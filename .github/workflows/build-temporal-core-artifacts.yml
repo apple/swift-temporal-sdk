@@ -61,12 +61,10 @@ jobs:
       - name: Create release notes
         run: |
           cat > release_notes.md << 'EOF'
-          # Temporal Core SDK v${{ steps.get_sha.outputs.sha_short }}
-          
-          Pre-built binaries for Temporal Core SDK at commit `${{ steps.get_sha.outputs.sha }}`.
+          Pre-built binaries for Temporal Core SDK at commit https://github.com/temporalio/sdk-core/tree/${{ steps.get_sha.outputs.sha }}.
           
           ## Assets
-          - **temporal.artifactbundle.zip** - Swift package manager artifact bundle 
+          - **temporal.artifactbundle.zip** - Artifact bundle 
           - **temporal.xcframework.zip** - XCFramework
           EOF
 
@@ -151,17 +149,17 @@ jobs:
         run: |
           X86_64_LIB="dependencies/sdk-core/target/x86_64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}"
           ARM64_LIB="dependencies/sdk-core/target/aarch64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}"
-          
+
           if [[ ! -f "${X86_64_LIB}" ]]; then
             echo "Error: x86_64 library not found: ${X86_64_LIB}"
             exit 1
           fi
-          
+
           if [[ ! -f "${ARM64_LIB}" ]]; then
             echo "Error: arm64 library not found: ${ARM64_LIB}"
             exit 1
           fi
-          
+
           lipo -create "${X86_64_LIB}" "${ARM64_LIB}" -output "libtemporal_fat.a"
           echo "✅ Fat library created: libtemporal_fat.a"
 
@@ -171,11 +169,12 @@ jobs:
           TEMP_DIR="temp_framework"
           rm -rf "${TEMP_DIR}"
           mkdir -p "${TEMP_DIR}/Headers"
-          
+
           # Copy fat library and headers
           cp "libtemporal_fat.a" "${TEMP_DIR}/libTemporal-macos.a"
           cp "${{ env.HEADER_SOURCE }}" "${TEMP_DIR}/Headers/temporal.h"
-          
+          cp "dependencies/sdk-core/LICENSE.txt" "${TEMP_DIR}/Headers/LICENSE.txt"
+
           # Create module map
           cat > "${TEMP_DIR}/Headers/module.modulemap" << 'EOF'
           module Bridge {
@@ -183,37 +182,18 @@ jobs:
               export *
           }
           EOF
-          
+
           # Create XCFramework using xcodebuild
           xcodebuild -create-xcframework \
               -library "${TEMP_DIR}/libTemporal-macos.a" \
               -headers "${TEMP_DIR}/Headers" \
               -output "${{ env.XCFRAMEWORK_NAME }}"
-          
+
           # Clean up temporary files
           rm -rf "${TEMP_DIR}"
           rm -f "libtemporal_fat.a"
-          
+
           echo "✅ XCFramework created: ${{ env.XCFRAMEWORK_NAME }}"
-
-      - name: Package and upload XCFramework
-        run: |
-          zip -r "${{ env.XCFRAMEWORK_NAME }}.zip" "${{ env.XCFRAMEWORK_NAME }}"
-
-          # Get release info to find upload URL
-          RELEASE_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ needs.setup.outputs.release_tag }}")
-
-          UPLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.upload_url' | sed 's/{?name,label}//')
-
-          # Upload the asset
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: application/zip" \
-            --data-binary @"${{ env.XCFRAMEWORK_NAME }}.zip" \
-            "${UPLOAD_URL}?name=${{ env.XCFRAMEWORK_NAME }}.zip&label=XCFramework"
-
-          echo "✅ XCFramework uploaded to release"
 
       - name: Upload macOS artifacts for bundle assembly
         uses: actions/upload-artifact@v4
@@ -222,6 +202,7 @@ jobs:
           path: |
             dependencies/sdk-core/target/x86_64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
             dependencies/sdk-core/target/aarch64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+            ${{ env.XCFRAMEWORK_NAME }}
           retention-days: 1
 
   build-linux-x86:
@@ -341,7 +322,10 @@ jobs:
         run: |
           # Copy and rename header file
           cp "${{ env.HEADER_SOURCE }}" "${{ env.ARTIFACT_BUNDLE_NAME }}/include/temporal.h"
-          
+
+          # Copy license file
+          cp "dependencies/sdk-core/LICENSE.txt" "${{ env.ARTIFACT_BUNDLE_NAME }}/include/LICENSE.txt"
+
           # Create module map with correct header reference
           cat > "${{ env.ARTIFACT_BUNDLE_NAME }}/include/module.modulemap" << 'EOF'
           module Bridge {
@@ -422,8 +406,20 @@ jobs:
           gh release upload "${{ needs.setup.outputs.release_tag }}" \
             "${{ env.ARTIFACT_BUNDLE_NAME }}.zip" \
             --clobber
-          
+
           echo "✅ Artifact bundle uploaded to release"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Package and upload XCFramework
+        run: |
+          zip -r "${{ env.XCFRAMEWORK_NAME }}.zip" "xcframework/${{ env.XCFRAMEWORK_NAME }}"
+
+          gh release upload "${{ needs.setup.outputs.release_tag }}" \
+            "${{ env.XCFRAMEWORK_NAME }}.zip" \
+            --clobber
+
+          echo "✅ XCFramework uploaded to release"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
