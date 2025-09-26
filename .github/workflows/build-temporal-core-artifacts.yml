@@ -103,7 +103,9 @@ jobs:
           submodules: recursive
 
       - name: Install protoc
-        run: brew install protobuf
+        run: |
+          NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          brew install protobuf
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
