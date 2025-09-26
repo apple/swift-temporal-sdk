@@ -112,6 +112,7 @@ jobs:
       - name: Install rust
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          . "$HOME/.cargo/env"
           rustup install ${{ env.RUST_VERSION }}
           rustup target add x86_64-apple-darwin
           rustup target add aarch64-apple-darwin
