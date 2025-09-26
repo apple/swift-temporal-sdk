@@ -108,7 +108,6 @@ jobs:
           curl -LO $PB_REL/download/v32.1/protoc-32.1-osx-universal_binary.zip
           unzip protoc-32.1-osx-universal_binary.zip -d $HOME/.local
           export PATH="$PATH:$HOME/.local/bin"
-          brew install protobuf
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
