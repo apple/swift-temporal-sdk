@@ -119,6 +119,7 @@ jobs:
 
       - name: Build macOS x86_64
         run: |
+          export PATH="$PATH:$HOME/.local/bin"
           . "$HOME/.cargo/env"
           cd ${{ env.RUST_PROJECT_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
@@ -133,6 +134,7 @@ jobs:
 
       - name: Build macOS arm64
         run: |
+          export PATH="$PATH:$HOME/.local/bin"
           . "$HOME/.cargo/env"
           cd ${{ env.RUST_PROJECT_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
