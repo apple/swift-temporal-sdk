@@ -311,7 +311,9 @@ jobs:
             exit 1
           fi
 
-          if [ -d "linux-x86-libraries" ]; then
+          # Create Linux target directory and copy Linux library
+          mkdir -p dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release
+          if [ -f "linux-x86-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }}" ]; then
             cp linux-x86-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
                dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release/
             echo "✅ Copied Linux x86_64 library"
