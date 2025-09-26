@@ -94,7 +94,7 @@ jobs:
 
   build-macos:
     name: Build macOS static libraries
-    runs-on: macos-latest
+    runs-on: [self-hosted, macos]
     needs: setup
     steps:
       - name: Checkout repository
@@ -246,43 +246,43 @@ jobs:
           path: dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
           retention-days: 1
 
-  build-linux-arm:
-    name: Build Linux ARM64
-    runs-on: ubuntu-24.04-arm
-    needs: setup
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
+  # build-linux-arm:
+  #   name: Build Linux ARM64
+  #   runs-on: ubuntu-24.04-arm
+  #   needs: setup
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #       with:
+  #         submodules: recursive
 
-      - name: Install protoc
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq protobuf-compiler
+  #     - name: Install protoc
+  #       run: |
+  #         sudo apt-get update -qq
+  #         sudo apt-get install -y -qq protobuf-compiler
 
-      - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
-          target: aarch64-unknown-linux-gnu
-          rustflags: ""
+  #     - name: Install Rust
+  #       uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         toolchain: ${{ env.RUST_VERSION }}
+  #         target: aarch64-unknown-linux-gnu
+  #         rustflags: ""
 
-      - name: Build Linux ARM64
-        run: |
-          cd ${{ env.RUST_PROJECT_DIR }}
-          cargo rustc \
-            --release \
-            --target aarch64-unknown-linux-gnu \
-            --features xz2-static \
-            --crate-type=staticlib
+  #     - name: Build Linux ARM64
+  #       run: |
+  #         cd ${{ env.RUST_PROJECT_DIR }}
+  #         cargo rustc \
+  #           --release \
+  #           --target aarch64-unknown-linux-gnu \
+  #           --features xz2-static \
+  #           --crate-type=staticlib
 
-      - name: Upload Linux ARM64 artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-arm-libraries
-          path: dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
-          retention-days: 1
+  #     - name: Upload Linux ARM64 artifacts
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: linux-arm-libraries
+  #         path: dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+  #         retention-days: 1
 
   assemble-bundle:
     name: Assemble artifact bundle
@@ -310,8 +310,8 @@ jobs:
              dependencies/sdk-core/target/aarch64-apple-darwin/release/
           cp linux-x86-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
              dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release/
-          cp linux-arm-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
-             dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/
+          # cp linux-arm-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
+          #    dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/
           
           echo "✅ Build structure reconstructed"
 
@@ -343,8 +343,8 @@ jobs:
              "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-macos-arm64.a"
           cp "dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
              "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-linux-x86_64.a"
-          cp "dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
-             "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-linux-arm64.a"
+          # cp "dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+          #    "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-linux-arm64.a"
 
       - name: Generate artifact bundle manifest
         run: |
