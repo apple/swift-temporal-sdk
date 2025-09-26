@@ -1,0 +1,10 @@
+.DS_Store
+project.xcworkspace
+xcuserdata
+DerivedData/
+.build
+.swiftpm
+target/
+Package.resolved
+/.vscode/
+/.vstags

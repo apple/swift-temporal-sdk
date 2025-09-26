@@ -1,0 +1,4 @@
+[submodule "dependencies/sdk-core"]
+	path = dependencies/sdk-core
+	url = https://github.com/temporalio/sdk-core.git
+	branch = master

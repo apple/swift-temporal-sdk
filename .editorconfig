@@ -1,0 +1,27 @@
+# EditorConfig is an editor agnostic format for editor setting: https://editorconfig.org
+# Notably it is supported by Xcode, vim, and vscode
+
+# top-most EditorConfig file
+root = true
+
+# Enforce utf-8 encoding
+[*]
+charset = utf-8
+
+# Indentation rules for swift
+[*.swift]
+trim_trailing_whitespace = true
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+
+# Indentation rules for rust
+[*.rs]
+trim_trailing_whitespace = true
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+
+# Ensure Makefiles use tabs
+[{Makefile,*.makefile}]
+indent_style = tab

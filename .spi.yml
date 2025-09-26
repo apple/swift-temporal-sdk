@@ -1,0 +1,8 @@
+version: 1
+builder:
+  configs:
+    - swift_version: '6.2'
+      documentation_targets:
+        - Temporal
+        - TemporalMacros
+        - TemporalTestKit

@@ -1,0 +1,422 @@
+name: Build Temporal Core SDK artifacts
+
+on:
+  workflow_dispatch:
+
+env:
+  RUST_VERSION: "1.88"
+  ARTIFACT_BUNDLE_NAME: "temporal.artifactbundle"
+  XCFRAMEWORK_NAME: "temporal.xcframework"
+  HEADER_SOURCE: "dependencies/sdk-core/core-c-bridge/include/temporal-sdk-core-c-bridge.h"
+  TEMPORAL_BUILT_LIB_NAME: "libtemporal_sdk_core_c_bridge.a"
+  RUST_PROJECT_DIR: "dependencies/sdk-core/core-c-bridge"
+
+jobs:
+  setup:
+    name: Setup release
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      core_sha: ${{ steps.get_sha.outputs.sha }}
+      core_sha_short: ${{ steps.get_sha.outputs.sha_short }}
+      release_tag: ${{ steps.get_sha.outputs.tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Get Core SDK commit SHA
+        id: get_sha
+        run: |
+          cd dependencies/sdk-core
+          CORE_SHA=$(git rev-parse HEAD)
+          CORE_SHA_SHORT=$(git rev-parse --short HEAD)
+          RELEASE_TAG="temporal-sdk-core-${CORE_SHA_SHORT}"
+          
+          echo "sha=${CORE_SHA}" >> $GITHUB_OUTPUT
+          echo "sha_short=${CORE_SHA_SHORT}" >> $GITHUB_OUTPUT
+          echo "tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
+          
+          echo "Core SDK SHA: ${CORE_SHA}"
+          echo "Release tag: ${RELEASE_TAG}"
+          
+          # Validate submodule is clean
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "Error: Core SDK submodule has uncommitted changes"
+            exit 1
+          fi
+
+      - name: Check for existing release
+        run: |
+          if gh release view "${{ steps.get_sha.outputs.tag }}" >/dev/null 2>&1; then
+            echo "Release ${{ steps.get_sha.outputs.tag }} already exists"
+            echo "Use force_rebuild=true to rebuild anyway"
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          # Temporal Core SDK v${{ steps.get_sha.outputs.sha_short }}
+          
+          Pre-built binaries for Temporal Core SDK at commit `${{ steps.get_sha.outputs.sha }}`.
+          
+          ## Assets
+          - **temporal.artifactbundle.zip** - Swift package manager artifact bundle 
+          - **temporal.xcframework.zip** - XCFramework
+          EOF
+
+      - name: Create draft release
+        id: create_release
+        run: |
+          gh release create "${{ steps.get_sha.outputs.tag }}" \
+            --title "Temporal Core SDK v${{ steps.get_sha.outputs.sha_short }}" \
+            --notes-file release_notes.md \
+            --draft \
+            --latest=false
+          
+          # Get release details
+          RELEASE_DATA=$(gh release view "${{ steps.get_sha.outputs.tag }}" --json id,uploadUrl)
+          RELEASE_ID=$(echo "$RELEASE_DATA" | jq -r '.id')
+          UPLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.uploadUrl')
+          
+          echo "id=${RELEASE_ID}" >> $GITHUB_OUTPUT
+          echo "upload_url=${UPLOAD_URL}" >> $GITHUB_OUTPUT
+          
+          echo "Created draft release: ${{ steps.get_sha.outputs.tag }}"
+          echo "Release ID: ${RELEASE_ID}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    name: Build macOS static libraries
+    runs-on: macos-latest
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install protoc
+        run: brew install protobuf
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          target: x86_64-apple-darwin,aarch64-apple-darwin
+          rustflags: ""
+
+      - name: Build macOS x86_64
+        run: |
+          cd ${{ env.RUST_PROJECT_DIR }}
+          MACOSX_DEPLOYMENT_TARGET="15" \
+          IPHONEOS_DEPLOYMENT_TARGET="18" \
+          TVOS_DEPLOYMENT_TARGET="18" \
+          WATCHOS_DEPLOYMENT_TARGET="11" \
+          cargo rustc \
+            --release \
+            --target x86_64-apple-darwin \
+            --features xz2-static \
+            --crate-type=staticlib
+
+      - name: Build macOS arm64
+        run: |
+          cd ${{ env.RUST_PROJECT_DIR }}
+          MACOSX_DEPLOYMENT_TARGET="15" \
+          IPHONEOS_DEPLOYMENT_TARGET="18" \
+          TVOS_DEPLOYMENT_TARGET="18" \
+          WATCHOS_DEPLOYMENT_TARGET="11" \
+          cargo rustc \
+            --release \
+            --target aarch64-apple-darwin \
+            --features xz2-static \
+            --crate-type=staticlib
+
+      - name: Create fat library
+        run: |
+          X86_64_LIB="dependencies/sdk-core/target/x86_64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}"
+          ARM64_LIB="dependencies/sdk-core/target/aarch64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}"
+          
+          if [[ ! -f "${X86_64_LIB}" ]]; then
+            echo "Error: x86_64 library not found: ${X86_64_LIB}"
+            exit 1
+          fi
+          
+          if [[ ! -f "${ARM64_LIB}" ]]; then
+            echo "Error: arm64 library not found: ${ARM64_LIB}"
+            exit 1
+          fi
+          
+          lipo -create "${X86_64_LIB}" "${ARM64_LIB}" -output "libtemporal_fat.a"
+          echo "✅ Fat library created: libtemporal_fat.a"
+
+      - name: Create XCFramework
+        run: |
+          # Create temporary directory for framework structure
+          TEMP_DIR="temp_framework"
+          rm -rf "${TEMP_DIR}"
+          mkdir -p "${TEMP_DIR}/Headers"
+          
+          # Copy fat library and headers
+          cp "libtemporal_fat.a" "${TEMP_DIR}/libTemporal-macos.a"
+          cp "${{ env.HEADER_SOURCE }}" "${TEMP_DIR}/Headers/temporal.h"
+          
+          # Create module map
+          cat > "${TEMP_DIR}/Headers/module.modulemap" << 'EOF'
+          module Bridge {
+              header "temporal.h"
+              export *
+          }
+          EOF
+          
+          # Create XCFramework using xcodebuild
+          xcodebuild -create-xcframework \
+              -library "${TEMP_DIR}/libTemporal-macos.a" \
+              -headers "${TEMP_DIR}/Headers" \
+              -output "${{ env.XCFRAMEWORK_NAME }}"
+          
+          # Clean up temporary files
+          rm -rf "${TEMP_DIR}"
+          rm -f "libtemporal_fat.a"
+          
+          echo "✅ XCFramework created: ${{ env.XCFRAMEWORK_NAME }}"
+
+      - name: Package and upload XCFramework
+        run: |
+          zip -r "${{ env.XCFRAMEWORK_NAME }}.zip" "${{ env.XCFRAMEWORK_NAME }}"
+          
+          gh release upload "${{ needs.setup.outputs.release_tag }}" \
+            "${{ env.XCFRAMEWORK_NAME }}.zip" \
+            --clobber
+          
+          echo "✅ XCFramework uploaded to release"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS artifacts for bundle assembly
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-libraries
+          path: |
+            dependencies/sdk-core/target/x86_64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+            dependencies/sdk-core/target/aarch64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+          retention-days: 1
+
+  build-linux-x86:
+    name: Build Linux x86_64
+    runs-on: ubuntu-24.04
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install protoc
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq protobuf-compiler
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          target: x86_64-unknown-linux-gnu
+          rustflags: ""
+
+      - name: Build Linux x86_64
+        run: |
+          cd ${{ env.RUST_PROJECT_DIR }}
+          cargo rustc \
+            --release \
+            --target x86_64-unknown-linux-gnu \
+            --features xz2-static \
+            --crate-type=staticlib
+
+      - name: Upload Linux x86_64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-x86-libraries
+          path: dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+          retention-days: 1
+
+  build-linux-arm:
+    name: Build Linux ARM64
+    runs-on: ubuntu-24.04-arm
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install protoc
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq protobuf-compiler
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          target: aarch64-unknown-linux-gnu
+          rustflags: ""
+
+      - name: Build Linux ARM64
+        run: |
+          cd ${{ env.RUST_PROJECT_DIR }}
+          cargo rustc \
+            --release \
+            --target aarch64-unknown-linux-gnu \
+            --features xz2-static \
+            --crate-type=staticlib
+
+      - name: Upload Linux ARM64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-arm-libraries
+          path: dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+          retention-days: 1
+
+  assemble-bundle:
+    name: Assemble artifact bundle
+    runs-on: ubuntu-latest
+    needs: [setup, build-macos, build-linux-x86, build-linux-arm]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download all platform artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Reconstruct build structure
+        run: |
+          # Create expected directory structure
+          mkdir -p dependencies/sdk-core/target/{x86_64-apple-darwin,aarch64-apple-darwin}/release
+          mkdir -p dependencies/sdk-core/target/{x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu}/release
+          
+          # Copy artifacts to expected locations
+          cp macos-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
+             dependencies/sdk-core/target/x86_64-apple-darwin/release/
+          cp macos-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
+             dependencies/sdk-core/target/aarch64-apple-darwin/release/
+          cp linux-x86-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
+             dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release/
+          cp linux-arm-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
+             dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/
+          
+          echo "✅ Build structure reconstructed"
+
+      - name: Create artifact bundle structure
+        run: |
+          rm -rf "${{ env.ARTIFACT_BUNDLE_NAME }}"
+          mkdir -p "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal"
+          mkdir -p "${{ env.ARTIFACT_BUNDLE_NAME }}/include"
+
+      - name: Setup headers and module map
+        run: |
+          # Copy and rename header file
+          cp "${{ env.HEADER_SOURCE }}" "${{ env.ARTIFACT_BUNDLE_NAME }}/include/temporal.h"
+          
+          # Create module map with correct header reference
+          cat > "${{ env.ARTIFACT_BUNDLE_NAME }}/include/module.modulemap" << 'EOF'
+          module Bridge {
+              header "temporal.h"
+              export *
+          }
+          EOF
+
+      - name: Copy platform libraries to bundle
+        run: |
+          # Copy all platform libraries to bundle
+          cp "dependencies/sdk-core/target/x86_64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+             "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-macos-x86_64.a"
+          cp "dependencies/sdk-core/target/aarch64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+             "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-macos-arm64.a"
+          cp "dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+             "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-linux-x86_64.a"
+          cp "dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+             "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-linux-arm64.a"
+
+      - name: Generate artifact bundle manifest
+        run: |
+          cat > "${{ env.ARTIFACT_BUNDLE_NAME }}/info.json" << 'EOF'
+          {
+              "schemaVersion": "1.0",
+              "artifacts": {
+                  "CTemporal": {
+                      "type": "staticLibrary",
+                      "version": "1.0.0",
+                      "variants": [
+                          {
+                              "path": "temporal/libTemporal-macos-x86_64.a",
+                              "supportedTriples": ["x86_64-apple-macosx"],
+                              "staticLibraryMetadata": {
+                                  "headerPaths": ["include"],
+                                  "moduleMapPath": "include/module.modulemap"
+                              }
+                          },
+                          {
+                              "path": "temporal/libTemporal-macos-arm64.a",
+                              "supportedTriples": ["arm64-apple-macosx"],
+                              "staticLibraryMetadata": {
+                                  "headerPaths": ["include"],
+                                  "moduleMapPath": "include/module.modulemap"
+                              }
+                          },
+                          {
+                              "path": "temporal/libTemporal-linux-x86_64.a",
+                              "supportedTriples": ["x86_64-unknown-linux-gnu"],
+                              "staticLibraryMetadata": {
+                                  "headerPaths": ["include"],
+                                  "moduleMapPath": "include/module.modulemap"
+                              }
+                          },
+                          {
+                              "path": "temporal/libTemporal-linux-arm64.a",
+                              "supportedTriples": ["aarch64-unknown-linux-gnu"],
+                              "staticLibraryMetadata": {
+                                  "headerPaths": ["include"],
+                                  "moduleMapPath": "include/module.modulemap"
+                              }
+                          }
+                      ]
+                  }
+              }
+          }
+          EOF
+
+      - name: Create archive
+        run: |
+          zip -r "${{ env.ARTIFACT_BUNDLE_NAME }}.zip" "${{ env.ARTIFACT_BUNDLE_NAME }}"
+          
+          echo "✅ Artifact archive created: ${{ env.ARTIFACT_BUNDLE_NAME }}.zip"
+          echo "📊 Archive size: $(du -h "${{ env.ARTIFACT_BUNDLE_NAME }}.zip" | cut -f1)"
+
+      - name: Upload artifact bundle to release
+        run: |
+          gh release upload "${{ needs.setup.outputs.release_tag }}" \
+            "${{ env.ARTIFACT_BUNDLE_NAME }}.zip" \
+            --clobber
+          
+          echo "✅ Artifact bundle uploaded to release"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print summary
+        run: |
+          echo "🎉 Build completed successfully!"
+          echo ""
+          echo "📋 Release Details:"
+          echo "   Tag: ${{ needs.setup.outputs.release_tag }}"
+          echo "   Core SHA: ${{ needs.setup.outputs.core_sha }}"
+          echo ""
+          echo "📝 Review and publish the draft release when ready!"

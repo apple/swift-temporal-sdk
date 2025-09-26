@@ -1,0 +1,39 @@
+
+The SwiftTemporalSDK Project
+====================
+
+Please visit the SwiftTemporalSDK web site for more information:
+
+* https://github.com/apple/swift-temporal-sdk
+
+Copyright 2025, The SwiftTemporalSDK Project
+
+The SwiftTemporalSDK Project licenses this file to you under the MIT License, 
+(the "License"); you may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+
+Also, please refer to each LICENSE.<component>.txt file, which is located in
+the 'license' directory of the distribution file, for the license terms of the
+components that this product depends on.
+
+-------------------------------------------------------------------------------
+
+This product contains a derivation of swift-testings's 'Parse.swift'.
+
+* LICENSE (Apache License 2.0):
+* https://github.com/swiftlang/swift-testing/blob/6f7688aec3afb935583565e4c0b4c80c6ca88950/LICENSE.txt
+* HOMEPAGE:
+* https://github.com/swiftlang/swift-testing
+
+---
+
+This product contains a derivation of the `pcg_oneseq_128_xsl_rr_64_random_r`.
+* LICENSE (Apache License 2.0):
+* https://github.com/imneme/pcg-c/blob/master/LICENSE.spdx
+* HOMEPAGE:
+* https://www.pcg-random.org
