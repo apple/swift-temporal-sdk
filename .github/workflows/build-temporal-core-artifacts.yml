@@ -296,20 +296,30 @@ jobs:
 
       - name: Reconstruct build structure
         run: |
-          # Create expected directory structure
-          mkdir -p dependencies/sdk-core/target/{x86_64-apple-darwin,aarch64-apple-darwin}/release
-          mkdir -p dependencies/sdk-core/target/{x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu}/release
-          
-          # Copy artifacts to expected locations
-          cp macos-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
-             dependencies/sdk-core/target/x86_64-apple-darwin/release/
-          cp macos-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
-             dependencies/sdk-core/target/aarch64-apple-darwin/release/
-          cp linux-x86-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
-             dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release/
-          # cp linux-arm-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
-          #    dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/
-          
+          # List downloaded artifacts to debug
+          echo "📁 Downloaded artifacts:"
+          find macos-libraries/ -type f -name "*" || echo "macos-libraries not found"
+          find linux-x86-libraries/ -type f -name "*" || echo "linux-x86-libraries not found"
+
+          # The artifacts already contain the full directory structure
+          # Just copy them to the current directory
+          if [ -d "macos-libraries/dependencies" ]; then
+            cp -r macos-libraries/dependencies .
+            echo "✅ Copied macOS libraries with directory structure"
+          else
+            echo "Error: macOS libraries not found in expected structure"
+            exit 1
+          fi
+
+          if [ -d "linux-x86-libraries" ]; then
+            cp linux-x86-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
+               dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release/
+            echo "✅ Copied Linux x86_64 library"
+          else
+            echo "Error: Linux x86_64 library not found"
+            exit 1
+          fi
+
           echo "✅ Build structure reconstructed"
 
       - name: Create artifact bundle structure
