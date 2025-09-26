@@ -119,6 +119,7 @@ jobs:
 
       - name: Build macOS x86_64
         run: |
+          . "$HOME/.cargo/env"
           cd ${{ env.RUST_PROJECT_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
           IPHONEOS_DEPLOYMENT_TARGET="18" \
@@ -132,6 +133,7 @@ jobs:
 
       - name: Build macOS arm64
         run: |
+          . "$HOME/.cargo/env"
           cd ${{ env.RUST_PROJECT_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
           IPHONEOS_DEPLOYMENT_TARGET="18" \
