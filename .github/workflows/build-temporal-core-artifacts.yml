@@ -425,7 +425,10 @@ jobs:
 
       - name: Package and upload XCFramework
         run: |
-          zip -r "${{ env.XCFRAMEWORK_NAME }}.zip" "macos-libraries/${{ env.XCFRAMEWORK_NAME }}"
+          # Copy XCFramework to root level for proper zip structure
+          cp -r "macos-libraries/${{ env.XCFRAMEWORK_NAME }}" .
+
+          zip -r "${{ env.XCFRAMEWORK_NAME }}.zip" "${{ env.XCFRAMEWORK_NAME }}"
 
           gh release upload "${{ needs.setup.outputs.release_tag }}" \
             "${{ env.XCFRAMEWORK_NAME }}.zip" \

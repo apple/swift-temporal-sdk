@@ -23,6 +23,15 @@ components that this product depends on.
 
 -------------------------------------------------------------------------------
 
+This product is based on Temporal Core SDK.
+
+  * LICENSE (MIT):
+    * https://github.com/temporalio/sdk-core/blob/3c724a0e2997bfb9d452d897fb766dd609ce6000/LICENSE.txt
+  * HOMEPAGE:
+    * https://github.com/temporalio/sdk-core
+
+---
+
 This product contains a derivation of swift-testings's 'Parse.swift'.
 
 * LICENSE (Apache License 2.0):
