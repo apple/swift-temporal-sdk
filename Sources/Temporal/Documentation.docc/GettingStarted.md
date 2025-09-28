@@ -15,7 +15,7 @@ Add the Swift Temporal SDK to your package dependencies. Use the command
 
 ```sh
 swift package add-dependency \
-    https://github.com/temporal-community/swift-temporal-sdk \
+    https://github.com/apple/swift-temporal-sdk \
     --from 0.1.0
 ```
 
@@ -24,7 +24,7 @@ Or manually update your project's Package.swift to include the SDK as a dependen
 ```swift
 dependencies: [
     .package(
-        url: "https://github.com/temporal-community/swift-temporal-sdk",
+        url: "https://github.com/apple/swift-temporal-sdk",
         from: "0.1.0"
     )
 ]

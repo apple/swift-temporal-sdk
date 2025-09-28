@@ -78,7 +78,7 @@ your `Package.swift` file:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/temporal-community/sdk-swift.git", upToNextMinor: "0.1.0")
+    .package(url: "https://github.com/apple/swift-temporal-sdk.git", upToNextMinor: "0.1.0")
 ]
 ```
 
@@ -86,7 +86,7 @@ dependencies: [
 
 1. **Clone the repository**
    ```bash
-   git clone git@github.com/temporal-community/sdk-swift.git
+   git clone git@github.com/apple/swift-temporal-sdk.git
    ```
 
 2. **Build the package**
@@ -173,9 +173,9 @@ struct MyApp {
 
 ## 📘 Documentation
 
-- [API Documentation](https://swiftpackageindex.com/temporal-community/sdk-swift/main/documentation/) - Complete
+- [API Documentation](https://swiftpackageindex.com/apple/swift-temporal-sdk/main/documentation/) - Complete
   API reference and guides
-- [Examples](https://github.com/temporal-community/sdk-swift/tree/main/Examples)
+- [Examples](https://github.com/apple/swift-temporal-sdk/tree/main/Examples)
   - Sample projects demonstrating various features
 
 ## 🧰 Release Info
@@ -189,4 +189,4 @@ struct MyApp {
 ## 🛠️ Support
 
 If you have any questions or need help, feel free to reach out by [opening an
-issue](https://github.com/temporal-community/sdk-swift/issues).
+issue](https://github.com/apple/swift-temporal-sdk/issues).
