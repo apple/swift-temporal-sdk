@@ -1,4 +1,5 @@
 .gitignore
+.gitmodules
 .licenseignore
 .swiftformatignore
 .spi.yml
@@ -6,7 +7,10 @@
 .github/
 **.md
 **.txt
+**.pb.swift
+**.grpc.swift
 **Package.swift
 docker/*
 .editorconfig
 Scripts/*
+dependencies/sdk-core

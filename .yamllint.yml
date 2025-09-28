@@ -1,0 +1,11 @@
+extends: default
+
+ignore: |
+  dependencies/
+  .build/
+
+rules:
+  line-length: false
+  document-start: false
+  truthy:
+    check-keys: false  # Otherwise we get a false positive on GitHub action's `on` key

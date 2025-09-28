@@ -34,14 +34,14 @@ jobs:
           CORE_SHA=$(git rev-parse HEAD)
           CORE_SHA_SHORT=$(git rev-parse --short HEAD)
           RELEASE_TAG="temporal-sdk-core-${CORE_SHA_SHORT}"
-          
+
           echo "sha=${CORE_SHA}" >> $GITHUB_OUTPUT
           echo "sha_short=${CORE_SHA_SHORT}" >> $GITHUB_OUTPUT
           echo "tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
-          
+
           echo "Core SDK SHA: ${CORE_SHA}"
           echo "Release tag: ${RELEASE_TAG}"
-          
+
           # Validate submodule is clean
           if [[ -n $(git status --porcelain) ]]; then
             echo "Error: Core SDK submodule has uncommitted changes"
@@ -62,9 +62,9 @@ jobs:
         run: |
           cat > release_notes.md << 'EOF'
           Pre-built binaries for Temporal Core SDK at commit https://github.com/temporalio/sdk-core/tree/${{ steps.get_sha.outputs.sha }}.
-          
+
           ## Assets
-          - **temporal.artifactbundle.zip** - Artifact bundle 
+          - **temporal.artifactbundle.zip** - Artifact bundle
           - **temporal.xcframework.zip** - XCFramework
           EOF
 
@@ -76,15 +76,15 @@ jobs:
             --notes-file release_notes.md \
             --draft \
             --latest=false
-          
+
           # Get release details
           RELEASE_DATA=$(gh release view "${{ steps.get_sha.outputs.tag }}" --json id,uploadUrl)
           RELEASE_ID=$(echo "$RELEASE_DATA" | jq -r '.id')
           UPLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.uploadUrl')
-          
+
           echo "id=${RELEASE_ID}" >> $GITHUB_OUTPUT
           echo "upload_url=${UPLOAD_URL}" >> $GITHUB_OUTPUT
-          
+
           echo "Created draft release: ${{ steps.get_sha.outputs.tag }}"
           echo "Release ID: ${RELEASE_ID}"
         env:
@@ -409,7 +409,7 @@ jobs:
       - name: Create archive
         run: |
           zip -r "${{ env.ARTIFACT_BUNDLE_NAME }}.zip" "${{ env.ARTIFACT_BUNDLE_NAME }}"
-          
+
           echo "✅ Artifact archive created: ${{ env.ARTIFACT_BUNDLE_NAME }}.zip"
           echo "📊 Archive size: $(du -h "${{ env.ARTIFACT_BUNDLE_NAME }}.zip" | cut -f1)"
 
