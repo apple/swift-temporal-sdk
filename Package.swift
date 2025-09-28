@@ -45,7 +45,7 @@ let package = Package(
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "2.0.0"),
         .package(url: "https://github.com/grpc/grpc-swift-extras.git", from: "2.0.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
-        .package(url: "https://github.com/apple/swift-configuration.git", from: "0.1.0", traits: []),
+        .package(url: "https://github.com/apple/swift-configuration.git", .upToNextMinor(from: "0.1.0"), traits: []),
     ],
     targets: [
         .binaryTarget(
