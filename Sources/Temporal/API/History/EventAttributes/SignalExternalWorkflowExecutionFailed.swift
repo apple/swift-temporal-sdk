@@ -1,0 +1,60 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Swift Temporal SDK open source project
+//
+// Copyright (c) 2025 Apple Inc. and the Swift Temporal SDK project authors
+// Licensed under MIT License
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of Swift Cassandra Client project authors
+//
+// SPDX-License-Identifier: MIT
+//
+//===----------------------------------------------------------------------===//
+
+extension HistoryEvent.Attributes {
+    /// Event attributes for when a signal to an external workflow execution has failed.
+    public struct SignalExternalWorkflowExecutionFailed: Hashable, Sendable {
+        /// The cause of the signal failure.
+        public var cause: SignalExternalWorkflowExecutionFailedCause
+
+        /// The `WORKFLOW_TASK_COMPLETED` event which this command was reported with.
+        public var workflowTaskCompletedEventID: Int
+
+        /// Namespace of the workflow which failed the signal.
+        ///
+        /// SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+        public var namespace: String
+
+        /// The namespace ID of the workflow which failed the signal.
+        public var namespaceID: String
+
+        /// The workflow execution identifier of the workflow which failed the signal.
+        public var workflowExecution: WorkflowExecutionID
+
+        /// The ID of the initiated event that this failure corresponds to.
+        public var initiatedEventID: Int
+
+        /// - Note: Deprecated - This field is no longer used.
+        public var control: String?
+
+        /// Creates event attributes for when a signal to an external workflow execution has failed.
+        public init(
+            cause: SignalExternalWorkflowExecutionFailedCause = .unspecified,
+            workflowTaskCompletedEventID: Int,
+            namespace: String,
+            namespaceID: String,
+            workflowExecution: WorkflowExecutionID,
+            initiatedEventID: Int,
+            control: String? = nil
+        ) {
+            self.cause = cause
+            self.workflowTaskCompletedEventID = workflowTaskCompletedEventID
+            self.namespace = namespace
+            self.namespaceID = namespaceID
+            self.workflowExecution = workflowExecution
+            self.initiatedEventID = initiatedEventID
+            self.control = control
+        }
+    }
+}

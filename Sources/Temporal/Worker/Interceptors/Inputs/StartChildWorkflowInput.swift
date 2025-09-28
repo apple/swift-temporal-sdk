@@ -1,0 +1,28 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Swift Temporal SDK open source project
+//
+// Copyright (c) 2025 Apple Inc. and the Swift Temporal SDK project authors
+// Licensed under MIT License
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of Swift Cassandra Client project authors
+//
+// SPDX-License-Identifier: MIT
+//
+//===----------------------------------------------------------------------===//
+
+/// Input structure containing parameters and context for child workflow startup operations in interceptor chains.
+public struct StartChildWorkflowInput<each Input: Sendable>: Sendable {
+    /// The name identifying the type of child workflow to be started.
+    public var name: String
+
+    /// The configuration options controlling how the child workflow should be executed.
+    public var options: ChildWorkflowOptions
+
+    /// Headers containing metadata and context information for child workflow startup and execution.
+    public var headers: [String: TemporalPayload]
+
+    /// The input parameters to be passed to the child workflow for execution.
+    public var input: (repeat each Input)
+}

@@ -1,0 +1,25 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Swift Temporal SDK open source project
+//
+// Copyright (c) 2025 Apple Inc. and the Swift Temporal SDK project authors
+// Licensed under MIT License
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of Swift Cassandra Client project authors
+//
+// SPDX-License-Identifier: MIT
+//
+//===----------------------------------------------------------------------===//
+
+import Configuration
+
+extension ConfigKey {
+    /// The optional namespace of the ``TemporalClient``.
+    static let clientNamespace: ConfigKey = ["client", "namespace"]
+    /// The optional identity of the ``TemporalClient``.
+    static let clientIdentity: ConfigKey = ["client", "identity"]
+
+    /// The required Temporal server hostname for instrumentation of the ``TemporalClient``.
+    static let clientServerHostname: ConfigKey = ["client", "instrumentation", "serverhostname"]
+}
