@@ -196,7 +196,7 @@ struct WorkflowInstance: Sendable {
             }
 
             // In some cases an activity may not be resolved (non-deterministic error
-            // when replaying for a query). We can't leave a hanging cancellation
+            // when replaying for a query). We can't leave a dangling cancellation
             // otherwise the task group will never return.
             Self.$isOnWorkflowInstance.withValue(true) {
                 stateMachine.forceCancelOutstandingContinuations()

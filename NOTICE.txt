@@ -43,6 +43,6 @@ This product contains a derivation of swift-testings's 'Parse.swift'.
 
 This product contains a derivation of the `pcg_oneseq_128_xsl_rr_64_random_r`.
 * LICENSE (Apache License 2.0):
-* https://github.com/imneme/pcg-c/blob/master/LICENSE.spdx
+* https://github.com/imneme/pcg-c/blob/83d10835a9f125442c9b2dafa7a1d5741dce9c3d/LICENSE.spdx
 * HOMEPAGE:
 * https://www.pcg-random.org

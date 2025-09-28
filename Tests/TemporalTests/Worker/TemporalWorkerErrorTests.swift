@@ -22,7 +22,7 @@ import Testing
 extension TestServerDependentTests {
     @Suite(.timeLimit(.minutes(1)))
     struct TemporalWorkerErrorTests {
-        // TODO: Re-enable this test as soon as the fired RPC doesn't hang anymore indefinitely when the GRPCClient doesn't properly start up
+        // TODO: Re-enable this test as soon as the fired RPC isn't stuck anymore indefinitely when the GRPCClient doesn't properly start up
         //        @Test
         //        func workerTaskQueueError() async throws {
         //            struct TestGRPCClient: UnaryGRPCClient {
