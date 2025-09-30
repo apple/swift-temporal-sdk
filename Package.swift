@@ -48,15 +48,23 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-configuration.git", .upToNextMinor(from: "0.1.0"), traits: []),
     ],
     targets: [
+        //        .binaryTarget(
+        //            name: "Bridge",
+        //            url: "https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441/temporal.artifactbundle.zip",
+        //            checksum: "7ae1ff325ba959bb2be848e63470daceb6ef4424def288b66a999976cb790a2a"
+        //        ),
         .binaryTarget(
             name: "Bridge",
-            url: "https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441/temporal.artifactbundle.zip",
-            checksum: "7ae1ff325ba959bb2be848e63470daceb6ef4424def288b66a999976cb790a2a"
+            path: "temporal.artifactbundle"
         ),
+        //        .binaryTarget(
+        //            name: "BridgeDarwin",
+        //            url: "https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441/temporal.xcframework.zip",
+        //            checksum: "d90fee2ef53ce3ad783dc5e969b1670f413823cc82b7095b413d16e3781187c9"
+        //        ),
         .binaryTarget(
             name: "BridgeDarwin",
-            url: "https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441/temporal.xcframework.zip",
-            checksum: "d90fee2ef53ce3ad783dc5e969b1670f413823cc82b7095b413d16e3781187c9"
+            path: "temporal.xcframework"
         ),
         .target(
             name: "Temporal",
@@ -190,6 +198,24 @@ let package = Package(
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
             ],
             path: "Examples/Greeting"
+        ),
+        .executableTarget(
+            name: "MultipleActivitiesExample",
+            dependencies: [
+                "Temporal",
+                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+            ],
+            path: "Examples/MultipleActivities",
+            exclude: ["README.md"]
+        ),
+        .executableTarget(
+            name: "ErrorHandlingExample",
+            dependencies: [
+                "Temporal",
+                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+            ],
+            path: "Examples/ErrorHandling",
+            exclude: ["README.md"]
         ),
     ]
 )
