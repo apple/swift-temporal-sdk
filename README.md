@@ -1,8 +1,5 @@
 # Temporal Swift SDK
 
-> [!WARNING]
-> This SDK is currently under active development.
-
 [Temporal](https://temporal.io/) is a distributed, scalable, durable, and highly
 available orchestration engine used to execute asynchronous, long-running
 business logic in a scalable and resilient way.
@@ -180,7 +177,7 @@ struct MyApp {
 
 ## 🧰 Release Info
 
-> [!WARNING]
+> [!NOTE]
 > This SDK is currently under active development.
 
 - Release Cadence: Ad-hoc whenever changes land on `main`
