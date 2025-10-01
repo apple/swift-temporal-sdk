@@ -284,7 +284,7 @@ jobs:
   assemble-bundle:
     name: Assemble artifact bundle
     runs-on: ubuntu-latest
-    needs: [setup, build-macos, build-linux-x86]
+    needs: [setup, build-macos, build-linux-x86, build-linux-arm]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
