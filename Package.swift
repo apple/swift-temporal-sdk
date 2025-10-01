@@ -191,5 +191,23 @@ let package = Package(
             ],
             path: "Examples/Greeting"
         ),
+        .executableTarget(
+            name: "MultipleActivitiesExample",
+            dependencies: [
+                "Temporal",
+                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+            ],
+            path: "Examples/MultipleActivities",
+            exclude: ["README.md"]
+        ),
+        .executableTarget(
+            name: "ErrorHandlingExample",
+            dependencies: [
+                "Temporal",
+                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+            ],
+            path: "Examples/ErrorHandling",
+            exclude: ["README.md"]
+        ),
     ]
 )
