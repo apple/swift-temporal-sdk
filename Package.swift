@@ -236,5 +236,14 @@ let package = Package(
             path: "Examples/Schedule",
             exclude: ["README.md"]
         ),
+        .executableTarget(
+            name: "ChildWorkflowExample",
+            dependencies: [
+                "Temporal",
+                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+            ],
+            path: "Examples/ChildWorkflows",
+            exclude: ["README.md"]
+        ),
     ]
 )

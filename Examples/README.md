@@ -19,6 +19,7 @@ swift build
 
 <!-- Keep this list in alphabetical order -->
 * [Async Activities](AsyncActivities) - Demonstrates parallel/concurrent activity execution using computer vision to process lemon quality control images.
+* [Child Workflows](ChildWorkflows) - Demonstrates parent and child workflow orchestration through a pizza restaurant order fulfillment system with parallel and sequential child workflows.
 * [Error Handling](ErrorHandling) - Shows advanced error handling patterns including retries, compensation, and failure recovery.
 * [Greeting](Greeting) - Simple workflow that returns Hello.
 * [Multiple Activities](MultipleActivities) - Demonstrates a workflow with multiple activities and fake database operations using Swift actors.
