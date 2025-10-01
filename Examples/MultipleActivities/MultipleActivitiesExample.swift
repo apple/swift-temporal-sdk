@@ -18,13 +18,35 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import Temporal
 
+/// Order Fulfillment Example
+///
+/// This example demonstrates how to orchestrate multiple activities in a Temporal workflow
+/// to implement a realistic order fulfillment process. It showcases:
+///
+/// - **Activity Orchestration**: Coordinating multiple external service calls
+/// - **Retry Policies**: Configuring different retry strategies for different operations
+/// - **Reliability**: Automatic retries and failure handling for transient errors
+/// - **Observability**: Clear logging and activity progress tracking
+///
+/// The workflow implements a complete e-commerce order flow:
+/// 1. Check inventory availability
+/// 2. Process payment
+/// 3. Reserve inventory
+/// 4. Create shipment
+/// 5. Send confirmation
+/// 6. Update order status
+///
+/// Each step is implemented as a separate activity, representing a call to an external
+/// service (payment gateway, shipping provider, notification service, etc.). Temporal
+/// ensures reliable execution with automatic retries, even if the worker crashes or
+/// activities fail temporarily.
 @main
 struct MultipleActivitiesExample {
     static func main() async throws {
         let logger = Logger(label: "TemporalWorker")
 
         let namespace = "default"
-        let taskQueue = "multiple-activities-queue"
+        let taskQueue = "order-fulfillment-queue"
 
         // Create worker configuration
         let workerConfiguration = TemporalWorker.Configuration(
@@ -33,10 +55,10 @@ struct MultipleActivitiesExample {
             instrumentation: .init(serverHostname: "localhost")
         )
 
-        // Create fake database client and activities
+        // Create activities with fake external service implementations
         let activities = MultipleActivitiesActivities()
 
-        // Create the worker with activities
+        // Create the worker with activities and workflows
         let worker = try TemporalWorker(
             configuration: workerConfiguration,
             target: .ipv4(address: "127.0.0.1", port: 7233),
@@ -67,17 +89,48 @@ struct MultipleActivitiesExample {
                 try await client.run()
             }
 
-            // Wait for the worker and client to run
+            // Wait for the worker and client to initialize
             try await Task.sleep(for: .seconds(1))
 
-            print("Executing Multiple Activities Workflow with Database Operations")
-            let result = try await client.executeWorkflow(
-                type: MultipleActivitiesWorkflow.self,
-                options: .init(id: UUID().uuidString, taskQueue: taskQueue),
-                input: "user1"  // Use a user key that exists in our fake database
+            print("🛒 Starting Order Fulfillment Workflow Example")
+            print(String(repeating: "=", count: 60))
+
+            // Create a sample order
+            let orderRequest = MultipleActivitiesWorkflow.OrderRequest(
+                orderId: "ORD-\(UUID().uuidString.prefix(8))",
+                customerId: "customer-123",
+                items: ["laptop", "mouse", "keyboard"],
+                totalAmount: 1299.99
             )
 
-            print("Workflow Result: \(result)")
+            print("\n📋 Order Details:")
+            print("  Order ID: \(orderRequest.orderId)")
+            print("  Customer: \(orderRequest.customerId)")
+            print("  Items: \(orderRequest.items.joined(separator: ", "))")
+            print("  Total: $\(orderRequest.totalAmount)")
+            print()
+
+            do {
+                let result = try await client.executeWorkflow(
+                    type: MultipleActivitiesWorkflow.self,
+                    options: .init(id: orderRequest.orderId, taskQueue: taskQueue),
+                    input: orderRequest
+                )
+
+                print("\n" + String(repeating: "=", count: 60))
+                print("✅ Order Fulfilled Successfully!")
+                print(String(repeating: "=", count: 60))
+                print("📦 Order Status: \(result.status)")
+                print("💳 Payment ID: \(result.paymentId)")
+                print("🚚 Tracking Number: \(result.trackingNumber)")
+                print()
+            } catch {
+                print("\n" + String(repeating: "=", count: 60))
+                print("❌ Order Fulfillment Failed")
+                print(String(repeating: "=", count: 60))
+                print("Error: \(error.localizedDescription)")
+                print()
+            }
 
             // Cancel the client and worker
             group.cancelAll()
