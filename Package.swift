@@ -209,5 +209,23 @@ let package = Package(
             path: "Examples/ErrorHandling",
             exclude: ["README.md"]
         ),
+        .executableTarget(
+            name: "SignalExample",
+            dependencies: [
+                "Temporal",
+                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+            ],
+            path: "Examples/Signals",
+            exclude: ["README.md"]
+        ),
+        .executableTarget(
+            name: "AsyncActivitiesExample",
+            dependencies: [
+                "Temporal",
+                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+            ],
+            path: "Examples/AsyncActivities",
+            exclude: ["lemon-dataset/", ".gitignore", "README.md"]
+        ),
     ]
 )

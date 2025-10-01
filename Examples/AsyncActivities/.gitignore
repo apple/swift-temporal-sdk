@@ -1,0 +1,2 @@
+# Don't commit the extracted dataset images (large files)
+lemon-dataset/data/lemon-dataset/
