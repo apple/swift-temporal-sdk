@@ -19,5 +19,5 @@ swift build
 
 <!-- Keep this list in alphabetical order -->
 * [Error Handling](ErrorHandling) - Shows advanced error handling patterns including retries, compensation, and failure recovery.
-* [Multiple activities](activity_simple) - Demonstrates a workflow with multiple activities and fake database operations using Swift actors.
 * [Greeting](Greeting) - Simple workflow that returns Hello.
+* [Multiple activities](MultipleActivities) - Demonstrates a complex workflow with multiple activities.
