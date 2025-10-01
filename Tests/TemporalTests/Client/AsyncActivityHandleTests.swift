@@ -227,7 +227,7 @@ extension TestServerDependentTests {
             }
         }
 
-        @Test(.timeLimit(.minutes(1)), .enabled(false))
+        @Test(.timeLimit(.minutes(1)), if: .enabled(false))
         func asyncCompletionCancelReportsCancel() async throws {
             let interceptor = AsyncActivityInterceptor()
             let workflowID = UUID().uuidString
