@@ -17,7 +17,7 @@ import Temporal
 import Testing
 import Tracing
 
-#if !(os(Linux) && swift(>=6.1))  // TODO: reenable once Swift 6.2 compiler crash / Swift 6.1 runtime crash on Linux (in RELEASE only) is fixed
+#if !(os(Linux) && swift(>=6.2))  // TODO: reenable once Swift 6.2 compiler crash / Swift 6.1 runtime crash on Linux (in RELEASE only) is fixed
 @Suite(.tags(.instrumentationTests))
 struct TemporalWorkerOutboundTracingInterceptorTests {
     @Workflow

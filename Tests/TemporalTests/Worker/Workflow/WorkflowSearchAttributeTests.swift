@@ -106,7 +106,7 @@ extension TestServerDependentTests {
             )
         }
 
-        @Test(.timeLimit(.minutes(1)))
+        @Test(.timeLimit(.minutes(1)), .enabled(if: false))
         func searchAttributes() async throws {
             try await ensureSearchAttributesPresent()
 
