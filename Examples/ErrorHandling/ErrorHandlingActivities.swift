@@ -15,248 +15,245 @@
 import Foundation
 import Temporal
 
+/// Activities for the travel booking workflow demonstrating error handling patterns.
+/// Each activity simulates interactions with external services (booking systems, payment gateways)
+/// and demonstrates different error handling scenarios.
 @ActivityContainer
 struct ErrorHandlingActivities {
-    // Internal in-memory DB + failure simulator moved here so activities
-    // can control retry behavior without relying on an external fake client.
-    private actor DBState {
-        var storage: [String: String] = [
-            "user1": "John Doe",
-            "user2": "Jane Smith",
-            "user3": "Bob Johnson",
-            "greeting": "Hello from database",
-            "prefix": "DB_PREFIX",
-        ]
+    // MARK: - Activity Input Types
 
-        var failureCount: [String: Int] = [:]
-        let maxFailures = 3
-
-        enum DatabaseError: Error, LocalizedError {
-            case keyNotFound(String)
-            case connectionFailed
-            case timeout
-            case serverOverloaded
-            case temporaryOutage
-            case networkPartition
-
-            var errorDescription: String? {
-                switch self {
-                case .keyNotFound(let key):
-                    return "Key '\(key)' not found in database"
-                case .connectionFailed:
-                    return "Database connection failed"
-                case .timeout:
-                    return "Database operation timed out"
-                case .serverOverloaded:
-                    return "Database server is overloaded"
-                case .temporaryOutage:
-                    return "Temporary database outage"
-                case .networkPartition:
-                    return "Network partition detected"
-                }
-            }
-
-            var isRetryable: Bool {
-                switch self {
-                case .keyNotFound:
-                    return false
-                case .connectionFailed, .timeout, .serverOverloaded, .temporaryOutage, .networkPartition:
-                    return true
-                }
-            }
-        }
-
-        private func simulateFailure(forKey key: String, operation: String = "unknown") throws {
-            let current = failureCount[key, default: 0]
-            
-            // Only simulate failures for save operations, not fetch operations
-            if operation.contains("save") && current < maxFailures {
-                failureCount[key] = current + 1
-
-                let error: DatabaseError
-                switch current % 3 {
-                case 0: error = .temporaryOutage
-                case 1: error = .serverOverloaded
-                case 2: error = .networkPartition
-                default: error = .connectionFailed
-                }
-
-                print("Database operation failed (attempt \(current + 1)/\(maxFailures)): \(error.errorDescription ?? "Unknown error")\nTemporal will retry this operation.")
-                throw error
-            }
-
-            // reset counter on success so subsequent keys start fresh
-            if operation.contains("save") {
-                failureCount[key] = 0
-            }
-        }
-
-        nonisolated func delayFetch() async throws {
-            try await Task.sleep(for: .milliseconds(100))
-        }
-
-        nonisolated func delaySave() async throws {
-            try await Task.sleep(for: .milliseconds(50))
-        }
-
-        func fetchData(forKey key: String) async throws -> String {
-            try await delayFetch()
-            try simulateFailure(forKey: key, operation: "fetch")
-            guard let value = storage[key] else {
-                throw DatabaseError.keyNotFound(key)
-            }
-            return value
-        }
-
-        func saveData(_ data: String, forKey key: String) async throws {
-            try await delaySave()
-            try simulateFailure(forKey: key, operation: "save")
-            storage[key] = data
-        }
-
-        func deleteData(forKey key: String) async throws {
-            try await delaySave()
-            try simulateFailure(forKey: key, operation: "delete")
-            storage.removeValue(forKey: key)
-        }
+    struct FlightReservation: Codable {
+        let flightId: String
+        let customerId: String
     }
 
-    private let db = DBState()
-
-    @Activity
-    func fetchUserData(input: String) async throws -> String {
-        print("🔄 Starting fetchUserData activity for key: \(input)")
-        do {
-            let value = try await db.fetchData(forKey: input)
-            print("✅ fetchUserData completed successfully: \(value)")
-            return value
-        } catch let error as DBState.DatabaseError {
-            if error.isRetryable {
-                throw ApplicationError(
-                    message: error.localizedDescription,
-                    type: "TransientError",
-                    isNonRetryable: false
-                )
-            }
-            throw error
-        }
+    struct HotelReservation: Codable {
+        let hotelId: String
+        let customerId: String
     }
 
-    @Activity
-    func saveWithValidation(input: String) async throws -> String {
-        print("🔄 Starting saveWithValidation activity for data: \(input)")
-        // Generate a deterministic key for this save operation so retries
-        // attempt the same key and the internal DB simulator can track attempts.
-        let base64 = Data(input.utf8).base64EncodedString()
-        let keySuffix = base64.prefix(12)
-        let key = "validated_\(keySuffix)"
+    struct PaymentRequest: Codable {
+        let customerId: String
+        let amount: Double
+        let simulateFailure: Bool
+    }
 
-        // Validate data before saving (simulating business logic)
-        guard !input.isEmpty else {
-            print("Business logic validation failed: Cannot save empty data\nThis is a non-retryable error - Temporal will NOT retry this operation.")
+    struct CancellationRequest: Codable {
+        let reservationId: String
+        let simulateFailure: Bool
+    }
+
+    // MARK: - Fake Services
+
+    private let reservationService: ReservationService
+    private let paymentService: PaymentServiceProtocol
+
+    init(
+        reservationService: ReservationService,
+        paymentService: PaymentServiceProtocol
+    ) {
+        self.reservationService = reservationService
+        self.paymentService = paymentService
+    }
+
+    init() {
+        self.reservationService = FakeReservationService()
+        self.paymentService = FakePaymentService()
+    }
+
+    // MARK: - Activities
+
+    /// Reserves a flight - demonstrates automatic retry on transient failures
+    @Activity
+    func reserveFlight(input: FlightReservation) async throws -> String {
+        print("✈️  Reserving flight \(input.flightId) for customer \(input.customerId)...")
+
+        let reservationId = try await reservationService.reserveFlight(
+            flightId: input.flightId,
+            customerId: input.customerId
+        )
+
+        print("✅ Flight reserved: \(reservationId)")
+        return reservationId
+    }
+
+    /// Reserves a hotel - demonstrates automatic retry on transient failures
+    @Activity
+    func reserveHotel(input: HotelReservation) async throws -> String {
+        print("🏨 Reserving hotel \(input.hotelId) for customer \(input.customerId)...")
+
+        let reservationId = try await reservationService.reserveHotel(
+            hotelId: input.hotelId,
+            customerId: input.customerId
+        )
+
+        print("✅ Hotel reserved: \(reservationId)")
+        return reservationId
+    }
+
+    /// Charges payment - demonstrates non-retryable business errors
+    @Activity
+    func chargePayment(input: PaymentRequest) async throws -> String {
+        print("💳 Charging payment of $\(input.amount) for customer \(input.customerId)...")
+
+        if input.simulateFailure {
+            // Simulate insufficient funds error (non-retryable)
+            print("❌ Payment failed: Insufficient funds")
             throw ApplicationError(
-                message: "Cannot save empty data",
-                type: "InvalidInputError",
-                isNonRetryable: true  // Business logic error, don't retry
+                message: "Insufficient funds to complete purchase",
+                type: "InsufficientFunds",
+                isNonRetryable: true
             )
         }
 
-        do {
-            try await db.saveData(input, forKey: key)
-            print("✅ saveWithValidation completed successfully with key: \(key)")
-            return "Data saved successfully with key: \(key)"
-        } catch let error as DBState.DatabaseError {
-            if error.isRetryable {
-                throw ApplicationError(
-                    message: error.localizedDescription,
-                    type: "TransientError",
-                    isNonRetryable: false
-                )
-            }
-            throw error
+        let paymentId = try await paymentService.charge(
+            customerId: input.customerId,
+            amount: input.amount
+        )
+
+        print("✅ Payment successful: \(paymentId)")
+        return paymentId
+    }
+
+    /// Cancels flight reservation - compensation activity
+    @Activity
+    func cancelFlight(input: CancellationRequest) async throws {
+        print("🔄 Cancelling flight reservation \(input.reservationId)...")
+
+        if input.simulateFailure {
+            print("❌ Flight cancellation failed: Airline API timeout")
+            throw ApplicationError(
+                message: "Airline reservation system unavailable - unable to cancel flight",
+                type: "CancellationFailed",
+                isNonRetryable: true
+            )
         }
+
+        try await reservationService.cancelFlight(reservationId: input.reservationId)
+
+        print("✅ Flight reservation cancelled")
     }
 
+    /// Cancels hotel reservation - compensation activity
     @Activity
-    func processWithCompensation(input: String) async throws -> String {
-        let tempKey = "temp_\(UUID().uuidString.prefix(8))"
+    func cancelHotel(input: CancellationRequest) async throws {
+        print("🔄 Cancelling hotel reservation \(input.reservationId)...")
 
-        do {
-            // First operation - might fail
-            try await db.saveData(input, forKey: tempKey)
-
-            // Simulate some processing that might fail
-            if input.contains("trigger_failure") {
-                throw ApplicationError(
-                    message: "Processing failed",
-                    type: "TransientError",
-                    isNonRetryable: false
-                )
-            }
-
-            // If we get here, processing succeeded
-            return "Processed successfully: \(input)"
-
-        } catch {
-            // Compensating action - cleanup on failure
-            print("Operation failed, attempting compensation (cleanup)...")
-            do {
-                try await db.deleteData(forKey: tempKey)
-            } catch {
-                // Log compensation failure but throw original error
-                print("Compensation failed: \(error.localizedDescription)")
-            }
-            throw error
+        if input.simulateFailure {
+            print("❌ Hotel cancellation failed: Hotel booking system unavailable")
+            throw ApplicationError(
+                message: "Hotel reservation system down - unable to cancel booking",
+                type: "CancellationFailed",
+                isNonRetryable: true
+            )
         }
-    }
 
-    @Activity
-    func updateUserProfile(input: String) async throws -> String {
-        print("🔄 Starting updateUserProfile activity for data: \(input)")
-        let profileKey = "profile_\(UUID().uuidString.prefix(8))"
-        
-        // Simulate a simple profile update that always succeeds (no database failures)
-        try await Task.sleep(for: .milliseconds(50))  // Simulate processing time
-        print("✅ updateUserProfile completed successfully with key: \(profileKey)")
-        return "Profile updated successfully with key: \(profileKey)"
-    }
+        try await reservationService.cancelHotel(reservationId: input.reservationId)
 
-    @Activity
-    func rollbackUserProfile(input: String) async throws -> String {
-        print("🔄 Starting rollbackUserProfile activity for key: \(input)")
-        
-        do {
-            try await db.deleteData(forKey: input)
-            print("✅ rollbackUserProfile completed successfully - deleted key: \(input)")
-            return "Profile rollback completed for key: \(input)"
-        } catch let error as DBState.DatabaseError {
-            if error.isRetryable {
-                throw ApplicationError(
-                    message: error.localizedDescription,
-                    type: "TransientError",
-                    isNonRetryable: false
-                )
-            }
-            throw error
+        print("✅ Hotel reservation cancelled")
+    }
+}
+
+// MARK: - Service Protocols
+
+/// Protocol for reservation system operations
+protocol ReservationService: Sendable {
+    func reserveFlight(flightId: String, customerId: String) async throws -> String
+    func reserveHotel(hotelId: String, customerId: String) async throws -> String
+    func cancelFlight(reservationId: String) async throws
+    func cancelHotel(reservationId: String) async throws
+}
+
+/// Protocol for payment gateway operations
+protocol PaymentServiceProtocol: Sendable {
+    func charge(customerId: String, amount: Double) async throws -> String
+}
+
+// MARK: - Fake Service Implementations
+
+/// Simulates a reservation system with transient failures
+actor FakeReservationService: ReservationService {
+    private var reservations: [String: String] = [:]
+    private var attemptCount: [String: Int] = [:]
+
+    func reserveFlight(flightId: String, customerId: String) async throws -> String {
+        // Simulate transient failures on first few attempts
+        let key = "flight-\(flightId)-\(customerId)"
+        let attempts = attemptCount[key, default: 0]
+        attemptCount[key] = attempts + 1
+
+        // Fail first 2 attempts to demonstrate retry
+        if attempts < 2 {
+            try await Task.sleep(for: .milliseconds(100))
+            let errorType = attempts == 0 ? "Connection timeout" : "Service temporarily unavailable"
+            print("⚠️  Flight reservation attempt \(attempts + 1) failed: \(errorType)")
+            throw ApplicationError(
+                message: errorType,
+                type: "TransientError",
+                isNonRetryable: false
+            )
         }
+
+        // Succeed on 3rd attempt
+        try await Task.sleep(for: .milliseconds(200))
+        let reservationId = "FLIGHT-RES-\(UUID().uuidString.prefix(8))"
+        reservations[reservationId] = "flight"
+        attemptCount[key] = 0  // Reset for next use
+        return reservationId
     }
 
-    @Activity
-    func cascadingOperation(input: String) async throws -> String {
-        var result = ""
+    func reserveHotel(hotelId: String, customerId: String) async throws -> String {
+        // Simulate transient failures on first attempt
+        let key = "hotel-\(hotelId)-\(customerId)"
+        let attempts = attemptCount[key, default: 0]
+        attemptCount[key] = attempts + 1
 
-        // First operation with retries - will fail a few times then succeed
-        let userData = try await fetchUserData(input: input)
-        result += "1. Fetched user data after retries: \(userData)\n"
+        // Fail first attempt to demonstrate retry
+        if attempts < 1 {
+            try await Task.sleep(for: .milliseconds(100))
+            print("⚠️  Hotel reservation attempt \(attempts + 1) failed: Database connection timeout")
+            throw ApplicationError(
+                message: "Database connection timeout",
+                type: "TransientError",
+                isNonRetryable: false
+            )
+        }
 
-        // Second operation with validation - will fail for empty input
-        let validatedData = try await saveWithValidation(input: userData)
-        result += "2. Validated and saved data: \(validatedData)\n"
+        // Succeed on 2nd attempt
+        try await Task.sleep(for: .milliseconds(200))
+        let reservationId = "HOTEL-RES-\(UUID().uuidString.prefix(8))"
+        reservations[reservationId] = "hotel"
+        attemptCount[key] = 0  // Reset for next use
+        return reservationId
+    }
 
-        // Third operation with compensation - will cleanup on failure
-        let processedData = try await processWithCompensation(input: validatedData + "_trigger_failure")
-        result += "3. Processed with compensation: \(processedData)\n"
+    func cancelFlight(reservationId: String) async throws {
+        try await Task.sleep(for: .milliseconds(150))
+        reservations.removeValue(forKey: reservationId)
+    }
 
-        return result
+    func cancelHotel(reservationId: String) async throws {
+        try await Task.sleep(for: .milliseconds(150))
+        reservations.removeValue(forKey: reservationId)
+    }
+}
+
+/// Simulates a payment service with idempotency
+actor FakePaymentService: PaymentServiceProtocol {
+    private var processedPayments: [String: String] = [:]
+
+    func charge(customerId: String, amount: Double) async throws -> String {
+        // Simulate payment gateway API call delay
+        try await Task.sleep(for: .milliseconds(400))
+
+        // Idempotency: return existing payment ID if already processed
+        let idempotencyKey = "\(customerId)-\(amount)"
+        if let existingPaymentId = processedPayments[idempotencyKey] {
+            return existingPaymentId
+        }
+
+        let paymentId = "PAY-\(UUID().uuidString.prefix(12))"
+        processedPayments[idempotencyKey] = paymentId
+        return paymentId
     }
 }

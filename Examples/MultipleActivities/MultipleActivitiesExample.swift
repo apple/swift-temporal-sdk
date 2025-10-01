@@ -103,6 +103,8 @@ struct MultipleActivitiesExample {
                 totalAmount: 1299.99
             )
 
+            print("\n🔗 View in Temporal UI:")
+            print("  http://localhost:8233/namespaces/\(namespace)/workflows/\(orderRequest.orderId)")
             print("\n📋 Order Details:")
             print("  Order ID: \(orderRequest.orderId)")
             print("  Customer: \(orderRequest.customerId)")
