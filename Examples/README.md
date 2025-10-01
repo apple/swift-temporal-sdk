@@ -22,4 +22,5 @@ swift build
 * [Error Handling](ErrorHandling) - Shows advanced error handling patterns including retries, compensation, and failure recovery.
 * [Greeting](Greeting) - Simple workflow that returns Hello.
 * [Multiple Activities](MultipleActivities) - Demonstrates a workflow with multiple activities and fake database operations using Swift actors.
+* [Schedule](Schedule) - Demonstrates Temporal scheduling with live NASA APIs to monitor the International Space Station, showing calendar and interval-based schedules.
 * [Signals](Signals) - Demonstrates signals, queries, and updates for interacting with running workflows.

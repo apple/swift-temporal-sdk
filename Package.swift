@@ -227,5 +227,14 @@ let package = Package(
             path: "Examples/AsyncActivities",
             exclude: ["lemon-dataset/", ".gitignore", "README.md"]
         ),
+        .executableTarget(
+            name: "ScheduleExample",
+            dependencies: [
+                "Temporal",
+                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+            ],
+            path: "Examples/Schedule",
+            exclude: ["README.md"]
+        ),
     ]
 )
