@@ -10,7 +10,7 @@ Demonstrates parallel and concurrent activity execution in Temporal workflows us
 - **Multiple Workers**: Distribute activity execution across 5 worker instances
 
 ### External API Integration
-- Fetches data from NYC Open Data API
+- Fetches data from [NYC Open Data API](https://data.cityofnewyork.us/City-Government/Film-Permits/tg4x-b46p/about_data)
 - HTTP requests with timeout and retry policies
 - Handles network errors and API failures gracefully
 - No external dependencies or submodules required
@@ -18,7 +18,7 @@ Demonstrates parallel and concurrent activity execution in Temporal workflows us
 ### Performance Comparison
 - Sequential vs parallel processing modes
 - Timing metrics showing speedup from parallelization
-- Demonstrates Temporal's scalability
+- Demonstrates scalability
 
 ## Activities
 
@@ -185,17 +185,3 @@ Worker instances share the same task queue. Temporal automatically distributes a
 
 ### Workflow Concurrency
 Leverages Swift's async/await and Structured Concurrency within workflows while maintaining Temporal's deterministic execution guarantees. See [Workflow Concurrency](../../Sources/Temporal/Documentation.docc/Workflows/Workflow-Concurrency.md) for details.
-
-### External API Integration
-Demonstrates best practices for calling external APIs in activities:
-- Timeout configuration (30s for API calls)
-- Retry policies with exponential backoff
-- Proper error handling and classification
-- Heartbeats for long-running operations
-
-### Application
-Demonstrates a data processing pipeline that could be adapted for:
-- Government data analysis and reporting
-- Location-based event aggregation
-- Permit and licensing workflows
-- Real-time city services monitoring
