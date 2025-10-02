@@ -126,7 +126,7 @@ struct MultipleActivitiesActivities {
     }
 
     /// Creates shipment and returns tracking number
-    /// External call to shipping provider (FedEx, UPS, etc.)
+    /// External call to shipping provider.
     @Activity
     func createShipment(input: CreateShipmentInput) async throws -> String {
         print("📮 Creating shipment for order \(input.orderId)...")
