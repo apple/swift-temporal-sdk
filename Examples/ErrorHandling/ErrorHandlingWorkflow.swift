@@ -6,7 +6,7 @@
 // Licensed under MIT License
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of Swift Cassandra Client project authors
+// See CONTRIBUTORS.txt for the list of Swift Temporal SDK project authors
 //
 // SPDX-License-Identifier: MIT
 //
@@ -15,7 +15,8 @@
 import Temporal
 
 /// Demonstrates error handling and compensation patterns in Temporal workflows.
-/// This workflow implements a travel booking system that shows:
+///
+/// This workflow implements a travel booking system that shows:.
 /// - Automatic retry with exponential backoff for transient failures
 /// - Saga pattern for distributed transaction compensation
 /// - Proper error handling with retryable vs non-retryable errors
@@ -179,14 +180,14 @@ final class ErrorHandlingWorkflow {
             // If compensation itself failed, this is a critical error requiring manual intervention
             if !compensationErrors.isEmpty {
                 let errorMessage = """
-                Critical: Booking failed AND compensation failed. Manual intervention required.
-                Original error: \(error.localizedDescription)
-                Compensation errors:
-                \(compensationErrors.map { "  - \($0)" }.joined(separator: "\n"))
-                Reservations requiring manual cleanup:
-                  - Flight: \(flightReservationId ?? "none")
-                  - Hotel: \(hotelReservationId ?? "none")
-                """
+                    Critical: Booking failed AND compensation failed. Manual intervention required.
+                    Original error: \(error.localizedDescription)
+                    Compensation errors:
+                    \(compensationErrors.map { "  - \($0)" }.joined(separator: "\n"))
+                    Reservations requiring manual cleanup:
+                      - Flight: \(flightReservationId ?? "none")
+                      - Hotel: \(hotelReservationId ?? "none")
+                    """
 
                 throw ApplicationError(
                     message: errorMessage,

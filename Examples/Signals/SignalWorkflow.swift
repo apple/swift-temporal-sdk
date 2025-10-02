@@ -15,7 +15,8 @@
 import Temporal
 
 /// Demonstrates signals, queries, and updates in a realistic order processing workflow.
-/// This workflow shows:
+///
+/// This workflow shows:.
 /// - Using signals to control workflow execution (pause/resume/cancel)
 /// - Using queries to inspect workflow state without mutation
 /// - Using updates to modify workflow state synchronously with validation
@@ -138,19 +139,19 @@ final class SignalWorkflow {
 
     // MARK: - Signal Handlers
 
-    /// Pauses the workflow execution
+    /// Pauses the workflow execution.
     @WorkflowSignal
     func pause(input: Void) async throws {
         isPaused = true
     }
 
-    /// Resumes the workflow execution
+    /// Resumes the workflow execution.
     @WorkflowSignal
     func resume(input: Void) async throws {
         isPaused = false
     }
 
-    /// Cancels the workflow
+    /// Cancels the workflow.
     @WorkflowSignal
     func cancel(input: Void) async throws {
         isCancelled = true
@@ -159,7 +160,7 @@ final class SignalWorkflow {
 
     // MARK: - Query Handlers
 
-    /// Returns the current status of the order
+    /// Returns the current status of the order.
     @WorkflowQuery
     func getStatus(input: Void) throws -> OrderStatus {
         return OrderStatus(
@@ -174,7 +175,7 @@ final class SignalWorkflow {
 
     // MARK: - Update Handlers
 
-    /// Updates the priority of the order with validation
+    /// Updates the priority of the order with validation.
     @WorkflowUpdate
     func setPriority(input: SetPriorityInput) async throws -> String {
         // Validate priority value
@@ -188,8 +189,9 @@ final class SignalWorkflow {
         }
 
         // Cannot change priority after shipping has started
-        guard currentState != "shipping" && currentState != "notifying"
-            && currentState != "completed"
+        guard
+            currentState != "shipping" && currentState != "notifying"
+                && currentState != "completed"
         else {
             throw ApplicationError(
                 message: "Cannot change priority after shipping has started",

@@ -59,7 +59,7 @@ struct PizzaActivities {
 
     // MARK: - Pizza Making Activities
 
-    /// Prepares pizza dough
+    /// Prepares pizza dough.
     @Activity
     func prepareDough(input: PrepareDoughInput) async throws -> String {
         let prepTime: Int
@@ -74,7 +74,7 @@ struct PizzaActivities {
         return "dough ready"
     }
 
-    /// Adds toppings to pizza
+    /// Adds toppings to pizza.
     @Activity
     func addToppings(input: AddToppingsInput) async throws -> String {
         let toppingTime = input.toppings.count
@@ -82,7 +82,7 @@ struct PizzaActivities {
         return "\(input.toppings.count) toppings added"
     }
 
-    /// Bakes the pizza
+    /// Bakes the pizza.
     @Activity
     func bakePizza(input: BakePizzaInput) async throws -> String {
         let bakeTime: Int
@@ -99,7 +99,7 @@ struct PizzaActivities {
 
     // MARK: - Sides Activities
 
-    /// Prepares side items
+    /// Prepares side items.
     @Activity
     func prepareSides(input: PrepareSidesInput) async throws -> String {
         let prepTime = input.sides.count * 3
@@ -109,7 +109,7 @@ struct PizzaActivities {
 
     // MARK: - Delivery Activities
 
-    /// Assigns a driver to the delivery
+    /// Assigns a driver to the delivery.
     @Activity
     func assignDriver(input: AssignDriverInput) async throws -> AssignDriverOutput {
         try await Task.sleep(for: .seconds(2))
@@ -129,7 +129,7 @@ struct PizzaActivities {
         )
     }
 
-    /// Delivers the order
+    /// Delivers the order.
     @Activity
     func deliverOrder(input: DeliverOrderInput) async throws -> String {
         try await Task.sleep(for: .seconds(3))

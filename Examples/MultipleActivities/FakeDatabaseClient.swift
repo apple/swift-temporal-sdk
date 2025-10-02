@@ -6,7 +6,7 @@
 // Licensed under MIT License
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of Swift Cassandra Client project authors
+// See CONTRIBUTORS.txt for the list of Swift Temporal SDK project authors
 //
 // SPDX-License-Identifier: MIT
 //
@@ -16,28 +16,28 @@ import Foundation
 
 // MARK: - Service Protocols
 
-/// Simulates an inventory management system
+/// Simulates an inventory management system.
 protocol InventoryService: Sendable {
     func checkAvailability(items: [String]) async throws -> Bool
     func reserve(orderId: String, items: [String]) async throws
 }
 
-/// Simulates a payment processing service (e.g., Stripe, PayPal)
+/// Simulates a payment processing service (e.g., Stripe, PayPal).
 protocol PaymentService: Sendable {
     func charge(customerId: String, amount: Double) async throws -> String
 }
 
-/// Simulates a shipping provider service (e.g., FedEx, UPS)
+/// Simulates a shipping provider service (e.g., FedEx, UPS).
 protocol ShippingService: Sendable {
     func createShipment(orderId: String, customerId: String, items: [String]) async throws -> String
 }
 
-/// Simulates a notification service (e.g., email, SMS, push notifications)
+/// Simulates a notification service (e.g., email, SMS, push notifications).
 protocol NotificationService: Sendable {
     func sendConfirmation(customerId: String, orderId: String, trackingNumber: String) async throws
 }
 
-/// Simulates an order management database
+/// Simulates an order management database.
 protocol OrderDatabase: Sendable {
     func updateStatus(orderId: String, status: String) async throws
 }
@@ -110,7 +110,7 @@ actor FakeShippingService: ShippingService {
         // Simulate shipping provider API call delay
         try await Task.sleep(for: .milliseconds(300))
 
-        let trackingNumber = "TRK\(Int.random(in: 100000000...999999999))"
+        let trackingNumber = "TRK\(Int.random(in: 100_000_000...999_999_999))"
         shipments[orderId] = trackingNumber
         return trackingNumber
     }

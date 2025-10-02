@@ -15,6 +15,7 @@
 import Temporal
 
 /// Child workflow that prepares side items.
+///
 /// Can run in parallel with pizza preparation.
 @Workflow
 final class PrepareSidesWorkflow {

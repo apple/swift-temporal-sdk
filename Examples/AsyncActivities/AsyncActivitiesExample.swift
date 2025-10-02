@@ -6,7 +6,7 @@
 // Licensed under MIT License
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of Swift Cassandra Client project authors
+// See CONTRIBUTORS.txt for the list of Swift Temporal SDK project authors
 //
 // SPDX-License-Identifier: MIT
 //
@@ -18,7 +18,7 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import Temporal
 
-/// Async Activities Example - NYC Film Permit Processing
+/// Async Activities Example - NYC Film Permit Processing.
 ///
 /// This example demonstrates parallel/concurrent activity execution patterns in Temporal:
 ///
@@ -28,13 +28,13 @@ import Temporal
 /// - **External API Integration**: Fetching data from NYC Open Data API with retry policies
 /// - **Performance Comparison**: Sequential vs parallel processing with timing metrics
 ///
-/// The example uses the NYC Film Permits API to demonstrate a data processing pipeline where:
+/// The example uses the NYC Film Permits API to demonstrate a data processing pipeline where:.
 /// - Each permit undergoes multiple analysis steps (validation, location, categorization)
 /// - Multiple permits are processed concurrently across workers
 /// - Activities are distributed across worker instances for parallel execution
 @main
 struct AsyncActivitiesExample {
-    /// Fetch permits from NYC API outside of workflow timing
+    /// Fetch permits from NYC API outside of workflow timing.
     static func fetchPermits(count: Int) async throws -> [FilmPermitActivities.FilmPermit] {
         let url = URL(string: "https://data.cityofnewyork.us/resource/tg4x-b46p.json?$limit=\(count)")!
         var request = URLRequest(url: url)

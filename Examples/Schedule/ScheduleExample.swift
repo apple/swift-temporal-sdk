@@ -18,7 +18,7 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import Temporal
 
-/// Space Mission Schedule Example
+/// Space Mission Schedule Example.
 ///
 /// This example demonstrates Temporal's scheduling capabilities through a space mission
 /// control automation scenario that monitors the International Space Station (ISS).
@@ -393,7 +393,7 @@ struct ScheduleExample {
         }
     }
 
-    /// Performs pre-flight cleanup of existing schedules to ensure clean state
+    /// Performs pre-flight cleanup of existing schedules to ensure clean state.
     static func performCleanup(logger: Logger) async throws {
         print("🧹 Performing pre-flight cleanup...")
 

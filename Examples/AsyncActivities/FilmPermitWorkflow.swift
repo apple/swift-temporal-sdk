@@ -6,7 +6,7 @@
 // Licensed under MIT License
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of Swift Cassandra Client project authors
+// See CONTRIBUTORS.txt for the list of Swift Temporal SDK project authors
 //
 // SPDX-License-Identifier: MIT
 //
@@ -15,7 +15,7 @@
 import Foundation
 import Temporal
 
-/// Workflow for processing NYC film permits with parallel and sequential modes
+/// Workflow for processing NYC film permits with parallel and sequential modes.
 @Workflow
 public final class FilmPermitWorkflow {
     public enum ProcessingMode: String, Codable, Sendable {
@@ -77,7 +77,7 @@ public final class FilmPermitWorkflow {
         )
     }
 
-    /// Process a single permit through validation, location analysis, and categorization
+    /// Process a single permit through validation, location analysis, and categorization.
     private func processPermit(permit: FilmPermitActivities.FilmPermit) async throws -> FilmPermitActivities.PermitAnalysis {
         let permitStart = Date()
 

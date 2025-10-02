@@ -6,7 +6,7 @@
 // Licensed under MIT License
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of Swift Cassandra Client project authors
+// See CONTRIBUTORS.txt for the list of Swift Temporal SDK project authors
 //
 // SPDX-License-Identifier: MIT
 //
@@ -16,7 +16,8 @@ import Foundation
 import Temporal
 
 /// Activities for the travel booking workflow demonstrating error handling patterns.
-/// Each activity simulates interactions with external services (booking systems, payment gateways)
+///
+/// Each activity simulates interactions with external services (booking systems, payment gateways).
 /// and demonstrates different error handling scenarios.
 @ActivityContainer
 struct ErrorHandlingActivities {
@@ -63,7 +64,7 @@ struct ErrorHandlingActivities {
 
     // MARK: - Activities
 
-    /// Reserves a flight - demonstrates automatic retry on transient failures
+    /// Reserves a flight - demonstrates automatic retry on transient failures.
     @Activity
     func reserveFlight(input: FlightReservation) async throws -> String {
         print("✈️  Reserving flight \(input.flightId) for customer \(input.customerId)...")
@@ -77,7 +78,7 @@ struct ErrorHandlingActivities {
         return reservationId
     }
 
-    /// Reserves a hotel - demonstrates automatic retry on transient failures
+    /// Reserves a hotel - demonstrates automatic retry on transient failures.
     @Activity
     func reserveHotel(input: HotelReservation) async throws -> String {
         print("🏨 Reserving hotel \(input.hotelId) for customer \(input.customerId)...")
@@ -91,7 +92,7 @@ struct ErrorHandlingActivities {
         return reservationId
     }
 
-    /// Charges payment - demonstrates non-retryable business errors
+    /// Charges payment - demonstrates non-retryable business errors.
     @Activity
     func chargePayment(input: PaymentRequest) async throws -> String {
         print("💳 Charging payment of $\(input.amount) for customer \(input.customerId)...")
@@ -115,7 +116,7 @@ struct ErrorHandlingActivities {
         return paymentId
     }
 
-    /// Cancels flight reservation - compensation activity
+    /// Cancels flight reservation - compensation activity.
     @Activity
     func cancelFlight(input: CancellationRequest) async throws {
         print("🔄 Cancelling flight reservation \(input.reservationId)...")
@@ -134,7 +135,7 @@ struct ErrorHandlingActivities {
         print("✅ Flight reservation cancelled")
     }
 
-    /// Cancels hotel reservation - compensation activity
+    /// Cancels hotel reservation - compensation activity.
     @Activity
     func cancelHotel(input: CancellationRequest) async throws {
         print("🔄 Cancelling hotel reservation \(input.reservationId)...")
@@ -156,7 +157,7 @@ struct ErrorHandlingActivities {
 
 // MARK: - Service Protocols
 
-/// Protocol for reservation system operations
+/// Protocol for reservation system operations.
 protocol ReservationService: Sendable {
     func reserveFlight(flightId: String, customerId: String) async throws -> String
     func reserveHotel(hotelId: String, customerId: String) async throws -> String
@@ -164,14 +165,14 @@ protocol ReservationService: Sendable {
     func cancelHotel(reservationId: String) async throws
 }
 
-/// Protocol for payment gateway operations
+/// Protocol for payment gateway operations.
 protocol PaymentServiceProtocol: Sendable {
     func charge(customerId: String, amount: Double) async throws -> String
 }
 
 // MARK: - Fake Service Implementations
 
-/// Simulates a reservation system with transient failures
+/// Simulates a reservation system with transient failures.
 actor FakeReservationService: ReservationService {
     private var reservations: [String: String] = [:]
     private var attemptCount: [String: Int] = [:]
@@ -238,7 +239,7 @@ actor FakeReservationService: ReservationService {
     }
 }
 
-/// Simulates a payment service with idempotency
+/// Simulates a payment service with idempotency.
 actor FakePaymentService: PaymentServiceProtocol {
     private var processedPayments: [String: String] = [:]
 

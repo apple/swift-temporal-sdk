@@ -6,7 +6,7 @@
 // Licensed under MIT License
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of Swift Cassandra Client project authors
+// See CONTRIBUTORS.txt for the list of Swift Temporal SDK project authors
 //
 // SPDX-License-Identifier: MIT
 //
@@ -15,7 +15,7 @@
 import Foundation
 import Temporal
 
-/// Activities for processing NYC film permits
+/// Activities for processing NYC film permits.
 @ActivityContainer
 public struct FilmPermitActivities {
     // MARK: - Data Models
@@ -90,7 +90,7 @@ public struct FilmPermitActivities {
 
     // MARK: - Activities
 
-    /// Fetches film permits from NYC Open Data API
+    /// Fetches film permits from NYC Open Data API.
     @Activity
     func fetchFilmPermits(input: Int) async throws -> [FilmPermit] {
         let context = ActivityExecutionContext.current!
@@ -139,7 +139,7 @@ public struct FilmPermitActivities {
         }
     }
 
-    /// Validates permit data quality
+    /// Validates permit data quality.
     @Activity
     func validatePermit(input: FilmPermit) async throws -> ValidationResult {
         let workerId = ProcessInfo.processInfo.processIdentifier
@@ -171,7 +171,7 @@ public struct FilmPermitActivities {
         )
     }
 
-    /// Analyzes permit location details
+    /// Analyzes permit location details.
     @Activity
     func analyzeLocation(input: FilmPermit) async throws -> LocationAnalysis {
         let workerId = ProcessInfo.processInfo.processIdentifier
@@ -191,7 +191,7 @@ public struct FilmPermitActivities {
         )
     }
 
-    /// Categorizes permit by type
+    /// Categorizes permit by type.
     @Activity
     func categorizePermit(input: FilmPermit) async throws -> PermitCategory {
         let workerId = ProcessInfo.processInfo.processIdentifier
@@ -209,7 +209,7 @@ public struct FilmPermitActivities {
         )
     }
 
-    /// Generates analytics report from permit analyses
+    /// Generates analytics report from permit analyses.
     @Activity
     func generateAnalyticsReport(input: [PermitAnalysis]) async throws -> AnalyticsReport {
         let workerId = ProcessInfo.processInfo.processIdentifier

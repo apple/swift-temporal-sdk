@@ -12,11 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
+import Temporal
+
 #if canImport(FoundationNetworking)
 import FoundationNetworking
 #endif
-import Foundation
-import Temporal
 
 // MARK: - API Response Models
 
@@ -231,21 +232,21 @@ struct SpaceMissionActivities {
         let reportId = "REPORT-\(UUID().uuidString.prefix(8))"
 
         let telemetrySummary = """
-        Position: \(telemetry.formattedPosition)
-        Altitude: \(String(format: "%.2f", telemetry.altitude)) km (\(telemetry.altitudeStatus))
-        Velocity: \(String(format: "%.2f", telemetry.velocity)) km/h
-        """
+            Position: \(telemetry.formattedPosition)
+            Altitude: \(String(format: "%.2f", telemetry.altitude)) km (\(telemetry.altitudeStatus))
+            Velocity: \(String(format: "%.2f", telemetry.velocity)) km/h
+            """
 
         let crewSummary = """
-        ISS Crew: \(crew.issCrewCount) astronauts
-        Total in space: \(crew.totalInSpace)
-        """
+            ISS Crew: \(crew.issCrewCount) astronauts
+            Total in space: \(crew.totalInSpace)
+            """
 
         let healthSummary = """
-        Overall: \(health.overallStatus)
-        Storage: \(String(format: "%.1f", health.dataStorageAvailable))% available
-        Orbital: \(health.orbitalParametersStatus)
-        """
+            Overall: \(health.overallStatus)
+            Storage: \(String(format: "%.1f", health.dataStorageAvailable))% available
+            Orbital: \(health.orbitalParametersStatus)
+            """
 
         return MissionReport(
             reportId: reportId,

@@ -18,9 +18,9 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import Temporal
 
-/// Child Workflows Example - Pizza Restaurant
+/// Child Workflows Example - Pizza Restaurant.
 ///
-/// This example demonstrates Temporal child workflows through a pizza restaurant order
+/// This example demonstrates Temporal child workflows through a pizza restaurant order.
 /// fulfillment system. It showcases:
 ///
 /// **Parent Workflow:**

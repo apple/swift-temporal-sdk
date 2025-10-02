@@ -6,7 +6,7 @@
 // Licensed under MIT License
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of Swift Cassandra Client project authors
+// See CONTRIBUTORS.txt for the list of Swift Temporal SDK project authors
 //
 // SPDX-License-Identifier: MIT
 //
@@ -16,6 +16,7 @@ import Foundation
 import Temporal
 
 /// Activities representing external service calls in an order fulfillment workflow.
+///
 /// Each activity simulates a real-world external system interaction that benefits
 /// from Temporal's automatic retry and observability features.
 @ActivityContainer
@@ -76,18 +77,16 @@ struct MultipleActivitiesActivities {
         self.orderDatabase = FakeOrderDatabase()
     }
 
-    /// Checks if all items are available in inventory
-    /// External call to inventory management system
+    /// Checks if all items are available in inventory.
+    ///
+    /// External call to inventory management system.
     @Activity
     func checkInventory(input: [String]) async throws -> String {
         print("📦 Checking inventory for \(input.count) item(s)...")
 
         let available = try await inventoryService.checkAvailability(items: input)
 
-        if available {
-            print("✅ All items in stock")
-            return "All items available"
-        } else {
+        guard available else {
             print("❌ Some items out of stock")
             throw ApplicationError(
                 message: "One or more items out of stock",
@@ -95,6 +94,8 @@ struct MultipleActivitiesActivities {
                 isNonRetryable: true
             )
         }
+        print("✅ All items in stock")
+        return "All items available"
     }
 
     /// Processes payment through payment gateway
@@ -112,8 +113,9 @@ struct MultipleActivitiesActivities {
         return paymentId
     }
 
-    /// Reserves inventory after successful payment
-    /// External call to inventory management system to update stock levels
+    /// Reserves inventory after successful payment.
+    ///
+    /// External call to inventory management system to update stock levels.
     @Activity
     func reserveInventory(input: ReserveInventoryInput) async throws {
         print("📦 Reserving inventory for order \(input.orderId)...")
@@ -139,8 +141,9 @@ struct MultipleActivitiesActivities {
         return trackingNumber
     }
 
-    /// Sends order confirmation to customer
-    /// External call to notification service (email, SMS, push notification)
+    /// Sends order confirmation to customer.
+    ///
+    /// External call to notification service (email, SMS, push notification).
     @Activity
     func sendConfirmation(input: SendConfirmationInput) async throws {
         print("📧 Sending confirmation to customer \(input.customerId)...")
@@ -154,8 +157,9 @@ struct MultipleActivitiesActivities {
         print("✅ Confirmation sent")
     }
 
-    /// Updates order status in database
-    /// External call to order management database
+    /// Updates order status in database.
+    ///
+    /// External call to order management database.
     @Activity
     func updateOrderStatus(input: UpdateOrderStatusInput) async throws {
         print("💾 Updating order \(input.orderId) status to '\(input.status)'...")

@@ -6,7 +6,7 @@
 // Licensed under MIT License
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of Swift Cassandra Client project authors
+// See CONTRIBUTORS.txt for the list of Swift Temporal SDK project authors
 //
 // SPDX-License-Identifier: MIT
 //
@@ -18,7 +18,7 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import Temporal
 
-/// Order Fulfillment Example
+/// Order Fulfillment Example.
 ///
 /// This example demonstrates how to orchestrate multiple activities in a Temporal workflow
 /// to implement a realistic order fulfillment process. It showcases:

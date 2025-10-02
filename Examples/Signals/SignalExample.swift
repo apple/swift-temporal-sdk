@@ -18,9 +18,9 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import Temporal
 
-/// Signal, Query, and Update Example
+/// Signal, Query, and Update Example.
 ///
-/// This example demonstrates Temporal's message passing capabilities through a realistic
+/// This example demonstrates Temporal's message passing capabilities through a realistic.
 /// order processing scenario. It showcases:
 ///
 /// **Signals** - Asynchronous messages that mutate workflow state:
@@ -34,7 +34,7 @@ import Temporal
 /// **Updates** - Synchronous operations that both mutate and return values:
 /// - `setPriority()` - Changes order priority with validation
 ///
-/// The example demonstrates:
+/// The example demonstrates:.
 /// - How to use Workflow.condition to wait for signals
 /// - Proper validation in update handlers
 /// - State management across signals, queries, and updates

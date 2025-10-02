@@ -15,6 +15,7 @@
 import Temporal
 
 /// Child workflow that makes a single pizza.
+///
 /// Demonstrates a typical child workflow with multiple activities.
 @Workflow
 final class MakePizzaWorkflow {

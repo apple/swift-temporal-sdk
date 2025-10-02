@@ -6,7 +6,7 @@
 // Licensed under MIT License
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of Swift Cassandra Client project authors
+// See CONTRIBUTORS.txt for the list of Swift Temporal SDK project authors
 //
 // SPDX-License-Identifier: MIT
 //
@@ -18,9 +18,9 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import Temporal
 
-/// Travel Booking Error Handling Example
+/// Travel Booking Error Handling Example.
 ///
-/// This example demonstrates Temporal's error handling capabilities through a realistic
+/// This example demonstrates Temporal's error handling capabilities through a realistic.
 /// travel booking scenario. It showcases:
 ///
 /// **Scenario 1: Retry with Exponential Backoff**
@@ -39,7 +39,7 @@ import Temporal
 /// - Shows how workflows fail when compensation is impossible
 /// - Demonstrates need for manual intervention
 ///
-/// The example uses structured types (no string parsing) and clean workflow code
+/// The example uses structured types (no string parsing) and clean workflow code.
 /// (no print statements in workflows, only in activities).
 @main
 struct ErrorHandlingExample {

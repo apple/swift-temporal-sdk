@@ -84,31 +84,7 @@ final class SpaceMissionWorkflow {
                 let targetAltitude = 410.0  // km
                 let needsCorrection = abs(telemetry.altitude - targetAltitude) > 5.0
 
-                if needsCorrection {
-                    // Simulate thruster burn duration
-                    let burnDuration = 45
-                    try await Workflow.sleep(for: .seconds(burnDuration))
-
-                    // Execute correction
-                    let correction = try await Workflow.executeActivity(
-                        SpaceMissionActivities.Activities.ExecuteOrbitCorrection.self,
-                        options: activityOptions,
-                        input: OrbitCorrectionInput(
-                            currentAltitude: telemetry.altitude,
-                            targetAltitude: targetAltitude,
-                            burnDuration: burnDuration
-                        )
-                    )
-
-                    return MissionOperationResult(
-                        operation: .orbitCorrection,
-                        status: .success,
-                        telemetryData: telemetry,
-                        orbitCorrection: correction,
-                        duration: Date().timeIntervalSince(startTime),
-                        timestamp: Date()
-                    )
-                } else {
+                guard needsCorrection else {
                     return MissionOperationResult(
                         operation: .orbitCorrection,
                         status: .success,
@@ -118,6 +94,29 @@ final class SpaceMissionWorkflow {
                         errorMessage: "No correction needed, altitude within tolerance"
                     )
                 }
+                // Simulate thruster burn duration
+                let burnDuration = 45
+                try await Workflow.sleep(for: .seconds(burnDuration))
+
+                // Execute correction
+                let correction = try await Workflow.executeActivity(
+                    SpaceMissionActivities.Activities.ExecuteOrbitCorrection.self,
+                    options: activityOptions,
+                    input: OrbitCorrectionInput(
+                        currentAltitude: telemetry.altitude,
+                        targetAltitude: targetAltitude,
+                        burnDuration: burnDuration
+                    )
+                )
+
+                return MissionOperationResult(
+                    operation: .orbitCorrection,
+                    status: .success,
+                    telemetryData: telemetry,
+                    orbitCorrection: correction,
+                    duration: Date().timeIntervalSince(startTime),
+                    timestamp: Date()
+                )
 
             case .generateReport:
                 let report = try await Workflow.executeActivity(

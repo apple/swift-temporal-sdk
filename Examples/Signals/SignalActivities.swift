@@ -32,7 +32,7 @@ struct SignalActivities {
 
     // MARK: - Activities
 
-    /// Processes an order
+    /// Processes an order.
     @Activity
     func processOrder(input: ProcessOrderInput) async throws -> String {
         print("📦 Processing order \(input.orderId) with \(input.items.count) item(s)...")
@@ -41,7 +41,7 @@ struct SignalActivities {
         return "PROCESSED-\(input.orderId)"
     }
 
-    /// Ships an order
+    /// Ships an order.
     @Activity
     func shipOrder(input: ShipOrderInput) async throws -> String {
         print("🚚 Shipping order \(input.orderId) with \(input.priority) priority...")
@@ -51,7 +51,7 @@ struct SignalActivities {
         return trackingNumber
     }
 
-    /// Notifies customer
+    /// Notifies customer.
     @Activity
     func notifyCustomer(input: String) async throws {
         print("📧 Notifying customer: \(input)")
