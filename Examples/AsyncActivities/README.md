@@ -1,19 +1,19 @@
-# Async Activities Example - Lemon Quality Control
+# Async Activities Example - NYC Film Permit Processing
 
-Demonstrates parallel and concurrent activity execution in Temporal workflows using a computer vision pipeline. This example processes images from the [lemon-dataset](https://github.com/softwaremill/lemon-dataset) using Apple's Vision framework.
+Demonstrates parallel and concurrent activity execution in Temporal workflows using NYC's Open Data API to process film permits.
 
 ## Features Demonstrated
 
 ### Parallel Activity Execution
-- **`async let`**: Run multiple analysis activities concurrently per image
-- **Task Groups**: Process multiple images in parallel with `withThrowingTaskGroup`
+- **`async let`**: Run multiple analysis activities concurrently per permit
+- **Task Groups**: Process multiple permits in parallel with `withThrowingTaskGroup`
 - **Multiple Workers**: Distribute activity execution across 5 worker instances
 
-### Computer Vision with COCO Annotations
-- Uses Apple's Vision framework for image quality analysis
-- Analyzes 2,690 annotated lemon images from COCO dataset
-- Uses ground truth labels for defect detection (illness, gangrene, mould)
-- Calculates blur, brightness, and contrast metrics
+### External API Integration
+- Fetches data from NYC Open Data API
+- HTTP requests with timeout and retry policies
+- Handles network errors and API failures gracefully
+- No external dependencies or submodules required
 
 ### Performance Comparison
 - Sequential vs parallel processing modes
@@ -22,67 +22,69 @@ Demonstrates parallel and concurrent activity execution in Temporal workflows us
 
 ## Activities
 
-### `fetchImageMetadata`
-Fetches image metadata and validates file existence.
-- **Input**: Image ID (filename)
-- **Output**: Image metadata with file path
-- **Simulated delay**: 500ms (network/disk I/O)
+### `fetchFilmPermits`
+Fetches film permits from NYC Open Data API.
+- **Input**: Number of permits to fetch
+- **Output**: Array of film permit records
+- **API**: `https://data.cityofnewyork.us/resource/tg4x-b46p.json`
+- **Retry Policy**: 3 attempts with exponential backoff
 
-### `analyzeImageQuality`
-Analyzes image quality using Vision framework.
-- **Input**: Image metadata
-- **Output**: Quality metrics (blur, brightness, contrast, quality score)
-- **Image processing**: Loads image, samples pixels, calculates statistics
+### `validatePermit`
+Validates permit data quality.
+- **Input**: Film permit record
+- **Output**: Validation result with issues list
+- **Checks**: Required fields, date formats, data completeness
 
-### `detectDefects`
-Detects lemon defects using COCO ground truth annotations.
-- **Input**: Image metadata
-- **Output**: Defect analysis with confidence scores
-- **Categories detected**: illness (category 2), gangrene (category 3), mould (category 4)
+### `analyzeLocation`
+Analyzes permit location details.
+- **Input**: Film permit record
+- **Output**: Location analysis (borough, precinct, street count)
+- **Processing**: Parses location strings and extracts geographic data
 
-### `checkQualityAttributes`
-Checks quality attributes using COCO annotations.
-- **Input**: Image metadata
-- **Output**: Quality attributes and health status
-- **Categories checked**: image_quality (category 1), condition (category 8)
+### `categorizePermit`
+Categorizes permit by type and commercial status.
+- **Input**: Film permit record
+- **Output**: Category classification
+- **Classification**: Film, TV, Commercial, Still Photography, etc.
 
-### `generateQualityReport`
-Generates comprehensive quality report with overall grade.
-- **Input**: Metadata, quality, defects, attributes
-- **Output**: Final quality report with grade (A-F)
+### `generateAnalyticsReport`
+Generates summary report from all permit analyses.
+- **Input**: Array of permit analyses
+- **Output**: Analytics report with aggregated statistics
+- **Metrics**: Counts by borough, category, validation status
 
 ## Workflow Execution Patterns
 
 ### Sequential Mode
-Processes images one at a time:
+Processes permits one at a time:
 ```swift
-for imageId in input.imageIds {
-    let report = try await processImage(imageId: imageId)
-    reports.append(report)
+for permit in permits {
+    let analysis = try await processPermit(permit: permit)
+    analyses.append(analysis)
 }
 ```
 
 ### Parallel Mode
-Processes all images concurrently using task groups:
+Processes all permits concurrently using task groups:
 ```swift
-try await withThrowingTaskGroup(of: QualityReport?.self) { group in
-    for imageId in input.imageIds {
+try await withThrowingTaskGroup(of: PermitAnalysis.self) { group in
+    for permit in permits {
         group.addTask {
-            try await self.processImage(imageId: imageId)
+            try await self.processPermit(permit: permit)
         }
     }
     // Collect results as they complete
 }
 ```
 
-### Per-Image Concurrency
-Each image runs multiple analyses in parallel:
+### Per-Permit Concurrency
+Each permit runs multiple analyses in parallel:
 ```swift
-async let qualityResult = Workflow.executeActivity(analyzeImageQuality, ...)
-async let defectsResult = Workflow.executeActivity(detectDefects, ...)
-async let attributesResult = Workflow.executeActivity(checkQualityAttributes, ...)
+async let validation = Workflow.executeActivity(validatePermit, ...)
+async let location = Workflow.executeActivity(analyzeLocation, ...)
+async let category = Workflow.executeActivity(categorizePermit, ...)
 
-let (quality, defects, attributes) = try await (qualityResult, defectsResult, attributesResult)
+let (v, l, c) = try await (validation, location, category)
 ```
 
 ## Setup
@@ -93,12 +95,7 @@ let (quality, defects, attributes) = try await (qualityResult, defectsResult, at
 temporal server start-dev
 ```
 
-2. Lemon dataset submodule and extraction:
-```bash
-git submodule update --init --recursive
-cd Examples/AsyncActivities/lemon-dataset/data
-unzip lemon-dataset.zip
-```
+2. Internet connection for API access (no authentication required)
 
 ## Running the Example
 
@@ -106,18 +103,13 @@ unzip lemon-dataset.zip
 swift run AsyncActivitiesExample
 ```
 
-This runs a single worker that demonstrates both sequential and parallel activity execution patterns within workflows.
+This runs 5 workers that demonstrate both sequential and parallel activity execution patterns.
 
 ### Expected Output
 
 ```
-🍋 Lemon Quality Control - Async Activities Example
+🎬 NYC Film Permit Processing - Async Activities Example
 ======================================================================
-
-📊 Dataset Information:
-  Total images in dataset: 2690
-  Images for this demo: 15
-  Dataset path: Examples/AsyncActivities/lemon-dataset/data/lemon-dataset
 
 🚀 Starting Workers:
   ✅ Worker 1 started (PID: 12345)
@@ -128,44 +120,60 @@ This runs a single worker that demonstrates both sequential and parallel activit
 
 ======================================================================
 
-⏳ Test 1: Sequential Processing
-----------------------------------------------------------------------
-🔗 View in Temporal UI:
-  http://localhost:8233/namespaces/default/workflows/BATCH-SEQ-...
-
-✅ Sequential Processing Complete:
-  Success: 15/15
-  Total time: 8.70s
-  Average per image: 0.58s
+📥 Fetching film permits from NYC API...
+✅ Fetched 100 permits
 
 ======================================================================
 
-⚡ Test 2: Parallel Processing (5 Workers)
+⏳ Test 1: Sequential Processing
 ----------------------------------------------------------------------
 🔗 View in Temporal UI:
-  http://localhost:8233/namespaces/default/workflows/BATCH-PAR-...
+  http://localhost:8233/namespaces/default/workflows/PERMITS-SEQ-...
 
-📊 Processing 15 images across 5 workers...
+✅ Sequential Processing Complete:
+  Total permits: 100
+  Valid permits: 100
+  Total time: 9.17s
+  Average per permit: 0.09s
+
+  By Borough:
+    • Manhattan: 42 permits
+    • Brooklyn: 28 permits
+    • Queens: 18 permits
+    • Bronx: 8 permits
+    • Staten Island: 4 permits
+
+======================================================================
+
+⚡ Test 2: Parallel Processing
+----------------------------------------------------------------------
+🔗 View in Temporal UI:
+  http://localhost:8233/namespaces/default/workflows/PERMITS-PAR-...
+
+📊 Processing 100 permits in parallel...
 
 ✅ Parallel Processing Complete:
-  Success: 15/15
-  Total time: 1.74s
-  Average per image: 0.12s
+  Total permits: 100
+  Valid permits: 100
+  Total time: 0.73s
+  Average per permit: 0.01s
 
-  Sample Results:
-    • 0003_A_V_150_A.jpg: Grade A, Quality: 87.3, ✅ Clean
-    • 0003_A_V_75_A.jpg: Grade B, Quality: 72.1, ✅ Clean
-    • 0004_A_H_60_A.jpg: Grade A, Quality: 91.5, ✅ Clean
+  By Category:
+    • Television: 38 permits
+    • Film: 24 permits
+    • WEB: 16 permits
+    • Commercial: 12 permits
+    • Still Photography: 10 permits
 
 ======================================================================
 
 📈 Performance Summary:
 ----------------------------------------------------------------------
-  Sequential: 8.70s for 15 images
-  Parallel:   1.74s for 15 images
+  Sequential: 9.17s for 100 permits
+  Parallel:   0.73s for 100 permits
 
-  Speedup: 5.0x
-  (Parallel processing is 5.0x faster)
+  Speedup: 12.6x
+  (Parallel processing is 12.6x faster)
 
 ✅ Example completed successfully!
 ```
@@ -178,9 +186,16 @@ Worker instances share the same task queue. Temporal automatically distributes a
 ### Workflow Concurrency
 Leverages Swift's async/await and Structured Concurrency within workflows while maintaining Temporal's deterministic execution guarantees. See [Workflow Concurrency](../../Sources/Temporal/Documentation.docc/Workflows/Workflow-Concurrency.md) for details.
 
+### External API Integration
+Demonstrates best practices for calling external APIs in activities:
+- Timeout configuration (30s for API calls)
+- Retry policies with exponential backoff
+- Proper error handling and classification
+- Heartbeats for long-running operations
+
 ### Application
-Demonstrates a quality control pipeline that could be adapted for:
-- Manufacturing defect detection
-- Agricultural product grading
-- Medical image analysis
-- Document processing at scale
+Demonstrates a data processing pipeline that could be adapted for:
+- Government data analysis and reporting
+- Location-based event aggregation
+- Permit and licensing workflows
+- Real-time city services monitoring

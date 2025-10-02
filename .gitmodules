@@ -2,6 +2,3 @@
 	path = dependencies/sdk-core
 	url = https://github.com/temporalio/sdk-core.git
 	branch = master
-[submodule "Examples/AsyncActivities/lemon-dataset"]
-	path = Examples/AsyncActivities/lemon-dataset
-	url = https://github.com/softwaremill/lemon-dataset.git

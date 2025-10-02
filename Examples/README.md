@@ -18,7 +18,7 @@ swift build
 ## Samples
 
 <!-- Keep this list in alphabetical order -->
-* [Async Activities](AsyncActivities) - Demonstrates parallel/concurrent activity execution using computer vision to process lemon quality control images.
+* [Async Activities](AsyncActivities) - Demonstrates parallel/concurrent activity execution using NYC's Open Data API to process film permits.
 * [Child Workflows](ChildWorkflows) - Demonstrates parent and child workflow orchestration through a pizza restaurant order fulfillment system with parallel and sequential child workflows.
 * [Error Handling](ErrorHandling) - Shows advanced error handling patterns including retries, compensation, and failure recovery.
 * [Greeting](Greeting) - Simple workflow that returns Hello.

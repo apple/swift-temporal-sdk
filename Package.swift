@@ -225,7 +225,7 @@ let package = Package(
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
             ],
             path: "Examples/AsyncActivities",
-            exclude: ["lemon-dataset/", ".gitignore", "README.md"]
+            exclude: ["README.md"]
         ),
         .executableTarget(
             name: "ScheduleExample",
