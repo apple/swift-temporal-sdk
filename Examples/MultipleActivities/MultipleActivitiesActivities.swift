@@ -99,7 +99,7 @@ struct MultipleActivitiesActivities {
     }
 
     /// Processes payment through payment gateway
-    /// External call to payment processor (Stripe, PayPal, etc.)
+    /// External call to payment processor.
     @Activity
     func processPayment(input: PaymentInput) async throws -> String {
         print("💳 Processing payment of $\(input.amount) for customer \(input.customerId)...")
