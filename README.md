@@ -68,6 +68,8 @@ business processes such as:
 
 - Swift version: Swift 6.2+
 
+To install/upgrade Swift, see https://www.swift.org/install/
+
 ### Adding as a dependency
 
 To use the Swift Temporal SDK in your Swift project, add it as a dependency in
