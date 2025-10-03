@@ -2,6 +2,7 @@
 .gitmodules
 .licenseignore
 .swiftformatignore
+.unacceptablelanguageignore
 .spi.yml
 .swift-format
 .github/
