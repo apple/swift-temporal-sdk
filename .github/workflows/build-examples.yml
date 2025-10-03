@@ -1,0 +1,37 @@
+name: Build Examples
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Examples/**'
+      - 'Sources/**'
+      - 'Package.swift'
+      - '.github/workflows/build-examples.yml'
+  pull_request:
+    paths:
+      - 'Examples/**'
+      - 'Sources/**'
+      - 'Package.swift'
+      - '.github/workflows/build-examples.yml'
+
+jobs:
+  build-examples:
+    name: Build examples (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Swift 6.2
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.2"
+
+      - name: Build Examples package
+        working-directory: Examples
+        run: swift build

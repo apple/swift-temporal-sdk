@@ -15,6 +15,10 @@
 import Foundation
 import Temporal
 
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
+
 /// Activities for processing NYC film permits.
 @ActivityContainer
 public struct FilmPermitActivities {

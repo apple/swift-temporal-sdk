@@ -8,7 +8,7 @@ let package = Package(
         .macOS(.v15),
     ],
     dependencies: [
-        .package(path: "../")
+        .package(url: "https://github.com/apple/swift-temporal-sdk.git", from: "0.1.0")
     ],
     targets: [
         .executableTarget(

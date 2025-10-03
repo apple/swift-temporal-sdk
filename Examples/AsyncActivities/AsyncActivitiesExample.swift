@@ -18,6 +18,10 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import Temporal
 
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
+
 /// Async Activities Example - NYC Film Permit Processing.
 ///
 /// This example demonstrates parallel/concurrent activity execution patterns in Temporal:
