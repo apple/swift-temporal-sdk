@@ -9,10 +9,38 @@ Prerequisites:
 * Swift version: Swift 6.2+
 * Local Temporal server running (can [install CLI](https://docs.temporal.io/cli#install) then
   [run a dev server](https://docs.temporal.io/cli#start-dev-server))
-* A successful build of this repo. 
+
+### Building Examples
+
+The examples are organized as a separate Swift package that depends on the main SDK. To build and run examples:
 
 ```bash
-swift build
+# From the Examples directory
+cd Examples
+swift build --product <ExampleName>
+
+# Or from the repository root
+swift build --package-path Examples --product <ExampleName>
+```
+
+### Running Examples
+
+After building, run an example:
+
+```bash
+# From Examples directory
+swift run <ExampleName>
+
+# Or from repository root
+swift run --package-path Examples <ExampleName>
+```
+
+For example, to build and run the Greeting example:
+
+```bash
+cd Examples
+swift build --product GreetingExample
+swift run GreetingExample
 ```
 
 ## Samples
