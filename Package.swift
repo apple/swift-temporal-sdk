@@ -181,15 +181,5 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),
-
-        // Examples
-        .executableTarget(
-            name: "GreetingExample",
-            dependencies: [
-                "Temporal",
-                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
-            ],
-            path: "Examples/Greeting"
-        ),
     ]
 )
