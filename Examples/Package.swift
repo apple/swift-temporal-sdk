@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "TemporalExamples",
     platforms: [
-        .macOS(.v15),
+        .macOS(.v15)
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-temporal-sdk.git", from: "0.1.0")
