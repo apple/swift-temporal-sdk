@@ -166,6 +166,82 @@ let package = Package(
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
             ]
         ),
+
+        // MARK: Examples
+
+        .executableTarget(
+            name: "GreetingExample",
+            dependencies: [
+                .target(name: "Temporal")
+            ],
+            path: "Examples/Greeting",
+            swiftSettings: [
+                .define("GRPCNIOTransport")
+            ]
+        ),
+        .executableTarget(
+            name: "MultipleActivitiesExample",
+            dependencies: [
+                .target(name: "Temporal")
+            ],
+            path: "Examples/MultipleActivities",
+            swiftSettings: [
+                .define("GRPCNIOTransport")
+            ]
+        ),
+        .executableTarget(
+            name: "ErrorHandlingExample",
+            dependencies: [
+                .target(name: "Temporal")
+            ],
+            path: "Examples/ErrorHandling",
+            swiftSettings: [
+                .define("GRPCNIOTransport")
+            ]
+        ),
+        .executableTarget(
+            name: "SignalExample",
+            dependencies: [
+                .target(name: "Temporal")
+            ],
+            path: "Examples/Signals",
+            swiftSettings: [
+                .define("GRPCNIOTransport")
+            ]
+        ),
+        .executableTarget(
+            name: "AsyncActivitiesExample",
+            dependencies: [
+                .target(name: "Temporal")
+            ],
+            path: "Examples/AsyncActivities",
+            swiftSettings: [
+                .define("GRPCNIOTransport")
+            ]
+        ),
+        .executableTarget(
+            name: "ScheduleExample",
+            dependencies: [
+                .target(name: "Temporal")
+            ],
+            path: "Examples/Schedule",
+            swiftSettings: [
+                .define("GRPCNIOTransport")
+            ]
+        ),
+        .executableTarget(
+            name: "ChildWorkflowExample",
+            dependencies: [
+                .target(name: "Temporal")
+            ],
+            path: "Examples/ChildWorkflows",
+            swiftSettings: [
+                .define("GRPCNIOTransport")
+            ]
+        ),
+
+        // MARK: Tests
+
         .testTarget(
             name: "TemporalTests",
             dependencies: [
