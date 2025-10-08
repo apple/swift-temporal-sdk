@@ -20,7 +20,7 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
       core_sha: ${{ steps.get_sha.outputs.sha }}
       core_sha_short: ${{ steps.get_sha.outputs.sha_short }}
-      release_tag: ${{ steps.get_sha.outputs.tag }}
+      release_tag: ${{ steps.create_release.outputs.release_tag }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,14 +33,14 @@ jobs:
           cd dependencies/sdk-core
           CORE_SHA=$(git rev-parse HEAD)
           CORE_SHA_SHORT=$(git rev-parse --short HEAD)
-          RELEASE_TAG="temporal-sdk-core-${CORE_SHA_SHORT}"
+          BASE_RELEASE_TAG="temporal-sdk-core-${CORE_SHA_SHORT}"
 
           echo "sha=${CORE_SHA}" >> $GITHUB_OUTPUT
           echo "sha_short=${CORE_SHA_SHORT}" >> $GITHUB_OUTPUT
-          echo "tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
+          echo "base_tag=${BASE_RELEASE_TAG}" >> $GITHUB_OUTPUT
 
           echo "Core SDK SHA: ${CORE_SHA}"
-          echo "Release tag: ${RELEASE_TAG}"
+          echo "Base release tag: ${BASE_RELEASE_TAG}"
 
           # Validate submodule is clean
           if [[ -n $(git status --porcelain) ]]; then
@@ -48,13 +48,35 @@ jobs:
             exit 1
           fi
 
-      - name: Check for existing release
+      - name: Find available release tag
+        id: find_tag
         run: |
-          if gh release view "${{ steps.get_sha.outputs.tag }}" >/dev/null 2>&1; then
-            echo "Release ${{ steps.get_sha.outputs.tag }} already exists"
-            echo "Use force_rebuild=true to rebuild anyway"
-            exit 1
+          BASE_TAG="${{ steps.get_sha.outputs.base_tag }}"
+
+          # Check if base tag exists
+          if ! gh release view "${BASE_TAG}" >/dev/null 2>&1; then
+            echo "tag=${BASE_TAG}" >> $GITHUB_OUTPUT
+            echo "✅ Using base tag: ${BASE_TAG}"
+            exit 0
           fi
+
+          # Find next available suffix
+          SUFFIX=1
+          while true; do
+            CANDIDATE_TAG="${BASE_TAG}-${SUFFIX}"
+            if ! gh release view "${CANDIDATE_TAG}" >/dev/null 2>&1; then
+              echo "tag=${CANDIDATE_TAG}" >> $GITHUB_OUTPUT
+              echo "✅ Using suffixed tag: ${CANDIDATE_TAG}"
+              break
+            fi
+            ((SUFFIX++))
+
+            # Safety check to prevent infinite loop
+            if [ $SUFFIX -gt 999 ]; then
+              echo "Error: Too many existing releases for this commit"
+              exit 1
+            fi
+          done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -71,21 +93,24 @@ jobs:
       - name: Create draft release
         id: create_release
         run: |
-          gh release create "${{ steps.get_sha.outputs.tag }}" \
+          RELEASE_TAG="${{ steps.find_tag.outputs.tag }}"
+
+          gh release create "${RELEASE_TAG}" \
             --title "Temporal Core SDK v${{ steps.get_sha.outputs.sha_short }}" \
             --notes-file release_notes.md \
             --draft \
             --latest=false
 
           # Get release details
-          RELEASE_DATA=$(gh release view "${{ steps.get_sha.outputs.tag }}" --json id,uploadUrl)
+          RELEASE_DATA=$(gh release view "${RELEASE_TAG}" --json id,uploadUrl)
           RELEASE_ID=$(echo "$RELEASE_DATA" | jq -r '.id')
           UPLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.uploadUrl')
 
           echo "id=${RELEASE_ID}" >> $GITHUB_OUTPUT
           echo "upload_url=${UPLOAD_URL}" >> $GITHUB_OUTPUT
+          echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
 
-          echo "Created draft release: ${{ steps.get_sha.outputs.tag }}"
+          echo "Created draft release: ${RELEASE_TAG}"
           echo "Release ID: ${RELEASE_ID}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -114,6 +139,9 @@ jobs:
           rustup install ${{ env.RUST_VERSION }}
           rustup target add x86_64-apple-darwin
           rustup target add aarch64-apple-darwin
+          rustup target add aarch64-apple-ios
+          rustup target add x86_64-apple-ios
+          rustup target add aarch64-apple-ios-sim
 
       - name: Build macOS x86_64
         run: |
@@ -145,6 +173,51 @@ jobs:
             --features xz2-static \
             --crate-type=staticlib
 
+      - name: Build iOS arm64
+        run: |
+          export PATH="$PATH:$HOME/.local/bin"
+          . "$HOME/.cargo/env"
+          cd ${{ env.RUST_PROJECT_DIR }}
+          MACOSX_DEPLOYMENT_TARGET="15" \
+          IPHONEOS_DEPLOYMENT_TARGET="18" \
+          TVOS_DEPLOYMENT_TARGET="18" \
+          WATCHOS_DEPLOYMENT_TARGET="11" \
+          cargo rustc \
+            --release \
+            --target aarch64-apple-ios \
+            --features xz2-static \
+            --crate-type=staticlib
+
+      - name: Build iOS x86_64 simulator
+        run: |
+          export PATH="$PATH:$HOME/.local/bin"
+          . "$HOME/.cargo/env"
+          cd ${{ env.RUST_PROJECT_DIR }}
+          MACOSX_DEPLOYMENT_TARGET="15" \
+          IPHONEOS_DEPLOYMENT_TARGET="18" \
+          TVOS_DEPLOYMENT_TARGET="18" \
+          WATCHOS_DEPLOYMENT_TARGET="11" \
+          cargo rustc \
+            --release \
+            --target x86_64-apple-ios \
+            --features xz2-static \
+            --crate-type=staticlib
+
+      - name: Build iOS arm64 simulator
+        run: |
+          export PATH="$PATH:$HOME/.local/bin"
+          . "$HOME/.cargo/env"
+          cd ${{ env.RUST_PROJECT_DIR }}
+          MACOSX_DEPLOYMENT_TARGET="15" \
+          IPHONEOS_DEPLOYMENT_TARGET="18" \
+          TVOS_DEPLOYMENT_TARGET="18" \
+          WATCHOS_DEPLOYMENT_TARGET="11" \
+          cargo rustc \
+            --release \
+            --target aarch64-apple-ios-sim \
+            --features xz2-static \
+            --crate-type=staticlib
+
       - name: Create fat library
         run: |
           X86_64_LIB="dependencies/sdk-core/target/x86_64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}"
@@ -163,35 +236,61 @@ jobs:
           lipo -create "${X86_64_LIB}" "${ARM64_LIB}" -output "libtemporal_fat.a"
           echo "✅ Fat library created: libtemporal_fat.a"
 
+      - name: Create all platform fat libraries
+        run: |
+          # Create fat libraries for each platform
+          echo "Creating fat libraries for each Apple platform..."
+
+          # macOS - already created above
+          echo "✅ macOS fat library: libtemporal_fat.a"
+
+          # iOS device
+          lipo -create \
+            "dependencies/sdk-core/target/aarch64-apple-ios/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+            -output "libtemporal_ios.a"
+          echo "✅ iOS device library: libtemporal_ios.a"
+
+          # iOS simulator
+          lipo -create \
+            "dependencies/sdk-core/target/x86_64-apple-ios/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+            "dependencies/sdk-core/target/aarch64-apple-ios-sim/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+            -output "libtemporal_ios_sim.a"
+          echo "✅ iOS simulator library: libtemporal_ios_sim.a"
+
       - name: Create XCFramework
         run: |
-          # Create temporary directory for framework structure
-          TEMP_DIR="temp_framework"
-          rm -rf "${TEMP_DIR}"
-          mkdir -p "${TEMP_DIR}/Headers"
+          # Create temporary directories for each platform
+          mkdir -p temp_macos/Headers
+          mkdir -p temp_ios/Headers
+          mkdir -p temp_ios_sim/Headers
 
-          # Copy fat library and headers
-          cp "libtemporal_fat.a" "${TEMP_DIR}/libTemporal-macos.a"
-          cp "${{ env.HEADER_SOURCE }}" "${TEMP_DIR}/Headers/temporal.h"
-          cp "dependencies/sdk-core/LICENSE.txt" "${TEMP_DIR}/Headers/LICENSE.txt"
+          # Copy libraries and headers to each platform directory
+          cp "libtemporal_fat.a" "temp_macos/libTemporal.a"
+          cp "libtemporal_ios.a" "temp_ios/libTemporal.a"
+          cp "libtemporal_ios_sim.a" "temp_ios_sim/libTemporal.a"
 
-          # Create module map
-          cat > "${TEMP_DIR}/Headers/module.modulemap" << 'EOF'
+          # Copy headers to all platform directories
+          for dir in temp_*/Headers; do
+            cp "${{ env.HEADER_SOURCE }}" "$dir/temporal.h"
+            cp "dependencies/sdk-core/LICENSE.txt" "$dir/LICENSE.txt"
+            cat > "$dir/module.modulemap" << 'EOF'
           module Bridge {
               header "temporal.h"
               export *
           }
           EOF
+          done
 
           # Create XCFramework using xcodebuild
           xcodebuild -create-xcframework \
-              -library "${TEMP_DIR}/libTemporal-macos.a" \
-              -headers "${TEMP_DIR}/Headers" \
+              -library "temp_macos/libTemporal.a" -headers "temp_macos/Headers" \
+              -library "temp_ios/libTemporal.a" -headers "temp_ios/Headers" \
+              -library "temp_ios_sim/libTemporal.a" -headers "temp_ios_sim/Headers" \
               -output "${{ env.XCFRAMEWORK_NAME }}"
 
           # Clean up temporary files
-          rm -rf "${TEMP_DIR}"
-          rm -f "libtemporal_fat.a"
+          rm -rf temp_*
+          rm -f libtemporal_*.a
 
           echo "✅ XCFramework created: ${{ env.XCFRAMEWORK_NAME }}"
 
@@ -202,6 +301,9 @@ jobs:
           path: |
             dependencies/sdk-core/target/x86_64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
             dependencies/sdk-core/target/aarch64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+            dependencies/sdk-core/target/aarch64-apple-ios/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+            dependencies/sdk-core/target/x86_64-apple-ios/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+            dependencies/sdk-core/target/aarch64-apple-ios-sim/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
             ${{ env.XCFRAMEWORK_NAME }}
           retention-days: 1
 
@@ -281,10 +383,96 @@ jobs:
           path: dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
           retention-days: 1
 
+  build-linux-musl-x86:
+    name: Build Linux MUSL x86_64
+    runs-on: ubuntu-24.04
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install protoc
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq protobuf-compiler
+
+      - name: Install MUSL tools
+        run: |
+          sudo apt-get install -y -qq musl-tools musl-dev
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          . "$HOME/.cargo/env"
+          rustup install ${{ env.RUST_VERSION }}
+          rustup target add x86_64-unknown-linux-musl
+
+      - name: Build Linux MUSL x86_64
+        run: |
+          . "$HOME/.cargo/env"
+          cd ${{ env.RUST_PROJECT_DIR }}
+          cargo rustc \
+            --release \
+            --target x86_64-unknown-linux-musl \
+            --features xz2-static \
+            --crate-type=staticlib
+
+      - name: Upload Linux MUSL x86_64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-musl-x86-libraries
+          path: dependencies/sdk-core/target/x86_64-unknown-linux-musl/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+          retention-days: 1
+
+  build-linux-musl-arm:
+    name: Build Linux MUSL ARM64
+    runs-on: ubuntu-24.04-arm
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install protoc
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq protobuf-compiler
+
+      - name: Install MUSL tools
+        run: |
+          sudo apt-get install -y -qq musl-tools musl-dev
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          . "$HOME/.cargo/env"
+          rustup install ${{ env.RUST_VERSION }}
+          rustup target add aarch64-unknown-linux-musl
+
+      - name: Build Linux MUSL ARM64
+        run: |
+          . "$HOME/.cargo/env"
+          cd ${{ env.RUST_PROJECT_DIR }}
+          cargo rustc \
+            --release \
+            --target aarch64-unknown-linux-musl \
+            --features xz2-static \
+            --crate-type=staticlib
+
+      - name: Upload Linux MUSL ARM64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-musl-arm-libraries
+          path: dependencies/sdk-core/target/aarch64-unknown-linux-musl/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+          retention-days: 1
+
   assemble-bundle:
     name: Assemble artifact bundle
     runs-on: ubuntu-latest
-    needs: [setup, build-macos, build-linux-x86, build-linux-arm]
+    needs: [setup, build-macos, build-linux-x86, build-linux-arm, build-linux-musl-x86, build-linux-musl-arm]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -301,6 +489,8 @@ jobs:
           find macos-libraries/ -type f -name "*" || echo "macos-libraries not found"
           find linux-x86-libraries/ -type f -name "*" || echo "linux-x86-libraries not found"
           find linux-arm-libraries/ -type f -name "*" || echo "linux-arm-libraries not found"
+          find linux-musl-x86-libraries/ -type f -name "*" || echo "linux-musl-x86-libraries not found"
+          find linux-musl-arm-libraries/ -type f -name "*" || echo "linux-musl-arm-libraries not found"
 
           # The artifacts already contain the full directory structure
           # Just copy them to the current directory
@@ -315,6 +505,8 @@ jobs:
           # Create Linux target directories and copy Linux libraries
           mkdir -p dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release
           mkdir -p dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release
+          mkdir -p dependencies/sdk-core/target/x86_64-unknown-linux-musl/release
+          mkdir -p dependencies/sdk-core/target/aarch64-unknown-linux-musl/release
 
           if [ -f "linux-x86-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }}" ]; then
             cp linux-x86-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
@@ -331,6 +523,24 @@ jobs:
             echo "✅ Copied Linux ARM64 library"
           else
             echo "Error: Linux ARM64 library not found"
+            exit 1
+          fi
+
+          if [ -f "linux-musl-x86-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }}" ]; then
+            cp linux-musl-x86-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
+               dependencies/sdk-core/target/x86_64-unknown-linux-musl/release/
+            echo "✅ Copied Linux MUSL x86_64 library"
+          else
+            echo "Error: Linux MUSL x86_64 library not found"
+            exit 1
+          fi
+
+          if [ -f "linux-musl-arm-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }}" ]; then
+            cp linux-musl-arm-libraries/${{ env.TEMPORAL_BUILT_LIB_NAME }} \
+               dependencies/sdk-core/target/aarch64-unknown-linux-musl/release/
+            echo "✅ Copied Linux MUSL ARM64 library"
+          else
+            echo "Error: Linux MUSL ARM64 library not found"
             exit 1
           fi
 
@@ -361,14 +571,31 @@ jobs:
       - name: Copy platform libraries to bundle
         run: |
           # Copy all platform libraries to bundle
+          # macOS
           cp "dependencies/sdk-core/target/x86_64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
              "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-macos-x86_64.a"
           cp "dependencies/sdk-core/target/aarch64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
              "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-macos-arm64.a"
+
+          # iOS
+          cp "dependencies/sdk-core/target/aarch64-apple-ios/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+             "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-ios-arm64.a"
+          cp "dependencies/sdk-core/target/x86_64-apple-ios/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+             "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-ios-x86_64.a"
+          cp "dependencies/sdk-core/target/aarch64-apple-ios-sim/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+             "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-ios-sim-arm64.a"
+
+          # Linux
           cp "dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
              "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-linux-x86_64.a"
           cp "dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
              "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-linux-arm64.a"
+
+          # Linux MUSL
+          cp "dependencies/sdk-core/target/x86_64-unknown-linux-musl/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+             "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-linux-musl-x86_64.a"
+          cp "dependencies/sdk-core/target/aarch64-unknown-linux-musl/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+             "${{ env.ARTIFACT_BUNDLE_NAME }}/temporal/libTemporal-linux-musl-arm64.a"
 
       - name: Generate artifact bundle manifest
         run: |
@@ -397,6 +624,30 @@ jobs:
                               }
                           },
                           {
+                              "path": "temporal/libTemporal-ios-arm64.a",
+                              "supportedTriples": ["arm64-apple-ios"],
+                              "staticLibraryMetadata": {
+                                  "headerPaths": ["include"],
+                                  "moduleMapPath": "include/module.modulemap"
+                              }
+                          },
+                          {
+                              "path": "temporal/libTemporal-ios-x86_64.a",
+                              "supportedTriples": ["x86_64-apple-ios"],
+                              "staticLibraryMetadata": {
+                                  "headerPaths": ["include"],
+                                  "moduleMapPath": "include/module.modulemap"
+                              }
+                          },
+                          {
+                              "path": "temporal/libTemporal-ios-sim-arm64.a",
+                              "supportedTriples": ["arm64-apple-ios-simulator"],
+                              "staticLibraryMetadata": {
+                                  "headerPaths": ["include"],
+                                  "moduleMapPath": "include/module.modulemap"
+                              }
+                          },
+                          {
                               "path": "temporal/libTemporal-linux-x86_64.a",
                               "supportedTriples": ["x86_64-unknown-linux-gnu"],
                               "staticLibraryMetadata": {
@@ -407,6 +658,22 @@ jobs:
                           {
                               "path": "temporal/libTemporal-linux-arm64.a",
                               "supportedTriples": ["aarch64-unknown-linux-gnu"],
+                              "staticLibraryMetadata": {
+                                  "headerPaths": ["include"],
+                                  "moduleMapPath": "include/module.modulemap"
+                              }
+                          },
+                          {
+                              "path": "temporal/libTemporal-linux-musl-x86_64.a",
+                              "supportedTriples": ["x86_64-swift-linux-musl"],
+                              "staticLibraryMetadata": {
+                                  "headerPaths": ["include"],
+                                  "moduleMapPath": "include/module.modulemap"
+                              }
+                          },
+                          {
+                              "path": "temporal/libTemporal-linux-musl-arm64.a",
+                              "supportedTriples": ["aarch64-swift-linux-musl"],
                               "staticLibraryMetadata": {
                                   "headerPaths": ["include"],
                                   "moduleMapPath": "include/module.modulemap"
