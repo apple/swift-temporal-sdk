@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(Testing)
 import GRPCNIOTransportHTTP2Posix
 import Logging
 import Temporal
@@ -552,3 +553,4 @@ extension Trait where Self == TemporalTimeSkippingTestServerTrait {
         Self()
     }
 }
+#endif
