@@ -21,20 +21,29 @@ extension BridgeClient {
         let unaryGrpcRequest: UnaryCall<UInt8ArraySerializer, UInt8ArrayDeserializer>
         let clientName: String = TemporalWorker.Configuration.workerClientName
         let clientVersion: String = TemporalWorker.Configuration.workerClientVersion
+        let apiKey: String?
 
         var metadata: Metadata {
             var metadata: Metadata = [:]
             metadata.addString(self.clientName, forKey: "client-name")
             metadata.addString(self.clientVersion, forKey: "client-version")
+
+            // Add API key authentication if provided
+            if let apiKey = self.apiKey {
+                metadata.addString("Bearer \(apiKey)", forKey: "authorization")
+            }
+
             return metadata
         }
 
         init(
             queue: WorkerClientQueue<[UInt8]>,
-            unaryGrpcRequest: @escaping UnaryCall<UInt8ArraySerializer, UInt8ArrayDeserializer>
+            unaryGrpcRequest: @escaping UnaryCall<UInt8ArraySerializer, UInt8ArrayDeserializer>,
+            apiKey: String? = nil
         ) {
             self.queue = queue
             self.unaryGrpcRequest = unaryGrpcRequest
+            self.apiKey = apiKey
         }
     }
 }

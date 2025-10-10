@@ -297,6 +297,16 @@ extension TemporalWorker {
         /// ``TemporalWorkerTracingInterceptor`` for distributed tracing.
         public var interceptors: [any WorkerInterceptor]
 
+        /// Optional API key for authenticating with Temporal Cloud.
+        ///
+        /// When provided, the API key is sent as a Bearer token in the `authorization` header with all
+        /// requests to the Temporal server. This provides an alternative to mTLS certificate authentication
+        /// for Temporal Cloud deployments.
+        ///
+        /// If both an API key and mTLS certificates are configured, the API key takes precedence for
+        /// authentication while mTLS is still used for transport encryption.
+        public var apiKey: String?
+
         // –– Workflows ––
         /// Polling behavior for workflows (default max `5`).
         public var workflowTaskPollerBehavior: PollerBehavior = .simpleMaximum(maximum: 5)
@@ -364,6 +374,7 @@ extension TemporalWorker {
         ///   - instrumentation: The worker client's instrumentation configuration.
         ///   - versioningStrategy: Versioning strategy of the worker, defaults to none.
         ///   - clientIdentity: A human-readable string that identifies the worker client. By default, it is set to the SDK name and version followed by a randomly generated ID.
+        ///   - apiKey: Optional API key for Temporal Cloud authentication. When provided, it is sent as a Bearer token in the authorization header.
         ///   - dataConverter: Converts to encode and decode ``TemporalPayload``s before sending it.
         ///   - interceptors: Interceptors of the worker, earlier ones wrap later ones. Defaults to a tracing interceptor.
         public init(
@@ -372,6 +383,7 @@ extension TemporalWorker {
             instrumentation: Instrumentation,
             versioningStrategy: VersioningStrategy = .none(.init()),
             clientIdentity: String? = nil,
+            apiKey: String? = nil,
             dataConverter: DataConverter = DataConverter.default,
             interceptors: [any WorkerInterceptor] = [TemporalWorkerTracingInterceptor()]
         ) {
@@ -382,6 +394,7 @@ extension TemporalWorker {
             self.clientIdentity =
                 clientIdentity
                 ?? "\(Self.workerClientName)-\(Self.workerClientVersion)-\(UUID().uuidString.replacingOccurrences(of: "-", with: "").suffix(5))"
+            self.apiKey = apiKey
             self.dataConverter = dataConverter
             self.interceptors = interceptors
         }

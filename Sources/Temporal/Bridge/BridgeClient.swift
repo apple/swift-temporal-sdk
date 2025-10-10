@@ -85,7 +85,7 @@ package struct BridgeClient: ~Copyable, Sendable {
             }
 
             // Build user_data context and retain it (as we're in a with style function)
-            let context = GrpcOverrideContext(queue: queue, unaryGrpcRequest: grpcClient.unary)
+            let context = GrpcOverrideContext(queue: queue, unaryGrpcRequest: grpcClient.unary, apiKey: configuration.apiKey)
 
             // Swift-based RPC handling
             let grpcCallback: TemporalCoreClientGrpcOverrideCallback = { request_pointer, user_data in
@@ -102,7 +102,7 @@ package struct BridgeClient: ~Copyable, Sendable {
                 let requestMetadata = Dictionary(
                     uniqueKeysWithValues: stride(from: 0, to: requestMetadataComponents.count - 1, by: 2)
                         .map { (requestMetadataComponents[$0], requestMetadataComponents[$0 + 1]) }
-                ).reduce(into: GRPCCore.Metadata()) { partialResult, metadata in
+                ).reduce(into: context.metadata) { partialResult, metadata in
                     if metadata.key == "content-type" || metadata.key == "te" {
                         return  // skip reserved gRPC transport-managed headers
                     }

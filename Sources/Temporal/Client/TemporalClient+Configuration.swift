@@ -49,6 +49,16 @@ extension TemporalClient {
         /// authentication, and request modification. Interceptors are applied in the order they appear in this array.
         public var interceptors: [any ClientInterceptor]
 
+        /// Optional API key for authenticating with Temporal Cloud.
+        ///
+        /// When provided, the API key is sent as a Bearer token in the `authorization` header with all
+        /// requests to the Temporal server. This provides an alternative to mTLS certificate authentication
+        /// for Temporal Cloud deployments.
+        ///
+        /// If both an API key and mTLS certificates are configured, the API key takes precedence for
+        /// authentication while mTLS is still used for transport encryption.
+        public var apiKey: String?
+
         /// The SDK name identifier sent in all RPC calls to identify the client implementation.
         ///
         /// This constant value identifies this SDK implementation to the Temporal server and appears in
@@ -86,18 +96,21 @@ extension TemporalClient {
         ///   - instrumentation: Configuration that controls tracing and observability features.
         ///   - namespace: The Temporal namespace that scopes workflow and activity executions. Defaults to "default".
         ///   - identity: A human-readable identifier for this client process. If `nil`, an identity is generated from the SDK name and version.
+        ///   - apiKey: Optional API key for Temporal Cloud authentication. When provided, it is sent as a Bearer token in the authorization header.
         ///   - dataConverter: The converter that handles serialization of workflow data. Defaults to the standard JSON converter.
         ///   - interceptors: Request processing interceptors applied in the specified order. Defaults to the tracing interceptor.
         public init(
             instrumentation: Instrumentation,
             namespace: String = "default",
             identity: String? = nil,
+            apiKey: String? = nil,
             dataConverter: DataConverter = DataConverter.default,
             interceptors: [any ClientInterceptor] = [TemporalClientTracingInterceptor()]
         ) {
             self.instrumentation = instrumentation
             self.namespace = namespace
             self.identity = identity ?? "\(self.clientName)-\(self.clientVersion)"
+            self.apiKey = apiKey
             self.dataConverter = dataConverter
             self.interceptors = interceptors
         }
