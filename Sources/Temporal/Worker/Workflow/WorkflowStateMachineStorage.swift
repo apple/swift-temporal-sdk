@@ -87,7 +87,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
 
         let convertedSummary = try summary.flatMap { try self.payloadConverter.convertValue($0) }
 
-        let sequenceNumber = self.stateMachine.nextSequenceNumber()
+        let sequenceNumber = self.stateMachine.nextTimerSequenceNumber()
         try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
                 self.stateMachine.sleep(
@@ -187,11 +187,11 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         var options = options
         let isLocal = options.isLocal
         while true {
-            let id = self.stateMachine.nextSequenceNumber()
+            let sequenceNumber = self.stateMachine.nextActivitySequenceNumber()
             let result = try await withTaskCancellationHandler {
                 try await withCheckedThrowingContinuation { continuation in
                     self.stateMachine.scheduleActivityExecution(
-                        id: id,
+                        sequenceNumber: sequenceNumber,
                         activityType: activityType,
                         options: options,
                         workflowTaskQueue: workflowTaskQueue,
@@ -203,7 +203,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
             } onCancel: {
                 // No need to worry about this being called before the actual operation as we check earlier in the method and there are no possible
                 // suspension points.
-                self.stateMachine.cancelActivity(id: id, isLocal: isLocal)
+                self.stateMachine.cancelActivity(sequenceNumber: sequenceNumber, isLocal: isLocal)
             }
 
             switch result.status {
@@ -283,7 +283,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
             )
         }
 
-        let sequenceNumber = self.stateMachine.nextSequenceNumber()
+        let sequenceNumber = self.stateMachine.nextChildWorkflowSequenceNumber()
         let state = UntypedChildWorkflowHandle.State(resolutionState: .unresolved(sequenceNumber: sequenceNumber))
         let (workflowID, firstExecutionRunID) = try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
@@ -379,7 +379,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
             )
         }
 
-        let sequenceNumber = self.stateMachine.nextSequenceNumber()
+        let sequenceNumber = self.stateMachine.nextExternalSignalSequenceNumber()
         try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
                 self.stateMachine.signalChildWorkflow(
