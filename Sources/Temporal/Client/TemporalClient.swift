@@ -104,6 +104,7 @@ public final class TemporalClient: Sendable {
         var metadata: GRPCCore.Metadata = [:]
         metadata.addString(configuration.clientName, forKey: "client-name")
         metadata.addString(configuration.clientVersion, forKey: "client-version")
+        metadata.addString(configuration.namespace, forKey: "temporal-namespace")
 
         // Add API key authentication if provided
         if let apiKey = configuration.apiKey {

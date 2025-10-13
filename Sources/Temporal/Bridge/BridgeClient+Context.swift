@@ -19,21 +19,13 @@ extension BridgeClient {
         let queue: WorkerClientQueue<[UInt8]>
         // Capture the `unary` gRPC method from `AnyUInt8GRPCClient` so that we avoid generics (C-closures can't capture generics)
         let unaryGrpcRequest: UnaryCall<UInt8ArraySerializer, UInt8ArrayDeserializer>
-        let clientName: String = TemporalWorker.Configuration.workerClientName
-        let clientVersion: String = TemporalWorker.Configuration.workerClientVersion
-        let apiKey: String?
 
+        // NOTE: Headers (client-name, client-version, temporal-namespace, authorization/api-key)
+        // are ALL handled by the Rust core SDK. We return an empty Metadata here and let
+        // the Rust core's headers come through via the request_headers in the grpcCallback.
+        // This avoids duplicate header definitions and ensures consistency with other language SDKs.
         var metadata: Metadata {
-            var metadata: Metadata = [:]
-            metadata.addString(self.clientName, forKey: "client-name")
-            metadata.addString(self.clientVersion, forKey: "client-version")
-
-            // Add API key authentication if provided
-            if let apiKey = self.apiKey {
-                metadata.addString("Bearer \(apiKey)", forKey: "authorization")
-            }
-
-            return metadata
+            return [:]
         }
 
         init(
@@ -43,7 +35,7 @@ extension BridgeClient {
         ) {
             self.queue = queue
             self.unaryGrpcRequest = unaryGrpcRequest
-            self.apiKey = apiKey
+            // apiKey is passed to Rust core via TemporalWorker.Configuration, not used here
         }
     }
 }

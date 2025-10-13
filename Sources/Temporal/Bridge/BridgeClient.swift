@@ -265,23 +265,26 @@ package struct BridgeClient: ~Copyable, Sendable {
                     // has to be a valid URL, otherwise input validation fails
                     try "https://dummy.temporal.com".withByteArrayRef { dummy_target_url in
                         try "".withByteArrayRef { empty_string in
-                            let options = TemporalCoreClientOptions(
-                                target_url: dummy_target_url,  // Dummy URL as gRPC connection is handled by Swift
-                                client_name: client_name,
-                                client_version: client_version,
-                                metadata: empty_string,
-                                api_key: empty_string,
-                                identity: identityBytes,
-                                tls_options: nil,  // Empty TLS config as auth is handled by Swift
-                                retry_options: nil,  // Default is picked when passing `nil`
-                                keep_alive_options: nil,  // Default is picked when passing `nil`, HTTP2 gRPC keep alive enabled.
-                                http_connect_proxy_options: nil,
-                                grpc_override_callback: grpcCallback,
-                                grpc_override_callback_user_data: grpcCallbackUserDataPointer
-                            )
+                            // Pass API key to Rust core if provided
+                            try (configuration.apiKey ?? "").withByteArrayRef { api_key_bytes in
+                                let options = TemporalCoreClientOptions(
+                                    target_url: dummy_target_url,  // Dummy URL as gRPC connection is handled by Swift
+                                    client_name: client_name,
+                                    client_version: client_version,
+                                    metadata: empty_string,
+                                    api_key: api_key_bytes,  // Now passes the actual API key to Rust core
+                                    identity: identityBytes,
+                                    tls_options: nil,  // Empty TLS config as auth is handled by Swift
+                                    retry_options: nil,  // Default is picked when passing `nil`
+                                    keep_alive_options: nil,  // Default is picked when passing `nil`, HTTP2 gRPC keep alive enabled.
+                                    http_connect_proxy_options: nil,
+                                    grpc_override_callback: grpcCallback,
+                                    grpc_override_callback_user_data: grpcCallbackUserDataPointer
+                                )
 
-                            return try withUnsafePointer(to: options) { unsafe_options in
-                                try body(unsafe_options)
+                                return try withUnsafePointer(to: options) { unsafe_options in
+                                    try body(unsafe_options)
+                                }
                             }
                         }
                     }
