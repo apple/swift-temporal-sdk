@@ -259,23 +259,18 @@ package struct BridgeClient: ~Copyable, Sendable {
         // Pass in user data fro grpc override
         let grpcCallbackUserDataPointer = Unmanaged.passUnretained(grpcCallbackUserData).toOpaque()
 
-        // Store API key in variable to ensure it lives long enough (avoid temporary string deallocation)
-        let apiKeyString = configuration.apiKey ?? ""
-
         return try TemporalWorker.Configuration.workerClientName.withByteArrayRef { client_name in
             try TemporalWorker.Configuration.workerClientVersion.withByteArrayRef { client_version in
                 try configuration.clientIdentity.withByteArrayRef { identityBytes in
                     // has to be a valid URL, otherwise input validation fails
                     try "https://dummy.temporal.com".withByteArrayRef { dummy_target_url in
                         try "".withByteArrayRef { empty_string in
-                            // Pass API key to Rust core if provided
-                            try apiKeyString.withByteArrayRef { api_key_bytes in
-                                let options = TemporalCoreClientOptions(
-                                    target_url: dummy_target_url,  // Dummy URL as gRPC connection is handled by Swift
-                                    client_name: client_name,
-                                    client_version: client_version,
-                                    metadata: empty_string,
-                                    api_key: api_key_bytes,  // Now passes the actual API key to Rust core
+                            let options = TemporalCoreClientOptions(
+                                target_url: dummy_target_url,  // Dummy URL as gRPC connection is handled by Swift
+                                client_name: client_name,
+                                client_version: client_version,
+                                metadata: empty_string,
+                                api_key: empty_string,  // Don't pass API key to Rust - Swift handles auth via gRPC headers
                                     identity: identityBytes,
                                     tls_options: nil,  // Empty TLS config as auth is handled by Swift
                                     retry_options: nil,  // Default is picked when passing `nil`
@@ -285,9 +280,8 @@ package struct BridgeClient: ~Copyable, Sendable {
                                     grpc_override_callback_user_data: grpcCallbackUserDataPointer
                                 )
 
-                                return try withUnsafePointer(to: options) { unsafe_options in
-                                    try body(unsafe_options)
-                                }
+                            return try withUnsafePointer(to: options) { unsafe_options in
+                                try body(unsafe_options)
                             }
                         }
                     }
