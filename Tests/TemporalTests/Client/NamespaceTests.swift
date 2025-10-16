@@ -59,7 +59,7 @@ extension TestServerDependentTests {
                 #expect(namespace.info.supportsSchedules == true)
                 #expect(namespace.info.capabilities.asyncUpdate == true)
                 #expect(namespace.info.capabilities.syncUpdate == true)
-                #expect(namespace.info.capabilities.eagerWorkflowStart == false)
+                #expect(namespace.info.capabilities.eagerWorkflowStart == true)
                 #expect(namespace.config.workflowExecutionRetentionTtl == workflowExecutionRetentionPeriod)
                 withKnownIssue(
                     "Temporal doesn't seem to acknowledge the `enabled` history archival state (inc. the URL), even though it is correctly set on the request"
@@ -75,7 +75,7 @@ extension TestServerDependentTests {
                 #expect(namespace.replicationConfig.activeClusterName == "active")
                 #expect(namespace.replicationConfig.clusters.count == 1)
                 #expect(namespace.replicationConfig.clusters.first == "active")
-                #expect(namespace.replicationConfig.state == nil)
+                #expect(namespace.replicationConfig.state == .normal)
 
                 // Fetch namespace via ID
                 let namespaceViaId = try await client.namespaceService.describeNamespace(namespace: .id(namespace.info.id))
