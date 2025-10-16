@@ -137,6 +137,7 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           . "$HOME/.cargo/env"
           rustup install ${{ env.RUST_VERSION }}
+          rustup default ${{ env.RUST_VERSION }}
           rustup target add x86_64-apple-darwin
           rustup target add aarch64-apple-darwin
           rustup target add aarch64-apple-ios
@@ -327,6 +328,7 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           . "$HOME/.cargo/env"
           rustup install ${{ env.RUST_VERSION }}
+          rustup default ${{ env.RUST_VERSION }}
 
       - name: Build Linux x86_64
         run: |
@@ -365,6 +367,7 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           . "$HOME/.cargo/env"
           rustup install ${{ env.RUST_VERSION }}
+          rustup default ${{ env.RUST_VERSION }}
 
       - name: Build Linux ARM64
         run: |
@@ -407,6 +410,7 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           . "$HOME/.cargo/env"
           rustup install ${{ env.RUST_VERSION }}
+          rustup default ${{ env.RUST_VERSION }}
           rustup target add x86_64-unknown-linux-musl
 
       - name: Build Linux MUSL x86_64
@@ -450,6 +454,7 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           . "$HOME/.cargo/env"
           rustup install ${{ env.RUST_VERSION }}
+          rustup default ${{ env.RUST_VERSION }}
           rustup target add aarch64-unknown-linux-musl
 
       - name: Build Linux MUSL ARM64
