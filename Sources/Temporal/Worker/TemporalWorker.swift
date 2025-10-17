@@ -160,10 +160,8 @@ where
                 ),
                 ClientOTelLoggingInterceptor(
                     logger: logger,
-                    serviceName: "swift-temporal-sdk.TemporalWorker.WorkerClient",
                     serverHostname: configuration.instrumentation.serverHostname,
                     networkTransportMethod: .tcp,
-                    serviceVersion: Constants.sdkVersion,
                     includeRequestMetadata: true,
                     includeResponseMetadata: true
                 ),

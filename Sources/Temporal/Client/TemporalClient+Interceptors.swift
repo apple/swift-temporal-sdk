@@ -44,10 +44,8 @@ extension TemporalClient {
             ),
             ClientOTelLoggingInterceptor(
                 logger: logger,
-                serviceName: "swift-temporal-sdk.TemporalClient",
                 serverHostname: serverHostname,
                 networkTransportMethod: .tcp,
-                serviceVersion: Constants.sdkVersion,
                 includeRequestMetadata: true,
                 includeResponseMetadata: true
             ),

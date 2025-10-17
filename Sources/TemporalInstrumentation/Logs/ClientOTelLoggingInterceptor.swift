@@ -22,8 +22,6 @@ package struct ClientOTelLoggingInterceptor: ClientInterceptor {
     private let logger: Logger
     private let serverHostname: String
     private let networkTransportMethod: SpanAttributes.NetworkAttributes.NestedSpanAttributes.TransportEnum
-    private let serviceName: String
-    private let serviceVersion: String?
     private var includeRequestMetadata: Bool
     private var includeResponseMetadata: Bool
 
@@ -31,26 +29,20 @@ package struct ClientOTelLoggingInterceptor: ClientInterceptor {
     ///
     /// - Parameters:
     ///   - logger: The `Logger` instance to-be-used in the interceptor. The `Logger.Metadata` should include trace and span IDs for log correlation.
-    ///   - serviceName: The name of the service being instrumented.
     ///   - severHostname: The hostname of the RPC server. This will be the value for the `server.address` attribute in spans.
     ///   - networkTransportMethod: The transport in use (e.g. "tcp", "unix"). This will be the value for the `network.transport` attribute in spans.
-    ///   - serviceVersion: Optional version of the service being instrumented, defaults to `nil`.
     ///   - includeRequestMetadata: if `true`, **all** metadata keys with string values included in the request will be added to the logger metadata.
     ///   - includeResponseMetadata: if `true`, **all** metadata keys with string values included in the response will be added to the logger metadata.
     package init(
         logger: Logger,
-        serviceName: String,
         serverHostname: String,
         networkTransportMethod: SpanAttributes.NetworkAttributes.NestedSpanAttributes.TransportEnum,
-        serviceVersion: String? = nil,
         includeRequestMetadata: Bool = false,
         includeResponseMetadata: Bool = false
     ) {
         self.logger = logger  // Should include trace and span IDs for log correlation
-        self.serviceName = serviceName
         self.serverHostname = serverHostname
         self.networkTransportMethod = networkTransportMethod
-        self.serviceVersion = serviceVersion
         self.includeRequestMetadata = includeRequestMetadata
         self.includeResponseMetadata = includeResponseMetadata
     }
@@ -65,8 +57,6 @@ package struct ClientOTelLoggingInterceptor: ClientInterceptor {
     ) async throws -> StreamingClientResponse<Output> {
         // Build logging metadata
         var metadata = context.metadata(
-            serviceName: self.serviceName,
-            serviceVersion: self.serviceVersion,
             serverHostname: self.serverHostname,
             networkTransportMethod: self.networkTransportMethod,
             requestMetadata: self.includeRequestMetadata ? request.metadata : [:]
