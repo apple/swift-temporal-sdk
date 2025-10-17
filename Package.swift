@@ -50,13 +50,13 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "Bridge",
-            url: "https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441/temporal.artifactbundle.zip",
-            checksum: "a457355ef39ef2d8609221e632682bbc06cfeb7a57691c96422fafa7a6350a39"
+            url: "https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441-6/temporal.artifactbundle.zip",
+            checksum: "c9c2e8f709e3b05362cae68a9ae45a437a1212b435e38d150e8925bded0a0973"
         ),
         .binaryTarget(
             name: "BridgeDarwin",
-            url: "https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441/temporal.xcframework.zip",
-            checksum: "edac56be6bf723f7f46e5dd13af59c9192e2660a2bf74953b96fa807abb54688"
+            url: "https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441-6/temporal.xcframework.zip",
+            checksum: "70a1a83a349058a0e2d422331012184256ee70199e6bb9f1cb946794f8bf8c7f"
         ),
         .target(
             name: "Temporal",
