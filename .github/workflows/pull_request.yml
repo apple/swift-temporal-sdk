@@ -33,9 +33,6 @@ jobs:
       watchos_xcode_build_enabled: false
       tvos_xcode_build_enabled: false
       visionos_xcode_build_enabled: false
-      # Pre-download binary artifacts to avoid HTTP proxy issues in CI
-      # SwiftPM will use these cached artifacts instead of downloading them through the proxy
-      xcode_26_0_setup_command: "mkdir -p .build/artifacts/swift-temporal-sdk/Bridge .build/artifacts/swift-temporal-sdk/BridgeDarwin && cd .build/artifacts/swift-temporal-sdk/Bridge && curl -sL https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441-3/temporal.artifactbundle.zip -o temporal.artifactbundle.zip && unzip -q temporal.artifactbundle.zip && rm temporal.artifactbundle.zip && cd ../BridgeDarwin && curl -sL https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441-3/temporal.xcframework.zip -o temporal.xcframework.zip && unzip -q temporal.xcframework.zip && rm temporal.xcframework.zip && cd ../../../.."
     secrets: inherit
 
   static-sdk:
