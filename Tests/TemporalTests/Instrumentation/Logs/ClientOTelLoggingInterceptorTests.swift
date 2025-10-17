@@ -40,17 +40,14 @@ struct ClientOTelLoggingInterceptorTests {
         let serviceName = "ClientOTelLoggingInterceptorTest"
         let serverHostname = "test.com"
         let transport: SpanAttributes.NetworkAttributes.NestedSpanAttributes.TransportEnum = .tcp
-        let serviceVersion = "1.2.3"
         let descriptor = MethodDescriptor(fullyQualifiedService: serviceName, method: "TestMethod")
         let remotePeer = "ipv4:123.45.67.89:1234"
         let localPeer = "ipv4:145.32.54.12:4321"
 
         let interceptor = ClientOTelLoggingInterceptor(
             logger: logger,
-            serviceName: serviceName,
             serverHostname: serverHostname,
             networkTransportMethod: transport,
-            serviceVersion: serviceVersion,
             includeRequestMetadata: true,
             includeResponseMetadata: true
         )
@@ -118,12 +115,6 @@ struct ClientOTelLoggingInterceptorTests {
             let rpcMethodName = try #require(log1.metadata?["rpc.method"])
             #expect(rpcMethodName == .string(descriptor.method))
 
-            // service metadata
-            let serviceName = try #require(log1.metadata?["service.name"])
-            #expect(serviceName == serviceName)
-            let serviceVersion = try #require(log1.metadata?["service.version"])
-            #expect(serviceVersion == serviceVersion)
-
             // network metadata
             let type = try #require(log1.metadata?["network.type"])
             #expect(type == "ipv4")
@@ -177,7 +168,6 @@ struct ClientOTelLoggingInterceptorTests {
 
         let interceptor = ClientOTelLoggingInterceptor(
             logger: logger,
-            serviceName: serviceName,
             serverHostname: "test.com",
             networkTransportMethod: .tcp,
             includeRequestMetadata: true,
@@ -238,10 +228,6 @@ struct ClientOTelLoggingInterceptorTests {
             #expect(rpcServiceName == .string(descriptor.service.fullyQualifiedService))
             let rpcMethodName = try #require(log1.metadata?["rpc.method"])
             #expect(rpcMethodName == .string(descriptor.method))
-
-            // service metadata
-            let serviceName = try #require(log1.metadata?["service.name"])
-            #expect(serviceName == serviceName)
 
             // Second "rejected RPC" log
             let log2 = try #require(entries.dropFirst().first)

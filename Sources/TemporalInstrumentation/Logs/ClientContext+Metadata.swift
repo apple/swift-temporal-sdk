@@ -19,19 +19,11 @@ import Tracing
 
 extension ClientContext {
     func metadata(
-        serviceName: String,
-        serviceVersion: String?,
         serverHostname: String,
         networkTransportMethod: SpanAttributes.NetworkAttributes.NestedSpanAttributes.TransportEnum,
         requestMetadata: GRPCCore.Metadata
     ) -> Logger.Metadata {
         var metadata: Logger.Metadata = [:]
-
-        // service-level identification
-        metadata.append(attribute: \.service.name, serviceName)
-        if let serviceVersion {
-            metadata.append(attribute: \.service.version, serviceVersion)
-        }
 
         // RPC info
         metadata.append(attribute: \.rpc.system, "grpc")
