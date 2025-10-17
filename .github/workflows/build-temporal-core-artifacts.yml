@@ -311,6 +311,9 @@ jobs:
   build-linux-x86:
     name: Build Linux x86_64
     runs-on: ubuntu-24.04
+    # Build in manylinux_2_28 container (glibc 2.28) for compatibility with Swift 6.2 Linux images
+    # This ensures the binary works with all official Swift images including amazonlinux2 (glibc 2.26)
+    container: quay.io/pypa/manylinux_2_28_x86_64
     needs: setup
     steps:
       - name: Checkout repository
@@ -320,8 +323,11 @@ jobs:
 
       - name: Install protoc
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq protobuf-compiler
+          # Install newer protobuf compiler that supports ruby_package option
+          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v28.3/protoc-28.3-linux-x86_64.zip
+          unzip -q protoc-28.3-linux-x86_64.zip -d /usr/local
+          rm protoc-28.3-linux-x86_64.zip
+          protoc --version
 
       - name: Install Rust
         run: |
@@ -350,6 +356,9 @@ jobs:
   build-linux-arm:
     name: Build Linux ARM64
     runs-on: ubuntu-24.04-arm
+    # Build in manylinux_2_28 container (glibc 2.28) for compatibility with Swift 6.2 Linux images
+    # This ensures the binary works with all official Swift images including amazonlinux2 (glibc 2.26)
+    container: quay.io/pypa/manylinux_2_28_aarch64
     needs: setup
     steps:
       - name: Checkout repository
@@ -359,8 +368,11 @@ jobs:
 
       - name: Install protoc
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq protobuf-compiler
+          # Install newer protobuf compiler that supports ruby_package option
+          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v28.3/protoc-28.3-linux-aarch_64.zip
+          unzip -q protoc-28.3-linux-aarch_64.zip -d /usr/local
+          rm protoc-28.3-linux-aarch_64.zip
+          protoc --version
 
       - name: Install Rust
         run: |
