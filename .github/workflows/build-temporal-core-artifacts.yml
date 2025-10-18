@@ -143,6 +143,8 @@ jobs:
           rustup target add aarch64-apple-ios
           rustup target add x86_64-apple-ios
           rustup target add aarch64-apple-ios-sim
+          rustup target add x86_64-apple-ios-macabi
+          rustup target add aarch64-apple-ios-macabi
 
       - name: Build macOS x86_64
         run: |
@@ -219,6 +221,36 @@ jobs:
             --features xz2-static \
             --crate-type=staticlib
 
+      - name: Build macOS Catalyst x86_64
+        run: |
+          export PATH="$PATH:$HOME/.local/bin"
+          . "$HOME/.cargo/env"
+          cd ${{ env.RUST_PROJECT_DIR }}
+          MACOSX_DEPLOYMENT_TARGET="15" \
+          IPHONEOS_DEPLOYMENT_TARGET="18" \
+          TVOS_DEPLOYMENT_TARGET="18" \
+          WATCHOS_DEPLOYMENT_TARGET="11" \
+          cargo rustc \
+            --release \
+            --target x86_64-apple-ios-macabi \
+            --features xz2-static \
+            --crate-type=staticlib
+
+      - name: Build macOS Catalyst arm64
+        run: |
+          export PATH="$PATH:$HOME/.local/bin"
+          . "$HOME/.cargo/env"
+          cd ${{ env.RUST_PROJECT_DIR }}
+          MACOSX_DEPLOYMENT_TARGET="15" \
+          IPHONEOS_DEPLOYMENT_TARGET="18" \
+          TVOS_DEPLOYMENT_TARGET="18" \
+          WATCHOS_DEPLOYMENT_TARGET="11" \
+          cargo rustc \
+            --release \
+            --target aarch64-apple-ios-macabi \
+            --features xz2-static \
+            --crate-type=staticlib
+
       - name: Create fat library
         run: |
           X86_64_LIB="dependencies/sdk-core/target/x86_64-apple-darwin/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}"
@@ -258,17 +290,26 @@ jobs:
             -output "libtemporal_ios_sim.a"
           echo "✅ iOS simulator library: libtemporal_ios_sim.a"
 
+          # macOS Catalyst
+          lipo -create \
+            "dependencies/sdk-core/target/x86_64-apple-ios-macabi/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+            "dependencies/sdk-core/target/aarch64-apple-ios-macabi/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}" \
+            -output "libtemporal_catalyst.a"
+          echo "✅ macOS Catalyst library: libtemporal_catalyst.a"
+
       - name: Create XCFramework
         run: |
           # Create temporary directories for each platform
           mkdir -p temp_macos/Headers
           mkdir -p temp_ios/Headers
           mkdir -p temp_ios_sim/Headers
+          mkdir -p temp_catalyst/Headers
 
           # Copy libraries and headers to each platform directory
           cp "libtemporal_fat.a" "temp_macos/libTemporal.a"
           cp "libtemporal_ios.a" "temp_ios/libTemporal.a"
           cp "libtemporal_ios_sim.a" "temp_ios_sim/libTemporal.a"
+          cp "libtemporal_catalyst.a" "temp_catalyst/libTemporal.a"
 
           # Copy headers to all platform directories
           for dir in temp_*/Headers; do
@@ -287,6 +328,7 @@ jobs:
               -library "temp_macos/libTemporal.a" -headers "temp_macos/Headers" \
               -library "temp_ios/libTemporal.a" -headers "temp_ios/Headers" \
               -library "temp_ios_sim/libTemporal.a" -headers "temp_ios_sim/Headers" \
+              -library "temp_catalyst/libTemporal.a" -headers "temp_catalyst/Headers" \
               -output "${{ env.XCFRAMEWORK_NAME }}"
 
           # Clean up temporary files
@@ -305,6 +347,8 @@ jobs:
             dependencies/sdk-core/target/aarch64-apple-ios/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
             dependencies/sdk-core/target/x86_64-apple-ios/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
             dependencies/sdk-core/target/aarch64-apple-ios-sim/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+            dependencies/sdk-core/target/x86_64-apple-ios-macabi/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
+            dependencies/sdk-core/target/aarch64-apple-ios-macabi/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
             ${{ env.XCFRAMEWORK_NAME }}
           retention-days: 1
 

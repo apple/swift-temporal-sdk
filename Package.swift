@@ -8,8 +8,6 @@ let package = Package(
     platforms: [
         .macOS(.v15),
         .iOS(.v18),
-        .tvOS(.v18),
-        .watchOS(.v11),
     ],
     products: [
         .library(
@@ -50,13 +48,13 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "Bridge",
-            url: "https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441-6/temporal.artifactbundle.zip",
-            checksum: "c9c2e8f709e3b05362cae68a9ae45a437a1212b435e38d150e8925bded0a0973"
+            url: "https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441-1/temporal.artifactbundle.zip",
+            checksum: "657ae88ac10ba93b6f1b282a30940d99c3df5a840473526570be6b01328c4afc"
         ),
         .binaryTarget(
             name: "BridgeDarwin",
-            url: "https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441-6/temporal.xcframework.zip",
-            checksum: "70a1a83a349058a0e2d422331012184256ee70199e6bb9f1cb946794f8bf8c7f"
+            url: "https://github.com/apple/swift-temporal-sdk/releases/download/temporal-sdk-core-682d441-1/temporal.xcframework.zip",
+            checksum: "7a6dd660d317b59be6ad79991c0ad73d8e5c809808f93777c8f13bdd439d87db"
         ),
         .target(
             name: "Temporal",
@@ -84,10 +82,8 @@ let package = Package(
                         .when(
                             platforms: [
                                 .macOS,
+                                .macCatalyst,
                                 .iOS,
-                                .tvOS,
-                                .watchOS,
-                                .visionOS,
                             ]
                         )
                 ),

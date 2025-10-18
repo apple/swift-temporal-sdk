@@ -22,6 +22,23 @@ jobs:
       linux_nightly_next_arguments_override: "-Xswiftc -require-explicit-sendable"
       linux_nightly_main_arguments_override: "-Xswiftc -require-explicit-sendable"
 
+  macos-tests:
+    name: macOS tests
+    uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
+    with:
+      runner_pool: general
+      build_scheme: swift-temporal-sdk-Package
+      xcode_16_3_enabled: false
+      xcode_16_4_enabled: false
+      watchos_xcode_build_enabled: false
+      tvos_xcode_build_enabled: false
+      visionos_xcode_build_enabled: false
+    secrets: inherit
+
+  static-sdk:
+    name: Static Linux Swift SDK
+    uses: apple/swift-nio/.github/workflows/static_sdk.yml@main
+
   cxx-interop:
     name: Cxx interop
     uses: apple/swift-nio/.github/workflows/cxx_interop.yml@main
