@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 /// Input parameters for fetching workflow history events in client interceptors.
 public struct FetchWorkflowHistoryEventsInput: Sendable {

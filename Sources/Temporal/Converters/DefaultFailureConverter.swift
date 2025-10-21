@@ -34,7 +34,7 @@ public struct DefaultFailureConverter: FailureConverter {
     ) -> TemporalFailure {
         // Use as TemporalFailureError if it already is one,
         // otherwise create a new one as an application failure
-        let temporalFailureError = error as? TemporalFailureError ?? ApplicationError(error: error)
+        let temporalFailureError = error as? any TemporalFailureError ?? ApplicationError(error: error)
 
         var temporalFailure = self.convertTemporalFailureError(
             temporalFailureError,
@@ -173,7 +173,7 @@ public struct DefaultFailureConverter: FailureConverter {
     }
 
     private func convertTemporalFailureError(
-        _ temporalFailureError: TemporalFailureError,
+        _ temporalFailureError: any TemporalFailureError,
         payloadConverter: some PayloadConverter
     ) -> TemporalFailure {
         var temporalFailure = TemporalFailure(

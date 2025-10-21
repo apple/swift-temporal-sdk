@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 /// Input parameters for creating workflow schedules in client interceptors.
 public struct CreateScheduleInput<Input: Sendable>: Sendable {

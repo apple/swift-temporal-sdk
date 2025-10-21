@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension Coresdk_WorkflowCommands_StartChildWorkflowExecution {
     init(
         sequenceNumber: UInt32,

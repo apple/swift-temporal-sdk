@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 #if canImport(FoundationEssentials)
 import struct FoundationEssentials.Data
 #else
@@ -162,7 +164,7 @@ extension TemporalClient.WorkflowService {
     ///   - dataConverter: Optional override for payload conversion.
     public func failAsyncActivity(
         activity: AsyncActivityHandle.Reference,
-        error: Error,
+        error: any Error,
         options: AsyncActivityFailOptions?,
         dataConverter: DataConverter? = nil
     ) async throws {

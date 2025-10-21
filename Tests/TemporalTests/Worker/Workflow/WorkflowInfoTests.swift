@@ -72,14 +72,14 @@ extension RetryPolicy: Codable {
     enum CodingKeys: String, CodingKey {
         case initialInterval, backoffCoefficient, maximumInterval, maximumAttempts
     }
-    public func encode(to encoder: any Encoder) throws {
+    func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(initialInterval, forKey: .initialInterval)
         try container.encode(backoffCoefficient, forKey: .backoffCoefficient)
         try container.encodeIfPresent(maximumInterval, forKey: .maximumInterval)
         try container.encode(maximumAttempts, forKey: .maximumAttempts)
     }
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self = try .init(
             initialInterval: container.decodeIfPresent(Duration.self, forKey: .initialInterval),
@@ -91,11 +91,11 @@ extension RetryPolicy: Codable {
 }
 
 extension TemporalRawValue: Codable {
-    public func encode(to encoder: any Encoder) throws {
+    func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(payload)
     }
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         self = .init(try container.decode(TemporalPayload.self))
     }
@@ -105,12 +105,12 @@ extension TemporalPayload: Codable {
     enum CodingKeys: String, CodingKey {
         case data, metadata
     }
-    public func encode(to encoder: any Encoder) throws {
+    func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(data, forKey: .data)
         try container.encode(metadata, forKey: .metadata)
     }
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self = try .init(
             data: container.decode([UInt8].self, forKey: .data),
@@ -123,13 +123,13 @@ extension WorkflowInfo.Parent: Codable {
     enum CodingKeys: String, CodingKey {
         case workflowID, runID, namespace
     }
-    public func encode(to encoder: any Encoder) throws {
+    func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(workflowID, forKey: .workflowID)
         try container.encode(runID, forKey: .runID)
         try container.encode(namespace, forKey: .namespace)
     }
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self = try .init(
             workflowID: container.decode(String.self, forKey: .workflowID),
@@ -146,7 +146,7 @@ extension WorkflowInfo: Codable {
         case runTimeout, taskTimeout, executionTimeout
         case lastFailure, lastResult, parent, retryPolicy
     }
-    public func encode(to encoder: any Encoder) throws {
+    func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(attempt, forKey: .attempt)
         try container.encode(startTime, forKey: .startTime)
@@ -168,7 +168,7 @@ extension WorkflowInfo: Codable {
         // NOTE: This currently doesn't encode lastFailure.
     }
 
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self = try .init(
             attempt: container.decode(Int.self, forKey: .attempt),

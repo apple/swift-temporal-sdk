@@ -54,7 +54,7 @@ public struct JSONPayloadConverter: EncodingPayloadConverter {
     }
 
     public func convertValue(_ value: some Any) throws -> TemporalPayload {
-        guard let encodable = value as? Encodable else {
+        guard let encodable = value as? any Encodable else {
             throw EncodingError()
         }
 
@@ -67,7 +67,7 @@ public struct JSONPayloadConverter: EncodingPayloadConverter {
         _ payload: TemporalPayload,
         as valueType: Value.Type
     ) throws -> Value {
-        guard let decodableType = Value.self as? Decodable.Type else {
+        guard let decodableType = Value.self as? any Decodable.Type else {
             throw DecodingError()
         }
 

@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension Temporal_Api_Workflowservice_V1_StartWorkflowExecutionRequest {
     package init(
         namespace: String,

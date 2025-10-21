@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension ScheduleInfo {
     init(proto: Temporal_Api_Schedule_V1_ScheduleInfo) {
         self.numActions = Int(proto.actionCount)

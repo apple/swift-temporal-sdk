@@ -51,7 +51,7 @@ final class TestMetricsFactory: MetricsFactory {
         self._timers.withLock { $0.removeAll() }
     }
 
-    func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
+    func makeCounter(label: String, dimensions: [(String, String)]) -> any CounterHandler {
         self._counters.withLock { counters in
             if let existing = counters[.init(label: label, dimensions: dimensions)] {
                 return existing
@@ -62,7 +62,7 @@ final class TestMetricsFactory: MetricsFactory {
         }
     }
 
-    func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
+    func makeMeter(label: String, dimensions: [(String, String)]) -> any MeterHandler {
         self._meters.withLock { meters in
             if let existing = meters[.init(label: label, dimensions: dimensions)] {
                 return existing
@@ -73,7 +73,7 @@ final class TestMetricsFactory: MetricsFactory {
         }
     }
 
-    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> any RecorderHandler {
         self._recorders.withLock { recorders in
             if let existing = recorders[.init(label: label, dimensions: dimensions)] {
                 return existing
@@ -84,7 +84,7 @@ final class TestMetricsFactory: MetricsFactory {
         }
     }
 
-    func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
+    func makeTimer(label: String, dimensions: [(String, String)]) -> any TimerHandler {
         self._timers.withLock { timers in
             if let existing = timers[.init(label: label, dimensions: dimensions)] {
                 return existing
@@ -95,7 +95,7 @@ final class TestMetricsFactory: MetricsFactory {
         }
     }
 
-    func destroyCounter(_ handler: CounterHandler) {
+    func destroyCounter(_ handler: any CounterHandler) {
         if let testCounter = handler as? TestCounter {
             _ = self._counters.withLock { counters in
                 counters.removeValue(forKey: testCounter.key)
@@ -103,7 +103,7 @@ final class TestMetricsFactory: MetricsFactory {
         }
     }
 
-    func destroyMeter(_ handler: MeterHandler) {
+    func destroyMeter(_ handler: any MeterHandler) {
         if let testMeter = handler as? TestMeter {
             _ = self._meters.withLock { meters in
                 meters.removeValue(forKey: testMeter.key)
@@ -111,7 +111,7 @@ final class TestMetricsFactory: MetricsFactory {
         }
     }
 
-    func destroyRecorder(_ handler: RecorderHandler) {
+    func destroyRecorder(_ handler: any RecorderHandler) {
         if let testRecorder = handler as? TestRecorder {
             _ = self._recorders.withLock { recorders in
                 recorders.removeValue(forKey: testRecorder.key)
@@ -119,7 +119,7 @@ final class TestMetricsFactory: MetricsFactory {
         }
     }
 
-    func destroyTimer(_ handler: TimerHandler) {
+    func destroyTimer(_ handler: any TimerHandler) {
         if let testTimer = handler as? TestTimer {
             _ = self._timers.withLock { timers in
                 timers.removeValue(forKey: testTimer.key)
@@ -538,7 +538,7 @@ final class TestTimer: TestMetric, TimerHandler, Equatable {
 
 enum TestMetricsError: Error {
     case missingMetric(label: String, dimensions: [(String, String)])
-    case illegalMetricType(metric: Sendable, expected: String)
+    case illegalMetricType(metric: any Sendable, expected: String)
 }
 
 // MARK: - Sendable support

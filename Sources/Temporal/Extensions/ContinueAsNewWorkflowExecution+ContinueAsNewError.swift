@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension Coresdk_WorkflowCommands_ContinueAsNewWorkflowExecution {
     init(continueAsNewError: ContinueAsNewError) {
         self = .with {

@@ -12,7 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Tracing
+import GRPCCore
+package import Tracing
 
 extension TemporalClientTracingInterceptor {
     /// Outbound client interceptor that instruments all client requests with distributed tracing.

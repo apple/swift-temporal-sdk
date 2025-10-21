@@ -49,18 +49,18 @@ struct MultipleActivitiesActivities {
         let orderId: String
         let status: String
     }
-    private let inventoryService: InventoryService
-    private let paymentService: PaymentService
-    private let shippingService: ShippingService
-    private let notificationService: NotificationService
-    private let orderDatabase: OrderDatabase
+    private let inventoryService: any InventoryService
+    private let paymentService: any PaymentService
+    private let shippingService: any ShippingService
+    private let notificationService: any NotificationService
+    private let orderDatabase: any OrderDatabase
 
     init(
-        inventoryService: InventoryService,
-        paymentService: PaymentService,
-        shippingService: ShippingService,
-        notificationService: NotificationService,
-        orderDatabase: OrderDatabase
+        inventoryService: any InventoryService,
+        paymentService: any PaymentService,
+        shippingService: any ShippingService,
+        notificationService: any NotificationService,
+        orderDatabase: any OrderDatabase
     ) {
         self.inventoryService = inventoryService
         self.paymentService = paymentService

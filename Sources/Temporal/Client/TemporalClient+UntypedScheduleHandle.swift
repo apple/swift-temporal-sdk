@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 extension TemporalClient {
@@ -92,7 +92,7 @@ extension TemporalClient.Interceptor {
     func createSchedule<Input>(
         _ input: CreateScheduleInput<Input>
     ) async throws -> UntypedScheduleHandle {
-        try await self.intercept(ClientOutboundInterceptor.createSchedule, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).createSchedule, input: input) { input in
             try await self.workflowService.createSchedule(
                 id: input.id,
                 schedule: input.schedule,
@@ -109,7 +109,7 @@ extension TemporalClient.Interceptor {
     func listSchedules(
         _ input: ListSchedulesInput
     ) async throws -> some AsyncSequence<ScheduleListDescription, any Error> & Sendable {
-        try await self.intercept(ClientOutboundInterceptor.listSchedules, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).listSchedules, input: input) { input in
             try await self.workflowService.listSchedules(
                 query: input.query ?? "",
                 callOptions: input.callOptions

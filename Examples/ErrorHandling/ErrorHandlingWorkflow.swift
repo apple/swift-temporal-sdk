@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Temporal
 
 /// Demonstrates error handling and compensation patterns in Temporal workflows.

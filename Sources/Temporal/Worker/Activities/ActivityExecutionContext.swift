@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Data
+import SwiftProtobuf
+
+public import struct Foundation.Data
 public import struct Foundation.Date
 
 /// Execution context information and utilities available during activity execution.
@@ -324,7 +326,7 @@ extension ActivityExecutionContext.Implementation {
         heartbeatContinuation: AsyncStream<[any Sendable]>.Continuation,
         input: HeartbeatInput<repeat each Detail>
     ) {
-        intercept(ActivityOutboundInterceptor.heartbeat, input: input) { input in
+        intercept((any ActivityOutboundInterceptor).heartbeat, input: input) { input in
             var anyDetails = [any Sendable]()
             for detail in repeat each input.details {
                 anyDetails.append(detail)

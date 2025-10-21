@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Configuration
+public import Configuration
 
 extension TemporalClient.Configuration {
     /// Configuration settings that control instrumentation features including tracing and observability.

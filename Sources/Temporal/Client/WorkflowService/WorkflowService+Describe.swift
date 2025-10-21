@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+import SwiftProtobuf
+
+public import struct GRPCCore.CallOptions
 
 extension TemporalClient.WorkflowService {
     /// Returns information about a specific workflow execution.

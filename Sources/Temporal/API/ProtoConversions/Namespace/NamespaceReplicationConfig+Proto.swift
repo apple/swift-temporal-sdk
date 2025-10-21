@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension NamespaceReplicationConfig {
     init(proto: Temporal_Api_Replication_V1_NamespaceReplicationConfig) {
         self.activeClusterName = proto.activeClusterName.isEmpty ? nil : proto.activeClusterName

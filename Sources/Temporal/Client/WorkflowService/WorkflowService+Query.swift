@@ -12,7 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import GRPCCore
+public import GRPCCore
+import SwiftProtobuf
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials

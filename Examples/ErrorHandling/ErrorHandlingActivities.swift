@@ -46,12 +46,12 @@ struct ErrorHandlingActivities {
 
     // MARK: - Fake Services
 
-    private let reservationService: ReservationService
-    private let paymentService: PaymentServiceProtocol
+    private let reservationService: any ReservationService
+    private let paymentService: any PaymentServiceProtocol
 
     init(
-        reservationService: ReservationService,
-        paymentService: PaymentServiceProtocol
+        reservationService: any ReservationService,
+        paymentService: any PaymentServiceProtocol
     ) {
         self.reservationService = reservationService
         self.paymentService = paymentService

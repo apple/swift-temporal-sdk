@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 /// Configuration options for schedule creation and initial behavior.
 public struct ScheduleOptions: Sendable {

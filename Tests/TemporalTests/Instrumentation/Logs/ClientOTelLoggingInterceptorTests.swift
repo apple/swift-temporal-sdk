@@ -14,6 +14,8 @@
 
 import GRPCCore
 import Logging
+import OTelSemanticConventions
+import Synchronization
 import Temporal
 import TemporalInstrumentation
 import TemporalTestKit

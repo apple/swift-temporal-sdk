@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension NamespaceBadBinaries {
     init(proto: Temporal_Api_Namespace_V1_BadBinaries) {
         self.binaries = proto.binaries.mapValues { .init(proto: $0) }

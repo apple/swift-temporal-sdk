@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
+import SwiftProtobuf
 
 /// A workflow runner is responsible for handling a single instance of a workflow.
 ///
@@ -881,7 +882,7 @@ struct WorkflowInstance: Sendable {
             // complete), rejected (failed validation), success, and failure.
             // Core just combines rejection (i.e. during validation) and failure (i.e. after validation) into the
             // same field in the proto and calls it "rejection".
-            if let temporalFailureError = error as? TemporalFailureError {
+            if let temporalFailureError = error as? any TemporalFailureError {
                 let temporalFailure = self.failureConverter.convertError(temporalFailureError, payloadConverter: self.payloadConverter)
                 self.stateMachine.updateRejected(id: id, temporalFailure: temporalFailure)
             } else {
@@ -905,7 +906,7 @@ struct WorkflowInstance: Sendable {
         if let continueAsNewError = error as? ContinueAsNewError {
             self.logger.debug("Workflow requested continue as new")
             self.stateMachine.continueAsNew(continueAsNewError)
-        } else if let temporalFailureError = error as? TemporalFailureError {
+        } else if let temporalFailureError = error as? any TemporalFailureError {
             // If the thrown error is a temporal failure error it needs to fail the whole
             // workflow.
             let temporalFailure = self.failureConverter.convertError(temporalFailureError, payloadConverter: self.payloadConverter)
@@ -933,7 +934,7 @@ extension WorkflowInstance.Implementation {
     ) async throws -> Workflow.Output {
         try await Temporal.Workflow.$context.withValue(context) {
             try await WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
-                try await intercept(WorkflowInboundInterceptor.executeWorkflow, input: input) { input in
+                try await intercept((any WorkflowInboundInterceptor).executeWorkflow, input: input) { input in
                     try await WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
                         try await workflow.run(input: input.input)
                     }
@@ -949,7 +950,7 @@ extension WorkflowInstance.Implementation {
     ) async throws {
         try await Temporal.Workflow.$context.withValue(context) {
             try await WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
-                try await intercept(WorkflowInboundInterceptor.handleSignal, input: input) { input in
+                try await intercept((any WorkflowInboundInterceptor).handleSignal, input: input) { input in
                     try await WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
                         try await input.definition.run(
                             workflow: workflow,
@@ -968,7 +969,7 @@ extension WorkflowInstance.Implementation {
     ) throws -> Query.Output {
         try Temporal.Workflow.$context.withValue(context) {
             try WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
-                try intercept(WorkflowInboundInterceptor.handleQuery, input: input) { input in
+                try intercept((any WorkflowInboundInterceptor).handleQuery, input: input) { input in
                     try WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
                         try input.definition.run(
                             workflow: workflow,
@@ -987,7 +988,7 @@ extension WorkflowInstance.Implementation {
     ) async throws -> Update.Output {
         try await Temporal.Workflow.$context.withValue(context) {
             try await WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
-                try await intercept(WorkflowInboundInterceptor.handleUpdate, input: input) { input in
+                try await intercept((any WorkflowInboundInterceptor).handleUpdate, input: input) { input in
                     try await WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
                         try await input.definition.run(
                             workflow: workflow,
@@ -1005,7 +1006,7 @@ extension WorkflowInstance.Implementation {
     ) throws {
         try Temporal.Workflow.$context.withValue(context) {
             try WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
-                try intercept(WorkflowInboundInterceptor.validateUpdate, input: input) { input in
+                try intercept((any WorkflowInboundInterceptor).validateUpdate, input: input) { input in
                     try WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
                         try input.definition.validateInput(input.input)
                     }

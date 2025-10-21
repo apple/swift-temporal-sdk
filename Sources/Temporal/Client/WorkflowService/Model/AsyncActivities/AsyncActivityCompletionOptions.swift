@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 /// Options for completing an async activity.
 public struct AsyncActivityCompleteOptions: Sendable {

@@ -170,7 +170,7 @@ extension TestServerDependentTests {
                         var activityOptions = ActivityOptions(scheduleToCloseTimeout: .seconds(100))
                         activityOptions.heartbeatTimeout = .seconds(10)
                         activityOptions.cancellationType = scenario.cancellationType
-                        let error = try await #require(throws: Error.self) {
+                        let error = try await #require(throws: (any Error).self) {
                             try await Workflow.executeActivity(
                                 InfiniteActivity.self,
                                 options: activityOptions,
@@ -212,7 +212,7 @@ extension TestServerDependentTests {
 }
 
 extension ActivityOptions.CancellationType: RawRepresentable {
-    public var rawValue: Int {
+    var rawValue: Int {
         switch self {
         case .tryCancel:
             return 0
@@ -225,7 +225,7 @@ extension ActivityOptions.CancellationType: RawRepresentable {
         }
     }
 
-    public init?(rawValue: Int) {
+    init?(rawValue: Int) {
         switch rawValue {
         case 0:
             self = .tryCancel

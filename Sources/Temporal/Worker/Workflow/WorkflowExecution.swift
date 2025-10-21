@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Date
+import SwiftProtobuf
+
+public import struct Foundation.Date
 
 /// Information about a specific workflow execution instance.
 ///

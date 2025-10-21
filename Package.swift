@@ -255,3 +255,25 @@ let package = Package(
         ),
     ]
 )
+
+for target in package.targets
+where [.executable, .test, .regular].contains(
+    target.type
+) {
+    var settings = target.swiftSettings ?? []
+
+    // https://github.com/apple/swift-evolution/blob/main/proposals/0335-existential-any.md
+    // Require `any` for existential types.
+    settings.append(.enableUpcomingFeature("ExistentialAny"))
+
+    // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0444-member-import-visibility.md
+    settings.append(.enableUpcomingFeature("MemberImportVisibility"))
+
+    // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
+    settings.append(.enableUpcomingFeature("InternalImportsByDefault"))
+
+    // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0461-async-function-isolation.md
+    settings.append(.enableUpcomingFeature("NonIsolatedNonSendingByDefault"))
+
+    target.swiftSettings = settings
+}

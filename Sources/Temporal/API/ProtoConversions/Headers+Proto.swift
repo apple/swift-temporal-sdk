@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension Temporal_Api_Common_V1_Header {
-    init(_ dictionary: [String: TemporalPayload], with payloadCodec: PayloadCodec?) async throws {
+    init(_ dictionary: [String: TemporalPayload], with payloadCodec: (any PayloadCodec)?) async throws {
         self.fields.reserveCapacity(dictionary.count)
         for (key, value) in dictionary {
             if let payloadCodec {
@@ -27,7 +27,7 @@ extension Temporal_Api_Common_V1_Header {
         }
     }
 
-    func decoded(with payloadCodec: PayloadCodec?) async throws -> [String: TemporalPayload] {
+    func decoded(with payloadCodec: (any PayloadCodec)?) async throws -> [String: TemporalPayload] {
         var result = [String: TemporalPayload]()
         for (key, value) in self.fields {
             result[key] = try await payloadCodec?.decode(payload: .init(temporalAPIPayload: value)) ?? .init(temporalAPIPayload: value)

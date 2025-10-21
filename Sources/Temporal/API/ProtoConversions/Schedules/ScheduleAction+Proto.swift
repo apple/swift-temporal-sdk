@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension Temporal_Api_Schedule_V1_ScheduleAction {
     init<Input: Sendable>(action: ScheduleAction<Input>, dataConverter: DataConverter) async throws {
         guard case .startWorkflow(let scheduleActionStartWorkflow) = action else {

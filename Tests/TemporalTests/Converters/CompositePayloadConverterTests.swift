@@ -28,7 +28,7 @@ struct CompositePayloadConverterTests {
         let expectedNilPayload = try binaryNilConverter.convertValue(nilValue)
         let nilPayload = try compositeConverter.convertValue(nilValue)
         #expect(nilPayload == expectedNilPayload)
-        #expect(throws: Error.self) {
+        #expect(throws: (any Error).self) {
             try compositeConverter.convertPayload(nilPayload, as: String.self)
         }
 

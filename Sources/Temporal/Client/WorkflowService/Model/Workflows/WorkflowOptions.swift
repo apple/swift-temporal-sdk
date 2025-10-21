@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 /// Configuration options that control how a workflow execution is started and managed.
 public struct WorkflowOptions: Sendable {

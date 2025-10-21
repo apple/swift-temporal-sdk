@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 /// Input parameters for retrieving schedule descriptions in client interceptors.
 public struct DescribeScheduleInput: Sendable {

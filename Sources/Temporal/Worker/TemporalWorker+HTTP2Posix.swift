@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #if GRPCNIOTransport
-import GRPCNIOTransportCore
-import GRPCNIOTransportHTTP2Posix
-import Logging
+public import GRPCNIOTransportCore
+public import GRPCNIOTransportHTTP2Posix
+public import Logging
 
 extension TemporalWorker {
     /// Creates a Temporal worker with HTTP/2 NIO transport configuration.

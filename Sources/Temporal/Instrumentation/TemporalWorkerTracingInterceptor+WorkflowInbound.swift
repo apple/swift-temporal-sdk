@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Tracing
+package import Tracing
 
 extension TemporalWorkerTracingInterceptor {
     /// Workflow inbound interceptor that instruments all worker inbound workflow requests with distributed tracing.

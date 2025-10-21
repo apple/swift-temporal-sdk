@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+package import Logging
 
 import struct Foundation.Date
 
@@ -43,7 +43,7 @@ package struct WorkflowContext: Sendable {
     let payloadConverter: any PayloadConverter
 
     /// A deterministic random number generator for workflow use.
-    var randomNumberGenerator: RandomNumberGenerator {
+    var randomNumberGenerator: any RandomNumberGenerator {
         WorkflowRandomNumberGenerator(stateMachine: self.stateMachine)
     }
 

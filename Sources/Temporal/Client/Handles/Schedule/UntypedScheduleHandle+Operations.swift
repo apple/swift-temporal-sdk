@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -188,7 +188,7 @@ extension TemporalClient.Interceptor {
     func describeSchedule<Input>(
         _ input: DescribeScheduleInput
     ) async throws -> ScheduleDescription<Input> {
-        try await self.intercept(ClientOutboundInterceptor.describeSchedule, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).describeSchedule, input: input) { input in
             try await self.workflowService.describeSchedule(
                 id: input.id,
                 callOptions: input.callOptions
@@ -199,7 +199,7 @@ extension TemporalClient.Interceptor {
     func backfillSchedule(
         _ input: BackfillScheduleInput
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.backfillSchedule, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).backfillSchedule, input: input) { input in
             try await self.workflowService.backfillSchedule(
                 id: input.id,
                 backfills: input.backfills,
@@ -211,7 +211,7 @@ extension TemporalClient.Interceptor {
     func deleteSchedule(
         _ input: DeleteScheduleInput
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.deleteSchedule, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).deleteSchedule, input: input) { input in
             try await self.workflowService.deleteSchedule(
                 id: input.id,
                 callOptions: input.callOptions
@@ -222,7 +222,7 @@ extension TemporalClient.Interceptor {
     func pauseSchedule(
         _ input: PauseScheduleInput
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.pauseSchedule, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).pauseSchedule, input: input) { input in
             try await self.workflowService.pauseSchedule(
                 id: input.id,
                 note: input.note,
@@ -234,7 +234,7 @@ extension TemporalClient.Interceptor {
     func triggerSchedule(
         _ input: TriggerScheduleInput
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.triggerSchedule, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).triggerSchedule, input: input) { input in
             try await self.workflowService.triggerSchedule(
                 id: input.id,
                 overlap: input.overlap,
@@ -246,7 +246,7 @@ extension TemporalClient.Interceptor {
     func unpauseSchedule(
         _ input: UnpauseScheduleInput
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.unpauseSchedule, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).unpauseSchedule, input: input) { input in
             try await self.workflowService.unpauseSchedule(
                 id: input.id,
                 note: input.note,
@@ -258,7 +258,7 @@ extension TemporalClient.Interceptor {
     func updateSchedule<Input>(
         _ input: UpdateScheduleInput<Input>
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.updateSchedule, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).updateSchedule, input: input) { input in
             try await self.workflowService.updateSchedule(
                 id: input.id,
                 input.update,

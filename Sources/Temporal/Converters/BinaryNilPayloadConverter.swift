@@ -23,7 +23,7 @@ public struct BinaryNilPayloadConverter: EncodingPayloadConverter {
     public init() {}
 
     public func convertValue(_ value: some Any) throws -> TemporalPayload {
-        guard let optionalValue = value as? OptionalValue, optionalValue.isNil else {
+        guard let optionalValue = value as? any OptionalValue, optionalValue.isNil else {
             throw EncodingError()
         }
 
@@ -38,7 +38,7 @@ public struct BinaryNilPayloadConverter: EncodingPayloadConverter {
             throw DecodingError()
         }
 
-        guard let optional = valueType as? OptionalValue.Type else {
+        guard let optional = valueType as? any OptionalValue.Type else {
             throw DecodingError()
         }
 

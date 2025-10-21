@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+package import FoundationEssentials
 #else
-import Foundation
+package import Foundation
 #endif
 
 /// Paginates a network call by sequentially retrieving full response pages.
@@ -58,7 +58,7 @@ import Foundation
 /// - Returns: An `AsyncSequence` that yields one complete response page per iteration.
 package func withPagination<Response: Sendable>(
     _ clientCall: @Sendable @escaping (_ pageToken: Data) async throws -> (response: Response, pageToken: Data)
-) -> some (AsyncSequence<Response, Error> & Sendable) {
+) -> some (AsyncSequence<Response, any Error> & Sendable) {
     PaginatedResponseSequence(clientCall: clientCall)
 }
 
@@ -102,7 +102,7 @@ package func withPagination<Response: Sendable>(
 /// - Returns: An `AsyncSequence` that yields individual response `Element`s as it paginates.
 package func withFlattenedPagination<Element: Sendable>(
     _ clientCall: @Sendable @escaping (_ pageToken: Data) async throws -> (elements: some Collection<Element> & Sendable, pageToken: Data)
-) -> some (AsyncSequence<Element, Error> & Sendable) {
+) -> some (AsyncSequence<Element, any Error> & Sendable) {
     PaginatedResponseSequence(clientCall: clientCall)
         .flattened()
 }

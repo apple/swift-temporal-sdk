@@ -14,6 +14,7 @@
 
 import Foundation
 import Logging
+import SwiftProtobuf
 import Synchronization
 import Temporal
 import Testing

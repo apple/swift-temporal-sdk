@@ -72,7 +72,7 @@ struct DataConverterTests {
             payloadCodec: Base64PayloadCodec()
         )
 
-        await #expect(throws: Error.self) {
+        await #expect(throws: (any Error).self) {
             try await dataConverter.convertValue(RandomStruct())
         }
     }
@@ -155,7 +155,7 @@ struct DataConverterTests {
             payloadCodec: Base64PayloadCodec()
         )
 
-        await #expect(throws: Error.self) {
+        await #expect(throws: (any Error).self) {
             try await dataConverter.convertPayloads(
                 [TemporalPayload(data: [], metadata: [:])],
                 as: Array<UInt8>.self

@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import GRPCCore
-import Logging
+public import GRPCCore
+public import Logging
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -35,7 +35,7 @@ import Foundation
 ///
 /// ## Creating a client
 ///
-/// Use the ``connect(transport:configuration:isolation:logger:_:)`` method for a lifetime-scoped client:
+/// Use the ``connect(transport:configuration:logger:_:)`` method for a lifetime-scoped client:
 ///
 /// ```swift
 /// let configuration = TemporalClient.Configuration(
@@ -154,21 +154,19 @@ public final class TemporalClient: Sendable {
     /// - Parameters:
     ///   - transport: The transport layer that should be used by the gRPC connection of the ``TemporalClient``.
     ///   - configuration: The configuration of the ``TemporalClient``.
-    ///   - isolation: The isolation domain of the caller.
     ///   - logger: The logger used in the ``TemporalClient``.
     ///   - body: A closure which is called with the ``TemporalClient``. When the closure returns, the ``TemporalClient`` is shutdown gracefully.
     /// - Returns: The result of the passed closure.
     public static func connect<Transport: ClientTransport, Result: Sendable>(
         transport: Transport,
         configuration: TemporalClient.Configuration,
-        isolation: isolated (any Actor)? = #isolation,
         logger: Logger = Logger(label: "NoOpLogger", factory: { _ in SwiftLogNoOpLogHandler() }),
         _ body: (TemporalClient) async throws -> sending Result
     ) async throws -> sending Result {
         try await withGRPCClient(
             transport: transport,
             interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger),
-            isolation: isolation
+            isolation: #isolation
         ) { client in
             let temporalClient = Self.init(client: client, configuration: configuration)
             return try await body(temporalClient)
@@ -177,14 +175,14 @@ public final class TemporalClient: Sendable {
 }
 
 #if GRPCNIOTransport
-import GRPCNIOTransportCore
-import GRPCNIOTransportHTTP2Posix
+public import GRPCNIOTransportCore
+public import GRPCNIOTransportHTTP2Posix
 
 extension TemporalClient {
     /// Creates a new Temporal client with NIO-based HTTP/2 transport.
     ///
     /// This convenience initializer creates a client using the NIO-based HTTP/2 transport implementation.
-    /// For automatic lifecycle management, prefer using the static ``connect(transport:configuration:isolation:logger:_:)``
+    /// For automatic lifecycle management, prefer using the static ``connect(transport:configuration:logger:_:)``
     /// method instead of this initializer.
     ///
     /// The initializer configures an HTTP/2 transport with the specified target and security settings,

@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Configuration
+public import Configuration
 
 extension TemporalClient {
     /// Configuration settings that define how the client connects to and interacts with the Temporal server.

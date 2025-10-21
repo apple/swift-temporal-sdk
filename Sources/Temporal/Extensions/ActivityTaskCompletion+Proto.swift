@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import SwiftProtobuf
 
 extension Coresdk_ActivityTaskCompletion {
     init(taskToken: Data, result: ActivityExecutionResult) {

@@ -16,6 +16,12 @@ import Bridge
 import GRPCCore
 import Logging
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
 package struct BridgeClient: ~Copyable, Sendable {
     nonisolated(unsafe) let client: OpaquePointer
     private let runtime: BridgeRuntime
@@ -32,7 +38,6 @@ package struct BridgeClient: ~Copyable, Sendable {
         runtime: consuming BridgeRuntime,
         configuration: TemporalWorker.Configuration,
         logger: Logger,
-        isolation: isolated (any Actor)? = #isolation,
         handleBridgeClient: (consuming BridgeClient) async throws -> Result
     ) async throws -> Result {
         // Workaround to capture noncopyable in closure: https://forums.swift.org/t/capture-noncopyable-in-closure/80460
@@ -189,7 +194,7 @@ package struct BridgeClient: ~Copyable, Sendable {
     }
 
     private static func withCallbackResponse<T>(
-        responseRaw: Result<ClientResponse<[UInt8]>, Error>,
+        responseRaw: Result<ClientResponse<[UInt8]>, any Error>,
         _ body: (TemporalCoreClientGrpcOverrideResponse) -> T
     ) -> T {
         do {

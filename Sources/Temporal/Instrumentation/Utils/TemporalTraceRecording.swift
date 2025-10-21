@@ -38,8 +38,8 @@ struct TemporalTraceRecording {
     func recordOutbound<R: Sendable>(
         spanName: String,
         headers: [String: TemporalPayload] = [:],
-        setRequestAttributes: (Span) -> Void,
-        setResponseAttributes: ((Span, R) -> Void)? = nil,
+        setRequestAttributes: (any Span) -> Void,
+        setResponseAttributes: ((any Span, R) -> Void)? = nil,
         next: (_ headers: [String: TemporalPayload]) async throws -> R
     ) async throws -> R {
         let serviceContext = ServiceContext.current ?? .topLevel
@@ -83,7 +83,7 @@ struct TemporalTraceRecording {
     func recordInbound<R: Sendable>(
         spanName: String,
         headers: [String: TemporalPayload],
-        setSpanAttributes: (Span) -> Void,
+        setSpanAttributes: (any Span) -> Void,
         next: () async throws -> R
     ) async throws -> R {
         let serviceContext = try makeInboundServiceContext(headers: headers)
@@ -109,7 +109,7 @@ struct TemporalTraceRecording {
     func recordInbound<R: Sendable>(
         spanName: String,
         headers: [String: TemporalPayload],
-        setSpanAttributes: (Span) -> Void,
+        setSpanAttributes: (any Span) -> Void,
         next: () throws -> R
     ) throws -> R {
         let serviceContext = try makeInboundServiceContext(headers: headers)

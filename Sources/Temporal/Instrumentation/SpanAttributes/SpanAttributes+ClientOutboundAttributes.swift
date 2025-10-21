@@ -14,6 +14,12 @@
 
 import Tracing
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
 // Client Outbound interceptor attributes
 extension Span {
     // MARK: StartWorkflow

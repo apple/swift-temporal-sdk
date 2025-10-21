@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension WorkflowInfo {
     init(
         initializeWorkflow: Coresdk_WorkflowActivation_InitializeWorkflow,

@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import Tracing
+package import Tracing
 
 extension Logger.Metadata {
     package mutating func append<T: SpanAttributeConvertible>(attribute keyPath: WritableKeyPath<SpanAttributes, T?>, _ value: T) {

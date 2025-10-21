@@ -83,7 +83,7 @@ extension TemporalClient.InterceptedService {
     ///   - dataConverter: Optional override for payload conversion. If nil, uses the client configuration converter.
     package func failAsyncActivity(
         activity: AsyncActivityHandle.Reference,
-        error: Error,
+        error: any Error,
         options: AsyncActivityFailOptions?,
         dataConverter: DataConverter? = nil
     ) async throws {

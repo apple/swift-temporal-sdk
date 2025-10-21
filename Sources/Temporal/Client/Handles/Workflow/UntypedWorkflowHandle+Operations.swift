@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 extension UntypedWorkflowHandle {
@@ -302,7 +302,7 @@ extension TemporalClient.Interceptor {
     func signalWorkflow<each Input>(
         _ input: SignalWorkflowInput<repeat each Input>
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.signalWorkflow, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).signalWorkflow, input: input) { input in
             try await self.workflowService.signalWorkflow(
                 workflowID: input.id,
                 runID: input.runID,
@@ -317,7 +317,7 @@ extension TemporalClient.Interceptor {
     func queryWorkflow<each Input, each Result: Sendable>(
         _ input: QueryWorkflowInput<repeat each Input>
     ) async throws -> (repeat each Result) {
-        try await self.intercept(ClientOutboundInterceptor.queryWorkflow, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).queryWorkflow, input: input) { input in
             try await self.workflowService.queryWorkflow(
                 workflowID: input.id,
                 runID: input.runID,
@@ -334,7 +334,7 @@ extension TemporalClient.Interceptor {
     func startWorkflowUpdate<each Input>(
         _ input: StartWorkflowUpdateInput<repeat each Input>
     ) async throws -> UntypedWorkflowUpdateHandle {
-        try await self.intercept(ClientOutboundInterceptor.startWorkflowUpdate, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).startWorkflowUpdate, input: input) { input in
             let updateID = try await self.workflowService.startWorkflowUpdate(
                 workflowID: input.id,
                 runID: input.runID,
@@ -358,7 +358,7 @@ extension TemporalClient.Interceptor {
     func describeWorkflow(
         _ input: DescribeWorkflowInput
     ) async throws -> WorkflowExecutionDescription {
-        try await self.intercept(ClientOutboundInterceptor.describeWorkflow, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).describeWorkflow, input: input) { input in
             try await self.workflowService.describeWorkflow(
                 workflowID: input.id,
                 runID: input.runID,
@@ -370,7 +370,7 @@ extension TemporalClient.Interceptor {
     func cancelWorkflow(
         _ input: CancelWorkflowInput
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.cancelWorkflow, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).cancelWorkflow, input: input) { input in
             try await self.workflowService.cancelWorkflow(
                 id: input.id,
                 runID: input.runID,
@@ -383,7 +383,7 @@ extension TemporalClient.Interceptor {
     func terminateWorkflow<each Detail>(
         _ input: TerminateWorkflowInput<repeat each Detail>
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.terminateWorkflow, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).terminateWorkflow, input: input) { input in
             try await self.workflowService.terminateWorkflow(
                 id: input.id,
                 runID: input.runID,
@@ -398,7 +398,7 @@ extension TemporalClient.Interceptor {
     func fetchWorkflowHistoryEvents(
         _ input: FetchWorkflowHistoryEventsInput
     ) async throws -> [HistoryEvent] {
-        try await self.intercept(ClientOutboundInterceptor.fetchWorkflowHistoryEvents, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).fetchWorkflowHistoryEvents, input: input) { input in
             try await self.workflowService.fetchWorkflowHistoryEvents(
                 id: input.id,
                 runID: input.runID,

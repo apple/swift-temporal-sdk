@@ -22,6 +22,7 @@
 // See https://swift.org/CONTRIBUTORS.txt for Swift project authors
 //
 
+import SwiftBasicFormat
 import SwiftDiagnostics
 import SwiftOperators
 import SwiftParser

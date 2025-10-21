@@ -21,10 +21,10 @@ import FoundationNetworking
 
 /// Activities for processing NYC film permits.
 @ActivityContainer
-public struct FilmPermitActivities {
+struct FilmPermitActivities {
     // MARK: - Data Models
 
-    public struct FilmPermit: Codable, Sendable {
+    struct FilmPermit: Codable, Sendable {
         let eventId: String
         let eventType: String
         let startDateTime: String
@@ -52,13 +52,13 @@ public struct FilmPermitActivities {
         }
     }
 
-    public struct ValidationResult: Codable, Sendable {
+    struct ValidationResult: Codable, Sendable {
         let permitId: String
         let isValid: Bool
         let issues: [String]
     }
 
-    public struct LocationAnalysis: Codable, Sendable {
+    struct LocationAnalysis: Codable, Sendable {
         let permitId: String
         let borough: String
         let precinct: String?
@@ -67,7 +67,7 @@ public struct FilmPermitActivities {
         let estimatedStreetCount: Int
     }
 
-    public struct PermitCategory: Codable, Sendable {
+    struct PermitCategory: Codable, Sendable {
         let permitId: String
         let category: String
         let subcategory: String
@@ -75,7 +75,7 @@ public struct FilmPermitActivities {
         let isCommercial: Bool
     }
 
-    public struct PermitAnalysis: Codable, Sendable {
+    struct PermitAnalysis: Codable, Sendable {
         let permit: FilmPermit
         let validation: ValidationResult
         let location: LocationAnalysis
@@ -83,7 +83,7 @@ public struct FilmPermitActivities {
         let processingTimeMs: Double
     }
 
-    public struct AnalyticsReport: Codable, Sendable {
+    struct AnalyticsReport: Codable, Sendable {
         let totalPermits: Int
         let validPermits: Int
         let byBorough: [String: Int]

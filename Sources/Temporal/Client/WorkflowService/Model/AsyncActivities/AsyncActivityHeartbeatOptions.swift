@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 /// Options for heartbeats in async activities.
 public struct AsyncActivityHeartbeatOptions: Sendable {

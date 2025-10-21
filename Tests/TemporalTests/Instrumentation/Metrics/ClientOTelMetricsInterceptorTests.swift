@@ -15,6 +15,7 @@
 import Foundation
 import GRPCCore
 import Metrics
+import OTelSemanticConventions
 import TemporalInstrumentation
 import Testing
 

@@ -23,7 +23,7 @@ struct JSONProtobufPayloadConverterTests {
     func convertNil() async throws {
         let payloadConverter = JSONProtobufPayloadConverter()
 
-        #expect(throws: Error.self) {
+        #expect(throws: (any Error).self) {
             try payloadConverter.convertValue(Optional<String>.none)
         }
     }
@@ -32,7 +32,7 @@ struct JSONProtobufPayloadConverterTests {
     func convertArrayUInt8() async throws {
         let payloadConverter = JSONProtobufPayloadConverter()
 
-        #expect(throws: Error.self) {
+        #expect(throws: (any Error).self) {
             try payloadConverter.convertValue([UInt8]([1, 2, 3]))
         }
     }

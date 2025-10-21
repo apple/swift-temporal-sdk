@@ -14,14 +14,16 @@
 
 #if canImport(Testing)
 import GRPCNIOTransportHTTP2Posix
-import Logging
-import Temporal
-import Testing
+import GRPCCore
+import NIOPosix
+public import Logging
+public import Temporal
+public import Testing
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Test server infrastructure providing local Temporal server instances for integration testing scenarios.
@@ -147,17 +149,14 @@ public struct TemporalTestServer: Sendable {
     ///   maintaining appropriate test isolation boundaries.
     ///
     /// - Parameters:
-    ///   - isolation: The isolation context of the calling actor.
     ///   - body: An async closure that receives the test server instance and performs test operations.
     /// - Returns: The result value returned by the closure.
     /// - Throws: Any errors thrown by the closure or during server lifecycle management.
     public static func withTestServer<Result: Sendable>(
-        isolation: isolated (any Actor)? = #isolation,
         _ body: (borrowing TemporalTestServer) async throws -> sending Result
     ) async throws -> sending Result {
         try await BridgeTestServer.withBridgeDevServer(
             devServerOptions: Self.devServerOptions,
-            isolation: isolation,
         ) { bridgeTestServer, target in
             let testServer = TemporalTestServer(
                 serverTarget: target
@@ -197,17 +196,15 @@ public struct TemporalTestServer: Sendable {
     ///   maintaining appropriate test isolation boundaries.
     ///
     /// - Parameters:
-    ///   - isolation: The isolation context of the calling actor.
     ///   - body: An async closure that receives the test server instance and performs test operations.
     /// - Throws: Any errors thrown by the closure or during server lifecycle management.
     ///
     /// - Note: This method currently has a void return type due to Swift 6.0 compiler limitations.
     ///   Future versions may support generic return types.
     public static func withTimeSkippingTestServer(
-        isolation: isolated (any Actor)? = #isolation,
         _ body: (borrowing TemporalTestServer) async throws -> Void
     ) async throws {
-        try await BridgeTestServer.withBridgeTestServer(isolation: isolation) { bridgeTestServer, target in
+        try await BridgeTestServer.withBridgeTestServer { bridgeTestServer, target in
             let testServer = TemporalTestServer(
                 serverTarget: target
             )
@@ -242,18 +239,15 @@ public struct TemporalTestServer: Sendable {
     /// ```
     ///
     /// - Parameters:
-    ///   - isolation: The isolation context of the calling actor.
     ///   - logger: The logger instance used by the client for diagnostic output.
     ///   - body: An async closure that receives the connected client and performs test operations.
     /// - Returns: The result value returned by the closure.
     /// - Throws: Any errors thrown during client connection establishment or by the closure.
     public func withConnectedClient<Result: Sendable>(
-        isolation: isolated (any Actor)? = #isolation,
         logger: Logger,
-        _ body: (TemporalClient) async throws -> sending Result
-    ) async throws -> sending Result {
+        _ body: (TemporalClient) async throws -> Result
+    ) async throws -> Result {
         try await withConnectedClient(
-            isolation: isolation,
             logger: logger,
         ) { client, _, _ in
             try await body(client)
@@ -267,18 +261,16 @@ public struct TemporalTestServer: Sendable {
     /// connection details or custom client configuration.
     ///
     /// - Parameters:
-    ///   - isolation: The isolation context of the calling actor.
     ///   - logger: The logger instance used by the client for diagnostic output.
     ///   - interceptors: An array of client interceptors to apply to the connection.
     ///   - body: An async closure that receives the connected client, host, and port for test operations.
     /// - Returns: The result value returned by the closure.
     /// - Throws: Any errors thrown during client connection establishment or by the closure.
     public func withConnectedClient<Result: Sendable>(
-        isolation: isolated (any Actor)? = #isolation,
         logger: Logger,
-        interceptors: [any ClientInterceptor] = [],
-        _ body: (TemporalClient, String, Int) async throws -> sending Result
-    ) async throws -> sending Result {
+        interceptors: [any Temporal.ClientInterceptor] = [],
+        _ body: (TemporalClient, String, Int) async throws -> Result
+    ) async throws -> Result {
         let (host, port) = self.hostAndPort()
 
         return try await TemporalClient.connect(
@@ -294,7 +286,6 @@ public struct TemporalTestServer: Sendable {
                 instrumentation: .init(serverHostname: host),
                 interceptors: interceptors
             ),
-            isolation: isolation,
             logger: logger,
         ) { client in
             try await body(client, host, port)
@@ -337,7 +328,6 @@ public struct TemporalTestServer: Sendable {
     ///   - activities: Activity implementations to register on the worker.
     ///   - workflows: Workflow types to register on the worker.
     ///   - logger: Logger used by the worker. Defaults to a stdout `Logger` at `.info`.
-    ///   - isolation: The isolation context of the calling actor. Defaults to `#isolation`.
     ///   - body: An async closure that receives the running worker and performs test operations. When the closure completes, the worker is cancelled.
     /// - Returns: The value returned by `body`.
     /// - Throws: Any error thrown while creating/starting the worker, establishing the transport, or by the `body` closure.
@@ -356,7 +346,6 @@ public struct TemporalTestServer: Sendable {
             logger.logLevel = .info
             return logger
         }(),
-        isolation: isolated (any Actor)? = #isolation,
         _ body: sending @escaping @isolated(any) (TemporalWorker) async throws -> sending Result
     ) async throws -> sending Result {
         try await self.withConnectedWorker(
@@ -389,7 +378,6 @@ public struct TemporalTestServer: Sendable {
             logger.logLevel = .info
             return logger
         }(),
-        isolation: isolated (any Actor)? = #isolation,
         _ body: sending @escaping @isolated(any) (Worker) async throws -> sending Result
     ) async throws -> sending Result {
         try await withThrowingTaskGroup(of: Result?.self) { group in

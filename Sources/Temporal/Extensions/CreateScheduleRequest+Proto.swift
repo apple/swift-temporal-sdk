@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension Temporal_Api_Workflowservice_V1_CreateScheduleRequest {
     init<Input>(
         namespace: String,
