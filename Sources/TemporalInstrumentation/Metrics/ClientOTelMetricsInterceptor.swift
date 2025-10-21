@@ -12,20 +12,21 @@
 //
 //===----------------------------------------------------------------------===//
 
-import GRPCCore
-import Metrics
-import Tracing
+package import GRPCCore
+package import Metrics
+package import OTelSemanticConventions
+package import Tracing
 
 /// Instruments the `GRPCClient` with metrics in the OTel convention.
 package struct ClientOTelMetricsInterceptor: GRPCCore.ClientInterceptor {
     private let serverHostname: String
     private let networkTransportMethod: SpanAttributes.NetworkAttributes.NestedSpanAttributes.TransportEnum
-    private let metricsFactory: MetricsFactory
+    private let metricsFactory: any MetricsFactory
 
     package init(
         serverHostname: String,
         networkTransportMethod: SpanAttributes.NetworkAttributes.NestedSpanAttributes.TransportEnum,
-        metricsFactory: MetricsFactory = MetricsSystem.factory
+        metricsFactory: any MetricsFactory = MetricsSystem.factory
     ) {
         self.serverHostname = serverHostname
         self.networkTransportMethod = networkTransportMethod

@@ -22,7 +22,7 @@ import Synchronization
 /// Call `shutdown()` to finish the underlying stream, cancel in-flight work, and prevent further submissions.
 package final class WorkerClientQueue<Element: Sendable>: Sendable {
     typealias Input = @Sendable () async throws -> ClientResponse<Element>
-    typealias Output = @Sendable (Result<ClientResponse<Element>, Error>) -> Void
+    typealias Output = @Sendable (Result<ClientResponse<Element>, any Error>) -> Void
     typealias WorkerClientTask = (Input, Output)
 
     /// Errors that can occur during task queue operation.

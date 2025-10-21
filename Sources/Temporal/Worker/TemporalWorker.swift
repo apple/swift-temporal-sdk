@@ -12,12 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import GRPCCore
+public import GRPCCore
 import GRPCNIOTransportHTTP2Posix
 import GRPCOTelTracingInterceptors
 import GRPCServiceLifecycle
-import Logging
-import ServiceLifecycle
+public import Logging
+import OTelSemanticConventions
+public import ServiceLifecycle
 import TemporalInstrumentation
 
 /// A Temporal worker that processes activities and workflows for a specific namespace and task queue.

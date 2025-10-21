@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+public import Logging
 
-import struct Foundation.Date
+public import struct Foundation.Date
 
 /// Static workflow API that provides access to Temporal workflow operations.
 ///
@@ -89,7 +89,7 @@ public struct Workflow: Sendable {
     /// var rng = Workflow.randomNumberGenerator
     /// let randomValue = Int.random(in: 1...100, using: &rng)
     /// ```
-    public static var randomNumberGenerator: RandomNumberGenerator {
+    public static var randomNumberGenerator: any RandomNumberGenerator {
         self._context.randomNumberGenerator
     }
 

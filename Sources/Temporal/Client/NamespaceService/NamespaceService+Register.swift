@@ -12,7 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+import SwiftProtobuf
+
+public import struct GRPCCore.CallOptions
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension TemporalClient.NamespaceService {
     /// Creates a new Temporal namespace with the specified configuration.

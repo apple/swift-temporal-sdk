@@ -14,7 +14,7 @@
 
 import Logging
 import OTelSemanticConventions
-import Tracing
+package import Tracing
 
 @dynamicMemberLookup
 package struct RPCAttributes: SpanAttributeNamespace {

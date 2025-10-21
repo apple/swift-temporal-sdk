@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Date
+public import struct Foundation.Date
 
 public struct ResetPoint: Hashable, Sendable {
     /// Worker build id.

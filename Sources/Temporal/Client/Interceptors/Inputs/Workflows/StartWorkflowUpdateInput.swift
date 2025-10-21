@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 /// Input parameters for starting workflow updates in client interceptors.
 public struct StartWorkflowUpdateInput<each Input: Sendable>: Sendable {

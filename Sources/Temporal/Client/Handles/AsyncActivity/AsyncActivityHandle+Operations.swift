@@ -66,7 +66,7 @@ extension AsyncActivityHandle {
     ///   - error: The error describing why the activity failed.
     ///   - options: Optional failure configuration, including last heartbeat details and gRPC call options.
     public func fail(
-        _ error: Error,
+        _ error: any Error,
         options: AsyncActivityFailOptions? = nil
     ) async throws {
         try await self.interceptor.failAsyncActivity(
@@ -104,7 +104,7 @@ extension TemporalClient.Interceptor {
     func heartbeatAsyncActivity(
         _ input: HeartbeatAsyncActivityInput
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.heartbeatAsyncActivity, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).heartbeatAsyncActivity, input: input) { input in
             try await self.workflowService.heartbeatAsyncActivity(
                 activity: input.activity,
                 options: input.options,
@@ -116,7 +116,7 @@ extension TemporalClient.Interceptor {
     func completeAsyncActivity<Result>(
         _ input: CompleteAsyncActivityInput<Result>
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.completeAsyncActivity, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).completeAsyncActivity, input: input) { input in
             try await self.workflowService.completeAsyncActivity(
                 activity: input.activity,
                 result: input.result,
@@ -129,7 +129,7 @@ extension TemporalClient.Interceptor {
     func failAsyncActivity(
         _ input: FailAsyncActivityInput
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.failAsyncActivity, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).failAsyncActivity, input: input) { input in
             try await self.workflowService.failAsyncActivity(
                 activity: input.activity,
                 error: input.error,
@@ -142,7 +142,7 @@ extension TemporalClient.Interceptor {
     func reportCancellationAsyncActivity(
         _ input: ReportCancellationAsyncActivityInput
     ) async throws {
-        try await self.intercept(ClientOutboundInterceptor.reportCancellationAsyncActivity, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).reportCancellationAsyncActivity, input: input) { input in
             try await self.workflowService.reportCancellationAsyncActivity(
                 activity: input.activity,
                 options: input.options,

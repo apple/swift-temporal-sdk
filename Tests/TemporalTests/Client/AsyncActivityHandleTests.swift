@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncAlgorithms
 import Foundation
 import Synchronization
 import Temporal

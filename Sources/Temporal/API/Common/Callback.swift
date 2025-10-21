@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Data
+public import struct Foundation.Data
 
 /// Callback to attach to various events in the system (workflow run completion).
 public struct Callback: Hashable, Sendable {

@@ -57,7 +57,7 @@ struct WorkerConfigurationTests {
         #expect(noneParameters.buildId == buildId)
 
         // sadly the thrown error is `package`-level
-        #expect(throws: Error.self, "If no scoping for container is provided, config creation should throw an error") {
+        #expect(throws: (any Error).self, "If no scoping for container is provided, config creation should throw an error") {
             _ = try TemporalWorker.Configuration(
                 configReader: container  // no scoping
             )

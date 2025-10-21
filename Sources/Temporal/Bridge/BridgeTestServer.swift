@@ -195,7 +195,6 @@ package struct BridgeTestServer: ~Copyable, Sendable {
 
     package static func withBridgeTestServer<Result: Sendable>(
         testServerOptions: BridgeTestServer.TestServerOptions = .default,
-        isolation: isolated (any Actor)? = #isolation,
         _ body: (borrowing BridgeTestServer, String) async throws -> Result
     ) async throws -> Result {
         let (serverPointer, connectTarget): (UnsafeTransfer<OpaquePointer>, String) = try await withCheckedThrowingContinuation { continuation in
@@ -244,7 +243,6 @@ package struct BridgeTestServer: ~Copyable, Sendable {
 
     package static func withBridgeDevServer<Result: Sendable>(
         devServerOptions: BridgeTestServer.DevServerOptions = .default,
-        isolation: isolated (any Actor)? = #isolation,
         _ body: (borrowing BridgeTestServer, String) async throws -> sending Result
     ) async throws -> sending Result {
         let (serverPointer, connectTarget): (UnsafeTransfer<OpaquePointer>, String) = try await withCheckedThrowingContinuation { continuation in

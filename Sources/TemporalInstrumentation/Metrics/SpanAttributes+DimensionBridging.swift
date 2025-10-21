@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Tracing
+package import Tracing
 
 extension Array where Element == (String, String) {
     package mutating func append<T: SpanAttributeConvertible>(attribute keyPath: WritableKeyPath<SpanAttributes, T?>, _ value: T) {

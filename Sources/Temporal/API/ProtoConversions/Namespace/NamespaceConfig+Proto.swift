@@ -12,6 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
+import SwiftProtobuf
+
 extension NamespaceConfig {
     init(proto: Temporal_Api_Namespace_V1_NamespaceConfig) {
         if proto.hasWorkflowExecutionRetentionTtl {

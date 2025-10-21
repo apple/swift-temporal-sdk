@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+import AsyncAlgorithms
+package import Logging
+import SwiftProtobuf
 import Synchronization
 
 import struct Foundation.Data
@@ -500,7 +502,7 @@ extension ActivityWorker.Implementation {
         _ activity: Activity,
         input: ExecuteActivityInput<Activity>
     ) async throws -> Activity.Output {
-        try await intercept(ActivityInboundInterceptor.executeActivity, input: input) { input in
+        try await intercept((any ActivityInboundInterceptor).executeActivity, input: input) { input in
             try await activity.run(input: input.input)
         }
     }

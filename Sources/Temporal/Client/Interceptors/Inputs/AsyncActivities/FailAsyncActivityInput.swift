@@ -17,7 +17,7 @@ public struct FailAsyncActivityInput: Sendable {
     /// Activity to fail.
     public var activity: AsyncActivityHandle.Reference
     /// Error to report.
-    public var error: Error
+    public var error: any Error
     /// Options passed in to fail.
     public var options: AsyncActivityFailOptions?
     /// Data converter to use.
@@ -32,7 +32,7 @@ public struct FailAsyncActivityInput: Sendable {
     ///   - dataConverter: Data converter to use.
     public init(
         activity: AsyncActivityHandle.Reference,
-        error: Error,
+        error: any Error,
         options: AsyncActivityFailOptions? = nil,
         dataConverter: DataConverter
     ) {

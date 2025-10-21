@@ -8,8 +8,8 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/grpc/grpc-swift
 
-import GRPCCore
-import GRPCProtobuf
+package import GRPCCore
+internal import GRPCProtobuf
 
 // MARK: - temporal.api.workflowservice.v1.WorkflowService
 

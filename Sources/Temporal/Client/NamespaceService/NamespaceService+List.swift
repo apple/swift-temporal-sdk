@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+import SwiftProtobuf
+
+public import struct GRPCCore.CallOptions
 
 extension TemporalClient.NamespaceService {
     /// Returns an asynchronous sequence of all namespaces in the Temporal cluster.
@@ -30,7 +32,7 @@ extension TemporalClient.NamespaceService {
     public func listNamespaces(
         includeDeleted: Bool = false,
         callOptions: CallOptions? = nil
-    ) async throws -> some (AsyncSequence<NamespaceDescription, Error> & Sendable) {
+    ) async throws -> some (AsyncSequence<NamespaceDescription, any Error> & Sendable) {
         withFlattenedPagination { pageToken in
             let response: Temporal_Api_Workflowservice_V1_ListNamespacesResponse = try await self.client.unary(
                 method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.ListNamespaces.descriptor,

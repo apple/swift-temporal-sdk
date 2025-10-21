@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+import SwiftProtobuf
+
+public import struct GRPCCore.CallOptions
 
 extension TemporalClient.OperatorService {
     /// Adds custom search attributes to enable advanced workflow querying.

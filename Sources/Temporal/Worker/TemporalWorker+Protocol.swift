@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import GRPCCore
-import Logging
-import ServiceLifecycle
+package import GRPCCore
+package import Logging
+package import ServiceLifecycle
 
 /// Defines the requirements for creating and running a Temporal worker.
 ///

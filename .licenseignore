@@ -6,6 +6,7 @@
 .spi.yml
 .swift-format
 .github/
+Makefile
 **.md
 **.txt
 **.pb.swift

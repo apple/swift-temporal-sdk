@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension Temporal_Api_Schedule_V1_BackfillRequest {
     init(scheduleBackfill: ScheduleBackfill) {
         self.startTime = .init(date: scheduleBackfill.startAt)

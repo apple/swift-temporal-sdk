@@ -24,7 +24,7 @@ import protocol GRPCCore.ClientTransport
 @Suite(.temporalTestServer, .temporalTimeSkippingTestServer, .timeLimit(.minutes(1)))
 enum TestServerDependentTests {}
 
-public func withTestClient<Result: Sendable>(
+func withTestClient<Result: Sendable>(
     _ body: (TemporalClient) async throws -> Result
 ) async throws -> Result {
     let logger: Logger = {
@@ -46,7 +46,6 @@ func withTestClient<Result: Sendable>(
         logger.logLevel = .info
         return logger
     }(),
-    isolation: isolated (any Actor)? = #isolation,
     _ body: (TemporalClient) async throws -> Result
 ) async throws -> Result {
     try await TemporalTestServer.testServer!.withConnectedClient(logger: logger) { client, host, port in
@@ -74,7 +73,6 @@ func withTestWorkerAndClient<Result: Sendable, Worker: TemporalWorkerProtocol>(
         logger.logLevel = .info
         return logger
     }(),
-    isolation: isolated (any Actor)? = #isolation,
     _ body: sending @escaping @isolated(any) (String, TemporalClient) async throws -> sending Result
 ) async throws -> Result {
     try await TemporalTestServer.testServer!.withConnectedWorker(
@@ -117,7 +115,6 @@ func withTimeSkippingTestWorkerAndClient<Result: Sendable, Worker: TemporalWorke
         logger.logLevel = .info
         return logger
     }(),
-    isolation: isolated (any Actor)? = #isolation,
     _ body: sending @escaping @isolated(any) (String, TemporalClient) async throws -> sending Result
 ) async throws -> Result {
     try await TemporalTestServer.timeSkippingTestServer!.withConnectedWorker(

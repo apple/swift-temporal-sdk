@@ -14,19 +14,20 @@
 
 import GRPCCore
 import Metrics
+import Tracing
 
 /// Metrics context for instrumenting the `GRPCClient`.
 struct GRPCMetricsContext {
     private let kind: ServiceKind
     private let startTime: ContinuousClock.Instant
     private let dimensions: [(String, String)]
-    private let metricsFactory: MetricsFactory
+    private let metricsFactory: any MetricsFactory
 
     private let requestsPerRPC: Recorder
     private let responsesPerRPC: Recorder
     private let activeCalls: Meter
 
-    init(kind: ServiceKind, dimensions: [(String, String)], metricsFactory: MetricsFactory) {
+    init(kind: ServiceKind, dimensions: [(String, String)], metricsFactory: any MetricsFactory) {
         self.kind = kind
         self.startTime = .now
         self.dimensions = dimensions

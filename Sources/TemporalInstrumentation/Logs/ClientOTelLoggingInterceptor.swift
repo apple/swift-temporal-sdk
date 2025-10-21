@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import GRPCCore
-import Logging
-import OTelSemanticConventions
-import Tracing
+package import GRPCCore
+package import Logging
+package import OTelSemanticConventions
+package import Tracing
 
 /// Logging interceptor for the `GRPCClient`.
 package struct ClientOTelLoggingInterceptor: ClientInterceptor {

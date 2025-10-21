@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 /// Options for reporting cancellation of async activities.
 public struct AsyncActivityReportCancellationOptions: Sendable {

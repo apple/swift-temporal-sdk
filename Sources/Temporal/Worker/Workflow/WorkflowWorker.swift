@@ -12,7 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+package import Logging
+import SwiftProtobuf
 
 package protocol WorkflowWorkerProtocol: Sendable {
     associatedtype BridgeWorker: BridgeWorkerProtocol

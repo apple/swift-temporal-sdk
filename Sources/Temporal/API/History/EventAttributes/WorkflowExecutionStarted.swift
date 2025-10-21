@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Date
+public import struct Foundation.Date
 
 extension HistoryEvent.Attributes {
     /// Always the first event in workflow history.

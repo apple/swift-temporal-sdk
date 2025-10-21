@@ -25,7 +25,7 @@ public struct BinaryProtobufPayloadConverter: EncodingPayloadConverter {
     public init() {}
 
     public func convertValue(_ value: some Any) throws -> TemporalPayload {
-        guard let value = value as? Message else {
+        guard let value = value as? any Message else {
             throw EncodingError()
         }
 
@@ -36,7 +36,7 @@ public struct BinaryProtobufPayloadConverter: EncodingPayloadConverter {
         _ payload: TemporalPayload,
         as valueType: Value.Type
     ) throws -> Value {
-        guard let messageType = Value.self as? Message.Type else {
+        guard let messageType = Value.self as? any Message.Type else {
             throw DecodingError()
         }
 

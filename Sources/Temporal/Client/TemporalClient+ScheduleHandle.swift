@@ -15,9 +15,9 @@
 import struct GRPCCore.CallOptions
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 extension TemporalClient {

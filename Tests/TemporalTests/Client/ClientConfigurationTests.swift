@@ -45,7 +45,7 @@ struct ClientConfigurationTests {
         #expect(config.interceptors.count == 1)  // default tracing interceptor
 
         // sadly the thrown error is `package`-level
-        #expect(throws: Error.self, "If no scoping for container is provided, config creation should throw an error") {
+        #expect(throws: (any Error).self, "If no scoping for container is provided, config creation should throw an error") {
             _ = try TemporalClient.Configuration(
                 configReader: container  // no scoping
             )

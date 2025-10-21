@@ -36,11 +36,11 @@ struct BinaryNilPayloadConverterTests {
     func convertString() async throws {
         let payloadConverter = BinaryNilPayloadConverter()
 
-        #expect(throws: Error.self) {
+        #expect(throws: (any Error).self) {
             try payloadConverter.convertValue("Foo")
         }
 
-        #expect(throws: Error.self) {
+        #expect(throws: (any Error).self) {
             try payloadConverter.convertPayload(
                 .init(data: .init(), metadata: [:]),
                 as: String.self

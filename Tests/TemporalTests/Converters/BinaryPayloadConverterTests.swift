@@ -22,7 +22,7 @@ struct BinaryPayloadConverterTests {
     func convertNil() async throws {
         let payloadConverter = BinaryPayloadConverter()
 
-        #expect(throws: Error.self) {
+        #expect(throws: (any Error).self) {
             try payloadConverter.convertValue(Optional<String>.none)
         }
     }

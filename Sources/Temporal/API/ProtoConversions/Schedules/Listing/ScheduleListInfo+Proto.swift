@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension ScheduleListInfo {
     init(proto: Temporal_Api_Schedule_V1_ScheduleListInfo) {
         self.recentActions = proto.recentActions.map { .init(proto: $0) }

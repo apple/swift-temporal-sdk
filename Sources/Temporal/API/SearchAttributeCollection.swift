@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Date
+public import struct Foundation.Date
 
 /// A collection of search attribute key-value pairs.
 public struct SearchAttributeCollection: Hashable, Sendable {

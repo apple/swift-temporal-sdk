@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Tracing
+package import Tracing
 
 /// Interceptor that creates and propagates distributed tracing activities for Temporal worker operations.
 ///

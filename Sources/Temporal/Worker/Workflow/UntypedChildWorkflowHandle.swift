@@ -115,7 +115,7 @@ public struct UntypedChildWorkflowHandle: Sendable {
         state: State,
         stateMachine: WorkflowStateMachineStorage,
         executor: WorkflowTaskExecutor,
-        interceptors: [WorkflowOutboundInterceptor],
+        interceptors: [any WorkflowOutboundInterceptor],
         payloadConverter: any PayloadConverter,
         failureConverter: any FailureConverter
     ) {
@@ -260,7 +260,7 @@ extension UntypedChildWorkflowHandle.Implementation {
     func signalWorkflow<each Input>(
         input: SignalChildWorkflowInput<repeat each Input>
     ) async throws {
-        try await intercept(WorkflowOutboundInterceptor.signalWorkflow, input: input) { input in
+        try await intercept((any WorkflowOutboundInterceptor).signalWorkflow, input: input) { input in
             let payloads = try self.payloadConverter.convertValues(repeat each input.input)
 
             try await self.stateMachine.signalChildWorkflow(

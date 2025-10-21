@@ -13,8 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncAlgorithms
+import SwiftProtobuf
 
-import struct GRPCCore.CallOptions
+public import struct GRPCCore.CallOptions
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials

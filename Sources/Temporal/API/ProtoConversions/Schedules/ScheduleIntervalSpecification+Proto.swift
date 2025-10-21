@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension Temporal_Api_Schedule_V1_IntervalSpec {
     init(intervalSpecification: ScheduleIntervalSpecification) {
         self.interval = .init(duration: intervalSpecification.every)

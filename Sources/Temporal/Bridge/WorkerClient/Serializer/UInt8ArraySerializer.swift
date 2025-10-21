@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import GRPCCore
+package import GRPCCore
 
 /// Serializes a `[UInt8]` message into a sequence of `GRPCContiguousBytes`.
 package struct UInt8ArraySerializer: GRPCCore.MessageSerializer {

@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+package import struct GRPCCore.CallOptions
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials

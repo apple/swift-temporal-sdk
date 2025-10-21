@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension ResetPoint {
     init(_ rawValue: Temporal_Api_Workflow_V1_ResetPointInfo) {
         self = .init(

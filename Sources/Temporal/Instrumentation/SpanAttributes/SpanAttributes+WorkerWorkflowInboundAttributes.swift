@@ -14,6 +14,12 @@
 
 import Tracing
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
 // Worker Workflow Inbound interceptor attributes
 extension Span {
     func setWorkerExecuteWorkflowSpanAttributes(info: WorkflowInfo) {

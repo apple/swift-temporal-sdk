@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Configuration
+public import Configuration
 
 extension TemporalWorker.Configuration {
     /// Instrumentation configuration settings for the Temporal worker controlling tracing, metrics, and

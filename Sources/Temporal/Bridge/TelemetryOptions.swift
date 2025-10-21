@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Bridge
-import Logging
+public import Logging
 
 /// Telemetry options for the worker.
 // TODO: Check if we can make this non-public

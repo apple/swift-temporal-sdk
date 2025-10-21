@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import GRPCCore
+public import GRPCCore
 
 extension TemporalClient {
     /// Provides access to Temporal operator services for administrative operations.
@@ -164,7 +164,7 @@ extension TemporalClient.Interceptor {
     package func listWorkflows(
         _ input: ListWorkflowsInput
     ) async throws -> some AsyncSequence<WorkflowExecution, any Error> & Sendable {
-        try await self.intercept(ClientOutboundInterceptor.listWorkflows, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).listWorkflows, input: input) { input in
             try await self.workflowService.listWorkflowExecutions(
                 query: input.query,
                 limit: input.limit,
@@ -176,7 +176,7 @@ extension TemporalClient.Interceptor {
     package func countWorkflows(
         _ input: CountWorkflowsInput
     ) async throws -> WorkflowExecutionCount {
-        try await self.intercept(ClientOutboundInterceptor.countWorkflows, input: input) { input in
+        try await self.intercept((any ClientOutboundInterceptor).countWorkflows, input: input) { input in
             try await self.workflowService.countWorkflowExecutions(
                 input: input,
                 callOptions: input.callOptions

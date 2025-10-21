@@ -82,7 +82,7 @@ try await client.run()
 ```
 
 For more advanced transport configuration, use the
-``TemporalClient/connect(transport:configuration:isolation:logger:_:)`` method
+``TemporalClient/connect(transport:configuration:logger:_:)`` method
 and check out the [grpc-swift project](https://github.com/grpc/grpc-swift-2).
 
 ## Manage client lifecycle

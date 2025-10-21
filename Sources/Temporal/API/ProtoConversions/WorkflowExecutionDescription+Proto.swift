@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension WorkflowExecutionDescription {
     init(_ raw: Temporal_Api_Workflowservice_V1_DescribeWorkflowExecutionResponse, dataConverter: DataConverter) throws {
         self.execution = try .init(raw.workflowExecutionInfo, dataConverter: dataConverter)

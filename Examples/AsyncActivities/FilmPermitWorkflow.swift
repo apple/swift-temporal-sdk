@@ -17,23 +17,23 @@ import Temporal
 
 /// Workflow for processing NYC film permits with parallel and sequential modes.
 @Workflow
-public final class FilmPermitWorkflow {
-    public enum ProcessingMode: String, Codable, Sendable {
+final class FilmPermitWorkflow {
+    enum ProcessingMode: String, Codable, Sendable {
         case sequential
         case parallel
     }
 
-    public struct BatchRequest: Codable, Sendable {
+    struct BatchRequest: Codable, Sendable {
         let permits: [FilmPermitActivities.FilmPermit]
         let mode: ProcessingMode
     }
 
-    public struct BatchResult: Codable, Sendable {
+    struct BatchResult: Codable, Sendable {
         let report: FilmPermitActivities.AnalyticsReport
         let processingTimeMs: Double
     }
 
-    public func run(input: BatchRequest) async throws -> BatchResult {
+    func run(input: BatchRequest) async throws -> BatchResult {
         let startTime = Date()
 
         // Process permits based on mode (permits already fetched)

@@ -15,6 +15,7 @@
 import GRPCCore
 import GRPCOTelTracingInterceptors
 import Logging
+import OTelSemanticConventions
 import TemporalInstrumentation
 
 // MARK: Temporal Interceptors

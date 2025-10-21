@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct GRPCCore.CallOptions
+import SwiftProtobuf
+
+public import struct GRPCCore.CallOptions
 
 extension TemporalClient.NamespaceService {
     /// Retrieves detailed information and configuration for a registered namespace.

@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension HistoryEvent.Attributes {
     init(_ rawValue: Temporal_Api_History_V1_HistoryEvent.OneOf_Attributes) throws {
         self =

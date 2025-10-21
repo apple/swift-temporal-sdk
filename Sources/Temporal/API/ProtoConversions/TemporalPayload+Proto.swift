@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 import struct Foundation.Data
 
 extension TemporalPayload {

@@ -12,15 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-import GRPCCore
-import Logging
-import ServiceLifecycle
+public import GRPCCore
+public import Logging
+public import ServiceLifecycle
 
 extension TemporalClient: Service {
     /// Creates a new Temporal client with manual lifecycle management for long-running services.
     ///
     /// This initializer creates a Temporal client that can be managed as a service within a larger
-    /// application lifecycle. Unlike the ``connect(transport:configuration:isolation:logger:_:)`` method
+    /// application lifecycle. Unlike the ``connect(transport:configuration:logger:_:)`` method
     /// which provides automatic lifecycle management, this initializer requires manual management of
     /// the client's lifecycle through the  `Service` protocol methods.
     ///

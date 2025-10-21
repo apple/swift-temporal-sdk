@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import GRPCCore
+package import GRPCCore
 
 package typealias UnaryCall<Serializer: MessageSerializer, Deserializer: MessageDeserializer> =
     @Sendable (

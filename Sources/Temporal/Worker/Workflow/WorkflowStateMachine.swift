@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 import struct Foundation.Date
 import struct Foundation.UUID
 

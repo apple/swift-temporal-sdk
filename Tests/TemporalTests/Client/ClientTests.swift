@@ -13,8 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import GRPCCore
 import GRPCNIOTransportHTTP2Posix
 import Logging
+import NIOPosix
 import ServiceLifecycle
 import SwiftASN1
 import Temporal

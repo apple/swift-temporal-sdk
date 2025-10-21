@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #if canImport(FoundationEssentials)
-import struct FoundationEssentials.UUID
+package import struct FoundationEssentials.UUID
 #else
-import struct Foundation.UUID
+package import struct Foundation.UUID
 #endif
 
 #if compiler(<6.3)  // Swift main nightly not tagged 6.3 yet, so this guard does nothing (for now)

@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 extension Temporal_Api_Common_V1_RetryPolicy {
     init(retryPolicy: RetryPolicy) {
         self = .with {

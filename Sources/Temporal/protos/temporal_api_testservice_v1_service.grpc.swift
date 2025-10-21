@@ -30,9 +30,9 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/grpc/grpc-swift
 
-import GRPCCore
-import GRPCProtobuf
-import SwiftProtobuf
+package import GRPCCore
+internal import GRPCProtobuf
+package import SwiftProtobuf
 
 // MARK: - temporal.api.testservice.v1.TestService
 

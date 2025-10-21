@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 import struct Foundation.Date
 
 // This type is unchecked Sendable since it enforces the safe access

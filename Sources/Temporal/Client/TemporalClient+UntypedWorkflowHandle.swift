@@ -209,7 +209,7 @@ extension TemporalClient.Interceptor {
     func startWorkflow<each Input>(
         _ input: StartWorkflowInput<repeat each Input>
     ) async throws -> UntypedWorkflowHandle {
-        try await withInterceptors(interceptors, input: input, call: ClientOutboundInterceptor.startWorkflow) { input in
+        try await withInterceptors(interceptors, input: input, call: (any ClientOutboundInterceptor).startWorkflow) { input in
             let runID = try await self.workflowService.startWorkflow(
                 name: input.name,
                 options: input.options,

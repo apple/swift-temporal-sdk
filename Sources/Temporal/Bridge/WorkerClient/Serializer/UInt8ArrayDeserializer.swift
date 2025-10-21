@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import GRPCCore
+package import GRPCCore
 
 /// Deserializes the serialized bytes received from grpc-swift into `[UInt8]` array.
 package struct UInt8ArrayDeserializer: GRPCCore.MessageDeserializer {

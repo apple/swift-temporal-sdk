@@ -15,6 +15,7 @@
 import Bridge
 import Foundation
 import GRPCCore
+internal import SwiftProtobuf
 
 package protocol BridgeWorkerProtocol: Sendable {
     init(
