@@ -171,9 +171,6 @@ let package = Package(
                 .target(name: "Temporal")
             ],
             path: "Examples/Greeting",
-            swiftSettings: [
-                .define("GRPCNIOTransport")
-            ]
         ),
         .executableTarget(
             name: "MultipleActivitiesExample",
@@ -181,9 +178,7 @@ let package = Package(
                 .target(name: "Temporal")
             ],
             path: "Examples/MultipleActivities",
-            swiftSettings: [
-                .define("GRPCNIOTransport")
-            ]
+            exclude: ["README.md"],
         ),
         .executableTarget(
             name: "ErrorHandlingExample",
@@ -191,9 +186,7 @@ let package = Package(
                 .target(name: "Temporal")
             ],
             path: "Examples/ErrorHandling",
-            swiftSettings: [
-                .define("GRPCNIOTransport")
-            ]
+            exclude: ["README.md"],
         ),
         .executableTarget(
             name: "SignalExample",
@@ -201,9 +194,7 @@ let package = Package(
                 .target(name: "Temporal")
             ],
             path: "Examples/Signals",
-            swiftSettings: [
-                .define("GRPCNIOTransport")
-            ]
+            exclude: ["README.md"],
         ),
         .executableTarget(
             name: "AsyncActivitiesExample",
@@ -211,9 +202,7 @@ let package = Package(
                 .target(name: "Temporal")
             ],
             path: "Examples/AsyncActivities",
-            swiftSettings: [
-                .define("GRPCNIOTransport")
-            ]
+            exclude: ["README.md"],
         ),
         .executableTarget(
             name: "ScheduleExample",
@@ -221,9 +210,7 @@ let package = Package(
                 .target(name: "Temporal")
             ],
             path: "Examples/Schedule",
-            swiftSettings: [
-                .define("GRPCNIOTransport")
-            ]
+            exclude: ["README.md"],
         ),
         .executableTarget(
             name: "ChildWorkflowExample",
@@ -231,9 +218,7 @@ let package = Package(
                 .target(name: "Temporal")
             ],
             path: "Examples/ChildWorkflows",
-            swiftSettings: [
-                .define("GRPCNIOTransport")
-            ]
+            exclude: ["README.md"],
         ),
 
         // MARK: Tests
