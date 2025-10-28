@@ -163,14 +163,31 @@ struct MyApp {
             logger: Logger(label: "client")
         )
         
-        // Execute workflow
-        let result = try await client.executeWorkflow(
-            GreetingWorkflow.self,
-            options: .init(id: "greeting-1", taskQueue: "greeting-queue"),
-            input: "World"
-        )
-        
-        print(result) // "Hello, World!"
+        try await withThrowingTaskGroup { group in
+            group.addTask {
+                try await worker.run()
+            }
+
+            group.addTask {
+                try await client.run()
+            }
+
+            // Wait for the worker and client to run
+            try await Task.sleep(for: .seconds(1))
+
+            // Execute workflow
+            print("Executing workflow")
+            let result = try await client.executeWorkflow(
+                GreetingWorkflow.self,
+                options: .init(id: "greeting-1", taskQueue: "greeting-queue"),
+                input: "World"
+            )
+            
+            print(result) // "Hello, World!"
+
+            // Cancel the client and worker
+            group.cancelAll()
+        }
     }
 }
 ```
