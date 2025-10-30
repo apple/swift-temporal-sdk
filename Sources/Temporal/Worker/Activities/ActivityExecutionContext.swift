@@ -191,16 +191,20 @@ public struct ActivityExecutionContext: Sendable {
         ///
         /// - Parameter detailTypes: The types to convert the heartbeat details to, specified as
         /// variadic generic parameters.
-        /// - Returns: A tuple containing the converted heartbeat details in the order specified.
+        /// - Returns: A tuple containing the converted heartbeat details in the order specified. Returns `nil` if there are no heartbeat details available from a previous activity attempt.
         /// - Throws: Conversion errors if the number of types doesn't match the stored details or if
         /// deserialization fails.
         public func heartbeatDetails<each HeartbeatDetail: Sendable>(
             as detailTypes: repeat (each HeartbeatDetail).Type
-        ) async throws -> (repeat each HeartbeatDetail) {
-            try await self.dataConverter.convertPayloads(
+        ) async throws -> (repeat each HeartbeatDetail)? {
+            guard !self.heartbeatDetails.isEmpty else {
+                return nil
+            }
+
+            return try await self.dataConverter.convertPayloads(
                 self.heartbeatDetails,
                 as: repeat (each detailTypes).self
-            )
+            ) as (repeat each HeartbeatDetail)
         }
     }
 
