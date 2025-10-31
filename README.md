@@ -116,8 +116,9 @@ dependencies: [
 Here's a simple example showing how to create a workflow and activity:
 
 ```swift
-import Temporal
+import GRPCNIOTransportHTTP2Posix
 import Logging
+import Temporal
 
 // Define an activity
 @ActivityContainer
@@ -133,7 +134,7 @@ struct GreetingActivities {
 final class GreetingWorkflow {
     func run(input: String) async throws -> String {
         let greeting = try await Workflow.executeActivity(
-            GreetingActivities.Activities.sayHello.self,
+            GreetingActivities.Activities.SayHello.self,
             options: ActivityOptions(startToCloseTimeout: .seconds(30)),
             input: input
         )
@@ -148,7 +149,8 @@ struct MyApp {
         let worker = try TemporalWorker(
             configuration: .init(
                 namespace: "default",
-                taskQueue: "greeting-queue"
+                taskQueue: "greeting-queue",
+                instrumentation: .init(serverHostname: "127.0.0.1")
             ),
             target: .ipv4(address: "127.0.0.1", port: 7233),
             transportSecurity: .plaintext,
@@ -156,13 +158,14 @@ struct MyApp {
             workflows: [GreetingWorkflow.self],
             logger: Logger(label: "worker")
         )
-        
+
         let client = try TemporalClient(
             target: .ipv4(address: "127.0.0.1", port: 7233),
             transportSecurity: .plaintext,
+            configuration: .init(instrumentation: .init(serverHostname: "127.0.0.1")),
             logger: Logger(label: "client")
         )
-        
+
         try await withThrowingTaskGroup { group in
             group.addTask {
                 try await worker.run()
@@ -178,11 +181,11 @@ struct MyApp {
             // Execute workflow
             print("Executing workflow")
             let result = try await client.executeWorkflow(
-                GreetingWorkflow.self,
+                type: GreetingWorkflow.self,
                 options: .init(id: "greeting-1", taskQueue: "greeting-queue"),
                 input: "World"
             )
-            
+
             print(result) // "Hello, World!"
 
             // Cancel the client and worker
