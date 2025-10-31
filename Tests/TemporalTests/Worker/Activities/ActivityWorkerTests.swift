@@ -231,21 +231,25 @@ private struct BadHeartbeatAcivity: ActivityDefinition {
     }
 }
 
-private struct ReadingHeartbeatAcivity: ActivityDefinition {
+private struct ReadingHeartbeatActivity: ActivityDefinition {
     struct HeartbeatDetails: Codable, Hashable {
         var string: String
         var data: Data
     }
     typealias Input = Void
-    typealias Output = HeartbeatDetails
+    typealias Output = HeartbeatDetails?
 
-    static let name: String? = "ReadingHeartbeatAcivity"
+    static let name: String? = "ReadingHeartbeatActivity"
 
-    func run(input: Void) async throws -> HeartbeatDetails {
-        let (string, data) = try await ActivityExecutionContext.current!.info.heartbeatDetails(
-            as: String.self,
-            Data.self
-        )
+    func run(input: Void) async throws -> HeartbeatDetails? {
+        guard
+            let (string, data) = try await ActivityExecutionContext.current!.info.heartbeatDetails(
+                as: String.self,
+                Data.self
+            )
+        else {
+            return nil
+        }
 
         return .init(string: string, data: data)
     }
@@ -748,9 +752,9 @@ struct ActivityWorkerTests {
         }
     }
 
-    @Test
-    static func readingHeartbeat() async throws {
-        let test = ActivityWorkerTests(activities: [ReadingHeartbeatAcivity()])
+    @Test("Read Heartbeat Details", arguments: [true, false])
+    static func readingHeartbeat(heartbeatDetailsAvailable: Bool) async throws {
+        let test = ActivityWorkerTests(activities: [ReadingHeartbeatActivity()])
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
@@ -760,7 +764,7 @@ struct ActivityWorkerTests {
             test.bridgeWorker.activityTaskContinuation.yield(
                 .with {
                     $0.taskToken = Data([1])
-                    $0.start.activityType = "ReadingHeartbeatAcivity"
+                    $0.start.activityType = "ReadingHeartbeatActivity"
                     $0.start.activityID = "ActivityID1"
                     $0.start.attempt = 1
                     $0.start.workflowType = "WorkflowType"
@@ -768,16 +772,18 @@ struct ActivityWorkerTests {
                         $0.runID = "RunID"
                         $0.workflowID = "WorkflowID1"
                     }
-                    $0.start.heartbeatDetails = [
-                        .with {
-                            $0.data = Data(#""Foo""#.utf8)
-                            $0.metadata = ["encoding": Data("json/plain".utf8)]
-                        },
-                        .with {
-                            $0.data = Data([1, 2, 3])
-                            $0.metadata = ["encoding": Data("binary/plain".utf8)]
-                        },
-                    ]
+                    if heartbeatDetailsAvailable {
+                        $0.start.heartbeatDetails = [
+                            .with {
+                                $0.data = Data(#""Foo""#.utf8)
+                                $0.metadata = ["encoding": Data("json/plain".utf8)]
+                            },
+                            .with {
+                                $0.data = Data([1, 2, 3])
+                                $0.metadata = ["encoding": Data("binary/plain".utf8)]
+                            },
+                        ]
+                    }
                 }
             )
 
@@ -785,15 +791,20 @@ struct ActivityWorkerTests {
             let completion = try await activityTaskCompletionIterator.next()
             #expect(completion?.taskToken == Data([1]))
             let jsonDecoder = JSONDecoder()
-            let expectedHeartbeatDetails = ReadingHeartbeatAcivity.HeartbeatDetails(
-                string: "Foo",
-                data: Data([1, 2, 3])
-            )
             let heartbeatDetails = try jsonDecoder.decode(
-                ReadingHeartbeatAcivity.HeartbeatDetails.self,
+                (ReadingHeartbeatActivity.HeartbeatDetails?).self,
                 from: completion!.result.completed.result.data
             )
-            #expect(heartbeatDetails == expectedHeartbeatDetails)
+
+            if heartbeatDetailsAvailable {
+                let expectedHeartbeatDetails = ReadingHeartbeatActivity.HeartbeatDetails(
+                    string: "Foo",
+                    data: Data([1, 2, 3])
+                )
+                #expect(heartbeatDetails == expectedHeartbeatDetails)
+            } else {
+                #expect(heartbeatDetails == nil)
+            }
             group.cancelAll()
         }
     }
