@@ -16,7 +16,6 @@ import Synchronization
 import Temporal
 import Testing
 
-#if !(os(Linux) && swift(>=6.2))  // TODO: reenable once Swift 6.2 compiler crash on Linux is fixed
 extension TestServerDependentTests {
     @Suite
     struct ActivityInterceptorTests {
@@ -150,16 +149,15 @@ extension TestServerDependentTests {
                 ) {
                     var i = 0
                     for d in repeat each input.details {
-                        guard i == 0 else {
-                            break
-                        }
-
-                        guard let first = d as? String else {
+                        // This is written slightly mor complicated since currently
+                        // early returns in `repeat each` loops are not allowed and
+                        // result in SIL verification crashes
+                        if let first = d as? String, i == 0 {
+                            #expect(first == "Foo", #"First heartbeat detail wasn't "Foo""#)
+                            i += 1
+                        } else {
                             Issue.record("Wrong type passed to heartbeat first detail, expected `String`")
-                            return
                         }
-                        #expect(first == "Foo", #"First heartbeat detail wasn't "Foo""#)
-                        i += 1
                     }
 
                     interceptor.counter.withLock { $0 += 1 }
@@ -228,4 +226,3 @@ extension TestServerDependentTests {
         }
     }
 }
-#endif

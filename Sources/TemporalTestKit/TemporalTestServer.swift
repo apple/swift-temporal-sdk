@@ -153,8 +153,8 @@ public struct TemporalTestServer: Sendable {
     /// - Returns: The result value returned by the closure.
     /// - Throws: Any errors thrown by the closure or during server lifecycle management.
     public static func withTestServer<Result: Sendable>(
-        _ body: (borrowing TemporalTestServer) async throws -> sending Result
-    ) async throws -> sending Result {
+        _ body: (borrowing TemporalTestServer) async throws -> Result
+    ) async throws -> Result {
         try await BridgeTestServer.withBridgeDevServer(
             devServerOptions: Self.devServerOptions,
         ) { bridgeTestServer, target in

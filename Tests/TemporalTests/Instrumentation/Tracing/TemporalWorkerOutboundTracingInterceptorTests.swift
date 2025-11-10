@@ -17,7 +17,6 @@ import Temporal
 import Testing
 import Tracing
 
-#if !(os(Linux) && swift(>=6.2))  // TODO: reenable once Swift 6.2 compiler crash / Swift 6.1 runtime crash on Linux (in RELEASE only) is fixed
 @Suite(.tags(.instrumentationTests))
 struct TemporalWorkerOutboundTracingInterceptorTests {
     @Workflow
@@ -74,18 +73,20 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                     ).makeWorkflowOutboundInterceptor()
                 )
 
-                _ = try await interceptor.executeActivity(
-                    input: ScheduleActivityInput(
-                        name: Self.activityInfo.name,
-                        options: ActivityOptions(
-                            scheduleToCloseTimeout: Self.scheduleToCloseTimeout,
-                            disableEagerActivityExecution: Self.disableEagerActivityExecution,
-                            cancellationType: Self.cancellationType,
-                            versioningIntent: Self.versioningIntent
-                        ),
-                        headers: [:],
-                        input: ()
+                let input = ScheduleActivityInput<Void>(
+                    name: Self.activityInfo.name,
+                    options: ActivityOptions(
+                        scheduleToCloseTimeout: Self.scheduleToCloseTimeout,
+                        disableEagerActivityExecution: Self.disableEagerActivityExecution,
+                        cancellationType: Self.cancellationType,
+                        versioningIntent: Self.versioningIntent
                     ),
+                    headers: [:],
+                    input: ()
+                )
+
+                _ = try await interceptor.executeActivity(
+                    input: input,
                     next: { input in
                         // Assert that headers contain the injected traceID
                         let traceHeaderPayload = try #require(
@@ -155,18 +156,20 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                 )
 
                 do {
-                    _ = try await interceptor.executeActivity(
-                        input: ScheduleActivityInput(
-                            name: Self.activityInfo.name,
-                            options: ActivityOptions(
-                                scheduleToCloseTimeout: Self.scheduleToCloseTimeout,
-                                disableEagerActivityExecution: Self.disableEagerActivityExecution,
-                                cancellationType: Self.cancellationType,
-                                versioningIntent: Self.versioningIntent
-                            ),
-                            headers: [:],
-                            input: ()
+                    let input = ScheduleActivityInput<Void>(
+                        name: Self.activityInfo.name,
+                        options: ActivityOptions(
+                            scheduleToCloseTimeout: Self.scheduleToCloseTimeout,
+                            disableEagerActivityExecution: Self.disableEagerActivityExecution,
+                            cancellationType: Self.cancellationType,
+                            versioningIntent: Self.versioningIntent
                         ),
+                        headers: [:],
+                        input: ()
+                    )
+
+                    _ = try await interceptor.executeActivity(
+                        input: input,
                         next: { input in
                             // Assert that headers contain the injected traceID
                             let traceHeaderPayload = try #require(
@@ -204,4 +207,3 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
         }
     }
 }
-#endif
