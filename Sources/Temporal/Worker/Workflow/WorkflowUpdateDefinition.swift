@@ -53,7 +53,7 @@
 ///     }
 /// }
 /// ```
-public protocol WorkflowUpdateDefinition<Workflow>: _SendableMetaTypeBaseProtocol, Sendable {
+public protocol WorkflowUpdateDefinition<Workflow>: Sendable {
     /// The input type for the update.
     associatedtype Input: Sendable
 

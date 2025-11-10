@@ -46,7 +46,7 @@
 ///     }
 /// }
 /// ```
-public protocol WorkflowSignalDefinition<Workflow>: _SendableMetaTypeBaseProtocol, Sendable {
+public protocol WorkflowSignalDefinition<Workflow>: Sendable {
     /// The input type for the signal.
     associatedtype Input: Sendable
 
