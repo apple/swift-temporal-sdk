@@ -90,7 +90,6 @@ struct DataConverterTests {
         }
     }
 
-    #if compiler(>=6.2)
     @Test
     func convertVoidPayloads() async throws {
         let dataConverter = DataConverter(
@@ -107,7 +106,6 @@ struct DataConverterTests {
 
         #expect(void! == ())
     }
-    #endif
 
     @Test
     func convertPayloads() async throws {

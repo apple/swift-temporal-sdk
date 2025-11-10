@@ -21,7 +21,6 @@ import TemporalTestKit
 import Testing
 import Tracing
 
-#if !(os(Linux) && swift(>=6.2))  // TODO: reenable once Swift 6.2 compiler crash / Swift 6.1 runtime crash on Linux (in RELEASE only) is fixed
 @Suite(.tags(.instrumentationTests))
 struct TemporalClientOutboundTracingInterceptorTests {
     @Workflow
@@ -165,4 +164,3 @@ struct TemporalClientOutboundTracingInterceptorTests {
         }
     }
 }
-#endif
