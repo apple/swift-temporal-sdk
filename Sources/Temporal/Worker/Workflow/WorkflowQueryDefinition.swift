@@ -45,7 +45,7 @@
 ///     }
 /// }
 /// ```
-public protocol WorkflowQueryDefinition<Workflow>: _SendableMetaTypeBaseProtocol, Sendable {
+public protocol WorkflowQueryDefinition<Workflow>: Sendable {
     /// The input type for the query.
     associatedtype Input: Sendable
 
