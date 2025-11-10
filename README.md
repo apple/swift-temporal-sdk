@@ -3,7 +3,6 @@
 [![](https://img.shields.io/badge/docc-read_documentation-blue)](https://swiftpackageindex.com/apple/swift-temporal-sdk/documentation)
 [![](https://img.shields.io/github/v/release/apple/swift-temporal-sdk)](https://github.com/apple/swift-temporal-sdk/releases)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fapple%2Fswift-temporal-sdk%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/apple/swift-temporal-sdk)
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fapple%2Fswift-temporal-sdk%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/apple/swift-temporal-sdk)
 
 [Temporal](https://temporal.io/) is a distributed, scalable, durable, and highly
 available orchestration engine used to execute asynchronous, long-running
