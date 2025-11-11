@@ -387,6 +387,8 @@ jobs:
         run: |
           . "$HOME/.cargo/env"
           cd ${{ env.RUST_PROJECT_DIR }}
+          # Build with static relocation model to avoid GOT references in static library
+          RUSTFLAGS="-C relocation-model=static" \
           cargo rustc \
             --release \
             --target x86_64-unknown-linux-gnu \
@@ -432,6 +434,8 @@ jobs:
         run: |
           . "$HOME/.cargo/env"
           cd ${{ env.RUST_PROJECT_DIR }}
+          # Build with static relocation model to avoid GOT references in static library
+          RUSTFLAGS="-C relocation-model=static" \
           cargo rustc \
             --release \
             --target aarch64-unknown-linux-gnu \
@@ -476,6 +480,8 @@ jobs:
         run: |
           . "$HOME/.cargo/env"
           cd ${{ env.RUST_PROJECT_DIR }}
+          # Build with static relocation model to avoid GOT references in static library
+          RUSTFLAGS="-C relocation-model=static" \
           cargo rustc \
             --release \
             --target x86_64-unknown-linux-musl \
@@ -520,6 +526,8 @@ jobs:
         run: |
           . "$HOME/.cargo/env"
           cd ${{ env.RUST_PROJECT_DIR }}
+          # Build with static relocation model to avoid GOT references in static library
+          RUSTFLAGS="-C relocation-model=static" \
           cargo rustc \
             --release \
             --target aarch64-unknown-linux-musl \
@@ -545,8 +553,20 @@ jobs:
         with:
           submodules: recursive
 
+      # When running in a container, the checkout action creates files with different ownership
+      # than the container user, causing git to refuse operations for security.
+      # This step marks the repository as safe so gh CLI can upload releases.
+      - name: Fix git ownership for container
+        run: |
+          git config --global --add safe.directory /__w/swift-temporal-sdk/swift-temporal-sdk
+
       - name: Download all platform artifacts
         uses: actions/download-artifact@v7
+
+      - name: Install github cli
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq gh
 
       - name: Reconstruct build structure
         run: |
