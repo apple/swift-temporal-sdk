@@ -1,7 +1,7 @@
 name: Build Temporal Core SDK artifacts
 
 permissions:
-  contents: read
+  contents: write
 
 on:
   workflow_dispatch:
@@ -536,6 +536,8 @@ jobs:
   assemble-bundle:
     name: Assemble artifact bundle
     runs-on: ubuntu-latest
+    # Running on a nightly container since we need https://github.com/swiftlang/swift-package-manager/pull/9360 & https://github.com/swiftlang/swift-package-manager/pull/9359
+    container: swiftlang/swift:nightly-main
     needs: [setup, build-macos, build-linux-x86, build-linux-arm, build-linux-musl-x86, build-linux-musl-arm]
     steps:
       - name: Checkout repository
@@ -748,6 +750,12 @@ jobs:
               }
           }
           EOF
+
+      - name: Validate artifact bundle
+        run: |
+          echo "🔍 Validating artifact bundle with Swift Package Manager..."
+          swift package experimental-audit-binary-artifact "${{ env.ARTIFACT_BUNDLE_NAME }}"
+          echo "✅ Artifact bundle validation passed"
 
       - name: Create archive
         run: |
