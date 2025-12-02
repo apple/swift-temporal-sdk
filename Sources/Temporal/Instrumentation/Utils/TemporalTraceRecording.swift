@@ -44,37 +44,44 @@ struct TemporalTraceRecording {
     ) async throws -> R {
         let serviceContext = ServiceContext.current ?? .topLevel
 
-        return try await self.tracer.withSpan(
-            spanName,
-            context: serviceContext,
-            ofKind: .client
-        ) { span in
-            setRequestAttributes(span)
-
-            // Inject context into tracer payload
-            var tracerPayload = [String: String]()
-            self.tracer.inject(serviceContext, into: &tracerPayload, using: self.injector)
-            let convertedTracerPayload =
-                try DataConverter
-                .default
-                .payloadConverter
-                .convertValueHandlingVoid(tracerPayload)
-
-            // Set encoded tracer payload as a header
-            var headers = headers
-            headers[self.tracingHeaderKey] = convertedTracerPayload
-
-            let response: R
-            do {
-                response = try await next(headers)
-            } catch {
-                span.setStatus(SpanStatus(code: .error))
-                throw error
-            }
-
-            setResponseAttributes?(span, response)
-            return response
+        // This works around a compiler crash on 6.2+ by defining a separate closure
+        // that we pass without escaping it.
+        var result: R? = nil
+        let callMe: (any Span, [String: TemporalPayload]) async throws -> Void = { span, headers in
+            let r = try await next(headers)
+            setResponseAttributes?(span, r)
+            result = r
         }
+        try await withoutActuallyEscaping(callMe) { callMe in
+            try await self.tracer.withSpan(
+                spanName,
+                context: serviceContext,
+                ofKind: .client
+            ) { span in
+                setRequestAttributes(span)
+
+                // Inject context into tracer payload
+                var tracerPayload = [String: String]()
+                self.tracer.inject(serviceContext, into: &tracerPayload, using: self.injector)
+                let convertedTracerPayload =
+                    try DataConverter
+                    .default
+                    .payloadConverter
+                    .convertValueHandlingVoid(tracerPayload)
+
+                // Set encoded tracer payload as a header
+                var headers = headers
+                headers[self.tracingHeaderKey] = convertedTracerPayload
+
+                do {
+                    try await callMe(span, headers)
+                } catch {
+                    span.setStatus(SpanStatus(code: .error))
+                    throw error
+                }
+            }
+        }
+        return result.unsafelyUnwrapped
     }
 
     // MARK: Inbound
