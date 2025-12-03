@@ -37,9 +37,8 @@ if [[ $LATEST_TAG =~ ^v?([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
   MINOR="${BASH_REMATCH[2]}"
   PATCH="${BASH_REMATCH[3]}"
 else
-  MAJOR=0
-  MINOR=0
-  PATCH=0
+  echo "Error: Latest tag '$LATEST_TAG' does not match semver format (vX.Y.Z or X.Y.Z)."
+  exit 1
 fi
 
 echo "Current version: $MAJOR.$MINOR.$PATCH"
