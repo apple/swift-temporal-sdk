@@ -20,7 +20,7 @@ set -euo pipefail
 # - GITHUB_REPOSITORY: Repository in format "owner/repo"
 
 # Get the latest release tag
-LATEST_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null || echo "")
+LATEST_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
 
 if [ -z "$LATEST_TAG" ]; then
   echo "Error: No previous releases found. Cannot determine version."
@@ -28,7 +28,7 @@ if [ -z "$LATEST_TAG" ]; then
 fi
 
 echo "Latest release: $LATEST_TAG"
-LATEST_TAG_DATE=$(gh release view "$LATEST_TAG" --json publishedAt --jq '.publishedAt' 2>/dev/null || echo "1970-01-01T00:00:00Z")
+LATEST_TAG_DATE=$(gh release view "$LATEST_TAG" --json publishedAt --jq '.publishedAt')
 BASE_REF="$LATEST_TAG"
 
 # Parse current version
@@ -45,7 +45,7 @@ fi
 echo "Current version: $MAJOR.$MINOR.$PATCH"
 
 # Get all merged PRs since last release
-PRS=$(gh pr list --state merged --base main --json number,mergedAt --jq ".[] | select(.mergedAt > \"$LATEST_TAG_DATE\") | .number" 2>/dev/null || echo "")
+PRS=$(gh pr list --state merged --base main --json number,mergedAt --jq ".[] | select(.mergedAt > \"$LATEST_TAG_DATE\") | .number")
 
 if [ -z "$PRS" ]; then
   # If no PRs found, check for direct commits
