@@ -47,51 +47,45 @@ echo "Current version: $MAJOR.$MINOR.$PATCH"
 PRS=$(gh pr list --state merged --base main --json number,mergedAt --jq ".[] | select(.mergedAt > \"$LATEST_TAG_DATE\") | .number")
 
 if [ -z "$PRS" ]; then
-  # If no PRs found, check for direct commits
-  COMMITS=$(git rev-list "${BASE_REF}"..HEAD --count 2>/dev/null || echo "0")
-  if [ "$COMMITS" = "0" ]; then
-    echo "No changes since last release. Skipping release."
-    exit 0
-  fi
-  echo "Found $COMMITS commits since last release, but no PRs. Creating patch release."
-  BUMP_TYPE="patch"
-else
-  echo "Analyzing PRs since $LATEST_TAG_DATE"
-  echo "PRs: $PRS"
+  echo "No PRs found since last release. Skipping release."
+  exit 0
+fi
 
-  # Determine the highest semver bump needed
-  BUMP_TYPE="none"
-  RELEASE_NEEDED=false
+echo "Analyzing PRs since $LATEST_TAG_DATE"
+echo "PRs: $PRS"
 
-  for PR in $PRS; do
-    LABELS=$(gh pr view "$PR" --json labels --jq '.labels[].name')
-    echo "PR #$PR labels: $LABELS"
+# Determine the highest semver bump needed
+BUMP_TYPE="none"
+RELEASE_NEEDED=false
 
-    if echo "$LABELS" | grep -q "⚠️ semver/major"; then
-      echo "Error: ⚠️ semver/major found in PR #$PR. Major releases must be created manually."
-      exit 1
-    elif echo "$LABELS" | grep -q "🆕 semver/minor"; then
-      echo "  -> 🆕 semver/minor found"
-      BUMP_TYPE="minor"
+for PR in $PRS; do
+  LABELS=$(gh pr view "$PR" --json labels --jq '.labels[].name')
+  echo "PR #$PR labels: $LABELS"
+
+  if echo "$LABELS" | grep -q "⚠️ semver/major"; then
+    echo "Error: ⚠️ semver/major found in PR #$PR. Major releases must be created manually."
+    exit 1
+  elif echo "$LABELS" | grep -q "🆕 semver/minor"; then
+    echo "  -> PR #$PR: 🆕 semver/minor found"
+    BUMP_TYPE="minor"
+    RELEASE_NEEDED=true
+  elif echo "$LABELS" | grep -q "🔨 semver/patch"; then
+    echo "  -> PR #$PR: 🔨 semver/patch found"
+    if [ "$BUMP_TYPE" = "none" ]; then
+      BUMP_TYPE="patch"
       RELEASE_NEEDED=true
-    elif echo "$LABELS" | grep -q "🔨 semver/patch"; then
-      echo "  -> 🔨 semver/patch found"
-      if [ "$BUMP_TYPE" = "none" ]; then
-        BUMP_TYPE="patch"
-        RELEASE_NEEDED=true
-      fi
-    elif echo "$LABELS" | grep -q "semver/none"; then
-      echo "  -> semver/none found"
-    else
-      # No semver label found, default to none (no release)
-      echo "  -> Warning: No semver label found. Skipping this PR."
     fi
-  done
-
-  if [ "$RELEASE_NEEDED" = false ]; then
-    echo "No PRs found requiring a release. Skipping release."
-    exit 0
+  elif echo "$LABELS" | grep -q "semver/none"; then
+    echo "  -> PR #$PR: semver/none found"
+  else
+    # No semver label found, default to none (no release)
+    echo "  -> PR #$PR: Warning: No semver label found. Skipping this PR."
   fi
+done
+
+if [ "$RELEASE_NEEDED" = false ]; then
+  echo "No PRs found requiring a release. Skipping release."
+  exit 0
 fi
 
 # Calculate new version
