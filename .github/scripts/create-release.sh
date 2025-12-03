@@ -59,7 +59,10 @@ BUMP_TYPE="none"
 RELEASE_NEEDED=false
 
 for PR in $PRS; do
-  LABELS=$(gh pr view "$PR" --json labels --jq '.labels[].name')
+  LABELS=$(gh pr view "$PR" --json labels --jq '.labels[].name') || {
+    echo "Error: Failed to fetch labels for PR #$PR"
+    exit 1
+  }
   echo "PR #$PR labels: $LABELS"
 
   if echo "$LABELS" | grep -q "⚠️ semver/major"; then
@@ -119,7 +122,10 @@ RELEASE_NOTES=$(gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
   -f tag_name="$NEW_TAG" \
   -f target_commitish="$(git rev-parse HEAD)" \
   -f previous_tag_name="$LATEST_TAG" \
-  --jq '.body')
+  --jq '.body') || {
+  echo "Error: Failed to generate release notes"
+  exit 1
+}
 
 # Create release
 echo "Creating GitHub release $NEW_TAG..."
