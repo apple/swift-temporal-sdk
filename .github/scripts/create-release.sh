@@ -29,7 +29,6 @@ fi
 
 echo "Latest release: $LATEST_TAG"
 LATEST_TAG_DATE=$(gh release view "$LATEST_TAG" --json publishedAt --jq '.publishedAt')
-BASE_REF="$LATEST_TAG"
 
 # Parse current version
 if [[ $LATEST_TAG =~ ^v?([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
