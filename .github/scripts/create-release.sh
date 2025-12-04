@@ -28,7 +28,10 @@ if [ -z "$LATEST_TAG" ]; then
 fi
 
 echo "Latest release: $LATEST_TAG"
-LATEST_TAG_DATE=$(gh release view "$LATEST_TAG" --json publishedAt --jq '.publishedAt')
+LATEST_TAG_DATE=$(gh release view "$LATEST_TAG" --json publishedAt --jq '.publishedAt') || {
+  echo "Error: Failed to get release date for tag '$LATEST_TAG'"
+  exit 1
+}
 
 # Parse current version
 if [[ $LATEST_TAG =~ ^v?([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
@@ -43,7 +46,10 @@ fi
 echo "Current version: $MAJOR.$MINOR.$PATCH"
 
 # Get all merged PRs since last release
-PRS=$(gh pr list --state merged --base main --json number,mergedAt --jq ".[] | select(.mergedAt > \"$LATEST_TAG_DATE\") | .number")
+PRS=$(gh pr list --state merged --base main --json number,mergedAt --jq ".[] | select(.mergedAt > \"$LATEST_TAG_DATE\") | .number") || {
+  echo "Error: Failed to fetch merged PRs"
+  exit 1
+}
 
 if [ -z "$PRS" ]; then
   echo "No PRs found since last release. Skipping release."
@@ -131,7 +137,10 @@ echo "Creating GitHub release $NEW_TAG..."
 gh release create "$NEW_TAG" \
   --title "$NEW_TAG" \
   --notes "$RELEASE_NOTES" \
-  --target "$(git rev-parse HEAD)"
+  --target "$(git rev-parse HEAD)" || {
+  echo "Error: Failed to create release $NEW_TAG"
+  exit 1
+}
 
 echo ""
 echo "Release $NEW_TAG created successfully!"
