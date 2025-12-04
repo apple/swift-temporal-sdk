@@ -20,7 +20,7 @@ set -euo pipefail
 # - GITHUB_REPOSITORY: Repository in format "owner/repo"
 
 # Get the latest release tag
-LATEST_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
+LATEST_TAG=$(gh release view --json tagName --jq '.tagName')
 
 if [ -z "$LATEST_TAG" ]; then
   echo "Error: No previous releases found. Cannot determine version."
