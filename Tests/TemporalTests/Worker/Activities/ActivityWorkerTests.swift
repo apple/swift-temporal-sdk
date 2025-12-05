@@ -279,20 +279,46 @@ private final class ActivityHeaderToInputInterceptor: WorkerInterceptor {
     }
 }
 
+// Test activities with duplicate names for duplicate registration tests
+private struct FirstActivity: ActivityDefinition {
+    typealias Input = Void
+    typealias Output = Void
+    static var name: String { "DuplicateName" }
+    func run(input: Void) async throws {}
+}
+
+private struct SecondActivity: ActivityDefinition {
+    typealias Input = Void
+    typealias Output = Void
+    static var name: String { "DuplicateName" }  // Same name as FirstActivity
+    func run(input: Void) async throws {}
+}
+
+private struct UniqueActivity: ActivityDefinition {
+    typealias Input = Void
+    typealias Output = Void
+    static var name: String { "UniqueName" }
+    func run(input: Void) async throws {}
+}
+
 @Suite()
 struct ActivityWorkerTests {
     private let bridgeWorker = MockBridgeWorker()
     private let activityWorker: ActivityWorker<MockBridgeWorker>
 
     init(activities: [any ActivityDefinition] = [], dataConverter: DataConverter = .default, interceptors: [any WorkerInterceptor] = []) {
-        self.activityWorker = .init(
-            worker: self.bridgeWorker,
-            activities: activities,
-            taskQueue: "test-queue",
-            dataConverter: dataConverter,
-            interceptors: interceptors,
-            logger: .init(label: "TestLogger")
-        )
+        do {
+            self.activityWorker = try .init(
+                worker: self.bridgeWorker,
+                activities: activities,
+                taskQueue: "test-queue",
+                dataConverter: dataConverter,
+                interceptors: interceptors,
+                logger: .init(label: "TestLogger")
+            )
+        } catch {
+            fatalError("Failed to initialize ActivityWorker: \(error)")
+        }
     }
 
     @Test
@@ -806,6 +832,65 @@ struct ActivityWorkerTests {
                 #expect(heartbeatDetails == nil)
             }
             group.cancelAll()
+        }
+    }
+
+    @Test
+    func duplicateActivityRegistrationThrowsError() async throws {
+        // Test that duplicate activity registrations throw TemporalSDKError
+        let logHandler = InMemoryLogHandler()
+        logHandler.logLevel = .trace  // Capture all logs including info
+        let logger = Logger(label: "TestActivityWorker") { _ in logHandler }
+
+        let bridgeWorker = MockBridgeWorker()
+
+        // Expect error to be thrown when creating ActivityWorker with duplicate activity names
+        #expect(throws: (any Error).self) {
+            let _ = try ActivityWorker(
+                worker: bridgeWorker,
+                activities: [FirstActivity(), SecondActivity(), UniqueActivity()],
+                taskQueue: "test-queue",
+                dataConverter: .default,
+                interceptors: [],
+                logger: logger
+            )
+        }
+
+        // Verify the info log was recorded before the error was thrown
+        try logHandler.entries.withLock { entries in
+            let infoEntries = entries.filter { $0.level == .info }
+            #expect(infoEntries.count == 1)
+
+            let logEntry = try #require(infoEntries.first)
+            #expect(logEntry.message == "Duplicate activity registration")
+
+            // Verify structured metadata using activity name key
+            let activityName = try #require(logEntry.metadata?["activity.name"])
+            #expect(activityName == "DuplicateName")
+        }
+    }
+
+    @Test
+    func noDuplicateActivitiesNoError() async throws {
+        // Test that no duplicates means no errors and no logs
+        let logHandler = InMemoryLogHandler()
+        let logger = Logger(label: "TestActivityWorker") { _ in logHandler }
+
+        let bridgeWorker = MockBridgeWorker()
+
+        // Should not throw when creating ActivityWorker with unique activity names
+        let _ = try ActivityWorker(
+            worker: bridgeWorker,
+            activities: [UniqueActivity()],
+            taskQueue: "test-queue",
+            dataConverter: .default,
+            interceptors: [],
+            logger: logger
+        )
+
+        // Verify no logs were recorded
+        logHandler.entries.withLock { entries in
+            #expect(entries.isEmpty)
         }
     }
 }
