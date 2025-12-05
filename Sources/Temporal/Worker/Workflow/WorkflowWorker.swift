@@ -22,7 +22,7 @@ package protocol WorkflowWorkerProtocol: Sendable {
         configuration: TemporalWorker.Configuration,
         workflows: [any WorkflowDefinition.Type],
         logger: Logger
-    )
+    ) throws
     var worker: BridgeWorker { get }
     var interceptors: [any WorkerInterceptor] { get }
     func run() async throws
@@ -56,12 +56,18 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
         workflows: [any WorkflowDefinition.Type],
         interceptors: [any WorkerInterceptor],
         logger: Logger
-    ) {
+    ) throws {
         self.worker = worker
         self.taskQueue = taskQueue
         self.namespace = namespace
         self.dataConverter = dataConverter
-        self.workflows = .init(uniqueKeysWithValues: workflows.map { ($0.name, $0) })
+        self.workflows = try Dictionary(
+            workflows.map { ($0.name, $0) },
+            uniquingKeysWith: { first, second in
+                logger.info("Duplicate workflow registration", metadata: [LoggingKeys.workflowType: "\(first.name)"])
+                throw TemporalSDKError("Duplicate workflow: \(first.name)")
+            }
+        )
         self.interceptors = interceptors
         self.logger = logger
     }
@@ -71,8 +77,8 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
         configuration: TemporalWorker.Configuration,
         workflows: [any WorkflowDefinition.Type],
         logger: Logger
-    ) {
-        self.init(
+    ) throws {
+        try self.init(
             worker: worker,
             taskQueue: configuration.taskQueue,
             namespace: configuration.namespace,
