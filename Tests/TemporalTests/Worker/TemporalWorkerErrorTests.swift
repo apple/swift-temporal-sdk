@@ -62,8 +62,8 @@ extension TestServerDependentTests {
                     configuration: TemporalWorker.Configuration,
                     activities: [any ActivityDefinition],
                     logger: Logger
-                ) {
-                    self.base = ActivityWorker(
+                ) throws {
+                    self.base = try ActivityWorker(
                         worker: worker,
                         configuration: configuration,
                         activities: activities,
@@ -103,8 +103,8 @@ extension TestServerDependentTests {
                     configuration: TemporalWorker.Configuration,
                     workflows: [any WorkflowDefinition.Type],
                     logger: Logger
-                ) {
-                    self.base = WorkflowWorker(
+                ) throws {
+                    self.base = try WorkflowWorker(
                         worker: worker,
                         configuration: configuration,
                         workflows: workflows,
