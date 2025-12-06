@@ -246,13 +246,13 @@ where
                 )
                 optionalWorker = worker
 
-                let activityWorker = ActivityWorker(
+                let activityWorker = try ActivityWorker(
                     worker: worker,
                     configuration: self.configuration,
                     activities: self.activities,
                     logger: self.logger
                 )
-                let workflowWorker = WorkflowWorker(
+                let workflowWorker = try WorkflowWorker(
                     worker: worker,
                     configuration: self.configuration,
                     workflows: self.workflows,

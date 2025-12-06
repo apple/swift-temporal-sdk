@@ -26,7 +26,7 @@ package protocol ActivityWorkerProtocol: Sendable {
         configuration: TemporalWorker.Configuration,
         activities: [any ActivityDefinition],
         logger: Logger
-    )
+    ) throws
     func run() async throws
 }
 
@@ -101,10 +101,15 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
         dataConverter: DataConverter,
         interceptors: [any WorkerInterceptor] = [],
         logger: Logger
-    ) {
+    ) throws {
         self.worker = worker
-        self.activities = .init(
-            uniqueKeysWithValues: activities.map { (Self.getName(for: $0), $0) }
+        self.activities = try Dictionary(
+            activities.map { (Self.getName(for: $0), $0) },
+            uniquingKeysWith: { first, second in
+                let activityName = Self.getName(for: first) ?? "unknown"
+                logger.info("Duplicate activity registration", metadata: [LoggingKeys.activityName: "\(activityName)"])
+                throw TemporalSDKError("Duplicate activity: \(activityName)")
+            }
         )
         self.taskQueue = taskQueue
         self.dataConverter = dataConverter
@@ -119,8 +124,8 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
         configuration: TemporalWorker.Configuration,
         activities: [any ActivityDefinition],
         logger: Logger
-    ) {
-        self.init(
+    ) throws {
+        try self.init(
             worker: worker,
             activities: activities,
             taskQueue: configuration.taskQueue,
