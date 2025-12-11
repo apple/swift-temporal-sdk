@@ -18,7 +18,7 @@ package import struct FoundationEssentials.UUID
 package import struct Foundation.UUID
 #endif
 
-#if compiler(<6.3)  // Swift main nightly not tagged 6.3 yet, so this guard does nothing (for now)
+#if compiler(<6.3) || canImport(Darwin)  // Swift main nightly not tagged 6.3 yet, so this guard does nothing (for now)
 extension UUID {
     @_disfavoredOverload  // Method was upstreamed into FoundationPreview 6.3: https://github.com/swiftlang/swift-foundation/pull/1271
     package static func random(

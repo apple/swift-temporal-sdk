@@ -412,14 +412,11 @@ extension TemporalWorker {
             dataConverter: DataConverter = DataConverter.default,
             interceptors: [any WorkerInterceptor] = [TemporalWorkerTracingInterceptor()]
         ) throws {
-            let (namespace, taskQueue, workerBuildID, clientIdentity) = try configReader.withSnapshot { snapshotContainer in
-                try (
-                    snapshotContainer.requiredString(forKey: .workerNamespace),
-                    snapshotContainer.requiredString(forKey: .workerTaskQueue),
-                    snapshotContainer.requiredString(forKey: .workerBuildId),
-                    snapshotContainer.string(forKey: .workerClientIdentity)  // defaults to `nil`
-                )
-            }
+            let snapshot = configReader.snapshot()
+            let namespace = try snapshot.requiredString(forKey: .workerNamespace)
+            let taskQueue = try snapshot.requiredString(forKey: .workerTaskQueue)
+            let workerBuildID = try snapshot.requiredString(forKey: .workerBuildId)
+            let clientIdentity = try snapshot.requiredString(forKey: .workerClientIdentity)  // defaults to `nil`
 
             try self.init(
                 namespace: namespace,

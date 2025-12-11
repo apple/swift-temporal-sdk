@@ -131,12 +131,9 @@ extension TemporalClient {
             dataConverter: DataConverter = DataConverter.default,
             interceptors: [any ClientInterceptor] = [TemporalClientTracingInterceptor()]
         ) throws {
-            let (namespace, identity) = configReader.withSnapshot { snapshotReader in
-                (
-                    snapshotReader.string(forKey: .clientNamespace, default: "default"),
-                    snapshotReader.string(forKey: .clientIdentity)  // defaults to `nil`
-                )
-            }
+            let snapshot = configReader.snapshot()
+            let namespace = snapshot.string(forKey: .clientNamespace, default: "default")
+            let identity = snapshot.string(forKey: .clientIdentity)  // defaults to `nil`
 
             try self.init(
                 instrumentation: .init(configReader: configReader),
