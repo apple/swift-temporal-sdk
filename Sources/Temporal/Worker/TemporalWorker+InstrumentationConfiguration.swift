@@ -64,9 +64,8 @@ extension TemporalWorker.Configuration {
         ///   - configReader: The configuration reader containing the required hostname value.
         /// - Throws: Configuration errors if the required hostname key is missing or invalid.
         public init(configReader: ConfigReader) throws {
-            let serverHostname = try configReader.withSnapshot { snapshotContainer in
-                try snapshotContainer.requiredString(forKey: .workerClientServerHostname)
-            }
+            let snapshot = configReader.snapshot()
+            let serverHostname = try snapshot.requiredString(forKey: .workerClientServerHostname)
 
             self.init(serverHostname: serverHostname)
         }
