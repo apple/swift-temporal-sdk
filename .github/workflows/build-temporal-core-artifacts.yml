@@ -26,7 +26,7 @@ jobs:
       release_tag: ${{ steps.create_release.outputs.release_tag }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -124,7 +124,7 @@ jobs:
     needs: setup
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -341,7 +341,7 @@ jobs:
           echo "✅ XCFramework created: ${{ env.XCFRAMEWORK_NAME }}"
 
       - name: Upload macOS artifacts for bundle assembly
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: macos-libraries
           path: |
@@ -364,7 +364,7 @@ jobs:
     needs: setup
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -394,7 +394,7 @@ jobs:
             --crate-type=staticlib
 
       - name: Upload Linux x86_64 artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: linux-x86-libraries
           path: dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
@@ -409,7 +409,7 @@ jobs:
     needs: setup
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -439,7 +439,7 @@ jobs:
             --crate-type=staticlib
 
       - name: Upload Linux ARM64 artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: linux-arm-libraries
           path: dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
@@ -451,7 +451,7 @@ jobs:
     needs: setup
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -483,7 +483,7 @@ jobs:
             --crate-type=staticlib
 
       - name: Upload Linux MUSL x86_64 artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: linux-musl-x86-libraries
           path: dependencies/sdk-core/target/x86_64-unknown-linux-musl/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
@@ -495,7 +495,7 @@ jobs:
     needs: setup
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -527,7 +527,7 @@ jobs:
             --crate-type=staticlib
 
       - name: Upload Linux MUSL ARM64 artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: linux-musl-arm-libraries
           path: dependencies/sdk-core/target/aarch64-unknown-linux-musl/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
@@ -539,12 +539,12 @@ jobs:
     needs: [setup, build-macos, build-linux-x86, build-linux-arm, build-linux-musl-x86, build-linux-musl-arm]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
       - name: Download all platform artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
 
       - name: Reconstruct build structure
         run: |
