@@ -805,6 +805,18 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
+    mutating func cancelWorkflowExecution() {
+        switch consume self.state {
+        case .active(var active):
+            active.commands.append(
+                .with {
+                    $0.cancelWorkflowExecution = .init()
+                }
+            )
+            self = .init(state: .active(active))
+        }
+    }
+
     // MARK: Memo
 
     func memo() -> [String: TemporalRawValue] {

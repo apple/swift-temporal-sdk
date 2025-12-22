@@ -906,6 +906,9 @@ struct WorkflowInstance: Sendable {
         if let continueAsNewError = error as? ContinueAsNewError {
             self.logger.debug("Workflow requested continue as new")
             self.stateMachine.continueAsNew(continueAsNewError)
+        } else if Task.isCancelled && error.isWorkflowCancellationError() {
+            self.logger.debug("Workflow raised a cancellation.")
+            self.stateMachine.cancelWorkflowExecution()
         } else if let temporalFailureError = error as? any TemporalFailureError {
             // If the thrown error is a temporal failure error it needs to fail the whole
             // workflow.
@@ -916,6 +919,23 @@ struct WorkflowInstance: Sendable {
             // so that the workflow task can be retried
             let temporalFailure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
             self.stateMachine.workflowTaskFailed(temporalFailure: temporalFailure)
+        }
+    }
+}
+
+extension Error {
+    fileprivate func isWorkflowCancellationError() -> Bool {
+        switch self {
+        case is CancellationError:
+            true
+        case is CanceledError:
+            true
+        case let error as ActivityError:
+            error.cause is CanceledError
+        case let error as ChildWorkflowError:
+            error.cause is CanceledError
+        default:
+            false
         }
     }
 }

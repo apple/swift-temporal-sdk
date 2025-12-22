@@ -465,8 +465,9 @@ extension TestServerDependentTests {
                         .result()
                 }
 
+                // `workflowExecutionCanceled` command translates to exactly this error
                 let cancelledError = try #require(error.cause as? CanceledError)
-                #expect(cancelledError.message == "Wait condition cancelled")
+                #expect(cancelledError.message == "Workflow execution canceled")
             }
         }
 

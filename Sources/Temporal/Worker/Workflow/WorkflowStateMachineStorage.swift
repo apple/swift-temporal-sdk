@@ -495,6 +495,10 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         self.stateMachine.continueAsNew(continueAsNewError)
     }
 
+    func cancelWorkflowExecution() {
+        self.stateMachine.cancelWorkflowExecution()
+    }
+
     func commands() -> WorkflowStateMachine.CommandsAction {
         return self.stateMachine.commands()
     }
