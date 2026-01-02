@@ -29,15 +29,18 @@ extension TestServerDependentTests {
 
         @Test
         func cancelWorker() async throws {
-            let task = Task {
-                try await executeWorkflow(
-                    SimpleWorkflow.self,
-                    input: ()
-                )
-            }
-            task.cancel()
-            await #expect(throws: (any Error).self) {
-                try await task.value
+            await withThrowingTaskGroup { group in
+                group.addTask {
+                    try await executeWorkflow(
+                        SimpleWorkflow.self,
+                        input: ()
+                    )
+                }
+
+                group.cancelAll()
+                await #expect(throws: (any Error).self) {
+                    try await group.next()
+                }
             }
         }
 
