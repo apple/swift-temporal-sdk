@@ -94,7 +94,7 @@ struct WorkflowWorkerTests {
             #expect(logEntry.message == "Duplicate workflow registration")
 
             // Verify structured metadata using workflow type key
-            let workflowType = try #require(logEntry.metadata?["workflow.type"])
+            let workflowType = try #require(logEntry.metadata?["temporal.workflow.type"])
             #expect(workflowType == "DuplicateWorkflow")
         }
     }

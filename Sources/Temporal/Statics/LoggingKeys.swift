@@ -15,13 +15,19 @@
 struct LoggingKeys {
     static let taskToken = "temporal.task.token"
     static let activityCancellationReason = "temporal.activity.cancellation.reason"
-    static let error = "error"
-    static let workflowRunID = "workflow.run.id"
-    static let workflowType = "workflow.type"
-    static let workflowSignalName = "workflow.signal.name"
-    static let workflowQueryID = "workflow.query.id"
-    static let workflowQueryName = "workflow.query.name"
-    static let workflowUpdateID = "workflow.update.id"
-    static let workflowUpdateName = "workflow.update.name"
-    static let activityName = "activity.name"
+    static let errorType = "error.type"
+    static let errorMessage = "error.message"
+    static let taskQueue = "temporal.taskQueue"
+    static let workflowID = TemporalTracingKeys.workflowId
+    static let workflowRunID = TemporalTracingKeys.workflowRunId
+    static let workflowType = TemporalTracingKeys.workflowType
+    static let workflowNamespace = TemporalTracingKeys.workflowNamespace
+    static let workflowSignalName = "temporal.workflow.signal.name"
+    static let workflowQueryID = "temporal.workflow.query.id"
+    static let workflowQueryName = "temporal.workflow.query.name"
+    static let workflowUpdateID = "temporal.workflow.update.id"
+    static let workflowUpdateName = "temporal.workflow.update.name"
+    static let activityID = TemporalTracingKeys.activityID
+    static let activityName = "temporal.activity.name"
+    static let activityAttempt = "temporal.activity.attempt"
 }
