@@ -187,7 +187,8 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
                     self.logger.debug(
                         "Workflow worker encountered error while processing activations",
                         metadata: [
-                            LoggingKeys.error: "\(error)"
+                            LoggingKeys.errorType: "\(type(of: error))",
+                            LoggingKeys.errorMessage: "\(error)",
                         ]
                     )
 

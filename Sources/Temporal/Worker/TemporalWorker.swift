@@ -275,7 +275,8 @@ where
                         self.logger.warning(
                             "Temporal worker failed finalizing shutdown",
                             metadata: [
-                                LoggingKeys.error: "\(error)"
+                                LoggingKeys.errorType: "\(type(of: error))",
+                                LoggingKeys.errorMessage: "\(error)",
                             ]
                         )
                     }
@@ -319,7 +320,8 @@ where
                                 self.logger.error(
                                     "Initiating shut down of Temporal worker due to temporal activity / workflow worker error",
                                     metadata: [
-                                        LoggingKeys.error: "\(error)"
+                                        LoggingKeys.errorType: "\(type(of: error))",
+                                        LoggingKeys.errorMessage: "\(error)",
                                     ]
                                 )
                                 worker.initiateShutdown()
@@ -338,7 +340,8 @@ where
                                 self.logger.debug(
                                     "Finished rerunning workers for cleanup. Throwing back error.",
                                     metadata: [
-                                        LoggingKeys.error: "\(error)"
+                                        LoggingKeys.errorType: "\(type(of: error))",
+                                        LoggingKeys.errorMessage: "\(error)",
                                     ]
                                 )
                                 throw error
