@@ -72,7 +72,7 @@ extension TestServerDependentTests {
 
         @Test("Workflow Cancellation", arguments: Scenario.allCases)
         func workflowCancellation(scenario: Scenario) async throws {
-            try await workflowHandle(for: CancellationWorkflow.self, input: scenario) { handle in
+            try await workflowHandle(for: CancellationWorkflow.self, input: scenario, activities: CancellationActivities().allActivities) { handle in
                 try await Task.sleep(for: .milliseconds(200))
                 await #expect(throws: Never.self) {
                     try await handle.cancel()
@@ -83,8 +83,8 @@ extension TestServerDependentTests {
                 }
 
                 // `workflowExecutionCanceled` command translates to exactly this error
-                let cancelledError = try #require(error.cause as? CanceledError)
-                #expect(cancelledError.message == "Workflow execution canceled")
+                #expect(error.cause is CanceledError)
+                #expect((error.cause as? CanceledError)?.message == "Workflow execution canceled")
             }
         }
 

@@ -626,6 +626,7 @@ struct WorkflowStateMachine: ~Copyable {
         headers: [String: TemporalPayload],
         inputs: [TemporalPayload],
         childWorkflowOptions: ChildWorkflowOptions,
+        memo: [String: TemporalPayload]?,
         state: UntypedChildWorkflowHandle.State,
         continuation: CheckedContinuation<(String, String), any Error>
     ) {
@@ -643,6 +644,7 @@ struct WorkflowStateMachine: ~Copyable {
                         generatedWorkflowID: workflowID,
                         taskQueue: taskQueue,
                         parentSearchAttributes: active.searchAttributes,
+                        memo: memo,
                         headers: headers,
                         inputs: inputs
                     )

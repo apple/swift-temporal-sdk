@@ -23,6 +23,7 @@ extension Coresdk_WorkflowCommands_StartChildWorkflowExecution {
         generatedWorkflowID: String,
         taskQueue: String,
         parentSearchAttributes: SearchAttributeCollection? = nil,
+        memo: [String: TemporalPayload]?,
         headers: [String: TemporalPayload],
         inputs: [TemporalPayload]
     ) {
@@ -48,6 +49,10 @@ extension Coresdk_WorkflowCommands_StartChildWorkflowExecution {
 
         self.headers = headers.mapValues { .init(temporalPayload: $0) }
 
+        if let retryPolicy = childWorkflowOptions.retryPolicy {
+            self.retryPolicy = .init(retryPolicy: retryPolicy)
+        }
+
         if let workflowExecutionTimeout = childWorkflowOptions.executionTimeout {
             self.workflowExecutionTimeout = .init(duration: workflowExecutionTimeout)
         }
@@ -58,6 +63,10 @@ extension Coresdk_WorkflowCommands_StartChildWorkflowExecution {
 
         if let taskTimeout = childWorkflowOptions.taskTimeout {
             self.workflowTaskTimeout = .init(duration: taskTimeout)
+        }
+
+        if let memo {
+            self.memo = memo.mapValues { .init(temporalPayload: $0) }
         }
 
         if let cronSchedule = childWorkflowOptions.cronSchedule {

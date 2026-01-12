@@ -285,6 +285,21 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
             )
         }
 
+        let childWorkflowMemo: [String: TemporalPayload]?
+        if let memo = childWorkflowOptions.memo {
+            var temporalPayloads: [String: TemporalPayload] = [:]
+            for (key, value) in memo {
+                do {
+                    temporalPayloads[key] = try self.payloadConverter.convertValue(value)
+                } catch {
+                    throw ArgumentError(message: "Failed to convert memo '\(key)' for child workflow '\(workflowName)'. Underlying error \(error)")
+                }
+            }
+            childWorkflowMemo = temporalPayloads
+        } else {
+            childWorkflowMemo = nil
+        }
+
         let sequenceNumber = self.stateMachine.nextChildWorkflowSequenceNumber()
         let state = UntypedChildWorkflowHandle.State(resolutionState: .unresolved(sequenceNumber: sequenceNumber))
         let (workflowID, firstExecutionRunID) = try await withTaskCancellationHandler {
@@ -297,6 +312,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
                     headers: headers,
                     inputs: inputs,
                     childWorkflowOptions: childWorkflowOptions,
+                    memo: childWorkflowMemo,
                     state: state,
                     continuation: continuation
                 )

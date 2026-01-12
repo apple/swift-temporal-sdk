@@ -141,7 +141,6 @@ extension TestServerDependentTests {
                     return try await Workflow.timeout(for: .seconds(0.1)) {
                         try await handle.result()
                     }
-
                 }
             }
         }
@@ -530,6 +529,46 @@ extension TestServerDependentTests {
             }
 
             #expect(interceptor.counter.withLock { $0 } == 2)
+        }
+
+        @Workflow
+        final class ChildMemoAndRetryWorkflow {
+            func run(input: Void) async throws {
+                guard let memo = try await Workflow.getMemoValue(for: "hello", as: String.self) else {
+                    throw ApplicationError(message: "Workflow memo not found!", isNonRetryable: true)
+                }
+
+                guard memo == "world" else {
+                    throw ApplicationError(message: "Workflow memo has invalid value: \(memo)!", isNonRetryable: true)
+                }
+
+                guard let retryPolicy = Workflow.info.retryPolicy,
+                    retryPolicy.maximumAttempts == 30
+                else {
+                    throw ApplicationError(message: "Retry Policy is not present!", isNonRetryable: true)
+                }
+            }
+        }
+
+        @Workflow
+        final class ParentMemoAndRetryWorkflow {
+            func run(input: Void) async throws {
+                try await Workflow.executeChildWorkflow(
+                    ChildMemoAndRetryWorkflow.self,
+                    options: ChildWorkflowOptions(
+                        retryPolicy: .init(maximumAttempts: 30),
+                        memo: ["hello": "world"]
+                    ),
+                    input: ()
+                )
+            }
+        }
+
+        @Test
+        func childWorkflowMemoAndRetryPolicy() async throws {
+            await #expect(throws: Never.self) {
+                try await executeWorkflow(ParentMemoAndRetryWorkflow.self, input: (), moreWorkflows: [ChildMemoAndRetryWorkflow.self])
+            }
         }
     }
 }
