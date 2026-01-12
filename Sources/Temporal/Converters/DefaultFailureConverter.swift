@@ -159,7 +159,13 @@ public struct DefaultFailureConverter: FailureConverter {
                 stackTrace: temporalFailure.stackTrace,
                 lastHeartbeatDetails: timeout.lastHeartbeatDetails
             )
-
+        case .server(let server):
+            return ServerError(
+                message: temporalFailure.message,
+                cause: cause,
+                stackTrace: temporalFailure.stackTrace,
+                isNonRetryable: server.isNonRetryable
+            )
         case .none:
             return BasicTemporalFailureError(
                 message: temporalFailure.message,
