@@ -47,6 +47,8 @@ extension Temporal_Api_Failure_V1_Failure.OneOf_FailureInfo {
             self = .activityFailureInfo(.init(activity: activity))
         case .timeout(let timeout):
             self = .timeoutFailureInfo(.init(timeout: timeout))
+        case .server(let server):
+            self = .serverFailureInfo(.init(server: server))
         case .DO_NOT_EXHAUSTIVELY_MATCH_OVER_THIS_ENUM:
             fatalError("Unexpected case DO_NOT_EXHAUSTIVELY_MATCH_OVER_THIS_ENUM")
         }
@@ -107,6 +109,14 @@ extension Temporal_Api_Failure_V1_ActivityFailureInfo {
             $0.activityType.name = activity.activityType
             $0.activityID = activity.activityID
             $0.retryState = .init(retryState: activity.retryState)
+        }
+    }
+}
+
+extension Temporal_Api_Failure_V1_ServerFailureInfo {
+    init(server: TemporalFailure.FailureInfo.Server) {
+        self = .with {
+            $0.nonRetryable = server.isNonRetryable
         }
     }
 }
@@ -198,9 +208,8 @@ extension TemporalFailure.FailureInfo {
             )
         case .terminatedFailureInfo:
             self = .terminated(.init())
-        case .serverFailureInfo:
-            // TODO: Add support
-            fatalError("Unsupported failure info")
+        case let .serverFailureInfo(failureInfo):
+            self = .server(.init(isNonRetryable: failureInfo.nonRetryable))
         case .resetWorkflowFailureInfo:
             // TODO: Add support
             fatalError("Unsupported failure info")

@@ -57,7 +57,7 @@ public struct TemporalFailure: Hashable, Sendable {
             /// The string type of the error if any.
             public var type: String
 
-            /// Boolean indicating wehter the error was set as non-retry.
+            /// Boolean indicating whether the error was set as non-retry.
             public var isNonRetryable: Bool
 
             /// Delay duration before the next retry attempt.
@@ -80,6 +80,19 @@ public struct TemporalFailure: Hashable, Sendable {
                 self.type = type
                 self.isNonRetryable = isNonRetryable
                 self.nextRetryDelay = nextRetryDelay
+            }
+        }
+
+        public struct Server: Sendable, Hashable {
+            /// Boolean indicating whether the error was set as non-retry.
+            public var isNonRetryable: Bool
+
+            /// Initializes a new server error.
+            ///
+            /// - Parameters:
+            ///   - isNonRetryable: Boolean indicating whether the error was set as non-retry. Defaults to `false`.
+            public init(isNonRetryable: Bool) {
+                self.isNonRetryable = isNonRetryable
             }
         }
 
@@ -211,6 +224,8 @@ public struct TemporalFailure: Hashable, Sendable {
         case terminated(Terminated)
         /// Indicates a child workflow execution failure.
         case childWorkflowExecution(ChildWorkflowExecution)
+        /// Indicates a server-side error.
+        case server(Server)
         /// Indicates an activity failure.
         case activity(Activity)
         /// Indicates a timeout failure.

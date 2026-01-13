@@ -60,7 +60,7 @@ extension PayloadCodec {
             cancelled.details = encodedDetails
             temporalFailure.failureInfo = .cancelled(cancelled)
 
-        case .childWorkflowExecution, .terminated, .activity:
+        case .childWorkflowExecution, .terminated, .activity, .server:
             // No details so nothing to encode
             break
 
@@ -136,7 +136,7 @@ extension PayloadCodec {
             timeout.lastHeartbeatDetails = decodedDetails
             temporalFailure.failureInfo = .timeout(timeout)
 
-        case .childWorkflowExecution, .activity:
+        case .childWorkflowExecution, .activity, .server:
             // No details so nothing to decode
             break
 
