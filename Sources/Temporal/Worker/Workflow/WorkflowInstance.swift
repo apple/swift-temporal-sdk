@@ -302,7 +302,13 @@ struct WorkflowInstance: Sendable {
                     self.stateMachine.workflowTaskFailed(temporalFailure: temporalFailure)
                 }
             case .failure(let error):
-                self.logger.trace("Workflow failed", metadata: [LoggingKeys.error: "\(error)"])
+                self.logger.trace(
+                    "Workflow failed",
+                    metadata: [
+                        LoggingKeys.errorType: "\(type(of: error))",
+                        LoggingKeys.errorMessage: "\(error)",
+                    ]
+                )
                 await self.handleTopLevelError(error)
             }
         }
@@ -511,7 +517,8 @@ struct WorkflowInstance: Sendable {
                 "Failed converting signal input",
                 metadata: [
                     LoggingKeys.workflowSignalName: "\(Signal.name)",
-                    LoggingKeys.error: "\(error)",
+                    LoggingKeys.errorType: "\(type(of: error))",
+                    LoggingKeys.errorMessage: "\(error)",
                 ]
             )
             return
@@ -535,7 +542,13 @@ struct WorkflowInstance: Sendable {
             // on the same level as the workflows primary run method. This means
             // that a throwing signal in a workflow has the same effect as a throwing
             // workflow run method.
-            self.logger.trace("Running signal handler failed", metadata: [LoggingKeys.error: "\(error)"])
+            self.logger.trace(
+                "Running signal handler failed",
+                metadata: [
+                    LoggingKeys.errorType: "\(type(of: error))",
+                    LoggingKeys.errorMessage: "\(error)",
+                ]
+            )
             await self.handleTopLevelError(error)
         }
     }
@@ -564,7 +577,8 @@ struct WorkflowInstance: Sendable {
                             metadata: [
                                 LoggingKeys.workflowQueryID: "\(queryWorkflow.queryID)",
                                 LoggingKeys.workflowQueryName: "\(queryWorkflow.queryType)",
-                                LoggingKeys.error: "\(error)",
+                                LoggingKeys.errorType: "\(type(of: error))",
+                                LoggingKeys.errorMessage: "\(error)",
                             ]
                         )
                         let temporalFailure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
@@ -622,7 +636,8 @@ struct WorkflowInstance: Sendable {
                 metadata: [
                     LoggingKeys.workflowQueryID: "\(id)",
                     LoggingKeys.workflowQueryName: "\(Query.name)",
-                    LoggingKeys.error: "\(error)",
+                    LoggingKeys.errorType: "\(type(of: error))",
+                    LoggingKeys.errorMessage: "\(error)",
                 ]
             )
             return
@@ -665,7 +680,8 @@ struct WorkflowInstance: Sendable {
                 metadata: [
                     LoggingKeys.workflowQueryID: "\(id)",
                     LoggingKeys.workflowQueryName: "\(Query.name)",
-                    LoggingKeys.error: "\(error)",
+                    LoggingKeys.errorType: "\(type(of: error))",
+                    LoggingKeys.errorMessage: "\(error)",
                 ]
             )
             let temporalFailure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
@@ -783,7 +799,8 @@ struct WorkflowInstance: Sendable {
                     metadata: [
                         LoggingKeys.workflowUpdateID: "\(id)",
                         LoggingKeys.workflowUpdateName: "\(Update.name)",
-                        LoggingKeys.error: "\(error)",
+                        LoggingKeys.errorType: "\(type(of: error))",
+                        LoggingKeys.errorMessage: "\(error)",
                     ]
                 )
 
@@ -821,7 +838,8 @@ struct WorkflowInstance: Sendable {
                     metadata: [
                         LoggingKeys.workflowUpdateID: "\(id)",
                         LoggingKeys.workflowUpdateName: "\(Update.name)",
-                        LoggingKeys.error: "\(error)",
+                        LoggingKeys.errorType: "\(type(of: error))",
+                        LoggingKeys.errorMessage: "\(error)",
                     ]
                 )
                 let temporalFailure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
@@ -871,7 +889,8 @@ struct WorkflowInstance: Sendable {
                 metadata: [
                     LoggingKeys.workflowUpdateID: "\(id)",
                     LoggingKeys.workflowUpdateName: "\(Update.name)",
-                    LoggingKeys.error: "\(error)",
+                    LoggingKeys.errorType: "\(type(of: error))",
+                    LoggingKeys.errorMessage: "\(error)",
                 ]
             )
             // Similar to errors thrown from the workflow's run method, errors thrown from

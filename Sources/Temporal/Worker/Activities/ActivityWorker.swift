@@ -275,6 +275,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                             taskQueue: self.taskQueue,
                             taskToken: taskToken,
                             dataConverter: self.dataConverter,
+                            logger: logger,
                             outboundInterceptors: self.interceptors.compactMap { $0.makeActivityOutboundInterceptor() },
                             heartbeatContinuation: heartbeatContinuation,
                             lookupCancellationReason: { runningActivity.cancellationReason }

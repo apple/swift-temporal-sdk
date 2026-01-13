@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+public import Logging
 import SwiftProtobuf
 
 public import struct Foundation.Data
@@ -221,6 +222,9 @@ public struct ActivityExecutionContext: Sendable {
     /// The metadata and configuration information for this activity execution.
     public var info: Info
 
+    /// The logger associated with the current activity execution.
+    public let logger: Logger
+
     private let heartbeatContinuation: AsyncStream<[any Sendable]>.Continuation
 
     private let lookupCancellationReason: @Sendable () -> ActivityCancellationReason?
@@ -229,11 +233,13 @@ public struct ActivityExecutionContext: Sendable {
 
     init(
         info: Info,
+        logger: Logger,
         outboundInterceptors: [any ActivityOutboundInterceptor],
         heartbeatContinuation: AsyncStream<[any Sendable]>.Continuation,
         lookupCancellationReason: @escaping @Sendable () -> ActivityCancellationReason?
     ) {
         self.info = info
+        self.logger = logger
         self.heartbeatContinuation = heartbeatContinuation
         self.lookupCancellationReason = lookupCancellationReason
         self.implementation = .init(interceptors: outboundInterceptors)
@@ -282,6 +288,7 @@ extension ActivityExecutionContext {
         taskQueue: String,
         taskToken: ActivityTaskToken,
         dataConverter: DataConverter,
+        logger: Logger,
         outboundInterceptors: [any ActivityOutboundInterceptor],
         heartbeatContinuation: AsyncStream<[any Sendable]>.Continuation,
         lookupCancellationReason: @escaping @Sendable () -> ActivityCancellationReason?
@@ -291,27 +298,40 @@ extension ActivityExecutionContext {
             activityTaskStart.hasScheduleToCloseTimeout ? Duration(protobufDuration: activityTaskStart.scheduleToCloseTimeout) : nil
         let startToCloseTimeout = activityTaskStart.hasStartToCloseTimeout ? Duration(protobufDuration: activityTaskStart.startToCloseTimeout) : nil
 
+        let info = Info(
+            activityID: activityTaskStart.activityID,
+            activityType: activityTaskStart.activityType,
+            attempt: Int(activityTaskStart.attempt),
+            currentAttemptScheduled: activityTaskStart.currentAttemptScheduledTime.date,
+            heartbeatTimeout: heartbeatTimeout,
+            isLocal: activityTaskStart.isLocal,
+            scheduleToCloseTimeout: scheduleToCloseTimeout,
+            scheduledTime: activityTaskStart.scheduledTime.date,
+            startToCloseTimeout: startToCloseTimeout,
+            startedTime: activityTaskStart.startedTime.date,
+            taskQueue: taskQueue,
+            taskToken: taskToken,
+            workflowID: activityTaskStart.workflowExecution.workflowID,
+            workflowNamespace: activityTaskStart.workflowNamespace,
+            workflowRunID: activityTaskStart.workflowExecution.runID,
+            workflowType: activityTaskStart.workflowType,
+            heartbeatDetails: activityTaskStart.heartbeatDetails.map { .init(temporalAPIPayload: $0) },
+            dataConverter: dataConverter
+        )
+
+        var logger = logger
+        logger[metadataKey: LoggingKeys.taskQueue] = "\(info.taskQueue)"
+        logger[metadataKey: LoggingKeys.workflowNamespace] = "\(info.workflowNamespace)"
+        logger[metadataKey: LoggingKeys.workflowID] = "\(info.workflowID)"
+        logger[metadataKey: LoggingKeys.workflowRunID] = "\(info.workflowRunID)"
+        logger[metadataKey: LoggingKeys.workflowType] = "\(info.workflowType)"
+        logger[metadataKey: LoggingKeys.activityID] = "\(info.activityID)"
+        logger[metadataKey: LoggingKeys.activityName] = "\(info.activityType)"
+        logger[metadataKey: LoggingKeys.activityAttempt] = "\(info.attempt)"
+
         self.init(
-            info: .init(
-                activityID: activityTaskStart.activityID,
-                activityType: activityTaskStart.activityType,
-                attempt: Int(activityTaskStart.attempt),
-                currentAttemptScheduled: activityTaskStart.currentAttemptScheduledTime.date,
-                heartbeatTimeout: heartbeatTimeout,
-                isLocal: activityTaskStart.isLocal,
-                scheduleToCloseTimeout: scheduleToCloseTimeout,
-                scheduledTime: activityTaskStart.scheduledTime.date,
-                startToCloseTimeout: startToCloseTimeout,
-                startedTime: activityTaskStart.startedTime.date,
-                taskQueue: taskQueue,
-                taskToken: taskToken,
-                workflowID: activityTaskStart.workflowExecution.workflowID,
-                workflowNamespace: activityTaskStart.workflowNamespace,
-                workflowRunID: activityTaskStart.workflowExecution.runID,
-                workflowType: activityTaskStart.workflowType,
-                heartbeatDetails: activityTaskStart.heartbeatDetails.map { .init(temporalAPIPayload: $0) },
-                dataConverter: dataConverter
-            ),
+            info: info,
+            logger: logger,
             outboundInterceptors: outboundInterceptors,
             heartbeatContinuation: heartbeatContinuation,
             lookupCancellationReason: lookupCancellationReason

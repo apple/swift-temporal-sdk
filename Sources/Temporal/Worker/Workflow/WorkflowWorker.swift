@@ -187,7 +187,8 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
                     self.logger.debug(
                         "Workflow worker encountered error while processing activations",
                         metadata: [
-                            LoggingKeys.error: "\(error)"
+                            LoggingKeys.errorType: "\(type(of: error))",
+                            LoggingKeys.errorMessage: "\(error)",
                         ]
                     )
 
@@ -233,6 +234,8 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
             }
 
             var logger = self.logger
+            logger[metadataKey: LoggingKeys.taskQueue] = "\(self.taskQueue)"
+            logger[metadataKey: LoggingKeys.workflowNamespace] = "\(self.namespace)"
             logger[metadataKey: LoggingKeys.workflowRunID] = "\(runID)"
             logger[metadataKey: LoggingKeys.workflowType] = "\(workflowType)"
 

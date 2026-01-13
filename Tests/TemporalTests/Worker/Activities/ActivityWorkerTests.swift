@@ -865,7 +865,7 @@ struct ActivityWorkerTests {
             #expect(logEntry.message == "Duplicate activity registration")
 
             // Verify structured metadata using activity name key
-            let activityName = try #require(logEntry.metadata?["activity.name"])
+            let activityName = try #require(logEntry.metadata?["temporal.activity.name"])
             #expect(activityName == "DuplicateName")
         }
     }
