@@ -41,7 +41,7 @@ extension TestServerDependentTests {
                 switch input {
                 case .swiftCancellationError:
                     do {
-                        try await Workflow.condition { true }
+                        try await Workflow.condition { false }
                     } catch {
                         // ignore cancellation handling from Workflow/condition(_:)
                         try Task.checkCancellation()

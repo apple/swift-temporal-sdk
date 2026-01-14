@@ -47,7 +47,7 @@ public import struct Foundation.Date
 public struct ActivityExecutionContext: Sendable {
     /// A task-local storage container providing access to the current activity execution context.
     @TaskLocal
-    static var taskLocal: ActivityExecutionContext?
+    package static var taskLocal: ActivityExecutionContext?
 
     /// Metadata and configuration information about the currently executing activity.
     ///
@@ -55,70 +55,70 @@ public struct ActivityExecutionContext: Sendable {
     /// timeout configurations, and workflow context.
     public struct Info: Sendable {
         /// The unique identifier for this activity instance.
-        public let activityID: String
+        public var activityID: String
 
         /// The activity type name as registered with the worker.
-        public let activityType: String
+        public var activityType: String
 
         /// The current attempt number (starting from 1).
-        public let attempt: Int
+        public var attempt: Int
 
         /// The timestamp when the current attempt was scheduled.
-        public let currentAttemptScheduled: Date
+        public var currentAttemptScheduled: Date
 
         /// The heartbeat timeout configured for this activity.
         ///
         /// If `nil`, no heartbeat timeout is configured.
-        public let heartbeatTimeout: Duration?
+        public var heartbeatTimeout: Duration?
 
         /// A Boolean value that indicates whether this activity runs locally within the workflow process.
         ///
         /// When `true`, the activity executes in the same process as the workflow with different timeout
         /// and retry semantics. When `false`, it might execute on a separate worker.
-        public let isLocal: Bool
+        public var isLocal: Bool
 
         /// The schedule-to-close timeout configured for this activity.
         ///
         /// If `nil`, no schedule-to-close timeout is configured.
-        public let scheduleToCloseTimeout: Duration?
+        public var scheduleToCloseTimeout: Duration?
 
         /// The timestamp when the activity was first scheduled.
-        public let scheduledTime: Date
+        public var scheduledTime: Date
 
         /// The start-to-close timeout configured for this activity.
         ///
         /// If `nil`, no start-to-close timeout is configured.
-        public let startToCloseTimeout: Duration?
+        public var startToCloseTimeout: Duration?
 
         /// The timestamp when the activity execution started.
-        public let startedTime: Date
+        public var startedTime: Date
 
         /// The name of the task queue this activity is executing on.
-        public let taskQueue: String
+        public var taskQueue: String
 
         /// The unique task token identifying this activity execution.
-        public let taskToken: ActivityTaskToken
+        public var taskToken: ActivityTaskToken
 
         /// The workflow ID that scheduled this activity.
-        public let workflowID: String
+        public var workflowID: String
 
         /// The namespace where the workflow and activity are executing.
-        public let workflowNamespace: String
+        public var workflowNamespace: String
 
         /// The workflow run ID that scheduled this activity.
-        public let workflowRunID: String
+        public var workflowRunID: String
 
         /// The workflow type name that scheduled this activity.
-        public let workflowType: String
+        public var workflowType: String
 
         /// The heartbeat details from the previous activity attempt.
         ///
         /// These details are preserved across activity retries and can be used
         /// to resume activity execution from a known state.
-        private let heartbeatDetails: [TemporalPayload]
+        private var heartbeatDetails: [TemporalPayload]
 
         /// The data converter used for payload serialization.
-        private let dataConverter: DataConverter
+        private var dataConverter: DataConverter
 
         /// Creates a new activity information instance.
         ///
@@ -141,7 +141,7 @@ public struct ActivityExecutionContext: Sendable {
         ///   - workflowType: The workflow type name.
         ///   - heartbeatDetails: Previous heartbeat details.
         ///   - dataConverter: Data converter for serialization.
-        init(
+        package init(
             activityID: String,
             activityType: String,
             attempt: Int,
@@ -220,7 +220,7 @@ public struct ActivityExecutionContext: Sendable {
     }
 
     /// The metadata and configuration information for this activity execution.
-    public var info: Info
+    public let info: Info
 
     /// The logger associated with the current activity execution.
     public let logger: Logger
@@ -231,7 +231,7 @@ public struct ActivityExecutionContext: Sendable {
 
     private let implementation: Implementation
 
-    init(
+    package init(
         info: Info,
         logger: Logger,
         outboundInterceptors: [any ActivityOutboundInterceptor],
