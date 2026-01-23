@@ -11,6 +11,7 @@ name: Auto Release
 
 on:
   schedule:
+    # Runs at 00:00 UTC every Monday (cron format)
     - cron: '0 0 * * 1'
   workflow_dispatch:
 
@@ -49,6 +50,10 @@ Note: The first release and all major releases must be created manually by maint
 
 ## Requirements
 
-- Repository must have at least one existing release
-- PRs must be labeled with appropriate semver labels
-- Repository must have a `main` branch
+Before using this workflow, your repository must have:
+
+1. **At least one existing release** - The workflow calculates new versions based on the last release
+2. **Properly configured semver labels** - PRs must be labeled with one of: `semver/none`, `🔨 semver/patch`, `🆕 semver/minor`, or `⚠️ semver/major`
+3. **`.github/release.yml` file** - Required for auto-generating release notes. See [GitHub's documentation](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes) for configuration details
+4. **Semver label validation** - Integrate the [NIO-provided `semver-label-check` action](https://github.com/swiftlang/github-workflows/blob/main/.github/workflows/soundness.yml) to ensure all PRs have appropriate labels
+5. **A `main` branch** - The workflow expects releases to be based on the `main` branch
