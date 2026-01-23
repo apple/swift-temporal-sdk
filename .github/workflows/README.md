@@ -36,10 +36,12 @@ The workflow automatically creates releases by:
 
 Each PR should have one of these labels:
 
-- **`semver/none`** - No release needed (e.g., documentation updates, test improvements, CI changes)
-- **`🔨 semver/patch`** - Patch release for bug fixes with no public API changes (0.0.1 → 0.0.2)
-- **`🆕 semver/minor`** - Minor release for new features that maintain backward compatibility (0.0.1 → 0.1.0)
-- **`⚠️ semver/major`** - Major release for breaking changes (0.0.1 → 1.0.0, must be created manually)
+| Label | Description | Example |
+|-------|-------------|---------|
+| `semver/none` | No release needed (e.g., documentation updates, test improvements, CI changes) | N/A |
+| `🔨 semver/patch` | Patch release for bug fixes with no public API changes | 0.0.1 → 0.0.2 |
+| `🆕 semver/minor` | Minor release for new features that maintain backward compatibility | 0.0.1 → 0.1.0 |
+| `⚠️ semver/major` | Major release for breaking changes (must be created manually) | 0.0.1 → 1.0.0 |
 
 When a PR is merged, the automation will:
 1. Analyze all merged PRs since the last release
