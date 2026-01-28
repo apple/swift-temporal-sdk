@@ -292,6 +292,15 @@ extension TemporalWorker {
         /// ``TemporalWorkerTracingInterceptor`` for distributed tracing.
         public var interceptors: [any WorkerInterceptor]
 
+        /// Optional API key for authenticating with Temporal Cloud.
+        ///
+        /// When provided, the API key is sent as a Bearer token in the `authorization` header with all
+        /// requests to the Temporal server. This provides an alternative to mTLS certificate authentication
+        /// for Temporal Cloud deployments.
+        ///
+        /// - Important: Ensure that you only configure either an API key or mTLS.
+        public var apiKey: String?
+
         // –– Workflows ––
         /// Polling behavior for workflows (default max `5`).
         public var workflowTaskPollerBehavior: PollerBehavior = .simpleMaximum(maximum: 5)
@@ -361,6 +370,7 @@ extension TemporalWorker {
         ///   - clientIdentity: A human-readable string that identifies the worker client. By default, it is set to the SDK name and version followed by a randomly generated ID.
         ///   - dataConverter: Converts to encode and decode ``TemporalPayload``s before sending it.
         ///   - interceptors: Interceptors of the worker, earlier ones wrap later ones. Defaults to a tracing interceptor.
+        ///   - apiKey: The API key to use for authenticating with a Temporal Cloud instance. Defaults to none.
         public init(
             namespace: String,
             taskQueue: String,
@@ -368,7 +378,8 @@ extension TemporalWorker {
             versioningStrategy: VersioningStrategy = .none(.init()),
             clientIdentity: String? = nil,
             dataConverter: DataConverter = DataConverter.default,
-            interceptors: [any WorkerInterceptor] = [TemporalWorkerTracingInterceptor()]
+            interceptors: [any WorkerInterceptor] = [TemporalWorkerTracingInterceptor()],
+            apiKey: String? = nil
         ) {
             self.namespace = namespace
             self.taskQueue = taskQueue
@@ -379,6 +390,7 @@ extension TemporalWorker {
                 ?? "\(Self.workerClientName)-\(Self.workerClientVersion)-\(UUID().uuidString.replacingOccurrences(of: "-", with: "").suffix(5))"
             self.dataConverter = dataConverter
             self.interceptors = interceptors
+            self.apiKey = apiKey
         }
 
         /// Creates a Temporal worker configuration from external configuration data.
@@ -400,6 +412,7 @@ extension TemporalWorker {
         ///
         /// - `worker.client.identity`: A human-readable worker client identifier (defaults to
         /// SDK name and version)
+        /// - `worker.client.apiKey`: The Temporal Cloud API key.
         ///
         /// - Parameters:
         ///   - configReader: The configuration reader containing the required configuration values.
@@ -417,6 +430,7 @@ extension TemporalWorker {
             let taskQueue = try snapshot.requiredString(forKey: .workerTaskQueue)
             let workerBuildID = try snapshot.requiredString(forKey: .workerBuildId)
             let clientIdentity = try snapshot.requiredString(forKey: .workerClientIdentity)  // defaults to `nil`
+            let apiKey = snapshot.string(forKey: .workerClientAPIKey)  // defaults to `nil`
 
             try self.init(
                 namespace: namespace,
@@ -425,7 +439,8 @@ extension TemporalWorker {
                 versioningStrategy: .none(.init(buildId: workerBuildID)),
                 clientIdentity: clientIdentity,
                 dataConverter: dataConverter,
-                interceptors: interceptors
+                interceptors: interceptors,
+                apiKey: apiKey
             )
         }
     }

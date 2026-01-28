@@ -105,6 +105,11 @@ public final class TemporalClient: Sendable {
         metadata.addString(configuration.clientName, forKey: "client-name")
         metadata.addString(configuration.clientVersion, forKey: "client-version")
 
+        if let apiKey = configuration.apiKey {
+            metadata.addString("Bearer \(apiKey)", forKey: "authorization")
+            metadata.addString(configuration.namespace, forKey: "temporal-namespace")
+        }
+
         // type-erasure of `GRPCClient`
         let configuredClient = ConfiguredClient(
             client: client,

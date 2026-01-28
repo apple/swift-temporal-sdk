@@ -49,6 +49,15 @@ extension TemporalClient {
         /// authentication, and request modification. Interceptors are applied in the order they appear in this array.
         public var interceptors: [any ClientInterceptor]
 
+        /// Optional API key for authenticating with Temporal Cloud.
+        ///
+        /// When provided, the API key is sent as a Bearer token in the `authorization` header with all
+        /// requests to the Temporal server. This provides an alternative to mTLS certificate authentication
+        /// for Temporal Cloud deployments.
+        ///
+        /// - Important: Ensure that you only configure either an API key or mTLS.
+        public var apiKey: String?
+
         /// The SDK name identifier sent in all RPC calls to identify the client implementation.
         ///
         /// This constant value identifies this SDK implementation to the Temporal server and appears in
@@ -88,18 +97,21 @@ extension TemporalClient {
         ///   - identity: A human-readable identifier for this client process. If `nil`, an identity is generated from the SDK name and version.
         ///   - dataConverter: The converter that handles serialization of workflow data. Defaults to the standard JSON converter.
         ///   - interceptors: Request processing interceptors applied in the specified order. Defaults to the tracing interceptor.
+        ///   - apiKey: The API key to use for authenticating with a Temporal Cloud instance. Defaults to none.
         public init(
             instrumentation: Instrumentation,
             namespace: String = "default",
             identity: String? = nil,
             dataConverter: DataConverter = DataConverter.default,
-            interceptors: [any ClientInterceptor] = [TemporalClientTracingInterceptor()]
+            interceptors: [any ClientInterceptor] = [TemporalClientTracingInterceptor()],
+            apiKey: String? = nil
         ) {
             self.instrumentation = instrumentation
             self.namespace = namespace
             self.identity = identity ?? "\(self.clientName)-\(self.clientVersion)"
             self.dataConverter = dataConverter
             self.interceptors = interceptors
+            self.apiKey = apiKey
         }
 
         /// Creates a Temporal client configuration from external configuration data.
@@ -119,6 +131,7 @@ extension TemporalClient {
         /// - `client.namespace`: The Temporal namespace where this worker polls for tasks
         /// - `client.identity`: A human-readable worker client identifier (defaults to
         /// SDK name and version)
+        /// - `client.apiKey`: The Temporal Cloud API key.
         ///
         /// - Parameters:
         ///   - configReader: The configuration reader containing the required configuration values.
@@ -134,13 +147,15 @@ extension TemporalClient {
             let snapshot = configReader.snapshot()
             let namespace = snapshot.string(forKey: .clientNamespace, default: "default")
             let identity = snapshot.string(forKey: .clientIdentity)  // defaults to `nil`
+            let apiKey = snapshot.string(forKey: .clientAPIKey)  // defaults to `nil`
 
             try self.init(
                 instrumentation: .init(configReader: configReader),
                 namespace: namespace,
                 identity: identity,
                 dataConverter: dataConverter,
-                interceptors: interceptors
+                interceptors: interceptors,
+                apiKey: apiKey
             )
         }
     }
