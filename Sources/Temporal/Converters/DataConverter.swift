@@ -64,7 +64,7 @@ public struct DataConverter: Sendable {
     package func convertValue<Value>(
         _ value: Value?
     ) async throws -> TemporalPayload {
-        if Value.self == Void.self {
+        if value is Void {
             return .init(data: .init(), metadata: [:])
         }
 

@@ -231,6 +231,21 @@ private struct BadHeartbeatAcivity: ActivityDefinition {
     }
 }
 
+private struct TypeErasedHeartbeatActivity: ActivityDefinition {
+    typealias Input = Void
+    typealias Output = Void
+
+    static let name: String? = "TypeErasedHeartbeatActivity"
+
+    func run(input: Void) async throws {
+        // Store the heartbeat detail as a type-erased `any Sendable` value.
+        let typeErasedVoid: any Sendable = Void()
+        ActivityExecutionContext.current?.heartbeat(details: typeErasedVoid)
+
+        try await Task.sleep(for: .seconds(10))
+    }
+}
+
 private struct ReadingHeartbeatActivity: ActivityDefinition {
     struct HeartbeatDetails: Codable, Hashable {
         var string: String
@@ -772,6 +787,53 @@ struct ActivityWorkerTests {
                 $0.result.failed.failure.stackTrace = ""
                 $0.result.failed.failure.encodedAttributes = .init()
                 $0.result.failed.failure.applicationFailureInfo.type = "EncodingError"
+            }
+            #expect(completion == expectedCompletion)
+            group.cancelAll()
+        }
+    }
+
+    @Test
+    static func typeErasedHeartbeat() async throws {
+        let test = ActivityWorkerTests(activities: [TypeErasedHeartbeatActivity()])
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await test.activityWorker.run()
+            }
+
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([1])
+                    $0.start.activityType = "TypeErasedVoidHeartbeatActivity"
+                    $0.start.activityID = "ActivityID1"
+                    $0.start.attempt = 1
+                    $0.start.workflowType = "WorkflowType"
+                    $0.start.workflowExecution = .with {
+                        $0.runID = "RunID"
+                        $0.workflowID = "WorkflowID1"
+                    }
+                }
+            )
+
+            var heartbeatIterator = test.bridgeWorker.heartbeatStream.makeAsyncIterator()
+            let heartbeat = await heartbeatIterator.next()
+            let expectedHeartbeat = Coresdk_ActivityHeartbeat.with {
+                $0.taskToken = Data([1])
+                $0.details = [
+                    .with {
+                        $0.data = Data()
+                        $0.metadata = [:]
+                    }
+                ]
+            }
+            #expect(heartbeat == expectedHeartbeat)
+
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            let completion = try await activityTaskCompletionIterator.next()
+            let expectedCompletion = Coresdk_ActivityTaskCompletion.with {
+                $0.taskToken = Data([1])
+                $0.result.completed.result = .init()
             }
             #expect(completion == expectedCompletion)
             group.cancelAll()
