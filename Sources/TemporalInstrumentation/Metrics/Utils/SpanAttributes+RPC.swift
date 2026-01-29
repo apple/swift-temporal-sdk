@@ -95,11 +95,11 @@ extension RPCAttributes {
             }
 
             package static var requestMetadata: Key<String> {
-                "rpc.grpc.request.metdata"
+                "rpc.grpc.request.metadata"
             }
 
             package static var responseMetadata: Key<String> {
-                "rpc.grpc.response.metdata"
+                "rpc.grpc.response.metadata"
             }
 
             package init() {}

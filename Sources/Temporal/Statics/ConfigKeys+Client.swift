@@ -22,4 +22,7 @@ extension ConfigKey {
 
     /// The required Temporal server hostname for instrumentation of the ``TemporalClient``.
     static let clientServerHostname: ConfigKey = ["client", "instrumentation", "serverhostname"]
+
+    /// The optional Temporal Cloud API key of the ``TemporalClient``.
+    static let clientAPIKey: ConfigKey = ["client", "apiKey"]
 }

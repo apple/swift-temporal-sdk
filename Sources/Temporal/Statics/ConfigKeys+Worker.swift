@@ -28,4 +28,7 @@ extension ConfigKey {
     ///
     /// If not provided, a default will be used.
     static let workerClientIdentity: ConfigKey = ["worker", "client", "identity"]
+
+    /// The optional Temporal Cloud API key of the ``TemporalWorker``.
+    static let workerClientAPIKey: ConfigKey = ["worker", "client", "apiKey"]
 }

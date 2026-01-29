@@ -145,7 +145,7 @@ struct ClientOTelLoggingInterceptorTests {
             let metadataKeys2 = try #require(log2.metadata?.keys)
             #expect(Set(metadataKeys2).isSuperset(of: Set(metadataKeys1)))
             // check additional response header
-            let responseHeader = try #require(log2.metadata?["rpc.grpc.response.metdata.test-key"])
+            let responseHeader = try #require(log2.metadata?["rpc.grpc.response.metadata.test-key"])
             #expect(responseHeader == "test-value")
         }
     }
@@ -245,7 +245,7 @@ struct ClientOTelLoggingInterceptorTests {
             #expect(exceptionMessage == "Test failure")
             let exceptionStacktrace = try #require(log2.metadata?["exception.stacktrace"])
             #expect(exceptionStacktrace == "TestError()")
-            let metadata = try #require(log2.metadata?["rpc.grpc.response.metdata.test-key-error"])
+            let metadata = try #require(log2.metadata?["rpc.grpc.response.metadata.test-key-error"])
             #expect(metadata == "test-value-error")
         }
     }
