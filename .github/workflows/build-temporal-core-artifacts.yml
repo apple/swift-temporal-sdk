@@ -1,8 +1,5 @@
 name: Build Temporal Core SDK artifacts
 
-permissions:
-  contents: write
-
 on:
   workflow_dispatch:
 
@@ -18,6 +15,8 @@ jobs:
   setup:
     name: Setup release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       release_id: ${{ steps.create_release.outputs.id }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -547,6 +546,8 @@ jobs:
     # Running on a nightly container since we need https://github.com/swiftlang/swift-package-manager/pull/9360 & https://github.com/swiftlang/swift-package-manager/pull/9359
     container: swiftlang/swift:nightly-main
     needs: [setup, build-macos, build-linux-x86, build-linux-arm, build-linux-musl-x86, build-linux-musl-arm]
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
