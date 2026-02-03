@@ -104,13 +104,13 @@ package struct BridgeClient: ~Copyable, Sendable {
                 let serviceName = String(byteArrayRef: temporal_core_client_grpc_override_request_service(request_pointer))
                 let rpcName = String(byteArrayRef: temporal_core_client_grpc_override_request_rpc(request_pointer))
                 let descriptor = GRPCCore.MethodDescriptor(fullyQualifiedService: serviceName, method: rpcName)
-                // Request metadata in format `<key1>\n<value1>\n<key2>\n<value2>`
-                let requestMetadataComponents = String(byteArrayRef: temporal_core_client_grpc_override_request_headers(request_pointer)).components(
-                    separatedBy: "\n"
-                )
-                let requestMetadata = Dictionary(
-                    uniqueKeysWithValues: stride(from: 0, to: requestMetadataComponents.count - 1, by: 2)
-                        .map { (requestMetadataComponents[$0], requestMetadataComponents[$0 + 1]) }
+                let requestMetadataComponents = temporal_core_client_grpc_override_request_headers(request_pointer).toStringArray()
+                let requestMetadata = Dictionary<String, String>.init(
+                    uniqueKeysWithValues: requestMetadataComponents.compactMap { component in
+                        let parts = component.split(separator: "\n", maxSplits: 1)
+                        guard parts.count == 2 else { fatalError("Unexpected metadata format") }
+                        return (String(parts[0]), String(parts[1]))
+                    }
                 ).reduce(into: context.metadata) { partialResult, metadata in
                     if metadata.key == "content-type" || metadata.key == "te" {
                         return  // skip reserved gRPC transport-managed headers
@@ -211,9 +211,8 @@ package struct BridgeClient: ~Copyable, Sendable {
                 .lazy
                 .filter { !$0.key.hasPrefix(":") }  // pseudo-headers like :status are reserved and invalid in gRPC user-defined metadata
                 .map { "\($0)\n\($1.encoded())" }
-                .joined(separator: "\n")
 
-            return try encodedMetadata.withByteArrayRef { headersRef in
+            return try Array(encodedMetadata).withByteArrayRefArray { headersRef in
                 try response.message.withByteArrayRef { successRef in
                     let resp = TemporalCoreClientGrpcOverrideResponse(
                         status_code: Int32(GRPCCore.Status.Code.ok.rawValue),
@@ -230,10 +229,9 @@ package struct BridgeClient: ~Copyable, Sendable {
                 .lazy
                 .filter { !$0.key.hasPrefix(":") }  // pseudo-headers like :status are reserved and invalid in gRPC user-defined metadata
                 .map { "\($0)\n\($1.encoded())" }
-                .joined(separator: "\n")
             let errorMessage = "RPC error: \(rpcError.message)\(rpcError.cause.map { "\ncaused by: \($0)" } ?? "")"
 
-            return encodedMetadata.withByteArrayRef { headersRef in
+            return Array(encodedMetadata).withByteArrayRefArray { headersRef in
                 errorMessage.withByteArrayRef { errorRef in
                     let resp = TemporalCoreClientGrpcOverrideResponse(
                         status_code: Int32(rpcError.code.rawValue),
@@ -278,7 +276,8 @@ package struct BridgeClient: ~Copyable, Sendable {
                                 target_url: dummy_target_url,  // Dummy URL as gRPC connection is handled by Swift
                                 client_name: client_name,
                                 client_version: client_version,
-                                metadata: empty_string,
+                                metadata: .nil,
+                                binary_metadata: .nil,
                                 api_key: empty_string,  // Don't pass API key to Rust - Swift handles auth via gRPC headers
                                 identity: identityBytes,
                                 tls_options: nil,  // Empty TLS config as auth is handled by Swift

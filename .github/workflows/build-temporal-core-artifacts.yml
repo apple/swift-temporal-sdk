@@ -7,9 +7,9 @@ env:
   RUST_VERSION: "1.88"
   ARTIFACT_BUNDLE_NAME: "temporal.artifactbundle"
   XCFRAMEWORK_NAME: "temporal.xcframework"
-  HEADER_SOURCE: "dependencies/sdk-core/core-c-bridge/include/temporal-sdk-core-c-bridge.h"
-  TEMPORAL_BUILT_LIB_NAME: "libtemporal_sdk_core_c_bridge.a"
-  RUST_PROJECT_DIR: "dependencies/sdk-core/core-c-bridge"
+  HEADER_SOURCE: "dependencies/sdk-core/crates/sdk-core-c-bridge/include/temporal-sdk-core-c-bridge.h"
+  TEMPORAL_BUILT_LIB_NAME: "libtemporalio_sdk_core_c_bridge.a"
+  RUST_WORKSPACE_DIR: "dependencies/sdk-core"
 
 jobs:
   setup:
@@ -152,12 +152,13 @@ jobs:
         run: |
           export PATH="$PATH:$HOME/.local/bin"
           . "$HOME/.cargo/env"
-          cd ${{ env.RUST_PROJECT_DIR }}
+          cd ${{ env.RUST_WORKSPACE_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
           IPHONEOS_DEPLOYMENT_TARGET="18" \
           TVOS_DEPLOYMENT_TARGET="18" \
           WATCHOS_DEPLOYMENT_TARGET="11" \
           cargo rustc \
+            --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
             --target x86_64-apple-darwin \
             --features xz2-static \
@@ -167,12 +168,13 @@ jobs:
         run: |
           export PATH="$PATH:$HOME/.local/bin"
           . "$HOME/.cargo/env"
-          cd ${{ env.RUST_PROJECT_DIR }}
+          cd ${{ env.RUST_WORKSPACE_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
           IPHONEOS_DEPLOYMENT_TARGET="18" \
           TVOS_DEPLOYMENT_TARGET="18" \
           WATCHOS_DEPLOYMENT_TARGET="11" \
           cargo rustc \
+            --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
             --target aarch64-apple-darwin \
             --features xz2-static \
@@ -182,12 +184,13 @@ jobs:
         run: |
           export PATH="$PATH:$HOME/.local/bin"
           . "$HOME/.cargo/env"
-          cd ${{ env.RUST_PROJECT_DIR }}
+          cd ${{ env.RUST_WORKSPACE_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
           IPHONEOS_DEPLOYMENT_TARGET="18" \
           TVOS_DEPLOYMENT_TARGET="18" \
           WATCHOS_DEPLOYMENT_TARGET="11" \
           cargo rustc \
+            --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
             --target aarch64-apple-ios \
             --features xz2-static \
@@ -197,12 +200,13 @@ jobs:
         run: |
           export PATH="$PATH:$HOME/.local/bin"
           . "$HOME/.cargo/env"
-          cd ${{ env.RUST_PROJECT_DIR }}
+          cd ${{ env.RUST_WORKSPACE_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
           IPHONEOS_DEPLOYMENT_TARGET="18" \
           TVOS_DEPLOYMENT_TARGET="18" \
           WATCHOS_DEPLOYMENT_TARGET="11" \
           cargo rustc \
+            --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
             --target x86_64-apple-ios \
             --features xz2-static \
@@ -212,12 +216,13 @@ jobs:
         run: |
           export PATH="$PATH:$HOME/.local/bin"
           . "$HOME/.cargo/env"
-          cd ${{ env.RUST_PROJECT_DIR }}
+          cd ${{ env.RUST_WORKSPACE_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
           IPHONEOS_DEPLOYMENT_TARGET="18" \
           TVOS_DEPLOYMENT_TARGET="18" \
           WATCHOS_DEPLOYMENT_TARGET="11" \
           cargo rustc \
+            --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
             --target aarch64-apple-ios-sim \
             --features xz2-static \
@@ -227,12 +232,13 @@ jobs:
         run: |
           export PATH="$PATH:$HOME/.local/bin"
           . "$HOME/.cargo/env"
-          cd ${{ env.RUST_PROJECT_DIR }}
+          cd ${{ env.RUST_WORKSPACE_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
           IPHONEOS_DEPLOYMENT_TARGET="18" \
           TVOS_DEPLOYMENT_TARGET="18" \
           WATCHOS_DEPLOYMENT_TARGET="11" \
           cargo rustc \
+            --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
             --target x86_64-apple-ios-macabi \
             --features xz2-static \
@@ -242,12 +248,13 @@ jobs:
         run: |
           export PATH="$PATH:$HOME/.local/bin"
           . "$HOME/.cargo/env"
-          cd ${{ env.RUST_PROJECT_DIR }}
+          cd ${{ env.RUST_WORKSPACE_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
           IPHONEOS_DEPLOYMENT_TARGET="18" \
           TVOS_DEPLOYMENT_TARGET="18" \
           WATCHOS_DEPLOYMENT_TARGET="11" \
           cargo rustc \
+            --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
             --target aarch64-apple-ios-macabi \
             --features xz2-static \
@@ -385,10 +392,9 @@ jobs:
       - name: Build Linux x86_64
         run: |
           . "$HOME/.cargo/env"
-          cd ${{ env.RUST_PROJECT_DIR }}
-          # Build with static relocation model to avoid GOT references in static library
-          RUSTFLAGS="-C relocation-model=static" \
+          cd ${{ env.RUST_WORKSPACE_DIR }}
           cargo rustc \
+            --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
             --target x86_64-unknown-linux-gnu \
             --features xz2-static \
@@ -432,10 +438,9 @@ jobs:
       - name: Build Linux ARM64
         run: |
           . "$HOME/.cargo/env"
-          cd ${{ env.RUST_PROJECT_DIR }}
-          # Build with static relocation model to avoid GOT references in static library
-          RUSTFLAGS="-C relocation-model=static" \
+          cd ${{ env.RUST_WORKSPACE_DIR }}
           cargo rustc \
+            --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
             --target aarch64-unknown-linux-gnu \
             --features xz2-static \
@@ -478,10 +483,9 @@ jobs:
       - name: Build Linux MUSL x86_64
         run: |
           . "$HOME/.cargo/env"
-          cd ${{ env.RUST_PROJECT_DIR }}
-          # Build with static relocation model to avoid GOT references in static library
-          RUSTFLAGS="-C relocation-model=static" \
+          cd ${{ env.RUST_WORKSPACE_DIR }}
           cargo rustc \
+            --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
             --target x86_64-unknown-linux-musl \
             --features xz2-static \
@@ -524,10 +528,9 @@ jobs:
       - name: Build Linux MUSL ARM64
         run: |
           . "$HOME/.cargo/env"
-          cd ${{ env.RUST_PROJECT_DIR }}
-          # Build with static relocation model to avoid GOT references in static library
-          RUSTFLAGS="-C relocation-model=static" \
+          cd ${{ env.RUST_WORKSPACE_DIR }}
           cargo rustc \
+            --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
             --target aarch64-unknown-linux-musl \
             --features xz2-static \

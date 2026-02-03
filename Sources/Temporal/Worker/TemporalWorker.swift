@@ -242,22 +242,34 @@ where
             do {
                 let worker = try BridgeWorker(
                     client: client,
-                    configuration: self.configuration
+                    configuration: self.configuration,
+                    hasActivities: !self.activities.isEmpty,
+                    hasWorkflows: !self.workflows.isEmpty
                 )
                 optionalWorker = worker
 
-                let activityWorker = try ActivityWorker(
-                    worker: worker,
-                    configuration: self.configuration,
-                    activities: self.activities,
-                    logger: self.logger
-                )
-                let workflowWorker = try WorkflowWorker(
-                    worker: worker,
-                    configuration: self.configuration,
-                    workflows: self.workflows,
-                    logger: self.logger
-                )
+                let activityWorker: ActivityWorker? =
+                    if !self.activities.isEmpty {
+                        try ActivityWorker(
+                            worker: worker,
+                            configuration: self.configuration,
+                            activities: self.activities,
+                            logger: self.logger
+                        )
+                    } else {
+                        nil
+                    }
+                let workflowWorker: WorkflowWorker? =
+                    if !self.workflows.isEmpty {
+                        try WorkflowWorker(
+                            worker: worker,
+                            configuration: self.configuration,
+                            workflows: self.workflows,
+                            logger: self.logger
+                        )
+                    } else {
+                        nil
+                    }
 
                 try await self.runWorkersIgnoringCancellation(
                     worker: worker,
@@ -293,8 +305,8 @@ where
     // an error since the run methods should infinitely loop.
     func runWorkersIgnoringCancellation(
         worker: BridgeWorker,
-        activityWorker: ActivityWorker,
-        workflowWorker: WorkflowWorker,
+        activityWorker: ActivityWorker?,
+        workflowWorker: WorkflowWorker?,
         isRunningForShutdown: Bool = false
     ) async throws {
         try await cancelWhenGracefulShutdown {
@@ -302,11 +314,15 @@ where
                 // Block cancellation from propagating inwards.
                 try await Task {
                     try await withThrowingTaskGroup(of: Void.self) { group in
-                        group.addTask {
-                            try await activityWorker.run()
+                        if let activityWorker {
+                            group.addTask {
+                                try await activityWorker.run()
+                            }
                         }
-                        group.addTask {
-                            try await workflowWorker.run()
+                        if let workflowWorker {
+                            group.addTask {
+                                try await workflowWorker.run()
+                            }
                         }
 
                         if isRunningForShutdown {

@@ -22,7 +22,12 @@ import Testing
 private final class MockBridgeWorker: BridgeWorkerProtocol {
     init() {}
 
-    init(client: borrowing Temporal.BridgeClient, configuration: Temporal.TemporalWorker.Configuration) throws {
+    init(
+        client: borrowing Temporal.BridgeClient,
+        configuration: Temporal.TemporalWorker.Configuration,
+        hasActivities: Bool,
+        hasWorkflows: Bool
+    ) throws {
         fatalError("Not implemented for workflow worker tests")
     }
 

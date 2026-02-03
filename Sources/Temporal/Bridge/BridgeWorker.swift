@@ -20,7 +20,9 @@ internal import SwiftProtobuf
 package protocol BridgeWorkerProtocol: Sendable {
     init(
         client: borrowing BridgeClient,
-        configuration: TemporalWorker.Configuration
+        configuration: TemporalWorker.Configuration,
+        hasActivities: Bool,
+        hasWorkflows: Bool,
     ) throws
 
     func initiateShutdown()
@@ -42,6 +44,8 @@ package final class BridgeWorker: BridgeWorkerProtocol {
         versioningStrategy: TemporalWorker.Configuration.VersioningStrategy,
         clientIdentity: String,
         identityOverride: String?,
+        hasActivities: Bool,
+        hasWorkflows: Bool,
         // –– Workflows ––
         workflowTaskPollerBehavior: TemporalWorker.Configuration.PollerBehavior,
         maxCachedWorkflows: UInt32,
@@ -54,7 +58,6 @@ package final class BridgeWorker: BridgeWorkerProtocol {
         activityTaskPollerBehavior: TemporalWorker.Configuration.PollerBehavior,
         maxConcurrentActivities: UInt,
         maxConcurrentLocalActivities: UInt,
-        noRemoteActivities: Bool,
         maxActivitiesPerSecond: Double,
         maxTaskQueueActivitiesPerSecond: Double,
         // –– Heartbeat throttling ––
@@ -76,10 +79,11 @@ package final class BridgeWorker: BridgeWorkerProtocol {
             namespace: namespace,
             taskQueue: taskQueue,
             identity: identityOverride ?? "",
+            hasActivities: hasActivities,
+            hasWorkflows: hasWorkflows,
             versioningStrategy: versioningStrategy,
             tuner: tuner,
             maxCachedWorkflows: maxCachedWorkflows,
-            noRemoteActivities: noRemoteActivities,
             stickyQueueTimeoutMs: stickyQueueScheduleToStartTimeoutMs,
             maxHeartbeatThrottleIntervalMs: maxHeartbeatThrottleIntervalMs,
             defaultHeartbeatThrottleIntervalMs: defaultHeartbeatThrottleIntervalMs,
@@ -112,7 +116,9 @@ package final class BridgeWorker: BridgeWorkerProtocol {
 
     package convenience init(
         client: borrowing BridgeClient,
-        configuration: TemporalWorker.Configuration
+        configuration: TemporalWorker.Configuration,
+        hasActivities: Bool,
+        hasWorkflows: Bool,
     ) throws {
         try self.init(
             client: client,
@@ -121,6 +127,8 @@ package final class BridgeWorker: BridgeWorkerProtocol {
             versioningStrategy: configuration.versioningStrategy,
             clientIdentity: configuration.clientIdentity,
             identityOverride: configuration.identityOverride,
+            hasActivities: hasActivities,
+            hasWorkflows: hasWorkflows,
             workflowTaskPollerBehavior: configuration.workflowTaskPollerBehavior,
             maxCachedWorkflows: UInt32(configuration.maxCachedWorkflows),
             maxConcurrentWorkflowTasks: UInt(configuration.maxConcurrentWorkflowTasks),
@@ -131,7 +139,6 @@ package final class BridgeWorker: BridgeWorkerProtocol {
             activityTaskPollerBehavior: configuration.activityTaskPollerBehavior,
             maxConcurrentActivities: UInt(configuration.maxConcurrentActivities),
             maxConcurrentLocalActivities: UInt(configuration.maxConcurrentLocalActivities),
-            noRemoteActivities: configuration.noRemoteActivities,
             maxActivitiesPerSecond: configuration.maxActivitiesPerSecond,
             maxTaskQueueActivitiesPerSecond: configuration.maxTaskQueueActivitiesPerSecond,
             defaultHeartbeatThrottleIntervalMs: configuration.defaultHeartbeatThrottleInterval.milliseconds,

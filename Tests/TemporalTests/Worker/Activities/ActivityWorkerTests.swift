@@ -38,7 +38,9 @@ private final class MockBridgeWorker: BridgeWorkerProtocol {
 
     init(
         client: borrowing Temporal.BridgeClient,
-        configuration: Temporal.TemporalWorker.Configuration
+        configuration: Temporal.TemporalWorker.Configuration,
+        hasActivities: Bool,
+        hasWorkflows: Bool
     ) throws {
         fatalError()
     }
