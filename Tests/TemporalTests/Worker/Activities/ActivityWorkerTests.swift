@@ -206,7 +206,7 @@ private struct ExecutionContextActivity: ActivityDefinition {
     }
 }
 
-private struct HeartbeatAcivity: ActivityDefinition {
+private struct HeartbeatActivity: ActivityDefinition {
     typealias Input = Void
     typealias Output = Void
 
@@ -214,6 +214,21 @@ private struct HeartbeatAcivity: ActivityDefinition {
 
     func run(input: Void) async throws {
         ActivityExecutionContext.current?.heartbeat(details: 1, "Foo", [UInt8]([1, 2, 3]))
+
+        try await Task.sleep(for: .seconds(1))
+    }
+}
+
+private struct TypeErasedHeartbeatActivity: ActivityDefinition {
+    typealias Input = Void
+    typealias Output = Void
+
+    static let name: String? = "TypeErasedHeartbeatActivity"
+
+    func run(input: Void) async throws {
+        // Store the heartbeat detail as a type-erased `any Sendable` value.
+        let typeErasedVoid: any Sendable = Void()
+        ActivityExecutionContext.current?.heartbeat(details: typeErasedVoid)
 
         try await Task.sleep(for: .seconds(1))
     }
@@ -689,7 +704,7 @@ struct ActivityWorkerTests {
 
     @Test
     static func heartbeat() async throws {
-        let test = ActivityWorkerTests(activities: [HeartbeatAcivity()])
+        let test = ActivityWorkerTests(activities: [HeartbeatActivity()])
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
@@ -699,7 +714,7 @@ struct ActivityWorkerTests {
             test.bridgeWorker.activityTaskContinuation.yield(
                 .with {
                     $0.taskToken = Data([1])
-                    $0.start.activityType = "HeartbeatAcivity"
+                    $0.start.activityType = "HeartbeatActivity"
                     $0.start.activityID = "ActivityID1"
                     $0.start.attempt = 1
                     $0.start.workflowType = "WorkflowType"
@@ -728,6 +743,48 @@ struct ActivityWorkerTests {
                         $0.metadata = ["encoding": Data("binary/plain".utf8)]
                     },
                 ]
+            }
+            #expect(heartbeat == expectedHeartbeat)
+
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            let completion = try await activityTaskCompletionIterator.next()
+            let expectedCompletion = Coresdk_ActivityTaskCompletion.with {
+                $0.taskToken = Data([1])
+                $0.result.completed.result = .init()
+            }
+            #expect(completion == expectedCompletion)
+            group.cancelAll()
+        }
+    }
+
+    @Test
+    static func typeErasedHeartbeat() async throws {
+        let test = ActivityWorkerTests(activities: [TypeErasedHeartbeatActivity()])
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await test.activityWorker.run()
+            }
+
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([1])
+                    $0.start.activityType = "TypeErasedHeartbeatActivity"
+                    $0.start.activityID = "ActivityID1"
+                    $0.start.attempt = 1
+                    $0.start.workflowType = "WorkflowType"
+                    $0.start.workflowExecution = .with {
+                        $0.runID = "RunID"
+                        $0.workflowID = "WorkflowID1"
+                    }
+                }
+            )
+
+            var heartbeatIterator = test.bridgeWorker.heartbeatStream.makeAsyncIterator()
+            let heartbeat = await heartbeatIterator.next()
+            let expectedHeartbeat = Coresdk_ActivityHeartbeat.with {
+                $0.taskToken = Data([1])
+                $0.details = [.init()]
             }
             #expect(heartbeat == expectedHeartbeat)
 
