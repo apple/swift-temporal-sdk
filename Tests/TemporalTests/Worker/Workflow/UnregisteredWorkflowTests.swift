@@ -23,7 +23,9 @@ extension TestServerDependentTests {
     struct UnregisteredWorkflowSleepTests {
         @Test
         func unregistered() async throws {
-            try await withTestWorkerAndClient { taskQueue, client in
+            try await withTestWorkerAndClient(
+                workflows: [VoidWorkflow.self]
+            ) { taskQueue, client in
                 _ = try await client.workflowService.startWorkflow(
                     name: "Unregistered",
                     options: .init(

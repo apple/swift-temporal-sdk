@@ -20,6 +20,20 @@ import Temporal
 import Testing
 
 extension TestServerDependentTests {
+    private struct VoidActivity: ActivityDefinition {
+        typealias Input = Void
+        typealias Output = Void
+
+        static let name: String? = "VoidActivity"
+
+        func run(input: Void) async throws {}
+    }
+
+    @Workflow
+    final class VoidWorkflow {
+        func run(input: Void) async {}
+    }
+
     @Suite(.timeLimit(.minutes(1)))
     struct TemporalWorkerErrorTests {
         // TODO: Re-enable this test as soon as the fired RPC isn't stuck anymore indefinitely when the GRPCClient doesn't properly start up
@@ -85,6 +99,7 @@ extension TestServerDependentTests {
 
             await #expect(throws: TestError.self) {
                 try await withTestWorkerAndClient(
+                    activities: [VoidActivity()],
                     workerType: GenericTemporalWorker<BridgeWorker, WorkflowWorker<BridgeWorker>, MockActivityWorker, AnyUInt8GRPCClient>.self
                 ) { _, _ in
                     try await Task.sleep(for: .seconds(1000))
@@ -126,6 +141,7 @@ extension TestServerDependentTests {
 
             await #expect(throws: TestError.self) {
                 try await withTestWorkerAndClient(
+                    workflows: [VoidWorkflow.self],
                     workerType: GenericTemporalWorker<BridgeWorker, MockWorkflowWorker, ActivityWorker<BridgeWorker>, AnyUInt8GRPCClient>.self
                 ) { _, _ in
                     try await Task.sleep(for: .seconds(1000))
@@ -140,11 +156,15 @@ extension TestServerDependentTests {
 
                 init(
                     client: borrowing Temporal.BridgeClient,
-                    configuration: Temporal.TemporalWorker.Configuration
+                    configuration: Temporal.TemporalWorker.Configuration,
+                    hasActivities: Bool,
+                    hasWorkflows: Bool,
                 ) throws {
                     self.base = try BridgeWorker(
                         client: client,
-                        configuration: configuration
+                        configuration: configuration,
+                        hasActivities: false,
+                        hasWorkflows: true,
                     )
                 }
 
@@ -155,9 +175,10 @@ extension TestServerDependentTests {
 
             await #expect(throws: TestError.self) {
                 try await withTestWorkerAndClient(
+                    workflows: [VoidWorkflow.self],
                     workerType: GenericTemporalWorker<
                         MockBridgeWorker, WorkflowWorker<MockBridgeWorker>, ActivityWorker<MockBridgeWorker>, AnyUInt8GRPCClient
-                    >.self
+                    >.self,
                 ) { _, _ in
                     try await Task.sleep(for: .seconds(1000))
                 }

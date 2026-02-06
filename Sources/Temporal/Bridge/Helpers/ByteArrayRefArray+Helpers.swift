@@ -42,3 +42,16 @@ extension Array where Element == String {
         }
     }
 }
+
+extension TemporalCoreByteArrayRefArray {
+    static var `nil`: TemporalCoreByteArrayRefArray {
+        TemporalCoreByteArrayRefArray()
+    }
+
+    func toStringArray() -> [String] {
+        guard let data = data else { return [] }
+        let buffer = UnsafeBufferPointer(start: data, count: size)
+
+        return buffer.map { String(byteArrayRef: $0) }
+    }
+}

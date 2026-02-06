@@ -24,7 +24,8 @@ package final class BridgeRuntime: Sendable {
         self.runtime = try telemetryOptions.withBridgeOptions { bridgeTelemetryOptions in
             return try withUnsafePointer(to: bridgeTelemetryOptions) { bridgeTelemetryOptionsPointer in
                 var options: TemporalCoreRuntimeOptions = TemporalCoreRuntimeOptions(
-                    telemetry: bridgeTelemetryOptionsPointer
+                    telemetry: bridgeTelemetryOptionsPointer,
+                    worker_heartbeat_interval_millis: 0  // TODO: Expose this as configuration
                 )
                 let maybeRuntime = temporal_core_runtime_new(&options)
 

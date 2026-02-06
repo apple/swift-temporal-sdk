@@ -19,10 +19,11 @@ extension BridgeWorker {
         namespace: String,
         taskQueue: String,
         identity: String,
+        hasActivities: Bool,
+        hasWorkflows: Bool,
         versioningStrategy: TemporalWorker.Configuration.VersioningStrategy,
         tuner: TemporalCoreTunerHolder,
         maxCachedWorkflows: UInt32,
-        noRemoteActivities: Bool,
         stickyQueueTimeoutMs: UInt64,
         maxHeartbeatThrottleIntervalMs: UInt64,
         defaultHeartbeatThrottleIntervalMs: UInt64,
@@ -52,7 +53,12 @@ extension BridgeWorker {
                                             identity_override: identityRef,
                                             max_cached_workflows: maxCachedWorkflows,
                                             tuner: tuner,
-                                            no_remote_activities: noRemoteActivities,
+                                            task_types: TemporalCoreWorkerTaskTypes(
+                                                enable_workflows: hasWorkflows,
+                                                enable_local_activities: hasWorkflows && hasActivities,
+                                                enable_remote_activities: hasActivities,
+                                                enable_nexus: false  // TODO: Support nexus
+                                            ),
                                             sticky_queue_schedule_to_start_timeout_millis: stickyQueueTimeoutMs,
                                             max_heartbeat_throttle_interval_millis: maxHeartbeatThrottleIntervalMs,
                                             default_heartbeat_throttle_interval_millis: defaultHeartbeatThrottleIntervalMs,
@@ -64,7 +70,8 @@ extension BridgeWorker {
                                             activity_task_poller_behavior: activityTaskPollerBehaviorRef,
                                             nexus_task_poller_behavior: nexusTaskPollerBehaviorRef,
                                             nondeterminism_as_workflow_fail: nondeterminismAsWorkflowFail,
-                                            nondeterminism_as_workflow_fail_for_types: nondetArray
+                                            nondeterminism_as_workflow_fail_for_types: nondetArray,
+                                            plugins: .init()
                                         )
 
                                         return try body(&opts)

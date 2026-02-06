@@ -320,8 +320,6 @@ extension TemporalWorker {
         public var maxConcurrentActivities: Int = 100
         /// Maximum concurrent local activities (default `100`).
         public var maxConcurrentLocalActivities: Int = 100
-        /// If true, disables polling and execution of remote activities (default `false`).
-        public var noRemoteActivities: Bool = false
         /// Global throttle for activity start rate (units/sec, default `100_000`).
         public var maxActivitiesPerSecond: Double = 100_000
 
