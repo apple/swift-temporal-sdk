@@ -99,7 +99,7 @@ extension TestServerDependentTests {
                 let activity = CompleteExternalContainer.Activities.ActivityDefault.self
                 return try await Workflow.executeActivity(
                     activity,
-                    options: .init(scheduleToCloseTimeout: .seconds(1)),
+                    options: .init(scheduleToCloseTimeout: .seconds(30)),
                     input: input
                 )
             }
@@ -222,6 +222,19 @@ extension TestServerDependentTests {
                 let activity = CompleteExternalContainer.Activities.ActivityDefault.self
                 return try await Workflow.executeActivity(
                     activity,
+                    options: .init(scheduleToCloseTimeout: .seconds(30), cancellationType: .waitCancellationCompleted),
+                    input: input
+                )
+            }
+        }
+
+        /// Workflow with a short timeout specifically for testing timeout behavior.
+        @Workflow
+        final class AsyncCompletionShortTimeoutWorkflow {
+            func run(input: String) async throws -> String {
+                let activity = CompleteExternalContainer.Activities.ActivityDefault.self
+                return try await Workflow.executeActivity(
+                    activity,
                     options: .init(scheduleToCloseTimeout: .seconds(1), cancellationType: .waitCancellationCompleted),
                     input: input
                 )
@@ -297,10 +310,10 @@ extension TestServerDependentTests {
             try await withTestWorkerAndClient(
                 clientInterceptors: [interceptor],
                 activities: CompleteExternalContainer(taskTokenContinuation: taskTokenContinuation).allActivities,
-                workflows: [AsyncCompletionCancellationWaitingWorkflow.self]
+                workflows: [AsyncCompletionShortTimeoutWorkflow.self]
             ) { taskQueue, client in
                 _ = try await client.startWorkflow(
-                    type: AsyncCompletionCancellationWaitingWorkflow.self,
+                    type: AsyncCompletionShortTimeoutWorkflow.self,
                     options: .init(id: workflowID, taskQueue: taskQueue),
                     input: "input"
                 )
