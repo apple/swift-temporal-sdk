@@ -63,4 +63,62 @@ struct WorkerConfigurationTests {
             )
         }
     }
+
+    @Test
+    func workerHeartbeatIntervalDefaultsToZero() async throws {
+        let config = TemporalWorker.Configuration(
+            namespace: "test",
+            taskQueue: "test-queue",
+            instrumentation: .init(serverHostname: "localhost")
+        )
+
+        #expect(config.workerHeartbeatInterval == .zero)
+    }
+
+    @Test
+    func workerHeartbeatIntervalCanBeSet() async throws {
+        var config = TemporalWorker.Configuration(
+            namespace: "test",
+            taskQueue: "test-queue",
+            instrumentation: .init(serverHostname: "localhost")
+        )
+
+        config.workerHeartbeatInterval = .seconds(30)
+        #expect(config.workerHeartbeatInterval == .seconds(30))
+
+        config.workerHeartbeatInterval = .milliseconds(500)
+        #expect(config.workerHeartbeatInterval == .milliseconds(500))
+
+        config.workerHeartbeatInterval = .zero
+        #expect(config.workerHeartbeatInterval == .zero)
+    }
+
+    @Test
+    func workerHeartbeatIntervalFromConfigReader() async throws {
+        let namespace = "testdefault"
+        let taskQueue = "testtaskqueue"
+        let buildId = "testbuildid"
+        let clientServerHostname = "testserverhostname.com"
+        let clientIdentity = "testclientidentity"
+        let heartbeatIntervalMs = 5000
+
+        let container = ConfigReader(
+            provider: InMemoryProvider(
+                values: [
+                    ["temporal", "worker", "namespace"]: .init(stringLiteral: namespace),
+                    ["temporal", "worker", "taskqueue"]: .init(stringLiteral: taskQueue),
+                    ["temporal", "worker", "buildid"]: .init(stringLiteral: buildId),
+                    ["temporal", "worker", "client", "instrumentation", "serverhostname"]: .init(stringLiteral: clientServerHostname),
+                    ["temporal", "worker", "client", "identity"]: .init(stringLiteral: clientIdentity),
+                    ["temporal", "worker", "heartbeatintervalms"]: .init(integerLiteral: heartbeatIntervalMs),
+                ]
+            )
+        )
+
+        let config = try TemporalWorker.Configuration(
+            configReader: container.scoped(to: "temporal")
+        )
+
+        #expect(config.workerHeartbeatInterval == .milliseconds(heartbeatIntervalMs))
+    }
 }
