@@ -348,6 +348,13 @@ extension TemporalWorker {
         public var maxHeartbeatThrottleInterval: Duration = .seconds(60)
 
         // –– Misc ––
+        /// The interval at which the worker sends heartbeats to the server.
+        ///
+        /// Worker heartbeats are separate from activity heartbeats. They indicate that the worker
+        /// process is alive and connected to the server. A value of `nil` or `.zero` disables
+        /// worker heartbeats.
+        public var workerHeartbeatInterval: Duration?
+
         /// Milliseconds to wait for in-flight tasks on shutdown before force exit (default `0 sec`).
         public var gracefulShutdownPeriod: Duration = .seconds(0)
         /// Polling behavior for nexus tasks (default max `5`).

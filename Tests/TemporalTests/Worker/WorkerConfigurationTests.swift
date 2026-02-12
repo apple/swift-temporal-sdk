@@ -63,4 +63,33 @@ struct WorkerConfigurationTests {
             )
         }
     }
+
+    @Test
+    func workerHeartbeatIntervalDefaultsToNil() async throws {
+        let config = TemporalWorker.Configuration(
+            namespace: "test",
+            taskQueue: "test-queue",
+            instrumentation: .init(serverHostname: "localhost")
+        )
+
+        #expect(config.workerHeartbeatInterval == nil)
+    }
+
+    @Test
+    func workerHeartbeatIntervalCanBeSet() async throws {
+        var config = TemporalWorker.Configuration(
+            namespace: "test",
+            taskQueue: "test-queue",
+            instrumentation: .init(serverHostname: "localhost")
+        )
+
+        config.workerHeartbeatInterval = .seconds(30)
+        #expect(config.workerHeartbeatInterval == .seconds(30))
+
+        config.workerHeartbeatInterval = .milliseconds(500)
+        #expect(config.workerHeartbeatInterval == .milliseconds(500))
+
+        config.workerHeartbeatInterval = nil
+        #expect(config.workerHeartbeatInterval == nil)
+    }
 }
