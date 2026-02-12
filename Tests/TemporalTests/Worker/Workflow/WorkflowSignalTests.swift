@@ -25,7 +25,7 @@ extension TestServerDependentTests {
         final class SignalWorkflow {
             enum SignalScenario: Codable {
                 case updateState
-                case throwTestError
+                case throwTestFailureError
                 case throwApplicationError
                 case timer
                 case updateStateAndWaitCondition
@@ -44,8 +44,8 @@ extension TestServerDependentTests {
                 switch input {
                 case .updateState:
                     self.state = "signaled"
-                case .throwTestError:
-                    throw TestError()
+                case .throwTestFailureError:
+                    throw TestFailureError()
                 case .throwApplicationError:
                     throw ApplicationError(
                         message: "CustomApplicationError",
@@ -82,7 +82,7 @@ extension TestServerDependentTests {
         }
 
         @Test
-        func signalThrowTestError() async throws {
+        func signalThrowTestFailureError() async throws {
             try await withTestWorkerAndClient(
                 workflows: [SignalWorkflow.self]
             ) { taskQueue, client in
@@ -96,7 +96,7 @@ extension TestServerDependentTests {
 
                 try await handle.signal(
                     signalType: SignalWorkflow.Signal.self,
-                    input: .throwTestError
+                    input: .throwTestFailureError
                 )
 
                 await #expect(throws: WorkflowFailedError.self) {

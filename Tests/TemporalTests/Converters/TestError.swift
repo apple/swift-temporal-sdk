@@ -12,4 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Temporal
+
+/// A simple error for testing that does not conform to `TemporalFailureError`.
 struct TestError: Error {}
+
+/// A test error that conforms to `TemporalFailureError`.
+struct TestFailureError: TemporalFailureError {
+    var message: String = "TestFailureError"
+    var cause: (any Error)?
+    var stackTrace: String = ""
+}
