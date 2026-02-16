@@ -254,17 +254,17 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
             let (activationsStream, activationsContinuation) = AsyncStream<Coresdk.WorkflowActivation.WorkflowActivation>.makeStream()
             runningWorkflows[runID] = activationsContinuation
             taskGroup.addTask {
-                self.logger.trace("Running workflow instance")
+                logger.trace("Running workflow instance")
                 do {
                     try await workflowInstance.run(
                         workflowType: workflowType,
                         activations: activationsStream
                     )
-                    self.logger.trace("Workflow instance finished")
+                    logger.trace("Workflow instance finished")
                 } catch {
                     // TODO: We should probably log an error here and let it all tear down
                     // since this can only happen if we failed to send a completion to the worker
-                    self.logger.error("Workflow instance failed to send a completion")
+                    logger.error("Workflow instance failed to send a completion")
                 }
             }
             return activationsContinuation

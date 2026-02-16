@@ -1,0 +1,216 @@
+{
+    "events": [
+        {
+            "eventId": "1",
+            "eventTime": "2026-02-16T14:18:03.073125Z",
+            "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED",
+            "taskId": "1048587",
+            "workflowExecutionStartedEventAttributes": {
+                "workflowType": {
+                    "name": "SayHelloWorkflow"
+                },
+                "taskQueue": {
+                    "name": "BA0C76B8-F38B-4303-B785-1ED6FE488A4A",
+                    "kind": "TASK_QUEUE_KIND_NORMAL"
+                },
+                "input": {
+                    "payloads": [
+                        {
+                            "metadata": {
+                                "encoding": "anNvbi9wbGFpbg=="
+                            },
+                            "data": "eyJuYW1lIjoiVGVtcG9yYWwiLCJzaG91bGRXYWl0IjpmYWxzZSwic2hvdWxkRXJyb3IiOmZhbHNlLCJzaG91bGRDYXVzZU5vbkRldGVybWluaXNtIjpmYWxzZX0="
+                        }
+                    ]
+                },
+                "workflowTaskTimeout": "10s",
+                "originalExecutionRunId": "019c66d0-c1c1-71e8-b0f3-3e572576cf6c",
+                "identity": "swift-temporal-16305efac88dbe2144cac1f3124e5c8a123fff08 (modified)",
+                "firstExecutionRunId": "019c66d0-c1c1-71e8-b0f3-3e572576cf6c",
+                "attempt": 1,
+                "firstWorkflowTaskBackoff": "0s",
+                "workflowId": "replayer-test-simple-2F1AA4EC-5C82-4E8D-819E-5BFE6FD7312E"
+            }
+        },
+        {
+            "eventId": "2",
+            "eventTime": "2026-02-16T14:18:03.073197Z",
+            "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+            "taskId": "1048588",
+            "workflowTaskScheduledEventAttributes": {
+                "taskQueue": {
+                    "name": "BA0C76B8-F38B-4303-B785-1ED6FE488A4A",
+                    "kind": "TASK_QUEUE_KIND_NORMAL"
+                },
+                "startToCloseTimeout": "10s",
+                "attempt": 1
+            }
+        },
+        {
+            "eventId": "3",
+            "eventTime": "2026-02-16T14:18:05.078125Z",
+            "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+            "taskId": "1048593",
+            "workflowTaskStartedEventAttributes": {
+                "scheduledEventId": "2",
+                "identity": "swift-temporal-16305efac88dbe2144cac1f3124e5c8a123fff08 (modified)-4E2A9",
+                "requestId": "46727192-9224-438f-b357-2ea0013b798b",
+                "historySizeBytes": "499"
+            }
+        },
+        {
+            "eventId": "4",
+            "eventTime": "2026-02-16T14:18:05.098268Z",
+            "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+            "taskId": "1048597",
+            "workflowTaskCompletedEventAttributes": {
+                "scheduledEventId": "2",
+                "startedEventId": "3",
+                "identity": "swift-temporal-16305efac88dbe2144cac1f3124e5c8a123fff08 (modified)-4E2A9",
+                "workerVersion": {},
+                "sdkMetadata": {
+                    "coreUsedFlags": [
+                        1,
+                        2,
+                        3
+                    ],
+                    "sdkName": "swift-temporal",
+                    "sdkVersion": "16305efac88dbe2144cac1f3124e5c8a123fff08 (modified)"
+                },
+                "meteringMetadata": {}
+            }
+        },
+        {
+            "eventId": "5",
+            "eventTime": "2026-02-16T14:18:05.098338Z",
+            "eventType": "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+            "taskId": "1048598",
+            "activityTaskScheduledEventAttributes": {
+                "activityId": "0",
+                "activityType": {
+                    "name": "ReplayActivity"
+                },
+                "taskQueue": {
+                    "name": "BA0C76B8-F38B-4303-B785-1ED6FE488A4A",
+                    "kind": "TASK_QUEUE_KIND_NORMAL"
+                },
+                "header": {},
+                "input": {
+                    "payloads": [
+                        {
+                            "metadata": {
+                                "encoding": "anNvbi9wbGFpbg=="
+                            },
+                            "data": "IlRlbXBvcmFsIg=="
+                        }
+                    ]
+                },
+                "scheduleToCloseTimeout": "60s",
+                "scheduleToStartTimeout": "60s",
+                "startToCloseTimeout": "60s",
+                "heartbeatTimeout": "0s",
+                "workflowTaskCompletedEventId": "4",
+                "retryPolicy": {
+                    "initialInterval": "1s",
+                    "backoffCoefficient": 2,
+                    "maximumInterval": "100s"
+                },
+                "useWorkflowBuildId": true
+            }
+        },
+        {
+            "eventId": "6",
+            "eventTime": "2026-02-16T14:18:05.099677Z",
+            "eventType": "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+            "taskId": "1048605",
+            "activityTaskStartedEventAttributes": {
+                "scheduledEventId": "5",
+                "identity": "swift-temporal-16305efac88dbe2144cac1f3124e5c8a123fff08 (modified)-4E2A9",
+                "requestId": "7897b9c0-9721-48a5-a2f3-395cbbd7598f",
+                "attempt": 1,
+                "workerVersion": {}
+            }
+        },
+        {
+            "eventId": "7",
+            "eventTime": "2026-02-16T14:18:05.111432Z",
+            "eventType": "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+            "taskId": "1048606",
+            "activityTaskCompletedEventAttributes": {
+                "result": {
+                    "payloads": [
+                        {
+                            "metadata": {
+                                "encoding": "anNvbi9wbGFpbg=="
+                            },
+                            "data": "IkhlbGxvLCBUZW1wb3JhbCEi"
+                        }
+                    ]
+                },
+                "scheduledEventId": "5",
+                "startedEventId": "6",
+                "identity": "swift-temporal-16305efac88dbe2144cac1f3124e5c8a123fff08 (modified)-4E2A9"
+            }
+        },
+        {
+            "eventId": "8",
+            "eventTime": "2026-02-16T14:18:05.111435Z",
+            "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+            "taskId": "1048607",
+            "workflowTaskScheduledEventAttributes": {
+                "taskQueue": {
+                    "name": "swift-temporal-16305efac88dbe2144cac1f3124e5c8a123fff08 (modified)-4E2A9-15b710ea9caf42e38a84622619ceff4f",
+                    "kind": "TASK_QUEUE_KIND_STICKY",
+                    "normalName": "BA0C76B8-F38B-4303-B785-1ED6FE488A4A"
+                },
+                "startToCloseTimeout": "10s",
+                "attempt": 1
+            }
+        },
+        {
+            "eventId": "9",
+            "eventTime": "2026-02-16T14:18:05.112191Z",
+            "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+            "taskId": "1048611",
+            "workflowTaskStartedEventAttributes": {
+                "scheduledEventId": "8",
+                "identity": "swift-temporal-16305efac88dbe2144cac1f3124e5c8a123fff08 (modified)-4E2A9",
+                "requestId": "0ddbcfe6-9aa8-426c-a414-5829b78c9941",
+                "historySizeBytes": "1477"
+            }
+        },
+        {
+            "eventId": "10",
+            "eventTime": "2026-02-16T14:18:05.118549Z",
+            "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+            "taskId": "1048615",
+            "workflowTaskCompletedEventAttributes": {
+                "scheduledEventId": "8",
+                "startedEventId": "9",
+                "identity": "swift-temporal-16305efac88dbe2144cac1f3124e5c8a123fff08 (modified)-4E2A9",
+                "workerVersion": {},
+                "sdkMetadata": {},
+                "meteringMetadata": {}
+            }
+        },
+        {
+            "eventId": "11",
+            "eventTime": "2026-02-16T14:18:05.118581Z",
+            "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+            "taskId": "1048616",
+            "workflowExecutionCompletedEventAttributes": {
+                "result": {
+                    "payloads": [
+                        {
+                            "metadata": {
+                                "encoding": "anNvbi9wbGFpbg=="
+                            },
+                            "data": "IkhlbGxvLCBUZW1wb3JhbCEi"
+                        }
+                    ]
+                },
+                "workflowTaskCompletedEventId": "10"
+            }
+        }
+    ]
+}

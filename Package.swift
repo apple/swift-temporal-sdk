@@ -242,6 +242,9 @@ let package = Package(
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
                 "Temporal",
                 "TemporalTestKit",
+            ],
+            resources: [
+                .copy("Worker/Histories")
             ]
         ),
         .testTarget(
