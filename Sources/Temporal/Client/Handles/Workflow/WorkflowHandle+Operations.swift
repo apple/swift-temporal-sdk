@@ -71,6 +71,24 @@ extension WorkflowHandle {
         )
     }
 
+    /// Fetches the complete execution history for this workflow.
+    ///
+    /// - Parameters:
+    ///   - waitNewEvent: Whether to wait for new events if none are immediately available.
+    ///   - eventFilterType: The type of events to include in the response.
+    ///   - skipArchival: Whether to skip archived history events for performance.
+    ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
+    /// - Returns: An array of history events representing the workflow's execution timeline.
+    /// - Throws: An error if the history cannot be retrieved or the workflow doesn't exist.
+    public func fetchHistory(
+        waitNewEvent: Bool = false,
+        eventFilterType: Api.Enums.V1.HistoryEventFilterType = .allEvent,
+        skipArchival: Bool = false,
+        callOptions: CallOptions? = nil
+    ) async throws -> WorkflowHistory {
+        try await self.untypedHandle.fetchHistory(callOptions: callOptions)
+    }
+
     // MARK: Signals
 
     /// Sends a signal to the workflow execution with typed input data.
