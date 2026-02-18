@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension ReplicationState {
-    init?(proto: Temporal_Api_Enums_V1_ReplicationState) {
+    init?(proto: Api.Enums.V1.ReplicationState) {
         switch proto {
         case .normal:
             self = .normal
@@ -25,7 +25,7 @@ extension ReplicationState {
     }
 }
 
-extension Temporal_Api_Enums_V1_ReplicationState {
+extension Api.Enums.V1.ReplicationState {
     init(state: ReplicationState) {
         switch state {
         case .normal:

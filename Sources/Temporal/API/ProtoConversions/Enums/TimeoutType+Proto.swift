@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension TimeoutType {
-    init(_ rawValue: Temporal_Api_Enums_V1_TimeoutType) {
+    init(_ rawValue: Api.Enums.V1.TimeoutType) {
         self =
             switch rawValue {
             case .unspecified: .unspecified
@@ -27,7 +27,7 @@ extension TimeoutType {
     }
 }
 
-extension Temporal_Api_Enums_V1_TimeoutType {
+extension Api.Enums.V1.TimeoutType {
     init(_ type: TimeoutType) {
         self =
             switch type {

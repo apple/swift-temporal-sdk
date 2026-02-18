@@ -284,7 +284,7 @@ public struct ActivityExecutionContext: Sendable {
 
 extension ActivityExecutionContext {
     init(
-        activityTaskStart: Coresdk_ActivityTask_Start,
+        activityTaskStart: Coresdk.ActivityTask.Start,
         taskQueue: String,
         taskToken: ActivityTaskToken,
         dataConverter: DataConverter,

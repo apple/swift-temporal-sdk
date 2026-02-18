@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Temporal_Api_Enums_V1_QueryRejectCondition {
+extension Api.Enums.V1.QueryRejectCondition {
     init(queryRejectionCondition: QueryRejectionCondition) {
         switch queryRejectionCondition.backing {
         case .none:

@@ -33,5 +33,5 @@ public struct PendingActivityInfo: Hashable, Sendable {
     /// The timestamp when the activity most recently started execution.
     public var lastStartedTime: Date
 
-    // TODO: Incorporate remaining properties from `Temporal_Api_Workflow_V1_PendingActivityInfo`
+    // TODO: Incorporate remaining properties from `Api.Workflow.V1.PendingActivityInfo`
 }

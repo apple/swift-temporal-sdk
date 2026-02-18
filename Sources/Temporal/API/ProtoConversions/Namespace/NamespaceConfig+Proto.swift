@@ -16,7 +16,7 @@ import Foundation
 import SwiftProtobuf
 
 extension NamespaceConfig {
-    init(proto: Temporal_Api_Namespace_V1_NamespaceConfig) {
+    init(proto: Api.Namespace.V1.NamespaceConfig) {
         if proto.hasWorkflowExecutionRetentionTtl {
             self.workflowExecutionRetentionTtl = .init(proto.workflowExecutionRetentionTtl)
         }
@@ -32,8 +32,9 @@ extension NamespaceConfig {
     }
 }
 
-extension Temporal_Api_Namespace_V1_NamespaceConfig {
+extension Api.Namespace.V1.NamespaceConfig {
     init(config: NamespaceConfig) {
+        self = .init()
         if let workflowExecutionRetentionTtl = config.workflowExecutionRetentionTtl {
             self.workflowExecutionRetentionTtl = .init(duration: workflowExecutionRetentionTtl)
         }

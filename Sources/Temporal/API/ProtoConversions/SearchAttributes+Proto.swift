@@ -14,8 +14,9 @@
 
 import struct Foundation.Date
 
-extension Temporal_Api_Common_V1_SearchAttributes {
+extension Api.Common.V1.SearchAttributes {
     init(_ collection: SearchAttributeCollection) {
+        self = .init()
         for (key, value) in collection {
             // This should be okay to force since the collection can only be created
             // in a type safe way and only handles primitives.
@@ -27,7 +28,7 @@ extension Temporal_Api_Common_V1_SearchAttributes {
 }
 
 extension SearchAttributeCollection {
-    init(_ rawSearchAttributes: Temporal_Api_Common_V1_SearchAttributes) throws {
+    init(_ rawSearchAttributes: Api.Common.V1.SearchAttributes) throws {
         self = try SearchAttributeCollection.init { builder in
             for (keyName, rawValue) in rawSearchAttributes.indexedFields {
                 guard let (value, type) = try StorageValue.convertPayload(rawValue) else { continue }
@@ -43,7 +44,7 @@ extension SearchAttributeCollection {
 }
 
 extension SearchAttributeCollection.StorageValue {
-    static func convertPayload(_ payload: Temporal_Api_Common_V1_Payload) throws -> (value: Self, type: SearchAttributeType)? {
+    static func convertPayload(_ payload: Api.Common.V1.Payload) throws -> (value: Self, type: SearchAttributeType)? {
         guard let rawType = payload.metadata["type"] else { return nil }
         guard let stringType = String(data: rawType, encoding: .utf8) else { return nil }
         guard let type = SearchAttributeType(indexedValueTypeString: stringType) else { return nil }

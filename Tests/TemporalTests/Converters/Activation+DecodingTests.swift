@@ -22,17 +22,17 @@ struct ActivationDecodingTests {
     @Test
     func decode() async throws {
         let payloadCodec = Base64PayloadCodec()
-        let payload = Temporal_Api_Common_V1_Payload.with {
+        let payload = Api.Common.V1.Payload.with {
             $0.data = Data([1, 2, 3]).base64EncodedData()
             $0.metadata["codec"] = Data("application/base64".utf8)
         }
-        let failure = Temporal_Api_Failure_V1_Failure.with {
+        let failure = Api.Failure.V1.Failure.with {
             $0.encodedAttributes = .with {
                 $0.data = Data([1, 2, 3]).base64EncodedData()
                 $0.metadata["codec"] = Data("application/base64".utf8)
             }
         }
-        var activation = Coresdk_WorkflowActivation_WorkflowActivation.with {
+        var activation = Coresdk.WorkflowActivation.WorkflowActivation.with {
             $0.jobs = [
                 .with {
                     $0.variant = .initializeWorkflow(
@@ -173,10 +173,10 @@ struct ActivationDecodingTests {
 
         try await activation.decode(payloadCodec: payloadCodec)
 
-        let expectedPayload = Temporal_Api_Common_V1_Payload.with {
+        let expectedPayload = Api.Common.V1.Payload.with {
             $0.data = Data([1, 2, 3])
         }
-        let expectedFailure = Temporal_Api_Failure_V1_Failure.with {
+        let expectedFailure = Api.Failure.V1.Failure.with {
             $0.encodedAttributes = .with {
                 $0.data = Data([1, 2, 3])
             }

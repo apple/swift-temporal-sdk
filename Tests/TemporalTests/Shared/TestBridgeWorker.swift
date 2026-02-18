@@ -29,28 +29,28 @@ extension BridgeWorkerForwarding {
         try await self.base.finalizeShutdown()
     }
 
-    func pollWorkflowActivation() async throws -> Coresdk_WorkflowActivation_WorkflowActivation {
+    func pollWorkflowActivation() async throws -> Coresdk.WorkflowActivation.WorkflowActivation {
         try await self.base.pollWorkflowActivation()
     }
 
     func completeWorkflowActivation(
-        completion: Coresdk_WorkflowCompletion_WorkflowActivationCompletion
+        completion: Coresdk.WorkflowCompletion.WorkflowActivationCompletion
     ) async throws {
         try await self.base.completeWorkflowActivation(completion: completion)
     }
 
-    func pollActivityTask() async throws -> Coresdk_ActivityTask_ActivityTask {
+    func pollActivityTask() async throws -> Coresdk.ActivityTask.ActivityTask {
         try await self.base.pollActivityTask()
     }
 
     func completeActivityTask(
-        _ completion: Coresdk_ActivityTaskCompletion
+        _ completion: Coresdk.ActivityTaskCompletion
     ) async throws {
         try await self.base.completeActivityTask(completion)
     }
 
     func recordActivityHeartbeat(
-        _ heartbeat: Coresdk_ActivityHeartbeat
+        _ heartbeat: Coresdk.ActivityHeartbeat
     ) throws {
         try self.base.recordActivityHeartbeat(heartbeat)
     }

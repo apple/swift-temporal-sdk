@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension UpdateAdmittedEventOrigin {
-    init(_ rawValue: Temporal_Api_Enums_V1_UpdateAdmittedEventOrigin) {
+    init(_ rawValue: Api.Enums.V1.UpdateAdmittedEventOrigin) {
         self =
             switch rawValue {
             case .unspecified: .unspecified

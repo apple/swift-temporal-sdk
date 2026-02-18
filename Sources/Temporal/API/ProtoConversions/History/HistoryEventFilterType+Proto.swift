@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Temporal_Api_Enums_V1_HistoryEventFilterType {
+extension Api.Enums.V1.HistoryEventFilterType {
     init(_ type: HistoryEventFilterType) {
         self =
             switch type {

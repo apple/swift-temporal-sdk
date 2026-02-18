@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension EventType {
-    init(_ rawValue: Temporal_Api_Enums_V1_EventType) {
+    init(_ rawValue: Api.Enums.V1.EventType) {
         self =
             switch rawValue {
             case .unspecified: .unspecified
@@ -76,6 +76,10 @@ extension EventType {
             case .workflowExecutionOptionsUpdated: .workflowExecutionOptionsUpdated
             case .UNRECOGNIZED(let value):
                 fatalError("Unrecognized rawValue \(value) for EventType.")
+            case .workflowExecutionPaused:
+                fatalError()  // TODO: Handle
+            case .workflowExecutionUnpaused:
+                fatalError()  // TODO: Handle
             }
     }
 }

@@ -35,9 +35,9 @@ extension TemporalClient.WorkflowService {
         runID: String? = nil,
         callOptions: CallOptions? = nil
     ) async throws -> WorkflowExecutionDescription {
-        let response: Temporal_Api_Workflowservice_V1_DescribeWorkflowExecutionResponse = try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.DescribeWorkflowExecution.descriptor,
-            request: Temporal_Api_Workflowservice_V1_DescribeWorkflowExecutionRequest.with {
+        let response: Api.Workflowservice.V1.DescribeWorkflowExecutionResponse = try await self.client.unary(
+            method: Api.Workflowservice.V1.WorkflowService.Method.DescribeWorkflowExecution.descriptor,
+            request: Api.Workflowservice.V1.DescribeWorkflowExecutionRequest.with {
                 $0.namespace = configuration.namespace
                 $0.execution.workflowID = workflowID
                 if let runID {

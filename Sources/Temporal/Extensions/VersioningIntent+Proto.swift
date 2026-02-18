@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Coresdk_Common_VersioningIntent {
+extension Coresdk.Common.VersioningIntent {
     init(versioningIntent: VersioningIntent) {
         switch versioningIntent {
         case .unspecified:

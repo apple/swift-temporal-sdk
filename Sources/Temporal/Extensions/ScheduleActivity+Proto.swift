@@ -14,7 +14,7 @@
 
 import Foundation
 
-extension Coresdk_WorkflowCommands_ScheduleActivity {
+extension Coresdk.WorkflowCommands.ScheduleActivity {
     init(
         id: UInt32,
         activityType: String,
@@ -23,6 +23,7 @@ extension Coresdk_WorkflowCommands_ScheduleActivity {
         input: [TemporalPayload],
         options: ActivityOptions
     ) {
+        self = .init()
         self.seq = id
         self.activityType = activityType
         self.activityID = options.activityID ?? String(id)

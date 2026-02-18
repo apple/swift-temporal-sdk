@@ -14,7 +14,7 @@
 
 import SwiftProtobuf
 
-extension Temporal_Api_Failure_V1_Failure {
+extension Api.Failure.V1.Failure {
     init(temporalFailure: TemporalFailure) {
         self = Self.with {
             $0.message = temporalFailure.message
@@ -32,7 +32,7 @@ extension Temporal_Api_Failure_V1_Failure {
     }
 }
 
-extension Temporal_Api_Failure_V1_Failure.OneOf_FailureInfo {
+extension Api.Failure.V1.Failure.OneOf_FailureInfo {
     init(failureInfo: TemporalFailure.FailureInfo) {
         switch failureInfo {
         case .application(let application):
@@ -55,7 +55,7 @@ extension Temporal_Api_Failure_V1_Failure.OneOf_FailureInfo {
     }
 }
 
-extension Temporal_Api_Failure_V1_ApplicationFailureInfo {
+extension Api.Failure.V1.ApplicationFailureInfo {
     init(application: TemporalFailure.FailureInfo.Application) {
         self = .with {
             $0.type = application.type
@@ -63,7 +63,7 @@ extension Temporal_Api_Failure_V1_ApplicationFailureInfo {
             if !application.details.isEmpty {
                 $0.details = .with {
                     $0.payloads = application.details
-                        .map { Temporal_Api_Common_V1_Payload(temporalPayload: $0) }
+                        .map { Api.Common.V1.Payload(temporalPayload: $0) }
                 }
             }
             if let nextRetryDelay = application.nextRetryDelay {
@@ -73,22 +73,24 @@ extension Temporal_Api_Failure_V1_ApplicationFailureInfo {
     }
 }
 
-extension Temporal_Api_Failure_V1_CanceledFailureInfo {
+extension Api.Failure.V1.CanceledFailureInfo {
     init(cancelled: TemporalFailure.FailureInfo.Cancelled) {
         self = .with {
             $0.details = .with {
                 $0.payloads = cancelled.details
-                    .map { Temporal_Api_Common_V1_Payload(temporalPayload: $0) }
+                    .map { Api.Common.V1.Payload(temporalPayload: $0) }
             }
         }
     }
 }
 
-extension Temporal_Api_Failure_V1_TerminatedFailureInfo {
-    init(terminated: TemporalFailure.FailureInfo.Terminated) {}
+extension Api.Failure.V1.TerminatedFailureInfo {
+    init(terminated: TemporalFailure.FailureInfo.Terminated) {
+        self = .init()
+    }
 }
 
-extension Temporal_Api_Failure_V1_ChildWorkflowExecutionFailureInfo {
+extension Api.Failure.V1.ChildWorkflowExecutionFailureInfo {
     init(childWorkflowExecution: TemporalFailure.FailureInfo.ChildWorkflowExecution) {
         self = .with {
             $0.namespace = childWorkflowExecution.namespace
@@ -100,7 +102,7 @@ extension Temporal_Api_Failure_V1_ChildWorkflowExecutionFailureInfo {
     }
 }
 
-extension Temporal_Api_Failure_V1_ActivityFailureInfo {
+extension Api.Failure.V1.ActivityFailureInfo {
     init(activity: TemporalFailure.FailureInfo.Activity) {
         self = .with {
             $0.scheduledEventID = Int64(activity.scheduledEventID)
@@ -113,7 +115,7 @@ extension Temporal_Api_Failure_V1_ActivityFailureInfo {
     }
 }
 
-extension Temporal_Api_Failure_V1_ServerFailureInfo {
+extension Api.Failure.V1.ServerFailureInfo {
     init(server: TemporalFailure.FailureInfo.Server) {
         self = .with {
             $0.nonRetryable = server.isNonRetryable
@@ -121,20 +123,20 @@ extension Temporal_Api_Failure_V1_ServerFailureInfo {
     }
 }
 
-extension Temporal_Api_Failure_V1_TimeoutFailureInfo {
+extension Api.Failure.V1.TimeoutFailureInfo {
     init(timeout: TemporalFailure.FailureInfo.Timeout) {
         self = .with {
             $0.timeoutType = .init(timeout.type)
             $0.lastHeartbeatDetails = .with {
                 $0.payloads = timeout.lastHeartbeatDetails
-                    .map { Temporal_Api_Common_V1_Payload(temporalPayload: $0) }
+                    .map { Api.Common.V1.Payload(temporalPayload: $0) }
             }
         }
     }
 }
 
 extension TemporalFailure {
-    init(temporalAPIFailure: Temporal_Api_Failure_V1_Failure) {
+    init(temporalAPIFailure: Api.Failure.V1.Failure) {
         self.init(
             message: temporalAPIFailure.message,
             source: temporalAPIFailure.source,
@@ -150,7 +152,7 @@ extension TemporalFailure {
 }
 
 extension TemporalFailure.FailureInfo {
-    init(temporalAPIFailureInfo: Temporal_Api_Failure_V1_Failure.OneOf_FailureInfo) {
+    init(temporalAPIFailureInfo: Api.Failure.V1.Failure.OneOf_FailureInfo) {
         switch temporalAPIFailureInfo {
         case .applicationFailureInfo(let applicationFailureInfo):
             self = .application(

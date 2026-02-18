@@ -36,9 +36,9 @@ extension TemporalClient.WorkflowService {
         callOptions: CallOptions? = nil
     ) async throws -> some AsyncSequence<WorkflowExecution, any Error> & Sendable {
         withFlattenedPagination { pageToken in
-            let response: Temporal_Api_Workflowservice_V1_ListWorkflowExecutionsResponse = try await self.client.unary(
-                method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.ListWorkflowExecutions.descriptor,
-                request: Temporal_Api_Workflowservice_V1_ListWorkflowExecutionsRequest.with {
+            let response: Api.Workflowservice.V1.ListWorkflowExecutionsResponse = try await self.client.unary(
+                method: Api.Workflowservice.V1.WorkflowService.Method.ListWorkflowExecutions.descriptor,
+                request: Api.Workflowservice.V1.ListWorkflowExecutionsRequest.with {
                     $0.namespace = configuration.namespace
                     $0.query = query
                     $0.nextPageToken = pageToken
@@ -70,9 +70,9 @@ extension TemporalClient.WorkflowService {
         input: CountWorkflowsInput,
         callOptions: CallOptions? = nil
     ) async throws -> WorkflowExecutionCount {
-        let rawValue: Temporal_Api_Workflowservice_V1_CountWorkflowExecutionsResponse = try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.CountWorkflowExecutions.descriptor,
-            request: Temporal_Api_Workflowservice_V1_CountWorkflowExecutionsRequest.with {
+        let rawValue: Api.Workflowservice.V1.CountWorkflowExecutionsResponse = try await self.client.unary(
+            method: Api.Workflowservice.V1.WorkflowService.Method.CountWorkflowExecutions.descriptor,
+            request: Api.Workflowservice.V1.CountWorkflowExecutionsRequest.with {
                 $0.namespace = self.configuration.namespace
                 $0.query = input.query
             },

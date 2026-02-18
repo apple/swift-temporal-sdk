@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension NamespaceUpdatedDescription {
-    init(proto: Temporal_Api_Workflowservice_V1_UpdateNamespaceResponse) {
+    init(proto: Api.Workflowservice.V1.UpdateNamespaceResponse) {
         self.info = .init(proto: proto.namespaceInfo)
         self.config = .init(proto: proto.config)
         self.replicationConfig = .init(proto: proto.replicationConfig)

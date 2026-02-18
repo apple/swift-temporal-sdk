@@ -15,7 +15,7 @@
 import SwiftProtobuf
 
 extension ResetPoint {
-    init(_ rawValue: Temporal_Api_Workflow_V1_ResetPointInfo) {
+    init(_ rawValue: Api.Workflow.V1.ResetPointInfo) {
         self = .init(
             buildID: rawValue.buildID.isEmpty ? nil : rawValue.buildID,
             binaryChecksum: rawValue.binaryChecksum.isEmpty ? nil : rawValue.binaryChecksum,

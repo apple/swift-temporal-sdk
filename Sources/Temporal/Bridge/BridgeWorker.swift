@@ -27,11 +27,11 @@ package protocol BridgeWorkerProtocol: Sendable {
 
     func initiateShutdown()
     func finalizeShutdown() async throws
-    func pollWorkflowActivation() async throws -> Coresdk_WorkflowActivation_WorkflowActivation
-    func completeWorkflowActivation(completion: Coresdk_WorkflowCompletion_WorkflowActivationCompletion) async throws
-    func pollActivityTask() async throws -> Coresdk_ActivityTask_ActivityTask
-    func completeActivityTask(_ completion: Coresdk_ActivityTaskCompletion) async throws
-    func recordActivityHeartbeat(_ heartbeat: Coresdk_ActivityHeartbeat) throws
+    func pollWorkflowActivation() async throws -> Coresdk.WorkflowActivation.WorkflowActivation
+    func completeWorkflowActivation(completion: Coresdk.WorkflowCompletion.WorkflowActivationCompletion) async throws
+    func pollActivityTask() async throws -> Coresdk.ActivityTask.ActivityTask
+    func completeActivityTask(_ completion: Coresdk.ActivityTaskCompletion) async throws
+    func recordActivityHeartbeat(_ heartbeat: Coresdk.ActivityHeartbeat) throws
 }
 
 package final class BridgeWorker: BridgeWorkerProtocol {
@@ -171,7 +171,7 @@ package final class BridgeWorker: BridgeWorkerProtocol {
         }
     }
 
-    package func pollWorkflowActivation() async throws -> Coresdk_WorkflowActivation_WorkflowActivation {
+    package func pollWorkflowActivation() async throws -> Coresdk.WorkflowActivation.WorkflowActivation {
         let result: Data = try await withCheckedThrowingContinuation { continuation in
             let holder = ContinuationHolder(continuation)
             let holderPtr = Unmanaged.passRetained(holder).toOpaque()
@@ -204,10 +204,10 @@ package final class BridgeWorker: BridgeWorkerProtocol {
             }
         }
 
-        return try Coresdk_WorkflowActivation_WorkflowActivation(serializedBytes: result)
+        return try Coresdk.WorkflowActivation.WorkflowActivation(serializedBytes: result)
     }
 
-    package func pollActivityTask() async throws -> Coresdk_ActivityTask_ActivityTask {
+    package func pollActivityTask() async throws -> Coresdk.ActivityTask.ActivityTask {
         let result: Data = try await withCheckedThrowingContinuation { continuation in
             let holder = ContinuationHolder(continuation)
             let holderPtr = Unmanaged.passRetained(holder).toOpaque()
@@ -240,10 +240,10 @@ package final class BridgeWorker: BridgeWorkerProtocol {
             }
         }
 
-        return try Coresdk_ActivityTask_ActivityTask(serializedBytes: result)
+        return try Coresdk.ActivityTask.ActivityTask(serializedBytes: result)
     }
 
-    package func completeActivityTask(_ completion: Coresdk_ActivityTaskCompletion) async throws {
+    package func completeActivityTask(_ completion: Coresdk.ActivityTaskCompletion) async throws {
         let completionBytes = try completion.serializedData()
 
         try await withCheckedThrowingContinuation { continuation in
@@ -264,7 +264,7 @@ package final class BridgeWorker: BridgeWorkerProtocol {
         }
     }
 
-    package func completeWorkflowActivation(completion: Coresdk_WorkflowCompletion_WorkflowActivationCompletion) async throws {
+    package func completeWorkflowActivation(completion: Coresdk.WorkflowCompletion.WorkflowActivationCompletion) async throws {
         let completionBytes = try completion.serializedData()
         try await withCheckedThrowingContinuation { continuation in
             let holder = ContinuationHolder<Void>(continuation)
@@ -284,7 +284,7 @@ package final class BridgeWorker: BridgeWorkerProtocol {
         }
     }
 
-    package func recordActivityHeartbeat(_ heartbeat: Coresdk_ActivityHeartbeat) throws {
+    package func recordActivityHeartbeat(_ heartbeat: Coresdk.ActivityHeartbeat) throws {
         let heartbeatBytes = try heartbeat.serializedData()
 
         let fail = heartbeatBytes.withByteArrayRef { heartbeatBytesRef in

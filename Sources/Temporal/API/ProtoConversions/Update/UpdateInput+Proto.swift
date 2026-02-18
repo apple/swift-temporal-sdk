@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension UpdateInput {
-    init(_ rawValue: Temporal_Api_Update_V1_Input) {
+    init(_ rawValue: Api.Update.V1.Input) {
         self = .init(
             headers: rawValue.header.fields.mapValues { .init(temporalAPIPayload: $0) },
             name: rawValue.name,

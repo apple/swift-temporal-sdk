@@ -16,7 +16,7 @@ import SwiftProtobuf
 
 extension WorkflowInfo {
     init(
-        initializeWorkflow: Coresdk_WorkflowActivation_InitializeWorkflow,
+        initializeWorkflow: Coresdk.WorkflowActivation.InitializeWorkflow,
         runID: String,
         taskQueue: String,
         namespace: String,

@@ -27,7 +27,7 @@ package protocol WorkflowWorkerProtocol: Sendable {
     var interceptors: [any WorkerInterceptor] { get }
     func run() async throws
     func completeWorkflowActivation(
-        completion: consuming Coresdk_WorkflowCompletion_WorkflowActivationCompletion
+        completion: consuming Coresdk.WorkflowCompletion.WorkflowActivationCompletion
     ) async throws
 }
 
@@ -98,7 +98,7 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
         try await Task {
             try await withDiscardingTaskGroup(returning: Result<Void, any Error>.self) { group in
                 // These are our running workflows.
-                var runningWorkflows = [String: AsyncStream<Coresdk_WorkflowActivation_WorkflowActivation>.Continuation]()
+                var runningWorkflows = [String: AsyncStream<Coresdk.WorkflowActivation.WorkflowActivation>.Continuation]()
 
                 // We don't have to handle cancellation here since the TemporalWorker is handling this
                 // for us and telling the bridge worker about it.
@@ -203,10 +203,10 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
     }
 
     private func workflowInstanceActivationContinuation(
-        for activation: Coresdk_WorkflowActivation_WorkflowActivation,
-        runningWorkflows: inout [String: AsyncStream<Coresdk_WorkflowActivation_WorkflowActivation>.Continuation],
+        for activation: Coresdk.WorkflowActivation.WorkflowActivation,
+        runningWorkflows: inout [String: AsyncStream<Coresdk.WorkflowActivation.WorkflowActivation>.Continuation],
         taskGroup: inout DiscardingTaskGroup
-    ) async throws -> AsyncStream<Coresdk_WorkflowActivation_WorkflowActivation>.Continuation? {
+    ) async throws -> AsyncStream<Coresdk.WorkflowActivation.WorkflowActivation>.Continuation? {
         let runID = activation.runID
 
         // First we check if we have a running workflow
@@ -220,7 +220,7 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
             guard let workflowType = self.workflows[workflowType] else {
                 logger.error("Workflow type not found", metadata: [LoggingKeys.workflowType: "\(workflowType)"])
                 try await self.worker.completeWorkflowActivation(
-                    completion: .with {
+                    completion: Coresdk.WorkflowCompletion.WorkflowActivationCompletion.with {
                         $0.runID = runID
                         $0.failed = .with {
                             $0.failure = .with {
@@ -251,7 +251,7 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
             )
             // Other SDKs keep this without an upper buffer limit as well
             // TODO: Check if we should enforce a buffer size
-            let (activationsStream, activationsContinuation) = AsyncStream<Coresdk_WorkflowActivation_WorkflowActivation>.makeStream()
+            let (activationsStream, activationsContinuation) = AsyncStream<Coresdk.WorkflowActivation.WorkflowActivation>.makeStream()
             runningWorkflows[runID] = activationsContinuation
             taskGroup.addTask {
                 self.logger.trace("Running workflow instance")
@@ -274,7 +274,7 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
     }
 
     package func completeWorkflowActivation(
-        completion: consuming Coresdk_WorkflowCompletion_WorkflowActivationCompletion
+        completion: consuming Coresdk.WorkflowCompletion.WorkflowActivationCompletion
     ) async throws {
         if let payloadCodec = dataConverter.payloadCodec {
             try await completion.encode(payloadCodec: payloadCodec)

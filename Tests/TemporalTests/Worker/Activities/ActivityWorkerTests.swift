@@ -20,19 +20,19 @@ import Temporal
 import Testing
 
 private final class MockBridgeWorker: BridgeWorkerProtocol {
-    private let activityTaskStream: AsyncThrowingStream<Coresdk_ActivityTask_ActivityTask, any Error>
-    let activityTaskContinuation: AsyncThrowingStream<Coresdk_ActivityTask_ActivityTask, any Error>.Continuation
-    let activityTaskCompletionStream: AsyncThrowingStream<Coresdk_ActivityTaskCompletion, any Error>
-    let heartbeatStream: AsyncStream<Coresdk_ActivityHeartbeat>
-    private let heartbeatContinuation: AsyncStream<Coresdk_ActivityHeartbeat>.Continuation
-    private let activityTaskCompletionContinuation: AsyncThrowingStream<Coresdk_ActivityTaskCompletion, any Error>.Continuation
+    private let activityTaskStream: AsyncThrowingStream<Coresdk.ActivityTask.ActivityTask, any Error>
+    let activityTaskContinuation: AsyncThrowingStream<Coresdk.ActivityTask.ActivityTask, any Error>.Continuation
+    let activityTaskCompletionStream: AsyncThrowingStream<Coresdk.ActivityTaskCompletion, any Error>
+    let heartbeatStream: AsyncStream<Coresdk.ActivityHeartbeat>
+    private let heartbeatContinuation: AsyncStream<Coresdk.ActivityHeartbeat>.Continuation
+    private let activityTaskCompletionContinuation: AsyncThrowingStream<Coresdk.ActivityTaskCompletion, any Error>.Continuation
 
     init() {
-        (self.activityTaskStream, self.activityTaskContinuation) = AsyncThrowingStream<Coresdk_ActivityTask_ActivityTask, any Error>
+        (self.activityTaskStream, self.activityTaskContinuation) = AsyncThrowingStream<Coresdk.ActivityTask.ActivityTask, any Error>
             .makeStream()
-        (self.activityTaskCompletionStream, self.activityTaskCompletionContinuation) = AsyncThrowingStream<Coresdk_ActivityTaskCompletion, any Error>
+        (self.activityTaskCompletionStream, self.activityTaskCompletionContinuation) = AsyncThrowingStream<Coresdk.ActivityTaskCompletion, any Error>
             .makeStream()
-        (self.heartbeatStream, self.heartbeatContinuation) = AsyncStream<Coresdk_ActivityHeartbeat>
+        (self.heartbeatStream, self.heartbeatContinuation) = AsyncStream<Coresdk.ActivityHeartbeat>
             .makeStream()
     }
 
@@ -51,17 +51,17 @@ private final class MockBridgeWorker: BridgeWorkerProtocol {
 
     func finalizeShutdown() async throws {}
 
-    func pollWorkflowActivation() async throws -> Coresdk_WorkflowActivation_WorkflowActivation {
+    func pollWorkflowActivation() async throws -> Coresdk.WorkflowActivation.WorkflowActivation {
         fatalError()
     }
 
     func completeWorkflowActivation(
-        completion: Coresdk_WorkflowCompletion_WorkflowActivationCompletion
+        completion: Coresdk.WorkflowCompletion.WorkflowActivationCompletion
     ) async throws {
         fatalError()
     }
 
-    func pollActivityTask() async throws -> Coresdk_ActivityTask_ActivityTask {
+    func pollActivityTask() async throws -> Coresdk.ActivityTask.ActivityTask {
         var iterator = self.activityTaskStream.makeAsyncIterator()
         if let task = try await iterator.next() {
             return task
@@ -69,11 +69,11 @@ private final class MockBridgeWorker: BridgeWorkerProtocol {
         throw CancellationError()
     }
 
-    func completeActivityTask(_ completion: Coresdk_ActivityTaskCompletion) async throws {
+    func completeActivityTask(_ completion: Coresdk.ActivityTaskCompletion) async throws {
         self.activityTaskCompletionContinuation.yield(completion)
     }
 
-    func recordActivityHeartbeat(_ heartbeat: Coresdk_ActivityHeartbeat) throws {
+    func recordActivityHeartbeat(_ heartbeat: Coresdk.ActivityHeartbeat) throws {
         self.heartbeatContinuation.yield(heartbeat)
     }
 }
@@ -354,7 +354,7 @@ struct ActivityWorkerTests {
 
             var activityTaskCompletionIterator = self.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
             let completion = try await activityTaskCompletionIterator.next()
-            let expectedCompletion = Coresdk_ActivityTaskCompletion.with {
+            let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
                 $0.result.failed.failure.message = "No activity found with name UnkownActivity. Supported types: []"
                 $0.result.failed.failure.source = "SwiftSDK"
@@ -391,7 +391,7 @@ struct ActivityWorkerTests {
 
             var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
             let completion = try await activityTaskCompletionIterator.next()
-            let expectedCompletion = Coresdk_ActivityTaskCompletion.with {
+            let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
                 $0.result.completed.result = .init()
             }
@@ -431,7 +431,7 @@ struct ActivityWorkerTests {
 
             var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
             let completion = try await activityTaskCompletionIterator.next()
-            let expectedCompletion = Coresdk_ActivityTaskCompletion.with {
+            let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
                 $0.result.completed.result = .with {
                     $0.data = Data([3, 2, 1])
@@ -475,7 +475,7 @@ struct ActivityWorkerTests {
 
             var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
             let completion = try await activityTaskCompletionIterator.next()
-            let expectedCompletion = Coresdk_ActivityTaskCompletion.with {
+            let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
                 $0.result.cancelled.failure.message = "Activity cancelled"
                 $0.result.cancelled.failure.source = "swift-temporal-sdk"
@@ -517,7 +517,7 @@ struct ActivityWorkerTests {
 
             var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
             let completion = try await activityTaskCompletionIterator.next()
-            let expectedCompletion = Coresdk_ActivityTaskCompletion.with {
+            let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
                 $0.result.failed.failure.message = "CustomMessage"
                 $0.result.failed.failure.source = "swift-temporal-sdk"
@@ -581,7 +581,7 @@ struct ActivityWorkerTests {
 
             var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
             let completion = try await activityTaskCompletionIterator.next()
-            let expectedCompletion = Coresdk_ActivityTaskCompletion.with {
+            let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
                 $0.result.completed.result = .init(temporalPayload: expectedOutput)
             }
@@ -616,7 +616,7 @@ struct ActivityWorkerTests {
 
             var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
             let completion = try await activityTaskCompletionIterator.next()
-            let expectedCompletion = Coresdk_ActivityTaskCompletion.with {
+            let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
                 $0.result.failed.failure.message = "CancellationError()"
                 $0.result.failed.failure.source = "swift-temporal-sdk"
@@ -727,7 +727,7 @@ struct ActivityWorkerTests {
 
             var heartbeatIterator = test.bridgeWorker.heartbeatStream.makeAsyncIterator()
             let heartbeat = await heartbeatIterator.next()
-            let expectedHeartbeat = Coresdk_ActivityHeartbeat.with {
+            let expectedHeartbeat = Coresdk.ActivityHeartbeat.with {
                 $0.taskToken = Data([1])
                 $0.details = [
                     .with {
@@ -748,7 +748,7 @@ struct ActivityWorkerTests {
 
             var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
             let completion = try await activityTaskCompletionIterator.next()
-            let expectedCompletion = Coresdk_ActivityTaskCompletion.with {
+            let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
                 $0.result.completed.result = .init()
             }
@@ -782,7 +782,7 @@ struct ActivityWorkerTests {
 
             var heartbeatIterator = test.bridgeWorker.heartbeatStream.makeAsyncIterator()
             let heartbeat = await heartbeatIterator.next()
-            let expectedHeartbeat = Coresdk_ActivityHeartbeat.with {
+            let expectedHeartbeat = Coresdk.ActivityHeartbeat.with {
                 $0.taskToken = Data([1])
                 $0.details = [.init()]
             }
@@ -790,7 +790,7 @@ struct ActivityWorkerTests {
 
             var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
             let completion = try await activityTaskCompletionIterator.next()
-            let expectedCompletion = Coresdk_ActivityTaskCompletion.with {
+            let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
                 $0.result.completed.result = .init()
             }
@@ -824,7 +824,7 @@ struct ActivityWorkerTests {
 
             var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
             let completion = try await activityTaskCompletionIterator.next()
-            let expectedCompletion = Coresdk_ActivityTaskCompletion.with {
+            let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
                 $0.result.failed.failure.message = "EncodingError()"
                 $0.result.failed.failure.source = "swift-temporal-sdk"

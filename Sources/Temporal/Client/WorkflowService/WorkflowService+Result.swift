@@ -83,9 +83,9 @@ extension TemporalClient.WorkflowService {
         callOptions: CallOptions? = nil
     ) async throws -> [HistoryEvent] {
         let eventStream = withFlattenedPagination { pageToken in
-            let response: Temporal_Api_Workflowservice_V1_GetWorkflowExecutionHistoryResponse = try await self.client.unary(
-                method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.GetWorkflowExecutionHistory.descriptor,
-                request: Temporal_Api_Workflowservice_V1_GetWorkflowExecutionHistoryRequest.with {
+            let response: Api.Workflowservice.V1.GetWorkflowExecutionHistoryResponse = try await self.client.unary(
+                method: Api.Workflowservice.V1.WorkflowService.Method.GetWorkflowExecutionHistory.descriptor,
+                request: Api.Workflowservice.V1.GetWorkflowExecutionHistoryRequest.with {
                     $0.namespace = self.configuration.namespace
                     $0.execution = .with {
                         $0.workflowID = id

@@ -15,13 +15,13 @@
 import SwiftProtobuf
 
 extension NamespaceBadBinaries {
-    init(proto: Temporal_Api_Namespace_V1_BadBinaries) {
+    init(proto: Api.Namespace.V1.BadBinaries) {
         self.binaries = proto.binaries.mapValues { .init(proto: $0) }
     }
 }
 
 extension NamespaceBadBinaries.Info {
-    init(proto: Temporal_Api_Namespace_V1_BadBinaryInfo) {
+    init(proto: Api.Namespace.V1.BadBinaryInfo) {
         self.reason = proto.reason.isEmpty ? nil : proto.reason
         self.operator = proto.operator.isEmpty ? nil : proto.operator
         if proto.hasCreateTime {
@@ -30,14 +30,16 @@ extension NamespaceBadBinaries.Info {
     }
 }
 
-extension Temporal_Api_Namespace_V1_BadBinaries {
+extension Api.Namespace.V1.BadBinaries {
     init(badBinaries: NamespaceBadBinaries) {
+        self = .init()
         self.binaries = badBinaries.binaries.mapValues { .init(info: $0) }
     }
 }
 
-extension Temporal_Api_Namespace_V1_BadBinaryInfo {
+extension Api.Namespace.V1.BadBinaryInfo {
     init(info: NamespaceBadBinaries.Info) {
+        self = .init()
         self.reason = info.reason ?? ""
         self.operator = info.operator ?? ""
         if let createdAt = info.createdAt {

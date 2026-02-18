@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Coresdk_WorkflowCommands_ActivityCancellationType {
+extension Coresdk.WorkflowCommands.ActivityCancellationType {
     init(cancellationType: ActivityOptions.CancellationType) {
         switch cancellationType {
         case .tryCancel:

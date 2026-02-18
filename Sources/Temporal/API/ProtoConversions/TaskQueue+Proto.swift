@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension TaskQueue {
-    init(_ rawValue: Temporal_Api_Taskqueue_V1_TaskQueue) {
+    init(_ rawValue: Api.Taskqueue.V1.TaskQueue) {
         self = .init(
             name: rawValue.name,
             kind: .init(rawValue.kind)
@@ -22,7 +22,7 @@ extension TaskQueue {
 }
 
 extension TaskQueue.Kind {
-    init(_ rawValue: Temporal_Api_Enums_V1_TaskQueueKind) {
+    init(_ rawValue: Api.Enums.V1.TaskQueueKind) {
         self =
             switch rawValue {
             case .unspecified: .unspecified

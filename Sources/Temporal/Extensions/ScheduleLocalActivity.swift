@@ -16,7 +16,7 @@ import Foundation
 
 import struct SwiftProtobuf.Google_Protobuf_Timestamp
 
-extension Coresdk_WorkflowCommands_ScheduleLocalActivity {
+extension Coresdk.WorkflowCommands.ScheduleLocalActivity {
     init(
         id: UInt32,
         activityType: String,
@@ -26,6 +26,7 @@ extension Coresdk_WorkflowCommands_ScheduleLocalActivity {
         attempt: UInt32?,
         originalScheduleTime: Google_Protobuf_Timestamp?
     ) {
+        self = .init()
         self.seq = id
         self.activityType = activityType
         self.activityID = options.activityID ?? String(id)

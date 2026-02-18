@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension ActivityCancellationReason {
-    init(temporalAPICancelReason: Coresdk_ActivityTask_ActivityCancelReason) {
+    init(temporalAPICancelReason: Coresdk.ActivityTask.ActivityCancelReason) {
         switch temporalAPICancelReason {
         case .notFound:
             self = .goneFromServer

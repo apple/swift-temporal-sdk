@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension UpdateRequest {
-    init(_ rawValue: Temporal_Api_Update_V1_Request) {
+    init(_ rawValue: Api.Update.V1.Request) {
         self = .init(
             meta: .init(rawValue.meta),
             input: .init(rawValue.input)

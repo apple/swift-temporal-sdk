@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension WorkerVersionStamp {
-    init(_ rawValue: Temporal_Api_Common_V1_WorkerVersionStamp) {
+    init(_ rawValue: Api.Common.V1.WorkerVersionStamp) {
         self = .init(
             buildID: rawValue.buildID,
             useVersioning: rawValue.useVersioning

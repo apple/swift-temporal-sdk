@@ -241,7 +241,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     ///   - logger: The logger instance for diagnostic output.
     private func startActivity<A: ActivityDefinition>(
         activity: A,
-        activityTaskStart: Coresdk_ActivityTask_Start,
+        activityTaskStart: Coresdk.ActivityTask.Start,
         taskToken: ActivityTaskToken,
         taskGroup: inout ThrowingTaskGroup<Void, any Error>,
         logger: Logger
@@ -262,7 +262,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                 }
 
                 group.addTask {
-                    try await withThrowingTaskGroup(of: Coresdk_ActivityTaskCompletion?.self) { activityTaskGroup in
+                    try await withThrowingTaskGroup(of: Coresdk.ActivityTaskCompletion?.self) { activityTaskGroup in
                         // Only the latest heartbeat matters so we don't have to buffer more than 1 ever. Each
                         // heartbeat adds an additional overhead since we need to convert the details so let's
                         // avoid doing unnecessary work.
@@ -397,7 +397,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
         activityType: String,
         logger: Logger
     ) async throws {
-        let completion = Coresdk_ActivityTaskCompletion.with {
+        let completion = Coresdk.ActivityTaskCompletion.with {
             $0.taskToken = taskToken
             $0.result.failed.failure.message = "No activity found with name \(activityType). Supported types: \(self.activities.keys)"
             $0.result.failed.failure.source = "SwiftSDK"
@@ -422,7 +422,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     ///   - completion: The completion message containing results or failure information.
     ///   - logger: The logger instance for diagnostic output.
     private func sendActivityCompletion(
-        completion: Coresdk_ActivityTaskCompletion,
+        completion: Coresdk.ActivityTaskCompletion,
         logger: Logger
     ) async throws {
         logger.debug("Sending activity completion \(completion)")
@@ -442,7 +442,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
         taskToken: ActivityTaskToken,
         heartbeatDetails: [any Sendable]
     ) async {
-        var payloads = [Temporal_Api_Common_V1_Payload]()
+        var payloads = [Api.Common.V1.Payload]()
         payloads.reserveCapacity(heartbeatDetails.count)
 
         do {

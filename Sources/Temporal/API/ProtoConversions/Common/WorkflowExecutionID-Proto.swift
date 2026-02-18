@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension WorkflowExecutionID {
-    init(_ rawValue: Temporal_Api_Common_V1_WorkflowExecution) {
+    init(_ rawValue: Api.Common.V1.WorkflowExecution) {
         self = .init(
             workflowID: rawValue.workflowID,
             runID: rawValue.runID.isEmpty ? nil : rawValue.runID

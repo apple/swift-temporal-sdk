@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension HistoryEvent {
-    init(_ event: Temporal_Api_History_V1_HistoryEvent) throws {
+    init(_ event: Api.History.V1.HistoryEvent) throws {
         self.attributes = try event.attributes.flatMap { try .init($0) }
         self.eventType = .init(event.eventType)
     }

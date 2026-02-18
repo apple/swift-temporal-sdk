@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension SignalExternalWorkflowExecutionFailedCause {
-    init(_ rawValue: Temporal_Api_Enums_V1_SignalExternalWorkflowExecutionFailedCause) {
+    init(_ rawValue: Api.Enums.V1.SignalExternalWorkflowExecutionFailedCause) {
         self =
             switch rawValue {
             case .unspecified: .unspecified

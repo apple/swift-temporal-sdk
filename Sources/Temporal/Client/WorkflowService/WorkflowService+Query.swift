@@ -52,7 +52,7 @@ extension TemporalClient.WorkflowService {
     ) async throws -> (repeat each Result) {
         let dataConverter = self.configuration.dataConverter
         let inputPayloads = try await dataConverter.convertValues(repeat each input)
-        var request = Temporal_Api_Workflowservice_V1_QueryWorkflowRequest.with {
+        var request = Api.Workflowservice.V1.QueryWorkflowRequest.with {
             $0.namespace = self.configuration.namespace
             $0.execution.workflowID = workflowID
             $0.query = .with {
@@ -74,10 +74,10 @@ extension TemporalClient.WorkflowService {
             request.query.header = try await .init(headers, with: dataConverter.payloadCodec)
         }
 
-        let response: Temporal_Api_Workflowservice_V1_QueryWorkflowResponse
+        let response: Api.Workflowservice.V1.QueryWorkflowResponse
         do {
             response = try await self.client.unary(
-                method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.QueryWorkflow.descriptor,
+                method: Api.Workflowservice.V1.WorkflowService.Method.QueryWorkflow.descriptor,
                 request: request,
                 callOptions: callOptions
             )
@@ -102,6 +102,8 @@ extension TemporalClient.WorkflowService {
             throw WorkflowQueryRejectedError(
                 workflowExecutionStatus: .init(temporalAPIWorkflowExecutionStatus: response.queryRejected.status)
             )
+        case .paused:
+            fatalError()  // TODO: Handle
         }
     }
 

@@ -49,7 +49,7 @@ extension TemporalClient.WorkflowService {
         let dataConverter = self.configuration.dataConverter
         let inputPayloads = try await dataConverter.convertValues(repeat each input)
 
-        var request = Temporal_Api_Workflowservice_V1_SignalWorkflowExecutionRequest.with {
+        var request = Api.Workflowservice.V1.SignalWorkflowExecutionRequest.with {
             $0.namespace = self.configuration.namespace
             $0.workflowExecution.workflowID = workflowID
             $0.identity = self.configuration.identity
@@ -70,7 +70,7 @@ extension TemporalClient.WorkflowService {
 
         // The response is an empty struct so we can ignore it.
         try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.SignalWorkflowExecution.descriptor,
+            method: Api.Workflowservice.V1.WorkflowService.Method.SignalWorkflowExecution.descriptor,
             request: request,
             callOptions: callOptions
         )

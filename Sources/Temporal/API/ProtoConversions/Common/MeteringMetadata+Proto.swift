@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension MeteringMetadata {
-    init(_ rawValue: Temporal_Api_Common_V1_MeteringMetadata) {
+    init(_ rawValue: Api.Common.V1.MeteringMetadata) {
         self = .init(
             nonfirstLocalActivityExecutionAttempts: Int(rawValue.nonfirstLocalActivityExecutionAttempts)
         )

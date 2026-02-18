@@ -15,7 +15,7 @@
 import Foundation
 import SwiftProtobuf
 
-extension Coresdk_ActivityTaskCompletion {
+extension Coresdk.ActivityTaskCompletion {
     init(taskToken: Data, result: ActivityExecutionResult) {
         self = Self.with {
             $0.taskToken = taskToken

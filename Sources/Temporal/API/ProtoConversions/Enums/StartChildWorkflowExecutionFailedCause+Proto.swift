@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension StartChildWorkflowExecutionFailedCause {
-    init(_ rawValue: Temporal_Api_Enums_V1_StartChildWorkflowExecutionFailedCause) {
+    init(_ rawValue: Api.Enums.V1.StartChildWorkflowExecutionFailedCause) {
         self =
             switch rawValue {
             case .unspecified: .unspecified

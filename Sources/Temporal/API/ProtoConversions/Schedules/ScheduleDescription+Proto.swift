@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension ScheduleDescription {
-    init(proto: Temporal_Api_Workflowservice_V1_DescribeScheduleResponse, dataConverter: DataConverter) async throws {
+    init(proto: Api.Workflowservice.V1.DescribeScheduleResponse, dataConverter: DataConverter) async throws {
         self.info = .init(proto: proto.info)
         self.schedule = try await .init(proto: proto.schedule, dataConverter: dataConverter)
         self.conflictToken = proto.conflictToken

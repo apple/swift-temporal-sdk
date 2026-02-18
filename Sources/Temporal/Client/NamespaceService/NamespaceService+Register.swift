@@ -60,8 +60,8 @@ extension TemporalClient.NamespaceService {
         callOptions: CallOptions? = nil
     ) async throws {
         try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RegisterNamespace.descriptor,
-            request: Temporal_Api_Workflowservice_V1_RegisterNamespaceRequest.with {
+            method: Api.Workflowservice.V1.WorkflowService.Method.RegisterNamespace.descriptor,
+            request: Api.Workflowservice.V1.RegisterNamespaceRequest.with {
                 // only these two properties are mandatory
                 $0.namespace = name
                 $0.workflowExecutionRetentionPeriod = .init(duration: workflowExecutionRetentionPeriod)

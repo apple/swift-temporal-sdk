@@ -14,8 +14,9 @@
 
 import SwiftProtobuf
 
-extension Temporal_Api_Schedule_V1_BackfillRequest {
+extension Api.Schedule.V1.BackfillRequest {
     init(scheduleBackfill: ScheduleBackfill) {
+        self = .init()
         self.startTime = .init(date: scheduleBackfill.startAt)
         self.endTime = .init(date: scheduleBackfill.endAt)
         if let overlap = scheduleBackfill.overlap {

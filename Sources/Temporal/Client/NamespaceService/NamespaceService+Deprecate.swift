@@ -35,8 +35,8 @@ extension TemporalClient.NamespaceService {
         callOptions: CallOptions? = nil
     ) async throws {
         try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.UpdateNamespace.descriptor,
-            request: Temporal_Api_Workflowservice_V1_UpdateNamespaceRequest.with {
+            method: Api.Workflowservice.V1.WorkflowService.Method.UpdateNamespace.descriptor,
+            request: Api.Workflowservice.V1.UpdateNamespaceRequest.with {
                 $0.namespace = namespace
                 $0.updateInfo.state = .deprecated
                 if let securityToken {

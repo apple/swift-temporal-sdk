@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Coresdk_WorkflowCompletion_WorkflowActivationCompletion {
+extension Coresdk.WorkflowCompletion.WorkflowActivationCompletion {
     package mutating func encode(payloadCodec: some PayloadCodec) async throws {
         switch self.status {
         case .successful(let successful):
@@ -139,21 +139,21 @@ extension Coresdk_WorkflowCompletion_WorkflowActivationCompletion {
         }
     }
 
-    private func encode(payload: inout Temporal_Api_Common_V1_Payload, payloadCodec: some PayloadCodec) async throws {
+    private func encode(payload: inout Api.Common.V1.Payload, payloadCodec: some PayloadCodec) async throws {
         payload = .init(temporalPayload: try await payloadCodec.encode(payload: .init(temporalAPIPayload: payload)))
     }
 
-    private func encode(payloads: inout [Temporal_Api_Common_V1_Payload], payloadCodec: some PayloadCodec) async throws {
+    private func encode(payloads: inout [Api.Common.V1.Payload], payloadCodec: some PayloadCodec) async throws {
         for index in payloads.indices {
             payloads[index] = .init(temporalPayload: try await payloadCodec.encode(payload: .init(temporalAPIPayload: payloads[index])))
         }
     }
 
-    private func encode(payloads: inout Temporal_Api_Common_V1_Payloads, payloadCodec: some PayloadCodec) async throws {
+    private func encode(payloads: inout Api.Common.V1.Payloads, payloadCodec: some PayloadCodec) async throws {
         try await self.encode(payloads: &payloads.payloads, payloadCodec: payloadCodec)
     }
 
-    private func encode(payloadDictionary: inout [String: Temporal_Api_Common_V1_Payload], payloadCodec: some PayloadCodec) async throws {
+    private func encode(payloadDictionary: inout [String: Api.Common.V1.Payload], payloadCodec: some PayloadCodec) async throws {
         for key in payloadDictionary.keys {
             payloadDictionary[key] = .init(
                 temporalPayload: try await payloadCodec.encode(payload: .init(temporalAPIPayload: payloadDictionary[key]!))
@@ -161,7 +161,7 @@ extension Coresdk_WorkflowCompletion_WorkflowActivationCompletion {
         }
     }
 
-    private func encode(temporalFailure: inout Temporal_Api_Failure_V1_Failure, payloadCodec: some PayloadCodec) async throws {
+    private func encode(temporalFailure: inout Api.Failure.V1.Failure, payloadCodec: some PayloadCodec) async throws {
         temporalFailure = try await .init(temporalFailure: payloadCodec.encode(temporalFailure: .init(temporalAPIFailure: temporalFailure)))
     }
 }

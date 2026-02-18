@@ -38,7 +38,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws -> UntypedWorkflowHandle {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    "\(Temporal_Api_Workflowservice_V1_WorkflowService.Method.StartWorkflowExecution.descriptor.fullyQualifiedMethod):\(input.name)",
+                    "\(Api.Workflowservice.V1.WorkflowService.Method.StartWorkflowExecution.descriptor.fullyQualifiedMethod):\(input.name)",
                 headers: input.headers,
                 setRequestAttributes: { [input] span in
                     span.setStartWorkflowRequestSpanAttributes(input: input)
@@ -62,7 +62,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    "\(Temporal_Api_Workflowservice_V1_WorkflowService.Method.SignalWorkflowExecution.descriptor.fullyQualifiedMethod):\(input.name)",
+                    "\(Api.Workflowservice.V1.WorkflowService.Method.SignalWorkflowExecution.descriptor.fullyQualifiedMethod):\(input.name)",
                 headers: input.headers,
                 setRequestAttributes: { [input] span in
                     span.setSignalWorkflowSpanAttributes(input: input)
@@ -81,7 +81,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws -> (repeat each Result) {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    "\(Temporal_Api_Workflowservice_V1_WorkflowService.Method.QueryWorkflow.descriptor.fullyQualifiedMethod):\(input.queryName)",
+                    "\(Api.Workflowservice.V1.WorkflowService.Method.QueryWorkflow.descriptor.fullyQualifiedMethod):\(input.queryName)",
                 headers: input.headers,
                 setRequestAttributes: { [input] span in
                     span.setQueryWorkflowSpanAttributes(input: input)
@@ -100,7 +100,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws -> UntypedWorkflowUpdateHandle {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    "\(Temporal_Api_Workflowservice_V1_WorkflowService.Method.UpdateWorkflowExecution.descriptor.fullyQualifiedMethod):\(input.updateName)",
+                    "\(Api.Workflowservice.V1.WorkflowService.Method.UpdateWorkflowExecution.descriptor.fullyQualifiedMethod):\(input.updateName)",
                 headers: input.headers,
                 setRequestAttributes: { [input] span in
                     span.setStartWorkflowUpdateRequestSpanAttributes(input: input)
@@ -122,7 +122,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws -> WorkflowExecutionDescription {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.DescribeWorkflowExecution.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.DescribeWorkflowExecution.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setDescribeWorkflowRequestSpanAttributes(input: input)
                 },
@@ -141,7 +141,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.RequestCancelWorkflowExecution.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.RequestCancelWorkflowExecution.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setCancelWorkflowSpanAttributes(input: input)
                 },
@@ -157,7 +157,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.TerminateWorkflowExecution.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.TerminateWorkflowExecution.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setTerminateWorkflowSpanAttributes(input: input)
                 },
@@ -173,7 +173,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws -> [HistoryEvent] {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.GetWorkflowExecutionHistory.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.GetWorkflowExecutionHistory.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setFetchWorkflowHistoryRequestSpanAttributes(input: input)
                 },
@@ -192,7 +192,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws -> Sequence {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.ListWorkflowExecutions.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.ListWorkflowExecutions.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setListWorkflowsRequestSpanAttributes(query: input.query, limit: input.limit)
                 },
@@ -208,7 +208,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws -> WorkflowExecutionCount {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.CountWorkflowExecutions.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.CountWorkflowExecutions.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setCountWorkflowsRequestSpanAttributes(query: input.query)
                 },
@@ -229,7 +229,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws -> UntypedScheduleHandle {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.CreateSchedule.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.CreateSchedule.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setCreateScheduleRequestSpanAttributes(input: input)
                 },
@@ -245,7 +245,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws -> Sequence {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.ListSchedules.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.ListSchedules.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setListSchedulesRequestSpanAttributes(query: input.query)
                 },
@@ -261,7 +261,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.PatchSchedule.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.PatchSchedule.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setBackfillScheduleSpanAttributes(scheduleId: input.id, backfills: input.backfills)
                 },
@@ -277,7 +277,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.DeleteSchedule.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.DeleteSchedule.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setDeleteScheduleSpanAttributes(scheduleId: input.id)
                 },
@@ -293,7 +293,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws -> ScheduleDescription<Input> {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.DescribeSchedule.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.DescribeSchedule.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setDescribeScheduleRequestSpanAttributes(scheduleId: input.id)
                 },
@@ -312,7 +312,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.PatchSchedule.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.PatchSchedule.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setPauseScheduleSpanAttributes(scheduleId: input.id, note: input.note)
                 },
@@ -328,7 +328,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.PatchSchedule.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.PatchSchedule.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setTriggerScheduleSpanAttributes(scheduleId: input.id, overlap: input.overlap)
                 },
@@ -344,7 +344,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.PatchSchedule.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.PatchSchedule.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setUnpauseScheduleSpanAttributes(scheduleId: input.id, note: input.note)
                 },
@@ -360,7 +360,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.UpdateSchedule.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.UpdateSchedule.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setUpdateScheduleSpanAttributes(scheduleId: input.id)
                 },
@@ -378,7 +378,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.RecordActivityTaskHeartbeat.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.RecordActivityTaskHeartbeat.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setHeartbeatAsyncActivity(input: input)
                 },
@@ -394,7 +394,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskCompleted.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskCompleted.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setCompleteAsyncActivity(input: input)
                 },
@@ -410,7 +410,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskFailed.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskFailed.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setFailAsyncActivity(input: input)
                 },
@@ -426,7 +426,7 @@ extension TemporalClientTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName:
-                    Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskCanceled.descriptor.fullyQualifiedMethod,
+                    Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskCanceled.descriptor.fullyQualifiedMethod,
                 setRequestAttributes: { span in
                     span.setReportCancellationAsyncActivity(input: input)
                 },

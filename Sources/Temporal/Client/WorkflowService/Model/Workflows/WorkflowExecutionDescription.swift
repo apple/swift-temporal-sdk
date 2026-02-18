@@ -19,5 +19,5 @@ public struct WorkflowExecutionDescription: Hashable, Sendable {
     /// Information about the currently pending activities of the workflow execution.
     public var pendingActivities: [PendingActivityInfo]
 
-    // TODO: Incorporate remaining properties `Temporal_Api_Workflowservice_V1_DescribeWorkflowExecutionResponse`
+    // TODO: Incorporate remaining properties `Api.Workflowservice.V1.DescribeWorkflowExecutionResponse`
 }

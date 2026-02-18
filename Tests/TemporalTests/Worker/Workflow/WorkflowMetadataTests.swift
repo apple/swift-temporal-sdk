@@ -49,7 +49,7 @@ extension TestServerDependentTests {
             func someOtherUpdate(input: Void) async throws {}
 
             @WorkflowQuery(name: "__temporal_workflow_metadata")
-            func workflowMetadata(input: Void) throws -> Temporal_Api_Sdk_V1_WorkflowMetadata {
+            func workflowMetadata(input: Void) throws -> Api.Sdk.V1.WorkflowMetadata {
                 throw TestError()
             }
         }

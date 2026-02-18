@@ -13,14 +13,14 @@
 //===----------------------------------------------------------------------===//
 
 extension WorkflowExecutionCount {
-    init(_ rawValue: Temporal_Api_Workflowservice_V1_CountWorkflowExecutionsResponse) {
+    init(_ rawValue: Api.Workflowservice.V1.CountWorkflowExecutionsResponse) {
         self.count = Int(rawValue.count)
         self.groups = rawValue.groups.map { .init($0) }
     }
 }
 
 extension WorkflowExecutionCount.AggregationGroup {
-    init(_ rawValue: Temporal_Api_Workflowservice_V1_CountWorkflowExecutionsResponse.AggregationGroup) {
+    init(_ rawValue: Api.Workflowservice.V1.CountWorkflowExecutionsResponse.AggregationGroup) {
         count = Int(rawValue.count)
         values = rawValue.groupValues
             .lazy

@@ -15,7 +15,7 @@
 import SwiftProtobuf
 
 extension HistoryEvent.Attributes {
-    init(_ rawValue: Temporal_Api_History_V1_HistoryEvent.OneOf_Attributes) throws {
+    init(_ rawValue: Api.History.V1.HistoryEvent.OneOf_Attributes) throws {
         self =
             switch rawValue {
             case .workflowExecutionStartedEventAttributes(let attributes):
@@ -132,12 +132,16 @@ extension HistoryEvent.Attributes {
                 .nexusOperationCancelRequestCompletedEventAttributes(.init(attributes))
             case .nexusOperationCancelRequestFailedEventAttributes(let attributes):
                 .nexusOperationCancelRequestFailedEventAttributes(.init(attributes))
+            case .workflowExecutionPausedEventAttributes(_):
+                fatalError()  // TODO: Handle
+            case .workflowExecutionUnpausedEventAttributes(_):
+                fatalError()  // TODO: Handle
             }
     }
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionStarted {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionStartedEventAttributes) throws {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionStartedEventAttributes) throws {
         self = .init(
             workflowType: rawValue.workflowType.name,
             parentWorkflowNamespace: rawValue.parentWorkflowNamespace.nilIfEmpty,
@@ -179,7 +183,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionStarted {
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionCompleted {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionCompletedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionCompletedEventAttributes) {
         self = .init(
             result: rawValue.result.payloads.map { .init(temporalAPIPayload: $0) },
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
@@ -189,7 +193,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionCompleted {
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionFailed {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionFailedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionFailedEventAttributes) {
         self = .init(
             failure: .init(temporalAPIFailure: rawValue.failure),
             retryState: .init(retryState: rawValue.retryState),
@@ -200,7 +204,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionFailed {
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionTimedOut {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionTimedOutEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionTimedOutEventAttributes) {
         self = .init(
             retryState: .init(retryState: rawValue.retryState),
             newExecutionRunID: rawValue.newExecutionRunID.nilIfEmpty
@@ -209,7 +213,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionTimedOut {
 }
 
 extension HistoryEvent.Attributes.WorkflowTaskScheduled {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowTaskScheduledEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowTaskScheduledEventAttributes) {
         self = .init(
             taskQueue: .init(rawValue.taskQueue),
             startToCloseTimeout: rawValue.hasStartToCloseTimeout ? .init(rawValue.startToCloseTimeout) : nil,
@@ -219,7 +223,7 @@ extension HistoryEvent.Attributes.WorkflowTaskScheduled {
 }
 
 extension HistoryEvent.Attributes.WorkflowTaskStarted {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowTaskStartedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowTaskStartedEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             identity: rawValue.identity.nilIfEmpty,
@@ -233,7 +237,7 @@ extension HistoryEvent.Attributes.WorkflowTaskStarted {
 }
 
 extension HistoryEvent.Attributes.WorkflowTaskCompleted {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowTaskCompletedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowTaskCompletedEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             startedEventID: Int(rawValue.startedEventID),
@@ -251,7 +255,7 @@ extension HistoryEvent.Attributes.WorkflowTaskCompleted {
 }
 
 extension HistoryEvent.Attributes.WorkflowTaskTimedOut {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowTaskTimedOutEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowTaskTimedOutEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             startedEventID: Int(rawValue.startedEventID),
@@ -261,7 +265,7 @@ extension HistoryEvent.Attributes.WorkflowTaskTimedOut {
 }
 
 extension HistoryEvent.Attributes.WorkflowTaskFailed {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowTaskFailedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowTaskFailedEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             startedEventID: Int(rawValue.startedEventID),
@@ -278,7 +282,7 @@ extension HistoryEvent.Attributes.WorkflowTaskFailed {
 }
 
 extension HistoryEvent.Attributes.ActivityTaskScheduled {
-    init(_ rawValue: Temporal_Api_History_V1_ActivityTaskScheduledEventAttributes) {
+    init(_ rawValue: Api.History.V1.ActivityTaskScheduledEventAttributes) {
         self = .init(
             activityID: rawValue.activityID,
             activityType: rawValue.activityType.name,
@@ -298,7 +302,7 @@ extension HistoryEvent.Attributes.ActivityTaskScheduled {
 }
 
 extension HistoryEvent.Attributes.ActivityTaskStarted {
-    init(_ rawValue: Temporal_Api_History_V1_ActivityTaskStartedEventAttributes) {
+    init(_ rawValue: Api.History.V1.ActivityTaskStartedEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             identity: rawValue.identity.nilIfEmpty,
@@ -312,7 +316,7 @@ extension HistoryEvent.Attributes.ActivityTaskStarted {
 }
 
 extension HistoryEvent.Attributes.ActivityTaskCompleted {
-    init(_ rawValue: Temporal_Api_History_V1_ActivityTaskCompletedEventAttributes) {
+    init(_ rawValue: Api.History.V1.ActivityTaskCompletedEventAttributes) {
         self = .init(
             result: rawValue.result.payloads.map { .init(temporalAPIPayload: $0) },
             scheduledEventID: Int(rawValue.scheduledEventID),
@@ -324,7 +328,7 @@ extension HistoryEvent.Attributes.ActivityTaskCompleted {
 }
 
 extension HistoryEvent.Attributes.ActivityTaskFailed {
-    init(_ rawValue: Temporal_Api_History_V1_ActivityTaskFailedEventAttributes) {
+    init(_ rawValue: Api.History.V1.ActivityTaskFailedEventAttributes) {
         self = .init(
             failure: .init(temporalAPIFailure: rawValue.failure),
             scheduledEventID: Int(rawValue.scheduledEventID),
@@ -337,7 +341,7 @@ extension HistoryEvent.Attributes.ActivityTaskFailed {
 }
 
 extension HistoryEvent.Attributes.ActivityTaskTimedOut {
-    init(_ rawValue: Temporal_Api_History_V1_ActivityTaskTimedOutEventAttributes) {
+    init(_ rawValue: Api.History.V1.ActivityTaskTimedOutEventAttributes) {
         self = .init(
             failure: rawValue.hasFailure ? .init(temporalAPIFailure: rawValue.failure) : nil,
             scheduledEventID: Int(rawValue.scheduledEventID),
@@ -348,7 +352,7 @@ extension HistoryEvent.Attributes.ActivityTaskTimedOut {
 }
 
 extension HistoryEvent.Attributes.TimerStarted {
-    init(_ rawValue: Temporal_Api_History_V1_TimerStartedEventAttributes) {
+    init(_ rawValue: Api.History.V1.TimerStartedEventAttributes) {
         self = .init(
             timerID: rawValue.timerID,
             startToFireTimeout: .init(rawValue.startToFireTimeout),
@@ -358,7 +362,7 @@ extension HistoryEvent.Attributes.TimerStarted {
 }
 
 extension HistoryEvent.Attributes.TimerFired {
-    init(_ rawValue: Temporal_Api_History_V1_TimerFiredEventAttributes) {
+    init(_ rawValue: Api.History.V1.TimerFiredEventAttributes) {
         self = .init(
             timerID: rawValue.timerID,
             startedEventID: Int(rawValue.startedEventID)
@@ -367,7 +371,7 @@ extension HistoryEvent.Attributes.TimerFired {
 }
 
 extension HistoryEvent.Attributes.ActivityTaskCancelRequested {
-    init(_ rawValue: Temporal_Api_History_V1_ActivityTaskCancelRequestedEventAttributes) {
+    init(_ rawValue: Api.History.V1.ActivityTaskCancelRequestedEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID)
@@ -376,7 +380,7 @@ extension HistoryEvent.Attributes.ActivityTaskCancelRequested {
 }
 
 extension HistoryEvent.Attributes.ActivityTaskCanceled {
-    init(_ rawValue: Temporal_Api_History_V1_ActivityTaskCanceledEventAttributes) {
+    init(_ rawValue: Api.History.V1.ActivityTaskCanceledEventAttributes) {
         self = .init(
             details: rawValue.details.payloads.map { .init(temporalAPIPayload: $0) },
             latestCancelRequestedEventID: Int(rawValue.latestCancelRequestedEventID),
@@ -389,7 +393,7 @@ extension HistoryEvent.Attributes.ActivityTaskCanceled {
 }
 
 extension HistoryEvent.Attributes.TimerCanceled {
-    init(_ rawValue: Temporal_Api_History_V1_TimerCanceledEventAttributes) {
+    init(_ rawValue: Api.History.V1.TimerCanceledEventAttributes) {
         self = .init(
             timerID: rawValue.timerID,
             startedEventID: Int(rawValue.startedEventID),
@@ -400,7 +404,7 @@ extension HistoryEvent.Attributes.TimerCanceled {
 }
 
 extension HistoryEvent.Attributes.MarkerRecorded {
-    init(_ rawValue: Temporal_Api_History_V1_MarkerRecordedEventAttributes) {
+    init(_ rawValue: Api.History.V1.MarkerRecordedEventAttributes) {
         self = .init(
             markerName: rawValue.markerName,
             details: rawValue.details.mapValues { $0.payloads.map { .init(temporalAPIPayload: $0) } },
@@ -412,7 +416,7 @@ extension HistoryEvent.Attributes.MarkerRecorded {
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionSignaled {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionSignaledEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionSignaledEventAttributes) {
         self = .init(
             signalName: rawValue.signalName,
             input: rawValue.input.payloads.map { .init(temporalAPIPayload: $0) },
@@ -425,7 +429,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionSignaled {
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionTerminated {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionTerminatedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionTerminatedEventAttributes) {
         self = .init(
             reason: rawValue.reason.nilIfEmpty,
             details: rawValue.details.payloads.map { .init(temporalAPIPayload: $0) },
@@ -435,7 +439,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionTerminated {
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionCancelRequested {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionCancelRequestedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionCancelRequestedEventAttributes) {
         self = .init(
             cause: rawValue.cause.nilIfEmpty,
             externalInitiatedEventID: Int(rawValue.externalInitiatedEventID),
@@ -446,7 +450,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionCancelRequested {
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionCanceled {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionCanceledEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionCanceledEventAttributes) {
         self = .init(
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
             details: rawValue.details.payloads.map { .init(temporalAPIPayload: $0) }
@@ -455,7 +459,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionCanceled {
 }
 
 extension HistoryEvent.Attributes.RequestCancelExternalWorkflowExecutionInitiated {
-    init(_ rawValue: Temporal_Api_History_V1_RequestCancelExternalWorkflowExecutionInitiatedEventAttributes) {
+    init(_ rawValue: Api.History.V1.RequestCancelExternalWorkflowExecutionInitiatedEventAttributes) {
         self = .init(
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
             namespace: rawValue.namespace,
@@ -469,7 +473,7 @@ extension HistoryEvent.Attributes.RequestCancelExternalWorkflowExecutionInitiate
 }
 
 extension HistoryEvent.Attributes.RequestCancelExternalWorkflowExecutionFailed {
-    init(_ rawValue: Temporal_Api_History_V1_RequestCancelExternalWorkflowExecutionFailedEventAttributes) {
+    init(_ rawValue: Api.History.V1.RequestCancelExternalWorkflowExecutionFailedEventAttributes) {
         self = .init(
             cause: .init(rawValue.cause),
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
@@ -483,7 +487,7 @@ extension HistoryEvent.Attributes.RequestCancelExternalWorkflowExecutionFailed {
 }
 
 extension HistoryEvent.Attributes.ExternalWorkflowExecutionCancelRequested {
-    init(_ rawValue: Temporal_Api_History_V1_ExternalWorkflowExecutionCancelRequestedEventAttributes) {
+    init(_ rawValue: Api.History.V1.ExternalWorkflowExecutionCancelRequestedEventAttributes) {
         self = .init(
             initiatedEventID: Int(rawValue.initiatedEventID),
             namespace: rawValue.namespace,
@@ -494,7 +498,7 @@ extension HistoryEvent.Attributes.ExternalWorkflowExecutionCancelRequested {
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionContinuedAsNew {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionContinuedAsNewEventAttributes) throws {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionContinuedAsNewEventAttributes) throws {
         self = .init(
             newExecutionRunID: rawValue.newExecutionRunID,
             workflowType: rawValue.workflowType.name,
@@ -513,7 +517,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionContinuedAsNew {
 }
 
 extension HistoryEvent.Attributes.StartChildWorkflowExecutionInitiated {
-    init(_ rawValue: Temporal_Api_History_V1_StartChildWorkflowExecutionInitiatedEventAttributes) throws {
+    init(_ rawValue: Api.History.V1.StartChildWorkflowExecutionInitiatedEventAttributes) throws {
         self = .init(
             namespace: rawValue.namespace,
             namespaceID: rawValue.namespaceID,
@@ -540,7 +544,7 @@ extension HistoryEvent.Attributes.StartChildWorkflowExecutionInitiated {
 }
 
 extension HistoryEvent.Attributes.StartChildWorkflowExecutionFailed {
-    init(_ rawValue: Temporal_Api_History_V1_StartChildWorkflowExecutionFailedEventAttributes) {
+    init(_ rawValue: Api.History.V1.StartChildWorkflowExecutionFailedEventAttributes) {
         self = .init(
             namespace: rawValue.namespace,
             namespaceID: rawValue.namespaceID,
@@ -555,7 +559,7 @@ extension HistoryEvent.Attributes.StartChildWorkflowExecutionFailed {
 }
 
 extension HistoryEvent.Attributes.ChildWorkflowExecutionStarted {
-    init(_ rawValue: Temporal_Api_History_V1_ChildWorkflowExecutionStartedEventAttributes) {
+    init(_ rawValue: Api.History.V1.ChildWorkflowExecutionStartedEventAttributes) {
         self = .init(
             namespace: rawValue.namespace,
             namespaceID: rawValue.namespaceID,
@@ -568,7 +572,7 @@ extension HistoryEvent.Attributes.ChildWorkflowExecutionStarted {
 }
 
 extension HistoryEvent.Attributes.ChildWorkflowExecutionCompleted {
-    init(_ rawValue: Temporal_Api_History_V1_ChildWorkflowExecutionCompletedEventAttributes) {
+    init(_ rawValue: Api.History.V1.ChildWorkflowExecutionCompletedEventAttributes) {
         self = .init(
             result: rawValue.result.payloads.map { .init(temporalAPIPayload: $0) },
             namespace: rawValue.namespace,
@@ -582,7 +586,7 @@ extension HistoryEvent.Attributes.ChildWorkflowExecutionCompleted {
 }
 
 extension HistoryEvent.Attributes.ChildWorkflowExecutionFailed {
-    init(_ rawValue: Temporal_Api_History_V1_ChildWorkflowExecutionFailedEventAttributes) {
+    init(_ rawValue: Api.History.V1.ChildWorkflowExecutionFailedEventAttributes) {
         self = .init(
             failure: .init(temporalAPIFailure: rawValue.failure),
             namespace: rawValue.namespace,
@@ -597,7 +601,7 @@ extension HistoryEvent.Attributes.ChildWorkflowExecutionFailed {
 }
 
 extension HistoryEvent.Attributes.ChildWorkflowExecutionCanceled {
-    init(_ rawValue: Temporal_Api_History_V1_ChildWorkflowExecutionCanceledEventAttributes) {
+    init(_ rawValue: Api.History.V1.ChildWorkflowExecutionCanceledEventAttributes) {
         self = .init(
             details: rawValue.details.payloads.map { .init(temporalAPIPayload: $0) },
             namespace: rawValue.namespace,
@@ -611,7 +615,7 @@ extension HistoryEvent.Attributes.ChildWorkflowExecutionCanceled {
 }
 
 extension HistoryEvent.Attributes.ChildWorkflowExecutionTimedOut {
-    init(_ rawValue: Temporal_Api_History_V1_ChildWorkflowExecutionTimedOutEventAttributes) {
+    init(_ rawValue: Api.History.V1.ChildWorkflowExecutionTimedOutEventAttributes) {
         self = .init(
             namespace: rawValue.namespace,
             namespaceID: rawValue.namespaceID,
@@ -625,7 +629,7 @@ extension HistoryEvent.Attributes.ChildWorkflowExecutionTimedOut {
 }
 
 extension HistoryEvent.Attributes.ChildWorkflowExecutionTerminated {
-    init(_ rawValue: Temporal_Api_History_V1_ChildWorkflowExecutionTerminatedEventAttributes) {
+    init(_ rawValue: Api.History.V1.ChildWorkflowExecutionTerminatedEventAttributes) {
         self = .init(
             namespace: rawValue.namespace,
             namespaceID: rawValue.namespaceID,
@@ -638,7 +642,7 @@ extension HistoryEvent.Attributes.ChildWorkflowExecutionTerminated {
 }
 
 extension HistoryEvent.Attributes.SignalExternalWorkflowExecutionInitiated {
-    init(_ rawValue: Temporal_Api_History_V1_SignalExternalWorkflowExecutionInitiatedEventAttributes) {
+    init(_ rawValue: Api.History.V1.SignalExternalWorkflowExecutionInitiatedEventAttributes) {
         self = .init(
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
             namespace: rawValue.namespace,
@@ -654,7 +658,7 @@ extension HistoryEvent.Attributes.SignalExternalWorkflowExecutionInitiated {
 }
 
 extension HistoryEvent.Attributes.SignalExternalWorkflowExecutionFailed {
-    init(_ rawValue: Temporal_Api_History_V1_SignalExternalWorkflowExecutionFailedEventAttributes) {
+    init(_ rawValue: Api.History.V1.SignalExternalWorkflowExecutionFailedEventAttributes) {
         self = .init(
             cause: .init(rawValue.cause),
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
@@ -668,7 +672,7 @@ extension HistoryEvent.Attributes.SignalExternalWorkflowExecutionFailed {
 }
 
 extension HistoryEvent.Attributes.ExternalWorkflowExecutionSignaled {
-    init(_ rawValue: Temporal_Api_History_V1_ExternalWorkflowExecutionSignaledEventAttributes) {
+    init(_ rawValue: Api.History.V1.ExternalWorkflowExecutionSignaledEventAttributes) {
         self = .init(
             initiatedEventID: Int(rawValue.initiatedEventID),
             namespace: rawValue.namespace,
@@ -680,7 +684,7 @@ extension HistoryEvent.Attributes.ExternalWorkflowExecutionSignaled {
 }
 
 extension HistoryEvent.Attributes.UpsertWorkflowSearchAttributes {
-    init(_ rawValue: Temporal_Api_History_V1_UpsertWorkflowSearchAttributesEventAttributes) throws {
+    init(_ rawValue: Api.History.V1.UpsertWorkflowSearchAttributesEventAttributes) throws {
         self = .init(
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
             searchAttributes: try .init(rawValue.searchAttributes)
@@ -689,7 +693,7 @@ extension HistoryEvent.Attributes.UpsertWorkflowSearchAttributes {
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionUpdateAccepted {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionUpdateAcceptedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionUpdateAcceptedEventAttributes) {
         self = .init(
             protocolInstanceID: rawValue.protocolInstanceID,
             acceptedRequestMessageID: rawValue.acceptedRequestMessageID,
@@ -700,7 +704,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionUpdateAccepted {
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionUpdateRejected {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionUpdateRejectedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionUpdateRejectedEventAttributes) {
         self = .init(
             protocolInstanceID: rawValue.protocolInstanceID,
             rejectedRequestMessageID: rawValue.rejectedRequestMessageID,
@@ -712,7 +716,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionUpdateRejected {
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionUpdateCompleted {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionUpdateCompletedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionUpdateCompletedEventAttributes) {
         self = .init(
             meta: .init(rawValue.meta),
             acceptedEventID: Int(rawValue.acceptedEventID),
@@ -722,7 +726,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionUpdateCompleted {
 }
 
 extension HistoryEvent.Attributes.WorkflowPropertiesModifiedExternally {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowPropertiesModifiedExternallyEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowPropertiesModifiedExternallyEventAttributes) {
         self = .init(
             newTaskQueue: rawValue.newTaskQueue.nilIfEmpty,
             newWorkflowTaskTimeout: rawValue.hasNewWorkflowTaskTimeout ? .init(rawValue.newWorkflowTaskTimeout) : nil,
@@ -734,7 +738,7 @@ extension HistoryEvent.Attributes.WorkflowPropertiesModifiedExternally {
 }
 
 extension HistoryEvent.Attributes.ActivityPropertiesModifiedExternally {
-    init(_ rawValue: Temporal_Api_History_V1_ActivityPropertiesModifiedExternallyEventAttributes) {
+    init(_ rawValue: Api.History.V1.ActivityPropertiesModifiedExternallyEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             newRetryPolicy: .init(retryPolicy: rawValue.newRetryPolicy)
@@ -743,7 +747,7 @@ extension HistoryEvent.Attributes.ActivityPropertiesModifiedExternally {
 }
 
 extension HistoryEvent.Attributes.WorkflowPropertiesModified {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowPropertiesModifiedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowPropertiesModifiedEventAttributes) {
         self = .init(
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
             upsertedMemo: rawValue.upsertedMemo.fields.mapValues { .init(temporalAPIPayload: $0) }
@@ -752,7 +756,7 @@ extension HistoryEvent.Attributes.WorkflowPropertiesModified {
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionUpdateAdmitted {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionUpdateAdmittedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionUpdateAdmittedEventAttributes) {
         self = .init(
             request: .init(rawValue.request),
             origin: .init(rawValue.origin)
@@ -761,7 +765,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionUpdateAdmitted {
 }
 
 extension HistoryEvent.Attributes.NexusOperationScheduled {
-    init(_ rawValue: Temporal_Api_History_V1_NexusOperationScheduledEventAttributes) {
+    init(_ rawValue: Api.History.V1.NexusOperationScheduledEventAttributes) {
         self = .init(
             endpoint: rawValue.endpoint,
             service: rawValue.service,
@@ -777,7 +781,7 @@ extension HistoryEvent.Attributes.NexusOperationScheduled {
 }
 
 extension HistoryEvent.Attributes.NexusOperationStarted {
-    init(_ rawValue: Temporal_Api_History_V1_NexusOperationStartedEventAttributes) {
+    init(_ rawValue: Api.History.V1.NexusOperationStartedEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             operationID: rawValue.operationID,
@@ -788,7 +792,7 @@ extension HistoryEvent.Attributes.NexusOperationStarted {
 }
 
 extension HistoryEvent.Attributes.NexusOperationCompleted {
-    init(_ rawValue: Temporal_Api_History_V1_NexusOperationCompletedEventAttributes) {
+    init(_ rawValue: Api.History.V1.NexusOperationCompletedEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             result: .init(temporalAPIPayload: rawValue.result),
@@ -798,7 +802,7 @@ extension HistoryEvent.Attributes.NexusOperationCompleted {
 }
 
 extension HistoryEvent.Attributes.NexusOperationFailed {
-    init(_ rawValue: Temporal_Api_History_V1_NexusOperationFailedEventAttributes) {
+    init(_ rawValue: Api.History.V1.NexusOperationFailedEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             failure: .init(temporalAPIFailure: rawValue.failure),
@@ -808,7 +812,7 @@ extension HistoryEvent.Attributes.NexusOperationFailed {
 }
 
 extension HistoryEvent.Attributes.NexusOperationCanceled {
-    init(_ rawValue: Temporal_Api_History_V1_NexusOperationCanceledEventAttributes) {
+    init(_ rawValue: Api.History.V1.NexusOperationCanceledEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             failure: .init(temporalAPIFailure: rawValue.failure),
@@ -818,7 +822,7 @@ extension HistoryEvent.Attributes.NexusOperationCanceled {
 }
 
 extension HistoryEvent.Attributes.NexusOperationTimedOut {
-    init(_ rawValue: Temporal_Api_History_V1_NexusOperationTimedOutEventAttributes) {
+    init(_ rawValue: Api.History.V1.NexusOperationTimedOutEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             failure: .init(temporalAPIFailure: rawValue.failure),
@@ -828,7 +832,7 @@ extension HistoryEvent.Attributes.NexusOperationTimedOut {
 }
 
 extension HistoryEvent.Attributes.NexusOperationCancelRequested {
-    init(_ rawValue: Temporal_Api_History_V1_NexusOperationCancelRequestedEventAttributes) {
+    init(_ rawValue: Api.History.V1.NexusOperationCancelRequestedEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
@@ -837,7 +841,7 @@ extension HistoryEvent.Attributes.NexusOperationCancelRequested {
 }
 
 extension HistoryEvent.Attributes.NexusOperationCancelRequestCompletedEventAttributes {
-    init(_ rawValue: Temporal_Api_History_V1_NexusOperationCancelRequestCompletedEventAttributes) {
+    init(_ rawValue: Api.History.V1.NexusOperationCancelRequestCompletedEventAttributes) {
         self = .init(
             requestedEventID: rawValue.requestedEventID,
             workflowTaskCompletedEventID: rawValue.workflowTaskCompletedEventID,
@@ -847,7 +851,7 @@ extension HistoryEvent.Attributes.NexusOperationCancelRequestCompletedEventAttri
 }
 
 extension HistoryEvent.Attributes.NexusOperationCancelRequestFailedEventAttributes {
-    init(_ rawValue: Temporal_Api_History_V1_NexusOperationCancelRequestFailedEventAttributes) {
+    init(_ rawValue: Api.History.V1.NexusOperationCancelRequestFailedEventAttributes) {
         self = .init(
             requestedEventID: rawValue.requestedEventID,
             workflowTaskCompletedEventID: rawValue.workflowTaskCompletedEventID,
@@ -858,7 +862,7 @@ extension HistoryEvent.Attributes.NexusOperationCancelRequestFailedEventAttribut
 }
 
 extension HistoryEvent.Attributes.WorkflowExecutionOptionsUpdated {
-    init(_ rawValue: Temporal_Api_History_V1_WorkflowExecutionOptionsUpdatedEventAttributes) {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionOptionsUpdatedEventAttributes) {
         self = .init(
             versioningOverride: .init(rawValue.versioningOverride),
             unsetVersioningOverride: rawValue.unsetVersioningOverride,

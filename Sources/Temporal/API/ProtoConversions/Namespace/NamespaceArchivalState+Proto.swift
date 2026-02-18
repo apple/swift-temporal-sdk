@@ -19,7 +19,7 @@ import Foundation
 #endif
 
 extension NamespaceArchivalState {
-    init?(proto: Temporal_Api_Enums_V1_ArchivalState, url urlString: String?) {
+    init?(proto: Api.Enums.V1.ArchivalState, url urlString: String?) {
         switch proto {
         case .disabled:
             self = .disabled

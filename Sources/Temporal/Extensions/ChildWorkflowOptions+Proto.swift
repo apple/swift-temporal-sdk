@@ -14,7 +14,7 @@
 
 import SwiftProtobuf
 
-extension Coresdk_WorkflowCommands_StartChildWorkflowExecution {
+extension Coresdk.WorkflowCommands.StartChildWorkflowExecution {
     init(
         sequenceNumber: UInt32,
         namespace: String,
@@ -44,7 +44,7 @@ extension Coresdk_WorkflowCommands_StartChildWorkflowExecution {
         let searchAttributes = childWorkflowOptions.searchAttributes ?? .init()
         let mergedAttributes = parentSearchAttributes.merging(searchAttributes) { $1 }
         if !mergedAttributes.isEmpty {
-            self.searchAttributes = Temporal_Api_Common_V1_SearchAttributes(mergedAttributes).indexedFields
+            self.searchAttributes = Api.Common.V1.SearchAttributes(mergedAttributes).indexedFields
         }
 
         self.headers = headers.mapValues { .init(temporalPayload: $0) }

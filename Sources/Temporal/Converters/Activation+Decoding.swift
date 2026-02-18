@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Coresdk_WorkflowActivation_WorkflowActivation {
+extension Coresdk.WorkflowActivation.WorkflowActivation {
     package mutating func decode(payloadCodec: some PayloadCodec) async throws {
         for index in self.jobs.indices {
             switch self.jobs[index].variant {
@@ -195,21 +195,21 @@ extension Coresdk_WorkflowActivation_WorkflowActivation {
         }
     }
 
-    private func decode(payload: inout Temporal_Api_Common_V1_Payload, payloadCodec: some PayloadCodec) async throws {
+    private func decode(payload: inout Api.Common.V1.Payload, payloadCodec: some PayloadCodec) async throws {
         payload = .init(temporalPayload: try await payloadCodec.decode(payload: .init(temporalAPIPayload: payload)))
     }
 
-    private func decode(payloads: inout [Temporal_Api_Common_V1_Payload], payloadCodec: some PayloadCodec) async throws {
+    private func decode(payloads: inout [Api.Common.V1.Payload], payloadCodec: some PayloadCodec) async throws {
         for index in payloads.indices {
             payloads[index] = .init(temporalPayload: try await payloadCodec.decode(payload: .init(temporalAPIPayload: payloads[index])))
         }
     }
 
-    private func decode(payloads: inout Temporal_Api_Common_V1_Payloads, payloadCodec: some PayloadCodec) async throws {
+    private func decode(payloads: inout Api.Common.V1.Payloads, payloadCodec: some PayloadCodec) async throws {
         try await self.decode(payloads: &payloads.payloads, payloadCodec: payloadCodec)
     }
 
-    private func decode(payloadDictionary: inout [String: Temporal_Api_Common_V1_Payload], payloadCodec: some PayloadCodec) async throws {
+    private func decode(payloadDictionary: inout [String: Api.Common.V1.Payload], payloadCodec: some PayloadCodec) async throws {
         for key in payloadDictionary.keys {
             payloadDictionary[key] = .init(
                 temporalPayload: try await payloadCodec.decode(payload: .init(temporalAPIPayload: payloadDictionary[key]!))
@@ -217,7 +217,7 @@ extension Coresdk_WorkflowActivation_WorkflowActivation {
         }
     }
 
-    private func decode(temporalFailure: inout Temporal_Api_Failure_V1_Failure, payloadCodec: some PayloadCodec) async throws {
+    private func decode(temporalFailure: inout Api.Failure.V1.Failure, payloadCodec: some PayloadCodec) async throws {
         temporalFailure = try await .init(temporalFailure: payloadCodec.decode(temporalFailure: .init(temporalAPIFailure: temporalFailure)))
     }
 }

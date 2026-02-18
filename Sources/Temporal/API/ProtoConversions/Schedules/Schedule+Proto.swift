@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Temporal_Api_Schedule_V1_Schedule {
+extension Api.Schedule.V1.Schedule {
     init<Input: Sendable>(schedule: Schedule<Input>, dataConverter: DataConverter) async throws {
+        self = .init()
         self.action = try await .init(action: schedule.action, dataConverter: dataConverter)
         self.spec = .init(specification: schedule.specification)
         self.policies = .init(policy: schedule.policy)
@@ -22,7 +23,7 @@ extension Temporal_Api_Schedule_V1_Schedule {
 }
 
 extension Schedule {
-    init(proto: Temporal_Api_Schedule_V1_Schedule, dataConverter: DataConverter) async throws {
+    init(proto: Api.Schedule.V1.Schedule, dataConverter: DataConverter) async throws {
         self.action = try await .init(proto: proto.action, dataConverter: dataConverter, inputType: Input.self)
         self.specification = .init(proto: proto.spec)
         self.policy = .init(proto: proto.policies)

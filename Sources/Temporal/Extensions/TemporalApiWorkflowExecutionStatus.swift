@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension WorkflowExecutionStatus {
-    init(temporalAPIWorkflowExecutionStatus: Temporal_Api_Enums_V1_WorkflowExecutionStatus) {
+    init(temporalAPIWorkflowExecutionStatus: Api.Enums.V1.WorkflowExecutionStatus) {
         switch temporalAPIWorkflowExecutionStatus {
         case .unspecified:
             fatalError("Internal inconsistency: We should never hit this")
@@ -31,6 +31,8 @@ extension WorkflowExecutionStatus {
             self = .continuedAsNew
         case .timedOut:
             self = .timedOut
+        case .paused:
+            fatalError()  // TODO: Handle
         case .UNRECOGNIZED:
             fatalError("Unknown status send back by the temporal server")
         }

@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension ParentClosePolicy {
-    init(_ rawValue: Temporal_Api_Enums_V1_ParentClosePolicy) {
+    init(_ rawValue: Api.Enums.V1.ParentClosePolicy) {
         self =
             switch rawValue {
             case .unspecified: .none
@@ -26,7 +26,7 @@ extension ParentClosePolicy {
     }
 }
 
-extension Coresdk_ChildWorkflow_ParentClosePolicy {
+extension Coresdk.ChildWorkflow.ParentClosePolicy {
     init(parentClosePolicy: ParentClosePolicy) {
         switch parentClosePolicy {
         case .none:

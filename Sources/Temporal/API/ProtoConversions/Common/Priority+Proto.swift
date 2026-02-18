@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension Priority {
-    init(_ rawValue: Temporal_Api_Common_V1_Priority) {
+    init(_ rawValue: Api.Common.V1.Priority) {
         self = .init(key: Int(rawValue.priorityKey))
     }
 }

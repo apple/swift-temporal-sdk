@@ -46,7 +46,7 @@ struct WorkflowOptionsTests {
 
         let options = WorkflowOptions(id: UUID().uuidString, taskQueue: "test-queue")
 
-        let request = try await Temporal_Api_Workflowservice_V1_StartWorkflowExecutionRequest(
+        let request = try await Api.Workflowservice.V1.StartWorkflowExecutionRequest(
             namespace: namespace,
             identity: identity,
             requestID: requestId,

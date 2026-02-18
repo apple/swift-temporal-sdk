@@ -14,7 +14,7 @@
 
 import SwiftProtobuf
 
-extension Coresdk_WorkflowCommands_ContinueAsNewWorkflowExecution {
+extension Coresdk.WorkflowCommands.ContinueAsNewWorkflowExecution {
     init(continueAsNewError: ContinueAsNewError) {
         self = .with {
             $0.workflowType = continueAsNewError.workflowName
@@ -33,7 +33,7 @@ extension Coresdk_WorkflowCommands_ContinueAsNewWorkflowExecution {
         }
 
         if let searchAttributes = continueAsNewError.searchAttributes, !searchAttributes.isEmpty {
-            self.searchAttributes = Temporal_Api_Common_V1_SearchAttributes(searchAttributes).indexedFields
+            self.searchAttributes = Api.Common.V1.SearchAttributes(searchAttributes).indexedFields
         }
 
         if !continueAsNewError.headers.isEmpty {

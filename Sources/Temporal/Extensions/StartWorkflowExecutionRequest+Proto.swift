@@ -14,7 +14,7 @@
 
 import SwiftProtobuf
 
-extension Temporal_Api_Workflowservice_V1_StartWorkflowExecutionRequest {
+extension Api.Workflowservice.V1.StartWorkflowExecutionRequest {
     package init(
         namespace: String,
         identity: String,
@@ -48,7 +48,7 @@ extension Temporal_Api_Workflowservice_V1_StartWorkflowExecutionRequest {
         }
 
         if let memo = workflowOptions.memo {
-            var temporalPayloads = [String: Temporal_Api_Common_V1_Payload]()
+            var temporalPayloads = [String: Api.Common.V1.Payload]()
             for (key, value) in memo {
                 temporalPayloads[key] = .init(temporalPayload: try await dataConverter.convertValue(value))
             }

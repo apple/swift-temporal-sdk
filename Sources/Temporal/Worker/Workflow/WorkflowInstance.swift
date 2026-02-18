@@ -45,7 +45,7 @@ struct WorkflowInstance: Sendable {
     /// The workflow worker complete workflow activation closure.
     private let workflowWorkerCompleteWorkflowActivation:
         @Sendable (
-            _ completion: consuming Coresdk_WorkflowCompletion_WorkflowActivationCompletion
+            _ completion: consuming Coresdk.WorkflowCompletion.WorkflowActivationCompletion
         ) async throws -> Void
     /// The workflow's state machine.
     private let stateMachine: WorkflowStateMachineStorage
@@ -87,7 +87,7 @@ struct WorkflowInstance: Sendable {
 
     func run<Workflow: WorkflowDefinition>(
         workflowType: Workflow.Type,
-        activations: some AsyncSequence<Coresdk_WorkflowActivation_WorkflowActivation, Never>
+        activations: some AsyncSequence<Coresdk.WorkflowActivation.WorkflowActivation, Never>
     ) async throws {
         var activationsIterator = activations.makeAsyncIterator()
 
@@ -212,7 +212,7 @@ struct WorkflowInstance: Sendable {
 
     /// Intializes the workflow.
     private func initializeWorkflow<Workflow: WorkflowDefinition>(
-        _ activation: Coresdk_WorkflowActivation_WorkflowActivation,
+        _ activation: Coresdk.WorkflowActivation.WorkflowActivation,
         workflowType: Workflow.Type
     ) async throws -> (WorkflowTaskExecutorIsolatedBox<Workflow>, WorkflowTaskExecutorIsolatedBox<Workflow.Input>, WorkflowContext) {
         guard case .initializeWorkflow(let initializeWorkflow) = activation.jobs.first?.variant else {
@@ -316,7 +316,7 @@ struct WorkflowInstance: Sendable {
 
     /// Applies the jobs of an activation.
     private func applyJobs<Workflow: WorkflowDefinition>(
-        jobs: [Coresdk_WorkflowActivation_WorkflowActivationJob],
+        jobs: [Coresdk.WorkflowActivation.WorkflowActivationJob],
         workflow: WorkflowTaskExecutorIsolatedBox<Workflow>,
         workflowContext: WorkflowContext,
         group: inout ThrowingTaskGroup<Void, any Error>
@@ -430,7 +430,7 @@ struct WorkflowInstance: Sendable {
     }
 
     private func updateActivation(
-        _ activation: Coresdk_WorkflowActivation_WorkflowActivation
+        _ activation: Coresdk.WorkflowActivation.WorkflowActivation
     ) {
         Self.$isOnWorkflowInstance.withValue(true) {
             stateMachine.activate(with: activation)
@@ -439,7 +439,7 @@ struct WorkflowInstance: Sendable {
 
     /// Completes the activation by sending the response to the worker.
     private func completeActivation(
-        activation: Coresdk_WorkflowActivation_WorkflowActivation
+        activation: Coresdk.WorkflowActivation.WorkflowActivation
     ) async throws {
         let commands = Self.$isOnWorkflowInstance.withValue(true) {
             self.stateMachine.commands()
@@ -475,7 +475,7 @@ struct WorkflowInstance: Sendable {
     // MARK: Signals
 
     private func signalWorkflow<Workflow: WorkflowDefinition>(
-        _ signalWorkflow: Coresdk_WorkflowActivation_SignalWorkflow,
+        _ signalWorkflow: Coresdk.WorkflowActivation.SignalWorkflow,
         workflow: WorkflowTaskExecutorIsolatedBox<Workflow>,
         workflowContext: WorkflowContext,
         group: inout ThrowingTaskGroup<Void, any Error>
@@ -556,7 +556,7 @@ struct WorkflowInstance: Sendable {
     // MARK: Queries
 
     private func queryWorkflow<Workflow: WorkflowDefinition>(
-        _ queryWorkflow: Coresdk_WorkflowActivation_QueryWorkflow,
+        _ queryWorkflow: Coresdk.WorkflowActivation.QueryWorkflow,
         workflow: WorkflowTaskExecutorIsolatedBox<Workflow>,
         workflowContext: WorkflowContext,
         group: inout ThrowingTaskGroup<Void, any Error>
@@ -692,8 +692,8 @@ struct WorkflowInstance: Sendable {
     private func workflowMetadata<Workflow: WorkflowDefinition>(
         type: Workflow.Type,
         context: WorkflowContext
-    ) -> Temporal_Api_Sdk_V1_WorkflowMetadata {
-        var definition = Temporal_Api_Sdk_V1_WorkflowDefinition.with {
+    ) -> Api.Sdk.V1.WorkflowMetadata {
+        var definition = Api.Sdk.V1.WorkflowDefinition.with {
             $0.type = context.info.workflowType
         }
 
@@ -738,7 +738,7 @@ struct WorkflowInstance: Sendable {
     // MARK: Updates
 
     private func updateWorkflow<Workflow: WorkflowDefinition>(
-        _ updateWorkflow: Coresdk_WorkflowActivation_DoUpdate,
+        _ updateWorkflow: Coresdk.WorkflowActivation.DoUpdate,
         workflow: WorkflowTaskExecutorIsolatedBox<Workflow>,
         workflowContext: WorkflowContext,
         group: inout ThrowingTaskGroup<Void, any Error>
