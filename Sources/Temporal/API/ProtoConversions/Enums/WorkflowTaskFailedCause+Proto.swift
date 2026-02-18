@@ -53,10 +53,9 @@ extension WorkflowTaskFailedCause {
             case .badRequestCancelNexusOperationAttributes: .badRequestCancelNexusOperationAttributes
             case .featureDisabled: .featureDisabled
             case .grpcMessageTooLarge: .grpcMessageTooLarge
+            case .payloadsTooLarge: .payloadToolarge
             case .UNRECOGNIZED(let value):
                 fatalError("Unexpected value \(value) for WorkflowTaskFailedCause")
-            case .payloadsTooLarge:
-                fatalError()  // TODO: Handle
             }
     }
 }

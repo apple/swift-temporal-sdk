@@ -32,7 +32,7 @@ extension WorkflowExecutionStatus {
         case .timedOut:
             self = .timedOut
         case .paused:
-            fatalError()  // TODO: Handle
+            self = .paused
         case .UNRECOGNIZED:
             fatalError("Unknown status send back by the temporal server")
         }

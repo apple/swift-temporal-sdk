@@ -74,12 +74,10 @@ extension EventType {
             case .nexusOperationCancelRequestCompleted: .nexusOperationCancelRequestCompleted
             case .nexusOperationCancelRequestFailed: .nexusOperationCancelRequestFailed
             case .workflowExecutionOptionsUpdated: .workflowExecutionOptionsUpdated
+            case .workflowExecutionPaused: .workflowExecutionPaused
+            case .workflowExecutionUnpaused: .workflowExecutionUnpaused
             case .UNRECOGNIZED(let value):
                 fatalError("Unrecognized rawValue \(value) for EventType.")
-            case .workflowExecutionPaused:
-                fatalError()  // TODO: Handle
-            case .workflowExecutionUnpaused:
-                fatalError()  // TODO: Handle
             }
     }
 }

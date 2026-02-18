@@ -73,5 +73,7 @@ extension HistoryEvent {
         case workflowExecutionOptionsUpdated(WorkflowExecutionOptionsUpdated)
         case nexusOperationCancelRequestCompletedEventAttributes(NexusOperationCancelRequestCompletedEventAttributes)
         case nexusOperationCancelRequestFailedEventAttributes(NexusOperationCancelRequestFailedEventAttributes)
+        case workflowExecutionPaused(WorkflowExecutionPaused)
+        case workflowExecutionUnpaused(WorkflowExecutionUnpaused)
     }
 }

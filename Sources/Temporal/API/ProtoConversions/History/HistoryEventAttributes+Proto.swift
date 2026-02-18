@@ -132,10 +132,10 @@ extension HistoryEvent.Attributes {
                 .nexusOperationCancelRequestCompletedEventAttributes(.init(attributes))
             case .nexusOperationCancelRequestFailedEventAttributes(let attributes):
                 .nexusOperationCancelRequestFailedEventAttributes(.init(attributes))
-            case .workflowExecutionPausedEventAttributes(_):
-                fatalError()  // TODO: Handle
-            case .workflowExecutionUnpausedEventAttributes(_):
-                fatalError()  // TODO: Handle
+            case .workflowExecutionPausedEventAttributes(let attributes):
+                .workflowExecutionPaused(.init(attributes))
+            case .workflowExecutionUnpausedEventAttributes(let attributes):
+                .workflowExecutionUnpaused(.init(attributes))
             }
     }
 }
@@ -868,6 +868,26 @@ extension HistoryEvent.Attributes.WorkflowExecutionOptionsUpdated {
             unsetVersioningOverride: rawValue.unsetVersioningOverride,
             attachedRequestID: rawValue.attachedRequestID.nilIfEmpty,
             attachedCompletionCallbacks: rawValue.attachedCompletionCallbacks.map { .init($0) }
+        )
+    }
+}
+
+extension HistoryEvent.Attributes.WorkflowExecutionPaused {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionPausedEventAttributes) {
+        self = .init(
+            identity: rawValue.identity.nilIfEmpty,
+            reason: rawValue.reason.nilIfEmpty,
+            requestID: rawValue.requestID.nilIfEmpty
+        )
+    }
+}
+
+extension HistoryEvent.Attributes.WorkflowExecutionUnpaused {
+    init(_ rawValue: Api.History.V1.WorkflowExecutionUnpausedEventAttributes) {
+        self = .init(
+            identity: rawValue.identity.nilIfEmpty,
+            reason: rawValue.reason.nilIfEmpty,
+            requestID: rawValue.requestID.nilIfEmpty
         )
     }
 }

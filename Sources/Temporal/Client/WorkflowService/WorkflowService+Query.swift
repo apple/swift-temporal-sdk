@@ -98,12 +98,10 @@ extension TemporalClient.WorkflowService {
                 payloads,
                 as: repeat each resultTypes
             )
-        case .running, .completed, .failed, .canceled, .terminated, .continuedAsNew, .timedOut, .UNRECOGNIZED:
+        case .running, .completed, .failed, .canceled, .terminated, .continuedAsNew, .timedOut, .paused, .UNRECOGNIZED:
             throw WorkflowQueryRejectedError(
                 workflowExecutionStatus: .init(temporalAPIWorkflowExecutionStatus: response.queryRejected.status)
             )
-        case .paused:
-            fatalError()  // TODO: Handle
         }
     }
 

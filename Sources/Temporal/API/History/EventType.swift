@@ -71,4 +71,6 @@ public enum EventType: Hashable, Sendable {
     case nexusOperationCancelRequestCompleted
     case nexusOperationCancelRequestFailed
     case workflowExecutionOptionsUpdated
+    case workflowExecutionPaused
+    case workflowExecutionUnpaused
 }
