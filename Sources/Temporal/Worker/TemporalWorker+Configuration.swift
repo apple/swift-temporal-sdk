@@ -348,6 +348,13 @@ extension TemporalWorker {
         public var maxHeartbeatThrottleInterval: Duration = .seconds(60)
 
         // –– Misc ––
+        /// The interval at which the worker sends heartbeats to the server.
+        ///
+        /// Worker heartbeats are separate from activity heartbeats. They indicate that the worker
+        /// process is alive and connected to the server. A value of `.zero` disables worker
+        /// heartbeats (default `.zero`).
+        public var workerHeartbeatInterval: Duration = .zero
+
         /// Milliseconds to wait for in-flight tasks on shutdown before force exit (default `0 sec`).
         public var gracefulShutdownPeriod: Duration = .seconds(0)
         /// Polling behavior for nexus tasks (default max `5`).
@@ -411,6 +418,8 @@ extension TemporalWorker {
         /// - `worker.client.identity`: A human-readable worker client identifier (defaults to
         /// SDK name and version)
         /// - `worker.client.apiKey`: The Temporal Cloud API key.
+        /// - `worker.heartbeatintervalms`: The worker heartbeat interval in milliseconds (defaults to 0,
+        /// which disables worker heartbeats).
         ///
         /// - Parameters:
         ///   - configReader: The configuration reader containing the required configuration values.
@@ -440,6 +449,11 @@ extension TemporalWorker {
                 interceptors: interceptors,
                 apiKey: apiKey
             )
+
+            // Set optional configuration values that have defaults
+            if let heartbeatIntervalMs = snapshot.int(forKey: .workerHeartbeatIntervalMs) {
+                self.workerHeartbeatInterval = .milliseconds(heartbeatIntervalMs)
+            }
         }
     }
 }

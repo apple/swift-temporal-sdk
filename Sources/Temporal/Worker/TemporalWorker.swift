@@ -218,7 +218,12 @@ where
     ///
     /// - Throws: An error when the worker is cancelled, or other errors during startup or operation.
     package func run() async throws {
-        try await self.run(bridgeRuntime: .init(telemetryOptions: .init()))  // TODO: Capture telemetry from bridge
+        try await self.run(
+            bridgeRuntime: .init(
+                telemetryOptions: .init(),  // TODO: Capture telemetry from bridge
+                workerHeartbeatInterval: self.configuration.workerHeartbeatInterval
+            )
+        )
     }
 
     /// Runs the Temporal worker to process activities and workflows.

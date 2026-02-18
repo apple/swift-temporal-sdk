@@ -31,4 +31,7 @@ extension ConfigKey {
 
     /// The optional Temporal Cloud API key of the ``TemporalWorker``.
     static let workerClientAPIKey: ConfigKey = ["worker", "client", "apiKey"]
+
+    /// The optional worker heartbeat interval in milliseconds of the ``TemporalWorker``.
+    static let workerHeartbeatIntervalMs: ConfigKey = ["worker", "heartbeatintervalms"]
 }
