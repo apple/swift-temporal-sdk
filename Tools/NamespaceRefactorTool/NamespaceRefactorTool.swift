@@ -16,8 +16,14 @@ import Foundation
 import SwiftParser
 import SwiftSyntax
 
+// This tool transforms the underscored proto generated namespaces into dot seperated ones.
+// Ideally this would be part of SwiftProtobuf but the generation pattern has some problems discussed in
+// https://github.com/apple/swift-protobuf/pull/1980.
 @main
 struct NamespaceRefactorTool {
+    enum NameSpaceRefactorError: Error {
+        case failedToIterateDictionary
+    }
     static func main() {
         guard CommandLine.arguments.count >= 2 else {
             print("Usage: NamespaceRefactorTool <input_directory>")
@@ -99,13 +105,7 @@ struct NamespaceRefactorTool {
                 options: [.skipsHiddenFiles]
             )
         else {
-            throw NSError(
-                domain: "NamespaceRefactorTool",
-                code: 1,
-                userInfo: [
-                    NSLocalizedDescriptionKey: "Failed to enumerate directory"
-                ]
-            )
+            throw NameSpaceRefactorError.failedToIterateDictionary
         }
 
         var protoFiles: [URL] = []
@@ -128,13 +128,7 @@ struct NamespaceRefactorTool {
                 options: [.skipsHiddenFiles]
             )
         else {
-            throw NSError(
-                domain: "NamespaceRefactorTool",
-                code: 1,
-                userInfo: [
-                    NSLocalizedDescriptionKey: "Failed to enumerate directory"
-                ]
-            )
+            throw NameSpaceRefactorError.failedToIterateDictionary
         }
 
         var swiftFiles: [URL] = []

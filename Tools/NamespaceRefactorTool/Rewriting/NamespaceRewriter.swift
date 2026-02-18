@@ -18,7 +18,7 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 
 // Swift reserved keywords that need to be escaped with backticks
-private let swiftReservedKeywords: Set<String> = [
+let swiftReservedKeywords: Set<String> = [
     // Declaration keywords
     "associatedtype", "class", "deinit", "enum", "extension", "fileprivate", "func", "import", "init",
     "inout", "internal", "let", "open", "operator", "private", "precedencegroup", "protocol", "public",
@@ -187,7 +187,7 @@ private class DeclarationWrapper: SyntaxRewriter {
         return DeclSyntax(extensionDecl)
     }
 
-    /// Indents all lines of a declaration by the specified number of spaces
+    /// Indents all lines of a declaration by the specified number of spaces.
     private func indentDeclaration(_ decl: DeclSyntax, by spaces: Int) -> DeclSyntax {
         let indentation = String(repeating: " ", count: spaces)
         let declString = decl.description
