@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension SearchAttributeType {
-    init(_ indexedValueType: Temporal_Api_Enums_V1_IndexedValueType) {
+    init(_ indexedValueType: Api.Enums.V1.IndexedValueType) {
         self =
             switch indexedValueType {
             case .unspecified: .unspecified
@@ -62,7 +62,7 @@ extension SearchAttributeType {
     }
 }
 
-extension Temporal_Api_Enums_V1_IndexedValueType {
+extension Api.Enums.V1.IndexedValueType {
     init(_ type: SearchAttributeType) {
         self =
             switch type {

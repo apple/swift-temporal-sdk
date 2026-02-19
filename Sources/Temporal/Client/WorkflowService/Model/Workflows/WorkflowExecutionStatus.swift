@@ -35,4 +35,7 @@ public enum WorkflowExecutionStatus: Hashable, Sendable {
 
     /// The workflow exceeded its execution timeout and was terminated.
     case timedOut
+
+    /// The workflow has been paused and is not currently executing.
+    case paused
 }

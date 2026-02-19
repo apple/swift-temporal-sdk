@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension RetryState {
-    init(retryState: Temporal_Api_Enums_V1_RetryState) {
+    init(retryState: Api.Enums.V1.RetryState) {
         switch retryState {
         case .unspecified:
             self = .unspecified
@@ -38,7 +38,7 @@ extension RetryState {
     }
 }
 
-extension Temporal_Api_Enums_V1_RetryState {
+extension Api.Enums.V1.RetryState {
     init(retryState: RetryState) {
         switch retryState {
         case .unspecified:

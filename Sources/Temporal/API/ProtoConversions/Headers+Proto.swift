@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Temporal_Api_Common_V1_Header {
+extension Api.Common.V1.Header {
     init(_ dictionary: [String: TemporalPayload], with payloadCodec: (any PayloadCodec)?) async throws {
+        self = .init()
         self.fields.reserveCapacity(dictionary.count)
         for (key, value) in dictionary {
             if let payloadCodec {

@@ -14,8 +14,9 @@
 
 import SwiftProtobuf
 
-extension Temporal_Api_Schedule_V1_ScheduleSpec {
+extension Api.Schedule.V1.ScheduleSpec {
     init(specification: ScheduleSpecification) {
+        self = .init()
         self.structuredCalendar = specification.calendars.map { .init(calendarSpecification: $0) }
         self.interval = specification.intervals.map { .init(intervalSpecification: $0) }
         self.cronString = specification._cronExpressions
@@ -36,7 +37,7 @@ extension Temporal_Api_Schedule_V1_ScheduleSpec {
 }
 
 extension ScheduleSpecification {
-    init(proto: Temporal_Api_Schedule_V1_ScheduleSpec) {
+    init(proto: Api.Schedule.V1.ScheduleSpec) {
         self.calendars = proto.structuredCalendar.map { .init(proto: $0) }
         self.intervals = proto.interval.map { .init(proto: $0) }
         self._cronExpressions = proto.cronString

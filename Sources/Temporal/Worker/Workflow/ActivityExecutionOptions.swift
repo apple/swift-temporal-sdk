@@ -25,7 +25,7 @@ enum ActivityExecutionOptions {
         }
     }
 
-    func withBackoff(_ backoff: Coresdk_ActivityResult_DoBackoff) -> Self {
+    func withBackoff(_ backoff: Coresdk.ActivityResult.DoBackoff) -> Self {
         switch self {
         case .remote:
             fatalError("A remote activity should not receive a backoff.")

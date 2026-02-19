@@ -15,7 +15,7 @@
 import SwiftProtobuf
 
 extension NamespaceFailoverStatus {
-    init(proto: Temporal_Api_Replication_V1_FailoverStatus) {
+    init(proto: Api.Replication.V1.FailoverStatus) {
         if proto.hasFailoverTime {
             self.failoverTime = proto.failoverTime.date
         }

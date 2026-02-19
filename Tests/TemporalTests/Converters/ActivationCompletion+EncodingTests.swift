@@ -22,12 +22,12 @@ struct ActivationCompletionEncodingTests {
     @Test
     func encodeFailed() async throws {
         let payloadCodec = Base64PayloadCodec()
-        let failure = Temporal_Api_Failure_V1_Failure.with {
+        let failure = Api.Failure.V1.Failure.with {
             $0.encodedAttributes = .with {
                 $0.data = Data([1, 2, 3])
             }
         }
-        var completion = Coresdk_WorkflowCompletion_WorkflowActivationCompletion.with {
+        var completion = Coresdk.WorkflowCompletion.WorkflowActivationCompletion.with {
             $0.failed = .with {
                 $0.failure = failure
             }
@@ -35,7 +35,7 @@ struct ActivationCompletionEncodingTests {
 
         try await completion.encode(payloadCodec: payloadCodec)
 
-        let expectedFailure = Temporal_Api_Failure_V1_Failure.with {
+        let expectedFailure = Api.Failure.V1.Failure.with {
             $0.encodedAttributes = .with {
                 $0.data = Data([1, 2, 3]).base64EncodedData()
                 $0.metadata["codec"] = Data("application/base64".utf8)
@@ -55,15 +55,15 @@ struct ActivationCompletionEncodingTests {
     @Test
     func encodeSuccess() async throws {
         let payloadCodec = Base64PayloadCodec()
-        let payload = Temporal_Api_Common_V1_Payload.with {
+        let payload = Api.Common.V1.Payload.with {
             $0.data = Data([1, 2, 3])
         }
-        let failure = Temporal_Api_Failure_V1_Failure.with {
+        let failure = Api.Failure.V1.Failure.with {
             $0.encodedAttributes = .with {
                 $0.data = Data([1, 2, 3])
             }
         }
-        var completion = Coresdk_WorkflowCompletion_WorkflowActivationCompletion.with {
+        var completion = Coresdk.WorkflowCompletion.WorkflowActivationCompletion.with {
             $0.successful = .with {
                 $0.commands = [
                     .with {
@@ -183,11 +183,11 @@ struct ActivationCompletionEncodingTests {
 
         try await completion.encode(payloadCodec: payloadCodec)
 
-        let expectedPayload = Temporal_Api_Common_V1_Payload.with {
+        let expectedPayload = Api.Common.V1.Payload.with {
             $0.data = Data([1, 2, 3]).base64EncodedData()
             $0.metadata["codec"] = Data("application/base64".utf8)
         }
-        let expectedFailure = Temporal_Api_Failure_V1_Failure.with {
+        let expectedFailure = Api.Failure.V1.Failure.with {
             $0.encodedAttributes = .with {
                 $0.data = Data([1, 2, 3]).base64EncodedData()
                 $0.metadata["codec"] = Data("application/base64".utf8)

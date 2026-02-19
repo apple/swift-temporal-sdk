@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension WorkflowIDReusePolicy {
-    package init(_ rawValue: Temporal_Api_Enums_V1_WorkflowIdReusePolicy) {
+    package init(_ rawValue: Api.Enums.V1.WorkflowIdReusePolicy) {
         self =
             switch rawValue {
             case .unspecified: .unspecified
@@ -27,7 +27,7 @@ extension WorkflowIDReusePolicy {
     }
 }
 
-extension Temporal_Api_Enums_V1_WorkflowIdReusePolicy {
+extension Api.Enums.V1.WorkflowIdReusePolicy {
     init(workflowIDReusePolicy: WorkflowIDReusePolicy) {
         switch workflowIDReusePolicy {
         case .unspecified:

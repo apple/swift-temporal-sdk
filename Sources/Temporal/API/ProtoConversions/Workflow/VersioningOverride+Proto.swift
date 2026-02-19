@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension VersioningOverride {
-    init(_ rawValue: Temporal_Api_Workflow_V1_VersioningOverride) {
+    init(_ rawValue: Api.Workflow.V1.VersioningOverride) {
         self = .init(
             behavior: .init(rawValue.behavior),
             deployment: rawValue.hasDeployment ? .init(rawValue.deployment) : nil,

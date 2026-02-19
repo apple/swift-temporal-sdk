@@ -14,7 +14,7 @@
 
 import SwiftProtobuf
 
-extension Temporal_Api_Schedule_V1_ScheduleAction {
+extension Api.Schedule.V1.ScheduleAction {
     init<Input: Sendable>(action: ScheduleAction<Input>, dataConverter: DataConverter) async throws {
         guard case .startWorkflow(let scheduleActionStartWorkflow) = action else {
             fatalError("`ScheduleAction` type not supported.")  // TODO: Improve error
@@ -22,6 +22,7 @@ extension Temporal_Api_Schedule_V1_ScheduleAction {
 
         // TODO: Introduce additional guards and conversions here once all properties on `WorkflowOptions` are supported, see https://github.com/temporalio/sdk-dotnet/blob/bac42d3db19617fae17bc1965e1a9c33fd517fc1/src/Temporalio/Client/Schedules/ScheduleActionStartWorkflow.cs#L124
 
+        self = .init()
         self.startWorkflow.workflowID = scheduleActionStartWorkflow.options.id
         self.startWorkflow.workflowType.name = scheduleActionStartWorkflow.workflowName
         self.startWorkflow.taskQueue.name = scheduleActionStartWorkflow.options.taskQueue
@@ -40,7 +41,7 @@ extension Temporal_Api_Schedule_V1_ScheduleAction {
         }
 
         if let memo = scheduleActionStartWorkflow.options.memo {
-            var temporalPayloads = [String: Temporal_Api_Common_V1_Payload]()
+            var temporalPayloads = [String: Api.Common.V1.Payload]()
             for (key, value) in memo {
                 temporalPayloads[key] = .init(temporalPayload: try await dataConverter.convertValue(value))
             }
@@ -56,7 +57,7 @@ extension Temporal_Api_Schedule_V1_ScheduleAction {
 }
 
 extension ScheduleAction {
-    init(proto: Temporal_Api_Schedule_V1_ScheduleAction, dataConverter: DataConverter, inputType: Input.Type = Input.self) async throws {
+    init(proto: Api.Schedule.V1.ScheduleAction, dataConverter: DataConverter, inputType: Input.Type = Input.self) async throws {
         switch proto.action {
         case .startWorkflow(let proto):
             let input: Input

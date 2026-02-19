@@ -148,7 +148,7 @@ extension TemporalClient.WorkflowService {
         let dataConverter = configuration.dataConverter
         let inputPayloads = try await dataConverter.convertValues(repeat each input)
 
-        var request = Temporal_Api_Workflowservice_V1_UpdateWorkflowExecutionRequest.with {
+        var request = Api.Workflowservice.V1.UpdateWorkflowExecutionRequest.with {
             $0.namespace = self.configuration.namespace
             $0.workflowExecution.workflowID = workflowID
             if let runID {
@@ -169,18 +169,18 @@ extension TemporalClient.WorkflowService {
             request.request.input.header = try await .init(headers, with: dataConverter.payloadCodec)
         }
 
-        var response: Temporal_Api_Workflowservice_V1_UpdateWorkflowExecutionResponse
+        var response: Api.Workflowservice.V1.UpdateWorkflowExecutionResponse
         repeat {
             do {
                 response = try await self.client.unary(
-                    method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.UpdateWorkflowExecution.descriptor,
+                    method: Api.Workflowservice.V1.WorkflowService.Method.UpdateWorkflowExecution.descriptor,
                     request: request,
                     callOptions: callOptions
                 )
             } catch {
                 throw error
             }
-        } while response.stage.rawValue < Temporal_Api_Enums_V1_UpdateWorkflowExecutionLifecycleStage.accepted.rawValue
+        } while response.stage.rawValue < Api.Enums.V1.UpdateWorkflowExecutionLifecycleStage.accepted.rawValue
 
         return updateID
     }
@@ -254,9 +254,9 @@ extension TemporalClient.WorkflowService {
         // since the request will wait until the various timeouts trigger.
         while true {
             do {
-                let response: Temporal_Api_Workflowservice_V1_PollWorkflowExecutionUpdateResponse = try await self.client.unary(
-                    method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.PollWorkflowExecutionUpdate.descriptor,
-                    request: Temporal_Api_Workflowservice_V1_PollWorkflowExecutionUpdateRequest.with {
+                let response: Api.Workflowservice.V1.PollWorkflowExecutionUpdateResponse = try await self.client.unary(
+                    method: Api.Workflowservice.V1.WorkflowService.Method.PollWorkflowExecutionUpdate.descriptor,
+                    request: Api.Workflowservice.V1.PollWorkflowExecutionUpdateRequest.with {
                         $0.namespace = self.configuration.namespace
                         $0.updateRef.workflowExecution.workflowID = workflowID
                         if let runID {

@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension VersioningBehavior {
-    init(_ rawValue: Temporal_Api_Enums_V1_VersioningBehavior) {
+    init(_ rawValue: Api.Enums.V1.VersioningBehavior) {
         self =
             switch rawValue {
             case .unspecified: .unspecified

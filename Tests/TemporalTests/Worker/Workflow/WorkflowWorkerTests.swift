@@ -34,11 +34,11 @@ private final class MockBridgeWorker: BridgeWorkerProtocol {
     deinit {}
     func initiateShutdown() {}
     func finalizeShutdown() async throws {}
-    func pollWorkflowActivation() async throws -> Coresdk_WorkflowActivation_WorkflowActivation { fatalError() }
-    func completeWorkflowActivation(completion: Coresdk_WorkflowCompletion_WorkflowActivationCompletion) async throws { fatalError() }
-    func pollActivityTask() async throws -> Coresdk_ActivityTask_ActivityTask { fatalError() }
-    func completeActivityTask(_ completion: Coresdk_ActivityTaskCompletion) async throws { fatalError() }
-    func recordActivityHeartbeat(_ heartbeat: Coresdk_ActivityHeartbeat) throws { fatalError() }
+    func pollWorkflowActivation() async throws -> Coresdk.WorkflowActivation.WorkflowActivation { fatalError() }
+    func completeWorkflowActivation(completion: Coresdk.WorkflowCompletion.WorkflowActivationCompletion) async throws { fatalError() }
+    func pollActivityTask() async throws -> Coresdk.ActivityTask.ActivityTask { fatalError() }
+    func completeActivityTask(_ completion: Coresdk.ActivityTaskCompletion) async throws { fatalError() }
+    func recordActivityHeartbeat(_ heartbeat: Coresdk.ActivityHeartbeat) throws { fatalError() }
 }
 
 // Test workflows with duplicate names

@@ -14,7 +14,7 @@
 
 import SwiftProtobuf
 
-extension Temporal_Api_Workflowservice_V1_CreateScheduleRequest {
+extension Api.Workflowservice.V1.CreateScheduleRequest {
     init<Input>(
         namespace: String,
         identity: String,
@@ -31,14 +31,14 @@ extension Temporal_Api_Workflowservice_V1_CreateScheduleRequest {
             $0.scheduleID = scheduleID
         }
 
-        let scheduleProto: Temporal_Api_Schedule_V1_Schedule = try await .init(schedule: schedule, dataConverter: dataConverter)
+        let scheduleProto: Api.Schedule.V1.Schedule = try await .init(schedule: schedule, dataConverter: dataConverter)
 
         self.schedule = .with {
             $0 = scheduleProto
         }
 
         if let memo = scheduleOptions?.memo {
-            var temporalPayloads = [String: Temporal_Api_Common_V1_Payload]()
+            var temporalPayloads = [String: Api.Common.V1.Payload]()
             for (key, value) in memo {
                 temporalPayloads[key] = .init(temporalPayload: try await dataConverter.convertValue(value))
             }

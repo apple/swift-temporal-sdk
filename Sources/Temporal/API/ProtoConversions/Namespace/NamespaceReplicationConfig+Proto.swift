@@ -15,15 +15,16 @@
 import SwiftProtobuf
 
 extension NamespaceReplicationConfig {
-    init(proto: Temporal_Api_Replication_V1_NamespaceReplicationConfig) {
+    init(proto: Api.Replication.V1.NamespaceReplicationConfig) {
         self.activeClusterName = proto.activeClusterName.isEmpty ? nil : proto.activeClusterName
         self.clusters = proto.clusters.map { $0.clusterName }
         self.state = .init(proto: proto.state)
     }
 }
 
-extension Temporal_Api_Replication_V1_NamespaceReplicationConfig {
+extension Api.Replication.V1.NamespaceReplicationConfig {
     init(replicationConfig: NamespaceReplicationConfig) {
+        self = .init()
         self.activeClusterName = replicationConfig.activeClusterName ?? ""
         self.clusters = replicationConfig.clusters.map { cluster in
             .with {

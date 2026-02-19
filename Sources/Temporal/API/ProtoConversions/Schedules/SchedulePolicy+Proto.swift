@@ -14,8 +14,9 @@
 
 import SwiftProtobuf
 
-extension Temporal_Api_Schedule_V1_SchedulePolicies {
+extension Api.Schedule.V1.SchedulePolicies {
     init(policy: SchedulePolicy) {
+        self = .init()
         self.overlapPolicy = .init(overlapPolicy: policy.overlap)
         self.catchupWindow = .init(rounding: policy.catchupWindow)
         self.pauseOnFailure = policy.pauseOnFailure
@@ -23,7 +24,7 @@ extension Temporal_Api_Schedule_V1_SchedulePolicies {
 }
 
 extension SchedulePolicy {
-    init(proto: Temporal_Api_Schedule_V1_SchedulePolicies) {
+    init(proto: Api.Schedule.V1.SchedulePolicies) {
         guard let overlap = ScheduleOverlapPolicy(proto: proto.overlapPolicy) else {
             fatalError("SchedulePolicy(proto:) failed to convert overlapPolicy.")
         }
@@ -33,7 +34,7 @@ extension SchedulePolicy {
     }
 }
 
-extension Temporal_Api_Enums_V1_ScheduleOverlapPolicy {
+extension Api.Enums.V1.ScheduleOverlapPolicy {
     init(overlapPolicy: ScheduleOverlapPolicy) {
         switch overlapPolicy {
         case .skip:
@@ -53,7 +54,7 @@ extension Temporal_Api_Enums_V1_ScheduleOverlapPolicy {
 }
 
 extension ScheduleOverlapPolicy {
-    init?(proto: Temporal_Api_Enums_V1_ScheduleOverlapPolicy) {
+    init?(proto: Api.Enums.V1.ScheduleOverlapPolicy) {
         switch proto {
         case .skip: self = .skip
         case .bufferOne: self = .bufferOne

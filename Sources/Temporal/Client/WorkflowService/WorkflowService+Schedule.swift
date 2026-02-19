@@ -42,9 +42,9 @@ extension TemporalClient.WorkflowService {
         schedule: Schedule<Input>,
         options: ScheduleOptions?
     ) async throws -> Data {
-        let response: Temporal_Api_Workflowservice_V1_CreateScheduleResponse = try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.CreateSchedule.descriptor,
-            request: Temporal_Api_Workflowservice_V1_CreateScheduleRequest(
+        let response: Api.Workflowservice.V1.CreateScheduleResponse = try await self.client.unary(
+            method: Api.Workflowservice.V1.WorkflowService.Method.CreateSchedule.descriptor,
+            request: Api.Workflowservice.V1.CreateScheduleRequest(
                 namespace: self.configuration.namespace,
                 identity: self.configuration.identity,
                 requestID: UUID().uuidString,
@@ -77,9 +77,9 @@ extension TemporalClient.WorkflowService {
         inputType: Input.Type = Input.self,
         callOptions: CallOptions? = nil
     ) async throws -> ScheduleDescription<Input> {
-        let response: Temporal_Api_Workflowservice_V1_DescribeScheduleResponse = try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.DescribeSchedule.descriptor,
-            request: Temporal_Api_Workflowservice_V1_DescribeScheduleRequest.with {
+        let response: Api.Workflowservice.V1.DescribeScheduleResponse = try await self.client.unary(
+            method: Api.Workflowservice.V1.WorkflowService.Method.DescribeSchedule.descriptor,
+            request: Api.Workflowservice.V1.DescribeScheduleRequest.with {
                 $0.namespace = self.configuration.namespace
                 $0.scheduleID = id
             },
@@ -106,15 +106,15 @@ extension TemporalClient.WorkflowService {
         backfills: some Sequence<ScheduleBackfill>,
         callOptions: CallOptions? = nil
     ) async throws {
-        let backfillProto: [Temporal_Api_Schedule_V1_BackfillRequest] = backfills.map { .init(scheduleBackfill: $0) }
+        let backfillProto: [Api.Schedule.V1.BackfillRequest] = backfills.map { .init(scheduleBackfill: $0) }
 
         guard !backfillProto.isEmpty else {
             throw ArgumentError(message: "At least one backfill period must be specified.")
         }
 
         try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.PatchSchedule.descriptor,
-            request: Temporal_Api_Workflowservice_V1_PatchScheduleRequest.with {
+            method: Api.Workflowservice.V1.WorkflowService.Method.PatchSchedule.descriptor,
+            request: Api.Workflowservice.V1.PatchScheduleRequest.with {
                 $0.namespace = self.configuration.namespace
                 $0.identity = self.configuration.identity
                 $0.requestID = UUID().uuidString
@@ -145,8 +145,8 @@ extension TemporalClient.WorkflowService {
         callOptions: CallOptions? = nil
     ) async throws {
         try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.PatchSchedule.descriptor,
-            request: Temporal_Api_Workflowservice_V1_PatchScheduleRequest.with {
+            method: Api.Workflowservice.V1.WorkflowService.Method.PatchSchedule.descriptor,
+            request: Api.Workflowservice.V1.PatchScheduleRequest.with {
                 $0.namespace = self.configuration.namespace
                 $0.identity = self.configuration.identity
                 $0.requestID = UUID().uuidString
@@ -188,14 +188,14 @@ extension TemporalClient.WorkflowService {
             return
         }
 
-        let scheduleUpdateProto = try await Temporal_Api_Schedule_V1_Schedule(
+        let scheduleUpdateProto = try await Api.Schedule.V1.Schedule(
             schedule: scheduleUpdate.schedule,
             dataConverter: self.configuration.dataConverter
         )
 
         try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.UpdateSchedule.descriptor,
-            request: Temporal_Api_Workflowservice_V1_UpdateScheduleRequest.with {
+            method: Api.Workflowservice.V1.WorkflowService.Method.UpdateSchedule.descriptor,
+            request: Api.Workflowservice.V1.UpdateScheduleRequest.with {
                 $0.namespace = self.configuration.namespace
                 $0.identity = self.configuration.identity
                 $0.requestID = UUID().uuidString
@@ -230,8 +230,8 @@ extension TemporalClient.WorkflowService {
         callOptions: CallOptions? = nil
     ) async throws {
         try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.PatchSchedule.descriptor,
-            request: Temporal_Api_Workflowservice_V1_PatchScheduleRequest.with {
+            method: Api.Workflowservice.V1.WorkflowService.Method.PatchSchedule.descriptor,
+            request: Api.Workflowservice.V1.PatchScheduleRequest.with {
                 $0.namespace = self.configuration.namespace
                 $0.identity = self.configuration.identity
                 $0.requestID = UUID().uuidString
@@ -261,8 +261,8 @@ extension TemporalClient.WorkflowService {
         callOptions: CallOptions? = nil
     ) async throws {
         try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.PatchSchedule.descriptor,
-            request: Temporal_Api_Workflowservice_V1_PatchScheduleRequest.with {
+            method: Api.Workflowservice.V1.WorkflowService.Method.PatchSchedule.descriptor,
+            request: Api.Workflowservice.V1.PatchScheduleRequest.with {
                 $0.namespace = self.configuration.namespace
                 $0.requestID = UUID().uuidString
                 $0.identity = self.configuration.identity
@@ -287,8 +287,8 @@ extension TemporalClient.WorkflowService {
     /// - Throws: An error if the operation fails.
     public func deleteSchedule(id: String, callOptions: CallOptions? = nil) async throws {
         try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.DeleteSchedule.descriptor,
-            request: Temporal_Api_Workflowservice_V1_DeleteScheduleRequest.with {
+            method: Api.Workflowservice.V1.WorkflowService.Method.DeleteSchedule.descriptor,
+            request: Api.Workflowservice.V1.DeleteScheduleRequest.with {
                 $0.namespace = self.configuration.namespace
                 $0.identity = self.configuration.identity
                 $0.scheduleID = id
@@ -317,9 +317,9 @@ extension TemporalClient.WorkflowService {
         callOptions: CallOptions? = nil
     ) async throws -> some AsyncSequence<ScheduleListDescription, any Error> & Sendable {
         withFlattenedPagination { pageToken in
-            let response: Temporal_Api_Workflowservice_V1_ListSchedulesResponse = try await self.client.unary(
-                method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.ListSchedules.descriptor,
-                request: Temporal_Api_Workflowservice_V1_ListSchedulesRequest.with {
+            let response: Api.Workflowservice.V1.ListSchedulesResponse = try await self.client.unary(
+                method: Api.Workflowservice.V1.WorkflowService.Method.ListSchedules.descriptor,
+                request: Api.Workflowservice.V1.ListSchedulesRequest.with {
                     $0.namespace = self.configuration.namespace
                     $0.query = query
                     $0.maximumPageSize = 100

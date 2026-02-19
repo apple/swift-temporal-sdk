@@ -14,7 +14,7 @@
 
 import SwiftProtobuf
 
-extension Temporal_Api_Common_V1_RetryPolicy {
+extension Api.Common.V1.RetryPolicy {
     init(retryPolicy: RetryPolicy) {
         self = .with {
             $0.backoffCoefficient = retryPolicy.backoffCoefficient
@@ -33,7 +33,7 @@ extension Temporal_Api_Common_V1_RetryPolicy {
 }
 
 extension RetryPolicy {
-    package init(retryPolicy: Temporal_Api_Common_V1_RetryPolicy) {
+    package init(retryPolicy: Api.Common.V1.RetryPolicy) {
         self = .init(
             backoffCoefficient: retryPolicy.backoffCoefficient,
             maximumAttempts: Int(retryPolicy.maximumAttempts),

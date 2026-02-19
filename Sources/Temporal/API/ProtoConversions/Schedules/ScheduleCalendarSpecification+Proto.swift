@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Temporal_Api_Schedule_V1_StructuredCalendarSpec {
+extension Api.Schedule.V1.StructuredCalendarSpec {
     init(calendarSpecification: ScheduleCalendarSpecification) {
+        self = .init()
         self.second = .init(ranges: calendarSpecification.second)
         self.minute = .init(ranges: calendarSpecification.minute)
         self.hour = .init(ranges: calendarSpecification.hour)
@@ -28,7 +29,7 @@ extension Temporal_Api_Schedule_V1_StructuredCalendarSpec {
 }
 
 extension ScheduleCalendarSpecification {
-    init(proto: Temporal_Api_Schedule_V1_StructuredCalendarSpec) {
+    init(proto: Api.Schedule.V1.StructuredCalendarSpec) {
         self.second = .init(protos: proto.second)
         self.minute = .init(protos: proto.minute)
         self.hour = .init(protos: proto.hour)

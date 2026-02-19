@@ -66,7 +66,7 @@ struct WorkflowStateMachine: ~Copyable {
             var currentHistorySize: Int
 
             /// The generated commands that need to be sent to the temporal service after processing the activation.
-            var commands: [Coresdk_WorkflowCommands_WorkflowCommand]
+            var commands: [Coresdk.WorkflowCommands.WorkflowCommand]
 
             /// These are the current timer continuations that the workflow is waiting on.
             ///
@@ -75,7 +75,7 @@ struct WorkflowStateMachine: ~Copyable {
             var timerContinuations: [UInt32: CheckedContinuation<Void, any Error>]
 
             /// These are the current activity continuations that the workflow is waiting on.
-            var activityContinuations: [UInt32: CheckedContinuation<Coresdk_ActivityResult_ActivityResolution, any Error>]
+            var activityContinuations: [UInt32: CheckedContinuation<Coresdk.ActivityResult.ActivityResolution, any Error>]
 
             /// These are the continuations for all the current wait conditions.
             var waitConditionContinuations: [UInt32: (() -> Bool, CheckedContinuation<Void, any Error>?)]
@@ -226,7 +226,7 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
-    mutating func activate(with activation: Coresdk_WorkflowActivation_WorkflowActivation) {
+    mutating func activate(with activation: Coresdk.WorkflowActivation.WorkflowActivation) {
         switch consume self.state {
         case .active(var active):
             active.isReplaying = activation.isReplaying
@@ -341,7 +341,7 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
-    mutating func fireTimer(_ fireTimer: Coresdk_WorkflowActivation_FireTimer) -> CheckedContinuation<Void, any Error>? {
+    mutating func fireTimer(_ fireTimer: Coresdk.WorkflowActivation.FireTimer) -> CheckedContinuation<Void, any Error>? {
         switch consume self.state {
         case .active(var active):
             guard let continuation = active.timerContinuations.removeValue(forKey: fireTimer.seq) else {
@@ -446,7 +446,7 @@ struct WorkflowStateMachine: ~Copyable {
         workflowTaskQueue: String,
         headers: [String: TemporalPayload],
         input: [TemporalPayload],
-        continuation: CheckedContinuation<Coresdk_ActivityResult_ActivityResolution, any Error>
+        continuation: CheckedContinuation<Coresdk.ActivityResult.ActivityResolution, any Error>
     ) {
         switch consume self.state {
         case .active(var active):
@@ -509,8 +509,8 @@ struct WorkflowStateMachine: ~Copyable {
     }
 
     mutating func resolveActivity(
-        _ resolveActivity: Coresdk_WorkflowActivation_ResolveActivity
-    ) -> CheckedContinuation<Coresdk_ActivityResult_ActivityResolution, any Error>? {
+        _ resolveActivity: Coresdk.WorkflowActivation.ResolveActivity
+    ) -> CheckedContinuation<Coresdk.ActivityResult.ActivityResolution, any Error>? {
         switch consume self.state {
         case .active(var active):
             // If the continuation wasn't there it means it was already cancelled.
@@ -883,7 +883,7 @@ struct WorkflowStateMachine: ~Copyable {
             active.commands.append(
                 .with {
                     $0.upsertWorkflowSearchAttributes = .with {
-                        $0.searchAttributes = Temporal_Api_Common_V1_SearchAttributes(searchAttributes).indexedFields
+                        $0.searchAttributes = Api.Common.V1.SearchAttributes(searchAttributes).indexedFields
                     }
                 }
             )
@@ -944,7 +944,7 @@ struct WorkflowStateMachine: ~Copyable {
     }
 
     enum CommandsAction {
-        case sendCommands([Coresdk_WorkflowCommands_WorkflowCommand])
+        case sendCommands([Coresdk.WorkflowCommands.WorkflowCommand])
         case failActivation(TemporalFailure)
     }
     mutating func commands() -> CommandsAction {

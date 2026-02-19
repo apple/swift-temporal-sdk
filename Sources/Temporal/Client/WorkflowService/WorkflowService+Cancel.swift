@@ -43,8 +43,8 @@ extension TemporalClient.WorkflowService {
         callOptions: CallOptions? = nil
     ) async throws {
         try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RequestCancelWorkflowExecution.descriptor,
-            request: Temporal_Api_Workflowservice_V1_RequestCancelWorkflowExecutionRequest.with {
+            method: Api.Workflowservice.V1.WorkflowService.Method.RequestCancelWorkflowExecution.descriptor,
+            request: Api.Workflowservice.V1.RequestCancelWorkflowExecutionRequest.with {
                 $0.namespace = self.configuration.namespace
                 $0.workflowExecution.workflowID = id
                 if let runID {
@@ -86,8 +86,8 @@ extension TemporalClient.WorkflowService {
         let detailPayloads = try await self.configuration.dataConverter.convertValues(repeat each details)
 
         try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.TerminateWorkflowExecution.descriptor,
-            request: Temporal_Api_Workflowservice_V1_TerminateWorkflowExecutionRequest.with {
+            method: Api.Workflowservice.V1.WorkflowService.Method.TerminateWorkflowExecution.descriptor,
+            request: Api.Workflowservice.V1.TerminateWorkflowExecutionRequest.with {
                 $0.namespace = self.configuration.namespace
                 $0.workflowExecution.workflowID = id
                 if let runID {

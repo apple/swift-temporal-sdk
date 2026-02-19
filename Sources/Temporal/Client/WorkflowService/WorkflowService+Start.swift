@@ -42,9 +42,9 @@ extension TemporalClient.WorkflowService {
         headers: [String: TemporalPayload] = [:],
         input: repeat each Input
     ) async throws -> String {
-        let response: Temporal_Api_Workflowservice_V1_StartWorkflowExecutionResponse = try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.StartWorkflowExecution.descriptor,
-            request: Temporal_Api_Workflowservice_V1_StartWorkflowExecutionRequest(
+        let response: Api.Workflowservice.V1.StartWorkflowExecutionResponse = try await self.client.unary(
+            method: Api.Workflowservice.V1.WorkflowService.Method.StartWorkflowExecution.descriptor,
+            request: Api.Workflowservice.V1.StartWorkflowExecutionRequest(
                 namespace: self.configuration.namespace,
                 identity: self.configuration.identity,
                 requestID: UUID().uuidString,

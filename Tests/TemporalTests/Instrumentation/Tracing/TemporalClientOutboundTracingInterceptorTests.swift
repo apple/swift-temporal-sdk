@@ -81,7 +81,7 @@ struct TemporalClientOutboundTracingInterceptorTests {
 
             assertTestSpanComponents(
                 forSpan:
-                    "\(Temporal_Api_Workflowservice_V1_WorkflowService.Method.QueryWorkflow.descriptor.fullyQualifiedMethod):\(Self.queryName)",
+                    "\(Api.Workflowservice.V1.WorkflowService.Method.QueryWorkflow.descriptor.fullyQualifiedMethod):\(Self.queryName)",
                 tracer: tracer
             ) { events in
                 // No events are recorded
@@ -142,7 +142,7 @@ struct TemporalClientOutboundTracingInterceptorTests {
                 print("threw")
                 assertTestSpanComponents(
                     forSpan:
-                        "\(Temporal_Api_Workflowservice_V1_WorkflowService.Method.QueryWorkflow.descriptor.fullyQualifiedMethod):\(Self.queryName)",
+                        "\(Api.Workflowservice.V1.WorkflowService.Method.QueryWorkflow.descriptor.fullyQualifiedMethod):\(Self.queryName)",
                     tracer: tracer
                 ) { events in
                     // No events are recorded

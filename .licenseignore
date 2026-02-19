@@ -15,4 +15,5 @@ Makefile
 docker/*
 .editorconfig
 Scripts/*
+Sources/Temporal/Generated/*
 dependencies/sdk-core

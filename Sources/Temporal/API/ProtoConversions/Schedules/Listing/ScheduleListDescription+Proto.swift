@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension ScheduleListDescription {
-    init(proto: Temporal_Api_Schedule_V1_ScheduleListEntry) {
+    init(proto: Api.Schedule.V1.ScheduleListEntry) {
         self.id = proto.scheduleID
         self.info = .init(proto: proto.info)
         self.schedule = .init(proto: proto.info)

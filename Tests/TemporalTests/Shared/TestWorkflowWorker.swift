@@ -29,7 +29,7 @@ extension WorkflowWorkerForwarding {
     }
 
     func completeWorkflowActivation(
-        completion: consuming Coresdk_WorkflowCompletion_WorkflowActivationCompletion
+        completion: consuming Coresdk.WorkflowCompletion.WorkflowActivationCompletion
     ) async throws {
         try await self.base.completeWorkflowActivation(completion: completion)
     }

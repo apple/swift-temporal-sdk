@@ -36,9 +36,9 @@ extension TemporalClient.NamespaceService {
         delay: Duration? = nil,
         callOptions: CallOptions? = nil
     ) async throws -> String {
-        let response: Temporal_Api_Operatorservice_V1_DeleteNamespaceResponse = try await self.client.unary(
-            method: Temporal_Api_Operatorservice_V1_OperatorService.Method.DeleteNamespace.descriptor,
-            request: Temporal_Api_Operatorservice_V1_DeleteNamespaceRequest.with {
+        let response: Api.Operatorservice.V1.DeleteNamespaceResponse = try await self.client.unary(
+            method: Api.Operatorservice.V1.OperatorService.Method.DeleteNamespace.descriptor,
+            request: Api.Operatorservice.V1.DeleteNamespaceRequest.with {
                 switch namespace {
                 case .name(let namespaceName):
                     $0.namespace = namespaceName

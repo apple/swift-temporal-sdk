@@ -119,11 +119,11 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         self.stateMachine.patch(id, true)
     }
 
-    func notifyHasPatch(_ notifyHasPatch: Coresdk_WorkflowActivation_NotifyHasPatch) {
+    func notifyHasPatch(_ notifyHasPatch: Coresdk.WorkflowActivation.NotifyHasPatch) {
         self.stateMachine.notifyHasPatch(notifyHasPatch.patchID)
     }
 
-    func fireTimer(_ fireTimer: Coresdk_WorkflowActivation_FireTimer) {
+    func fireTimer(_ fireTimer: Coresdk.WorkflowActivation.FireTimer) {
         self.stateMachine.fireTimer(fireTimer)?.resume()
     }
 
@@ -232,7 +232,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         }
     }
 
-    func resolveActivity(_ resolveActivity: Coresdk_WorkflowActivation_ResolveActivity) {
+    func resolveActivity(_ resolveActivity: Coresdk.WorkflowActivation.ResolveActivity) {
         guard let continuation = self.stateMachine.resolveActivity(resolveActivity) else {
             // If there is no continuation the activity was cancelled and the cancellation was already reported to the workflow.
             return
@@ -338,7 +338,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
     }
 
     func resolveStartChildWorkflow(
-        _ resolveChildWorkflowExecutionStart: Coresdk_WorkflowActivation_ResolveChildWorkflowExecutionStart
+        _ resolveChildWorkflowExecutionStart: Coresdk.WorkflowActivation.ResolveChildWorkflowExecutionStart
     ) async {
         let (workflowID, continuation) = self.stateMachine.removeStartChildWorkflowContinuation(
             sequenceNumber: resolveChildWorkflowExecutionStart.seq
@@ -372,7 +372,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
 
     func resolveChildWorkflowResult(
         sequenceNumber: UInt32,
-        result: Coresdk_ChildWorkflow_ChildWorkflowResult
+        result: Coresdk.ChildWorkflow.ChildWorkflowResult
     ) {
         let state = self.stateMachine.resolveChildWorkflowResult(
             sequenceNumber: sequenceNumber
@@ -418,7 +418,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
     }
 
     func resolveExternalWorkflowSignal(
-        _ resolveSignalExternalWorkflow: Coresdk_WorkflowActivation_ResolveSignalExternalWorkflow
+        _ resolveSignalExternalWorkflow: Coresdk.WorkflowActivation.ResolveSignalExternalWorkflow
     ) async {
         let continuation = self.stateMachine.removeExternalWorkflowContinuation(sequenceNumber: resolveSignalExternalWorkflow.seq)
 
@@ -445,7 +445,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         self.stateMachine.workflowTaskFailed(temporalFailure: temporalFailure)
     }
 
-    func activate(with activation: Coresdk_WorkflowActivation_WorkflowActivation) {
+    func activate(with activation: Coresdk.WorkflowActivation.WorkflowActivation) {
         self.stateMachine.activate(with: activation)
     }
 

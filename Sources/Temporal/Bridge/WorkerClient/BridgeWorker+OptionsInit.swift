@@ -110,7 +110,7 @@ extension TemporalWorker.Configuration.VersioningStrategy {
                         version: .init(deployment_name: deploymentVersionRef, build_id: buildIdRef),
                         use_worker_versioning: deploymentBasedParameter.useWorkerVersioning,
                         default_versioning_behavior: {
-                            let behavior: Temporal_Api_Enums_V1_VersioningBehavior =
+                            let behavior: Api.Enums.V1.VersioningBehavior =
                                 switch deploymentBasedParameter.defaultVersioningBehavior.kind {
                                 case .unspecified: .unspecified
                                 case .pinned: .pinned

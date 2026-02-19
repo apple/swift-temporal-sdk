@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Coresdk_ChildWorkflow_ChildWorkflowCancellationType {
+extension Coresdk.ChildWorkflow.ChildWorkflowCancellationType {
     init(childWorkflowCancellationType: ChildWorkflowCancellationType) {
         switch childWorkflowCancellationType {
         case .abandon:

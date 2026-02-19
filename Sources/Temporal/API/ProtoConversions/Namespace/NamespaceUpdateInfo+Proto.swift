@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Temporal_Api_Namespace_V1_UpdateNamespaceInfo {
+extension Api.Namespace.V1.UpdateNamespaceInfo {
     init(updateInfo: NamespaceUpdateInfo) {
+        self = .init()
         if let description = updateInfo.description {
             self.description_p = description
         }

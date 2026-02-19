@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension CancelExternalWorkflowExecutionFailedCause {
-    init(_ rawValue: Temporal_Api_Enums_V1_CancelExternalWorkflowExecutionFailedCause) {
+    init(_ rawValue: Api.Enums.V1.CancelExternalWorkflowExecutionFailedCause) {
         self =
             switch rawValue {
             case .unspecified: .unspecified

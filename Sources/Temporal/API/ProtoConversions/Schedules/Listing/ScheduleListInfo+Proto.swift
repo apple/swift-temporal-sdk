@@ -15,7 +15,7 @@
 import SwiftProtobuf
 
 extension ScheduleListInfo {
-    init(proto: Temporal_Api_Schedule_V1_ScheduleListInfo) {
+    init(proto: Api.Schedule.V1.ScheduleListInfo) {
         self.recentActions = proto.recentActions.map { .init(proto: $0) }
         self.nextActionTimes = proto.futureActionTimes.map { $0.date }
     }

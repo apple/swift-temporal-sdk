@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension Callback {
-    init(_ rawValue: Temporal_Api_Common_V1_Callback) {
+    init(_ rawValue: Api.Common.V1.Callback) {
         let variant: Variant =
             switch rawValue.variant {
             case .nexus(let value):

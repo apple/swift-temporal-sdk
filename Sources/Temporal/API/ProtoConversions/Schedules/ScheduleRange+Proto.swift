@@ -12,22 +12,23 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Temporal_Api_Schedule_V1_Range {
+extension Api.Schedule.V1.Range {
     init(range: ScheduleRange) {
+        self = .init()
         self.start = Int32(range.start)
         self.end = Int32(range.end)
         self.step = Int32(range.step)
     }
 }
 
-extension Array where Element == Temporal_Api_Schedule_V1_Range {
+extension Array where Element == Api.Schedule.V1.Range {
     init(ranges: [ScheduleRange]) {
         self = ranges.map { .init(range: $0) }
     }
 }
 
 extension ScheduleRange {
-    init(proto: Temporal_Api_Schedule_V1_Range) {
+    init(proto: Api.Schedule.V1.Range) {
         self.start = Int(proto.start)
         self.end = Int(proto.end)
         self.step = Int(proto.step)
@@ -35,7 +36,7 @@ extension ScheduleRange {
 }
 
 extension Array where Element == ScheduleRange {
-    init(protos: [Temporal_Api_Schedule_V1_Range]) {
+    init(protos: [Api.Schedule.V1.Range]) {
         self = protos.map(ScheduleRange.init)
     }
 }

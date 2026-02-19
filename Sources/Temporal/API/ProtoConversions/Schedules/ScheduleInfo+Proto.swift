@@ -15,7 +15,7 @@
 import SwiftProtobuf
 
 extension ScheduleInfo {
-    init(proto: Temporal_Api_Schedule_V1_ScheduleInfo) {
+    init(proto: Api.Schedule.V1.ScheduleInfo) {
         self.numActions = Int(proto.actionCount)
         self.numActionsMissedCatchupWindow = Int(proto.missedCatchupWindow)
         self.numActionsSkippedOverlap = Int(proto.overlapSkipped)
@@ -32,14 +32,14 @@ extension ScheduleInfo {
 }
 
 extension ScheduleInfo.ActionExecution {
-    init(proto: Temporal_Api_Common_V1_WorkflowExecution) {
+    init(proto: Api.Common.V1.WorkflowExecution) {
         self.workflowId = proto.workflowID
         self.firstExecutionRunId = proto.runID
     }
 }
 
 extension ScheduleInfo.ActionResult {
-    init(proto: Temporal_Api_Schedule_V1_ScheduleActionResult) {
+    init(proto: Api.Schedule.V1.ScheduleActionResult) {
         self.scheduledAt = proto.scheduleTime.date
         self.startedAt = proto.actualTime.date
         self.action = .init(proto: proto.startWorkflowResult)

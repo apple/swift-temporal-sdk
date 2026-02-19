@@ -34,14 +34,14 @@ extension TemporalClient.OperatorService {
         _ attributes: repeat SearchAttributeKey<each Value>,
         callOptions: CallOptions? = nil
     ) async throws {
-        var searchAttributes = [String: Temporal_Api_Enums_V1_IndexedValueType]()
+        var searchAttributes = [String: Api.Enums.V1.IndexedValueType]()
         for attribute in repeat each attributes {
             searchAttributes[attribute.name] = .init(attribute.type)
         }
 
         try await self.client.unary(
-            method: Temporal_Api_Operatorservice_V1_OperatorService.Method.AddSearchAttributes.descriptor,
-            request: Temporal_Api_Operatorservice_V1_AddSearchAttributesRequest.with {
+            method: Api.Operatorservice.V1.OperatorService.Method.AddSearchAttributes.descriptor,
+            request: Api.Operatorservice.V1.AddSearchAttributesRequest.with {
                 $0.namespace = configuration.namespace
                 $0.searchAttributes = searchAttributes
             },
@@ -66,14 +66,14 @@ extension TemporalClient.OperatorService {
         _ attributes: [AnySearchAttributeKey],
         callOptions: CallOptions? = nil
     ) async throws {
-        var searchAttributes = [String: Temporal_Api_Enums_V1_IndexedValueType]()
+        var searchAttributes = [String: Api.Enums.V1.IndexedValueType]()
         for attribute in attributes {
             searchAttributes[attribute.name] = .init(attribute.type)
         }
 
         try await self.client.unary(
-            method: Temporal_Api_Operatorservice_V1_OperatorService.Method.AddSearchAttributes.descriptor,
-            request: Temporal_Api_Operatorservice_V1_AddSearchAttributesRequest.with {
+            method: Api.Operatorservice.V1.OperatorService.Method.AddSearchAttributes.descriptor,
+            request: Api.Operatorservice.V1.AddSearchAttributesRequest.with {
                 $0.namespace = configuration.namespace
                 $0.searchAttributes = searchAttributes
             },
@@ -104,8 +104,8 @@ extension TemporalClient.OperatorService {
         }
 
         try await self.client.unary(
-            method: Temporal_Api_Operatorservice_V1_OperatorService.Method.RemoveSearchAttributes.descriptor,
-            request: Temporal_Api_Operatorservice_V1_RemoveSearchAttributesRequest.with {
+            method: Api.Operatorservice.V1.OperatorService.Method.RemoveSearchAttributes.descriptor,
+            request: Api.Operatorservice.V1.RemoveSearchAttributesRequest.with {
                 $0.namespace = configuration.namespace
                 $0.searchAttributes = searchAttributes
             },
@@ -136,8 +136,8 @@ extension TemporalClient.OperatorService {
         }
 
         try await self.client.unary(
-            method: Temporal_Api_Operatorservice_V1_OperatorService.Method.RemoveSearchAttributes.descriptor,
-            request: Temporal_Api_Operatorservice_V1_RemoveSearchAttributesRequest.with {
+            method: Api.Operatorservice.V1.OperatorService.Method.RemoveSearchAttributes.descriptor,
+            request: Api.Operatorservice.V1.RemoveSearchAttributesRequest.with {
                 $0.namespace = configuration.namespace
                 $0.searchAttributes = searchAttributes
             },
@@ -158,9 +158,9 @@ extension TemporalClient.OperatorService {
     /// - Returns: A ``SearchAttributeKeyCollection`` containing comprehensive search attribute information.
     /// - Throws: An error if the operation fails or access is denied.
     public func listSearchAttributes(namespace: String? = nil, callOptions: CallOptions? = nil) async throws -> SearchAttributeKeyCollection {
-        let response: Temporal_Api_Operatorservice_V1_ListSearchAttributesResponse = try await self.client.unary(
-            method: Temporal_Api_Operatorservice_V1_OperatorService.Method.ListSearchAttributes.descriptor,
-            request: Temporal_Api_Operatorservice_V1_ListSearchAttributesRequest.with {
+        let response: Api.Operatorservice.V1.ListSearchAttributesResponse = try await self.client.unary(
+            method: Api.Operatorservice.V1.OperatorService.Method.ListSearchAttributes.descriptor,
+            request: Api.Operatorservice.V1.ListSearchAttributesRequest.with {
                 $0.namespace = configuration.namespace
             },
             callOptions: callOptions

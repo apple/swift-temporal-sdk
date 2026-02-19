@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension ScheduleListEntry {
-    init(proto: Temporal_Api_Schedule_V1_ScheduleListInfo) {
+    init(proto: Api.Schedule.V1.ScheduleListInfo) {
         self.spec = .init(proto: proto.spec)
         self.state = .init(
             note: proto.notes.isEmpty ? nil : proto.notes,

@@ -40,7 +40,7 @@ public struct UntypedChildWorkflowHandle: Sendable {
             ///
             /// - Parameter result: The final result of the child workflow execution, which may represent
             ///   successful completion, failure, or cancellation.
-            case resolved(result: Coresdk_ChildWorkflow_ChildWorkflowResult)
+            case resolved(result: Coresdk.ChildWorkflow.ChildWorkflowResult)
 
             /// A boolean value that indicates whether the child workflow has completed execution.
             var isResolved: Bool {

@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension WorkflowTaskCompletedMetadata {
-    init(_ rawValue: Temporal_Api_Sdk_V1_WorkflowTaskCompletedMetadata) {
+    init(_ rawValue: Api.Sdk.V1.WorkflowTaskCompletedMetadata) {
         self = .init(
             coreUsedFlags: rawValue.coreUsedFlags,
             langUsedFlags: rawValue.langUsedFlags,

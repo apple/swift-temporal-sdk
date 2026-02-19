@@ -17,7 +17,7 @@ import SwiftProtobuf
 import struct Foundation.Data
 
 extension TemporalPayload {
-    init(temporalAPIPayload: Temporal_Api_Common_V1_Payload) {
+    init(temporalAPIPayload: Api.Common.V1.Payload) {
         self.init(
             data: Array(temporalAPIPayload.data),
             metadata: temporalAPIPayload.metadata.mapValues { Array($0) }
@@ -25,7 +25,7 @@ extension TemporalPayload {
     }
 }
 
-extension Temporal_Api_Common_V1_Payload {
+extension Api.Common.V1.Payload {
     package init(temporalPayload: TemporalPayload) {
         self = Self.with {
             $0.data = Data(temporalPayload.data)

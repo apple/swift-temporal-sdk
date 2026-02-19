@@ -111,7 +111,7 @@ public struct WorkflowExecution: Hashable, Sendable {
     ///   - raw: The raw workflow execution info from the Temporal API.
     ///   - dataConverter: Data converter for deserializing memo and search attributes.
     /// - Throws: Any error that occurs during data conversion.
-    init(_ raw: Temporal_Api_Workflow_V1_WorkflowExecutionInfo, dataConverter: DataConverter) throws {
+    init(_ raw: Api.Workflow.V1.WorkflowExecutionInfo, dataConverter: DataConverter) throws {
         workflowType = raw.type.name
         workflowID = raw.execution.workflowID
         parentWorkflowID = raw.hasParentExecution ? raw.parentExecution.workflowID : nil

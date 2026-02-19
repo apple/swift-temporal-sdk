@@ -14,8 +14,9 @@
 
 import SwiftProtobuf
 
-extension Temporal_Api_Schedule_V1_IntervalSpec {
+extension Api.Schedule.V1.IntervalSpec {
     init(intervalSpecification: ScheduleIntervalSpecification) {
+        self = .init()
         self.interval = .init(duration: intervalSpecification.every)
         if let offset = intervalSpecification.offset {
             self.phase = .init(duration: offset)
@@ -24,7 +25,7 @@ extension Temporal_Api_Schedule_V1_IntervalSpec {
 }
 
 extension ScheduleIntervalSpecification {
-    init(proto: Temporal_Api_Schedule_V1_IntervalSpec) {
+    init(proto: Api.Schedule.V1.IntervalSpec) {
         self.every = .init(proto.interval)
         self.offset = proto.hasPhase ? .init(proto.phase) : nil
     }

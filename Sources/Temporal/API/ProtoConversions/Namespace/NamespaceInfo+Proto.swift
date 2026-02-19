@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension NamespaceInfo {
-    init(proto: Temporal_Api_Namespace_V1_NamespaceInfo) {
+    init(proto: Api.Namespace.V1.NamespaceInfo) {
         self.name = proto.name
         self.id = proto.id
         self.state = .init(proto: proto.state)
@@ -26,7 +26,7 @@ extension NamespaceInfo {
 }
 
 extension NamespaceInfo.State {
-    init?(proto: Temporal_Api_Enums_V1_NamespaceState) {
+    init?(proto: Api.Enums.V1.NamespaceState) {
         switch proto {
         case .registered:
             self = .registered
@@ -41,14 +41,14 @@ extension NamespaceInfo.State {
 }
 
 extension NamespaceInfo.Capabilities {
-    init(proto: Temporal_Api_Namespace_V1_NamespaceInfo.Capabilities) {
+    init(proto: Api.Namespace.V1.NamespaceInfo.Capabilities) {
         self.eagerWorkflowStart = proto.eagerWorkflowStart
         self.syncUpdate = proto.syncUpdate
         self.asyncUpdate = proto.asyncUpdate
     }
 }
 
-extension Temporal_Api_Enums_V1_NamespaceState {
+extension Api.Enums.V1.NamespaceState {
     init(state: NamespaceInfo.State) {
         switch state {
         case .registered:

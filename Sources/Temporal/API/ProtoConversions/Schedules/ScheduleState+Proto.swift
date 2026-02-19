@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension Temporal_Api_Schedule_V1_ScheduleState {
+extension Api.Schedule.V1.ScheduleState {
     init(state: ScheduleState) {
+        self = .init()
         if let note = state.note {
             self.notes = note
         }
@@ -24,7 +25,7 @@ extension Temporal_Api_Schedule_V1_ScheduleState {
 }
 
 extension ScheduleState {
-    init(proto: Temporal_Api_Schedule_V1_ScheduleState) {
+    init(proto: Api.Schedule.V1.ScheduleState) {
         self.note = proto.notes.isEmpty ? nil : String(proto.notes)
         self.paused = proto.paused
         self.limitedActions = proto.limitedActions

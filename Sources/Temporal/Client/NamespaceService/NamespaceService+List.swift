@@ -34,9 +34,9 @@ extension TemporalClient.NamespaceService {
         callOptions: CallOptions? = nil
     ) async throws -> some (AsyncSequence<NamespaceDescription, any Error> & Sendable) {
         withFlattenedPagination { pageToken in
-            let response: Temporal_Api_Workflowservice_V1_ListNamespacesResponse = try await self.client.unary(
-                method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.ListNamespaces.descriptor,
-                request: Temporal_Api_Workflowservice_V1_ListNamespacesRequest.with {
+            let response: Api.Workflowservice.V1.ListNamespacesResponse = try await self.client.unary(
+                method: Api.Workflowservice.V1.WorkflowService.Method.ListNamespaces.descriptor,
+                request: Api.Workflowservice.V1.ListNamespacesRequest.with {
                     $0.namespaceFilter = .with {
                         $0.includeDeleted = includeDeleted
                     }

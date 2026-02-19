@@ -46,7 +46,7 @@ extension TemporalClient.WorkflowService {
     ) async throws {
         let dataConverter = dataConverter ?? self.configuration.dataConverter
 
-        var detailsPayloads: Temporal_Api_Common_V1_Payloads?
+        var detailsPayloads: Api.Common.V1.Payloads?
         if let items = options?.details, !items.isEmpty {
             var payloads: [TemporalPayload] = []
             for item in items {
@@ -60,10 +60,10 @@ extension TemporalClient.WorkflowService {
 
         switch activity {
         case .id(let workflowID, let runID, let activityID):
-            let response: Temporal_Api_Workflowservice_V1_RecordActivityTaskHeartbeatByIdResponse =
+            let response: Api.Workflowservice.V1.RecordActivityTaskHeartbeatByIdResponse =
                 try await self.client.unary(
-                    method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RecordActivityTaskHeartbeatById.descriptor,
-                    request: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RecordActivityTaskHeartbeatById.Input.with {
+                    method: Api.Workflowservice.V1.WorkflowService.Method.RecordActivityTaskHeartbeatById.descriptor,
+                    request: Api.Workflowservice.V1.WorkflowService.Method.RecordActivityTaskHeartbeatById.Input.with {
                         $0.namespace = self.configuration.namespace
                         $0.identity = self.configuration.identity
                         $0.workflowID = workflowID
@@ -78,10 +78,10 @@ extension TemporalClient.WorkflowService {
             }
 
         case .taskToken(let token):
-            let response: Temporal_Api_Workflowservice_V1_RecordActivityTaskHeartbeatResponse =
+            let response: Api.Workflowservice.V1.RecordActivityTaskHeartbeatResponse =
                 try await self.client.unary(
-                    method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RecordActivityTaskHeartbeat.descriptor,
-                    request: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RecordActivityTaskHeartbeat.Input.with {
+                    method: Api.Workflowservice.V1.WorkflowService.Method.RecordActivityTaskHeartbeat.descriptor,
+                    request: Api.Workflowservice.V1.WorkflowService.Method.RecordActivityTaskHeartbeat.Input.with {
                         $0.namespace = self.configuration.namespace
                         $0.identity = self.configuration.identity
                         $0.taskToken = Data(token.bytes)
@@ -115,15 +115,15 @@ extension TemporalClient.WorkflowService {
         let dataConverter = dataConverter ?? self.configuration.dataConverter
 
         let payload = try await dataConverter.convertValue(result)
-        let resultPayloads = Temporal_Api_Common_V1_Payloads.with {
+        let resultPayloads = Api.Common.V1.Payloads.with {
             $0.payloads = [.init(temporalPayload: payload)]
         }
 
         switch activity {
         case .id(let workflowID, let runID, let activityID):
             _ = try await self.client.unary(
-                method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskCompletedById.descriptor,
-                request: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskCompletedById.Input.with {
+                method: Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskCompletedById.descriptor,
+                request: Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskCompletedById.Input.with {
                     $0.namespace = self.configuration.namespace
                     $0.identity = self.configuration.identity
                     $0.workflowID = workflowID
@@ -136,8 +136,8 @@ extension TemporalClient.WorkflowService {
 
         case .taskToken(let token):
             _ = try await self.client.unary(
-                method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskCompleted.descriptor,
-                request: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskCompleted.Input.with {
+                method: Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskCompleted.descriptor,
+                request: Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskCompleted.Input.with {
                     $0.namespace = self.configuration.namespace
                     $0.identity = self.configuration.identity
                     $0.taskToken = Data(token.bytes)
@@ -172,7 +172,7 @@ extension TemporalClient.WorkflowService {
 
         let failure = await dataConverter.convertError(error)
 
-        var lastHeartbeatDetails: Temporal_Api_Common_V1_Payloads?
+        var lastHeartbeatDetails: Api.Common.V1.Payloads?
         if let items = options?.lastHeartbeatDetails, !items.isEmpty {
             let payloads = try await dataConverter.convertValues(items)
             lastHeartbeatDetails = .with {
@@ -183,8 +183,8 @@ extension TemporalClient.WorkflowService {
         switch activity {
         case .id(let workflowID, let runID, let activityID):
             _ = try await self.client.unary(
-                method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskFailedById.descriptor,
-                request: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskFailedById.Input.with {
+                method: Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskFailedById.descriptor,
+                request: Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskFailedById.Input.with {
                     $0.namespace = self.configuration.namespace
                     $0.identity = self.configuration.identity
                     $0.workflowID = workflowID
@@ -198,8 +198,8 @@ extension TemporalClient.WorkflowService {
 
         case .taskToken(let token):
             _ = try await self.client.unary(
-                method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskFailed.descriptor,
-                request: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskFailed.Input.with {
+                method: Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskFailed.descriptor,
+                request: Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskFailed.Input.with {
                     $0.namespace = self.configuration.namespace
                     $0.identity = self.configuration.identity
                     $0.taskToken = Data(token.bytes)
@@ -230,7 +230,7 @@ extension TemporalClient.WorkflowService {
     ) async throws {
         let dataConverter = dataConverter ?? self.configuration.dataConverter
 
-        var detailsPayloads: Temporal_Api_Common_V1_Payloads?
+        var detailsPayloads: Api.Common.V1.Payloads?
         if let items = options?.details, !items.isEmpty {
             let payloads = try await dataConverter.convertValues(items)
             detailsPayloads = .with {
@@ -241,8 +241,8 @@ extension TemporalClient.WorkflowService {
         switch activity {
         case .id(let workflowID, let runID, let activityID):
             _ = try await self.client.unary(
-                method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskCanceledById.descriptor,
-                request: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskCanceledById.Input.with {
+                method: Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskCanceledById.descriptor,
+                request: Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskCanceledById.Input.with {
                     $0.namespace = self.configuration.namespace
                     $0.identity = self.configuration.identity
                     $0.workflowID = workflowID
@@ -255,8 +255,8 @@ extension TemporalClient.WorkflowService {
 
         case .taskToken(let token):
             _ = try await self.client.unary(
-                method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskCanceled.descriptor,
-                request: Temporal_Api_Workflowservice_V1_WorkflowService.Method.RespondActivityTaskCanceled.Input.with {
+                method: Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskCanceled.descriptor,
+                request: Api.Workflowservice.V1.WorkflowService.Method.RespondActivityTaskCanceled.Input.with {
                     $0.namespace = self.configuration.namespace
                     $0.identity = self.configuration.identity
                     $0.taskToken = Data(token.bytes)

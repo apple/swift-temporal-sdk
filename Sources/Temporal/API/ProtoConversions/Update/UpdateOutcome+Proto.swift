@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension UpdateOutcome {
-    init(_ rawValue: Temporal_Api_Update_V1_Outcome) {
+    init(_ rawValue: Api.Update.V1.Outcome) {
         self =
             switch rawValue.value {
             case .failure(let failure): .failure(.init(temporalAPIFailure: failure))

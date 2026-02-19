@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension Deployment {
-    init(_ rawValue: Temporal_Api_Deployment_V1_Deployment) {
+    init(_ rawValue: Api.Deployment.V1.Deployment) {
         self = .init(seriesName: rawValue.seriesName, buildID: rawValue.buildID)
     }
 }

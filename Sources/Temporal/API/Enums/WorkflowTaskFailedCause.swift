@@ -94,4 +94,7 @@ public enum WorkflowTaskFailedCause: Hashable, Sendable {
 
     /// A workflow task failed because a grpc message was too large.
     case grpcMessageTooLarge
+
+    /// A workflow task failed because the payloads were too large.
+    case payloadToolarge
 }

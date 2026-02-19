@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension ContinueAsNewInitiator {
-    init(_ rawValue: Temporal_Api_Enums_V1_ContinueAsNewInitiator) {
+    init(_ rawValue: Api.Enums.V1.ContinueAsNewInitiator) {
         self =
             switch rawValue {
             case .unspecified: .unspecified

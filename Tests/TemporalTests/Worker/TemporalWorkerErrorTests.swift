@@ -168,7 +168,7 @@ extension TestServerDependentTests {
                     )
                 }
 
-                func pollWorkflowActivation() async throws -> Coresdk_WorkflowActivation_WorkflowActivation {
+                func pollWorkflowActivation() async throws -> Coresdk.WorkflowActivation.WorkflowActivation {
                     throw TestError()
                 }
             }

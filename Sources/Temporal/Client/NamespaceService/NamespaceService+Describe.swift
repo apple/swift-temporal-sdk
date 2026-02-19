@@ -33,9 +33,9 @@ extension TemporalClient.NamespaceService {
         namespace: NamespaceReference,
         callOptions: CallOptions? = nil
     ) async throws -> NamespaceDescription {
-        let response: Temporal_Api_Workflowservice_V1_DescribeNamespaceResponse = try await self.client.unary(
-            method: Temporal_Api_Workflowservice_V1_WorkflowService.Method.DescribeNamespace.descriptor,
-            request: Temporal_Api_Workflowservice_V1_DescribeNamespaceRequest.with {
+        let response: Api.Workflowservice.V1.DescribeNamespaceResponse = try await self.client.unary(
+            method: Api.Workflowservice.V1.WorkflowService.Method.DescribeNamespace.descriptor,
+            request: Api.Workflowservice.V1.DescribeNamespaceRequest.with {
                 switch namespace {
                 case .name(let namespaceName):
                     $0.namespace = namespaceName

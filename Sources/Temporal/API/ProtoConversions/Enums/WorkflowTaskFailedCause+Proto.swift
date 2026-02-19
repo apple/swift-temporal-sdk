@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension WorkflowTaskFailedCause {
-    init(_ rawValue: Temporal_Api_Enums_V1_WorkflowTaskFailedCause) {
+    init(_ rawValue: Api.Enums.V1.WorkflowTaskFailedCause) {
         self =
             switch rawValue {
             case .unspecified: .unspecified
@@ -53,6 +53,7 @@ extension WorkflowTaskFailedCause {
             case .badRequestCancelNexusOperationAttributes: .badRequestCancelNexusOperationAttributes
             case .featureDisabled: .featureDisabled
             case .grpcMessageTooLarge: .grpcMessageTooLarge
+            case .payloadsTooLarge: .payloadToolarge
             case .UNRECOGNIZED(let value):
                 fatalError("Unexpected value \(value) for WorkflowTaskFailedCause")
             }

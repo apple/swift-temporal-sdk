@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension WorkflowIDConflictPolicy {
-    package init(_ rawValue: Temporal_Api_Enums_V1_WorkflowIdConflictPolicy) {
+    package init(_ rawValue: Api.Enums.V1.WorkflowIdConflictPolicy) {
         self =
             switch rawValue {
             case .unspecified: .unspecified
@@ -26,7 +26,7 @@ extension WorkflowIDConflictPolicy {
     }
 }
 
-extension Temporal_Api_Enums_V1_WorkflowIdConflictPolicy {
+extension Api.Enums.V1.WorkflowIdConflictPolicy {
     init(workflowIDConflictPolicy: WorkflowIDConflictPolicy) {
         switch workflowIDConflictPolicy {
         case .unspecified:

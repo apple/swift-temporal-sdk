@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension UpdateMeta {
-    init(_ rawValue: Temporal_Api_Update_V1_Meta) {
+    init(_ rawValue: Api.Update.V1.Meta) {
         self = .init(
             updateID: rawValue.updateID,
             identity: rawValue.identity.isEmpty ? nil : rawValue.identity

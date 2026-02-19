@@ -163,6 +163,18 @@ let package = Package(
             ]
         ),
 
+        // MARK: Tools
+
+        .executableTarget(
+            name: "NamespaceRefactorTool",
+            dependencies: [
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+            ],
+            path: "Tools/NamespaceRefactorTool"
+        ),
+
         // MARK: Examples
 
         .executableTarget(
