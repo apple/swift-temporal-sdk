@@ -3,6 +3,9 @@ name: Build Temporal Core SDK artifacts
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
   RUST_VERSION: "1.88"
   ARTIFACT_BUNDLE_NAME: "temporal.artifactbundle"
