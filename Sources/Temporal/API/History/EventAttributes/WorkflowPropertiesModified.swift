@@ -21,12 +21,12 @@ extension HistoryEvent.Attributes {
         /// If set, update the workflow memo with the provided values.
         ///
         /// The values will be merged with the existing memo. If the user wants to delete values, a default/empty Payload should be used as the value for the key being deleted.
-        public var upsertedMemo: [String: TemporalPayload]
+        public var upsertedMemo: [String: Api.Common.V1.Payload]
 
         /// Creates event attributes for when workflow properties have been modified.
         public init(
             workflowTaskCompletedEventID: Int,
-            upsertedMemo: [String: TemporalPayload]
+            upsertedMemo: [String: Api.Common.V1.Payload]
         ) {
             self.workflowTaskCompletedEventID = workflowTaskCompletedEventID
             self.upsertedMemo = upsertedMemo

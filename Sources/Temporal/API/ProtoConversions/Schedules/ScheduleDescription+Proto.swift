@@ -17,7 +17,7 @@ extension ScheduleDescription {
         self.info = .init(proto: proto.info)
         self.schedule = try await .init(proto: proto.schedule, dataConverter: dataConverter)
         self.conflictToken = proto.conflictToken
-        self.memo = proto.memo.fields.mapValues { .init(.init(temporalAPIPayload: $0)) }
+        self.memo = proto.memo.fields.mapValues { .init($0) }
         self.searchAttributes = try .init(proto.searchAttributes)
     }
 }

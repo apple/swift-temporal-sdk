@@ -21,7 +21,7 @@ public struct ScheduleLocalActivityInput<each Input: Sendable>: Sendable {
     public var options: LocalActivityOptions
 
     /// Headers containing metadata and context information for activity execution.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input parameters to be passed to the activity for execution.
     public var input: (repeat each Input)
@@ -36,7 +36,7 @@ public struct ScheduleLocalActivityInput<each Input: Sendable>: Sendable {
     package init(
         name: String,
         options: LocalActivityOptions,
-        headers: [String: TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
         input: (repeat each Input)
     ) {
         self.name = name

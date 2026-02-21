@@ -296,27 +296,27 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                                     heartbeatContinuation.finish()
                                 }
 
-                                let resultPayload: TemporalPayload
+                                let resultPayload: Api.Common.V1.Payload
                                 do {
                                     let input: A.Input
                                     if A.Input.self == Void.self {
                                         input = () as! A.Input
                                     } else {
                                         input = try await self.dataConverter.convertPayloads(
-                                            activityTaskStart.input.map { TemporalPayload(temporalAPIPayload: $0) },
+                                            activityTaskStart.input,
                                             as: (A.Input).self
                                         )
                                     }
 
-                                    let headers: [String: TemporalPayload]
+                                    let headers: [String: Api.Common.V1.Payload]
                                     if let payloadCodec = self.dataConverter.payloadCodec {
                                         headers = try await .init(
                                             uniqueKeysWithValues: activityTaskStart.headerFields.async.map {
-                                                ($0, try await payloadCodec.decode(payload: .init(temporalAPIPayload: $1)))
+                                                ($0, try await payloadCodec.decode(payload: $1))
                                             }
                                         )
                                     } else {
-                                        headers = activityTaskStart.headerFields.mapValues { .init(temporalAPIPayload: $0) }
+                                        headers = activityTaskStart.headerFields
                                     }
 
                                     // TODO: We want to have a task local logger here
@@ -448,7 +448,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
         do {
             for heartbeatDetail in heartbeatDetails {
                 let payload = try await self.dataConverter.convertValue(heartbeatDetail)
-                payloads.append(.init(temporalPayload: payload))
+                payloads.append(payload)
             }
         } catch {
             logger.debug("Failed to convert heartbeat details. Cancelling activity")

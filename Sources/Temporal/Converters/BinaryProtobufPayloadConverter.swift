@@ -24,7 +24,7 @@ public struct BinaryProtobufPayloadConverter: EncodingPayloadConverter {
 
     public init() {}
 
-    public func convertValue(_ value: some Any) throws -> TemporalPayload {
+    public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {
         guard let value = value as? any Message else {
             throw EncodingError()
         }
@@ -33,7 +33,7 @@ public struct BinaryProtobufPayloadConverter: EncodingPayloadConverter {
     }
 
     public func convertPayload<Value>(
-        _ payload: TemporalPayload,
+        _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type
     ) throws -> Value {
         guard let messageType = Value.self as? any Message.Type else {
@@ -46,7 +46,7 @@ public struct BinaryProtobufPayloadConverter: EncodingPayloadConverter {
     }
 
     private func convertPayload<Value: Message>(
-        _ payload: TemporalPayload,
+        _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type
     ) throws -> Value {
         return try .init(serializedBytes: payload.data)

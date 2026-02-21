@@ -19,14 +19,14 @@ extension HistoryEvent.Attributes {
         public var signalName: String
 
         /// Will be deserialized and provided as argument(s) to the signal handler.
-        public var input: [TemporalPayload]
+        public var input: [Api.Common.V1.Payload]
 
         /// id of the worker/client who sent this signal.
         public var identity: String?
 
         /// Headers that were passed by the sender of the signal and copied by temporal
         /// server into the workflow task.
-        public var headers: [String: TemporalPayload]
+        public var headers: [String: Api.Common.V1.Payload]
 
         /// - Note: Deprecated - This field is deprecated and never respected. It should always be set to false.
         public var skipGenerateWorkflowTask: Bool
@@ -37,9 +37,9 @@ extension HistoryEvent.Attributes {
         /// Creates event attributes for when a workflow execution has been signaled.
         public init(
             signalName: String,
-            input: [TemporalPayload],
+            input: [Api.Common.V1.Payload],
             identity: String? = nil,
-            headers: [String: TemporalPayload],
+            headers: [String: Api.Common.V1.Payload],
             skipGenerateWorkflowTask: Bool,
             externalWorkflowExecution: WorkflowExecutionID
         ) {

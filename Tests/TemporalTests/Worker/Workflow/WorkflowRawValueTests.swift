@@ -14,6 +14,7 @@
 
 import Foundation
 import Logging
+import SwiftProtobuf
 import Temporal
 import TemporalTestKit
 import Testing
@@ -38,7 +39,12 @@ extension TestServerDependentTests {
             static func doubleContent(input: TemporalRawValue) -> TemporalRawValue {
                 let data = input.payload.data + input.payload.data
                 let metadata = input.payload.metadata
-                return .init(.init(data: data, metadata: metadata))
+                return .init(
+                    Api.Common.V1.Payload.with {
+                        $0.data = data
+                        $0.metadata = metadata
+                    }
+                )
             }
         }
 

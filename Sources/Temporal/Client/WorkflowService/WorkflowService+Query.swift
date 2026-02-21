@@ -45,7 +45,7 @@ extension TemporalClient.WorkflowService {
         runID: String? = nil,
         queryName: String,
         rejectionCondition: QueryRejectionCondition? = nil,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         input: repeat each Input,
         resultTypes: repeat (each Result).Type,
         callOptions: CallOptions? = nil
@@ -58,7 +58,7 @@ extension TemporalClient.WorkflowService {
             $0.query = .with {
                 $0.queryType = queryName
                 $0.queryArgs = .with {
-                    $0.payloads = inputPayloads.map { .init(temporalPayload: $0) }
+                    $0.payloads = inputPayloads
                 }
             }
 
@@ -91,9 +91,7 @@ extension TemporalClient.WorkflowService {
 
         switch response.queryRejected.status {
         case .unspecified:
-            let payloads = response.queryResult.payloads.map {
-                TemporalPayload(temporalAPIPayload: $0)
-            }
+            let payloads = response.queryResult.payloads
             return try await self.configuration.dataConverter.convertPayloads(
                 payloads,
                 as: repeat each resultTypes
@@ -127,7 +125,7 @@ extension TemporalClient.WorkflowService {
         runID: String? = nil,
         queryType: Query.Type = Query.self,
         rejectionCondition: QueryRejectionCondition? = nil,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         input: Query.Input,
         callOptions: CallOptions? = nil
     ) async throws -> Query.Output {
@@ -163,7 +161,7 @@ extension TemporalClient.WorkflowService {
         runID: String? = nil,
         queryType: Query.Type = Query.self,
         rejectionCondition: QueryRejectionCondition? = nil,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         callOptions: CallOptions? = nil
     ) async throws -> Query.Output where Query.Input == Void {
         try await self.queryWorkflow(

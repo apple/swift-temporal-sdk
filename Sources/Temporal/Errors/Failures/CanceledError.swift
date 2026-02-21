@@ -24,7 +24,7 @@ public struct CanceledError: TemporalFailureError {
     public var stackTrace: String
 
     /// The details of the error.
-    public var details: [TemporalPayload]
+    public var details: [Api.Common.V1.Payload]
 
     /// Initializes a new application error.
     ///
@@ -37,7 +37,7 @@ public struct CanceledError: TemporalFailureError {
         message: String,
         cause: (any Error)? = nil,
         stackTrace: String = "",
-        details: [TemporalPayload] = []
+        details: [Api.Common.V1.Payload] = []
     ) {
         self.message = message
         self.cause = cause

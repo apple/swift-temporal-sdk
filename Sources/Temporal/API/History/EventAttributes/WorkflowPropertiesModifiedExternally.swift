@@ -28,7 +28,7 @@ extension HistoryEvent.Attributes {
         public var newWorkflowExecutionTimeout: Duration?
 
         /// Not used.
-        public var upsertedMemo: [String: TemporalPayload]
+        public var upsertedMemo: [String: Api.Common.V1.Payload]
 
         /// Creates event attributes for when workflow properties have been modified externally.
         public init(
@@ -36,7 +36,7 @@ extension HistoryEvent.Attributes {
             newWorkflowTaskTimeout: Duration? = nil,
             newWorkflowRunTimeout: Duration? = nil,
             newWorkflowExecutionTimeout: Duration? = nil,
-            upsertedMemo: [String: TemporalPayload] = [:]
+            upsertedMemo: [String: Api.Common.V1.Payload] = [:]
         ) {
             self.newTaskQueue = newTaskQueue
             self.newWorkflowTaskTimeout = newWorkflowTaskTimeout

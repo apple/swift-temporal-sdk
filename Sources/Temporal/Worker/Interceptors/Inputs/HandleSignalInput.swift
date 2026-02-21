@@ -21,7 +21,7 @@ public struct HandleSignalInput<Signal: WorkflowSignalDefinition>: Sendable {
     public var definition: Signal
 
     /// Headers containing metadata and context information for signal execution.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input parameters to be passed to the signal handler for execution.
     public var input: Signal.Input

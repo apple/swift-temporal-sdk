@@ -22,7 +22,7 @@ extension Coresdk.ActivityTaskCompletion {
 
             switch result {
             case .completed(let payload):
-                $0.result.completed.result = .init(temporalPayload: payload)
+                $0.result.completed.result = payload
             case .failed(let failure):
                 $0.result.failed.failure = .init(temporalFailure: failure)
             case .cancelled(let failure):

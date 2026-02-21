@@ -21,13 +21,13 @@ extension HistoryEvent.Attributes {
         public var markerName: String
 
         /// Serialized information recorded in the marker.
-        public var details: [String: [TemporalPayload]]
+        public var details: [String: [Api.Common.V1.Payload]]
 
         /// The `WORKFLOW_TASK_COMPLETED` event which this command was reported with.
         public var workflowTaskCompletedEventID: Int
 
         /// Headers associated with the marker.
-        public var headers: [String: TemporalPayload]
+        public var headers: [String: Api.Common.V1.Payload]
 
         /// Some uses of markers, like a local activity, could "fail".
         ///
@@ -37,9 +37,9 @@ extension HistoryEvent.Attributes {
         /// Creates event attributes for when a marker has been recorded.
         public init(
             markerName: String,
-            details: [String: [TemporalPayload]] = [:],
+            details: [String: [Api.Common.V1.Payload]] = [:],
             workflowTaskCompletedEventID: Int,
-            headers: [String: TemporalPayload] = [:],
+            headers: [String: Api.Common.V1.Payload] = [:],
             failure: TemporalFailure? = nil
         ) {
             self.markerName = markerName

@@ -58,7 +58,7 @@ struct DefaultPayloadConverterTests {
 
         let payload = try payloadConverter.convertValue(Optional<String>.none)
         #expect(payload.data == .init())
-        #expect(payload.metadata == ["encoding": Array("binary/null".utf8)])
+        #expect(payload.metadata == ["encoding": Data("binary/null".utf8)])
 
         let convertedNil = try payloadConverter.convertPayload(
             payload,
@@ -72,8 +72,8 @@ struct DefaultPayloadConverterTests {
         let payloadConverter = DefaultPayloadConverter()
 
         let payload = try payloadConverter.convertValue([UInt8]([1, 2, 3]))
-        #expect(payload.data == [1, 2, 3])
-        #expect(payload.metadata == ["encoding": Array("binary/plain".utf8)])
+        #expect(payload.data == Data([1, 2, 3]))
+        #expect(payload.metadata == ["encoding": Data("binary/plain".utf8)])
 
         let convertedArray = try payloadConverter.convertPayload(
             payload,
@@ -87,8 +87,8 @@ struct DefaultPayloadConverterTests {
         let payloadConverter = DefaultPayloadConverter()
 
         let payload = try payloadConverter.convertValue(Data([1, 2, 3]))
-        #expect(payload.data == [1, 2, 3])
-        #expect(payload.metadata == ["encoding": Array("binary/plain".utf8)])
+        #expect(payload.data == Data([1, 2, 3]))
+        #expect(payload.metadata == ["encoding": Data("binary/plain".utf8)])
 
         let convertedData = try payloadConverter.convertPayload(
             payload,
@@ -105,8 +105,8 @@ struct DefaultPayloadConverterTests {
         }
 
         let payload = try payloadConverter.convertValue(testMessage)
-        #expect(payload.data == [123, 34, 115, 101, 99, 111, 110, 100, 115, 34, 58, 34, 49, 34, 125])
-        #expect(payload.metadata == ["encoding": Array("json/protobuf".utf8)])
+        #expect(payload.data == Data([123, 34, 115, 101, 99, 111, 110, 100, 115, 34, 58, 34, 49, 34, 125]))
+        #expect(payload.metadata == ["encoding": Data("json/protobuf".utf8)])
 
         let convertedMessage = try payloadConverter.convertPayload(
             payload,
@@ -120,8 +120,8 @@ struct DefaultPayloadConverterTests {
         let payloadConverter = JSONPayloadConverter()
 
         let payload = try payloadConverter.convertValue("Hello")
-        #expect(payload.data == [34, 72, 101, 108, 108, 111, 34])
-        #expect(payload.metadata == ["encoding": Array("json/plain".utf8)])
+        #expect(payload.data == Data([34, 72, 101, 108, 108, 111, 34]))
+        #expect(payload.metadata == ["encoding": Data("json/plain".utf8)])
 
         let convertedData = try payloadConverter.convertPayload(
             payload,
@@ -144,29 +144,30 @@ struct DefaultPayloadConverterTests {
 
         let payload = try payloadConverter.convertValue(testCodable)
         #expect(
-            payload.data == [
-                123, 34, 115, 111,
-                109, 101, 66, 111,
-                111, 108, 34, 58,
-                116, 114, 117, 101,
-                44, 34, 115, 111,
-                109, 101, 68, 97,
-                116, 97, 34, 58,
-                34, 65, 81, 73,
-                68, 66, 65, 61,
-                61, 34, 44, 34,
-                115, 111, 109, 101,
-                73, 110, 116, 34,
-                58, 49, 50, 51,
-                52, 44, 34, 115,
-                111, 109, 101, 83,
-                116, 114, 105, 110,
-                103, 34, 58, 34,
-                72, 101, 108, 108,
-                111, 34, 125,
-            ]
+            payload.data
+                == Data([
+                    123, 34, 115, 111,
+                    109, 101, 66, 111,
+                    111, 108, 34, 58,
+                    116, 114, 117, 101,
+                    44, 34, 115, 111,
+                    109, 101, 68, 97,
+                    116, 97, 34, 58,
+                    34, 65, 81, 73,
+                    68, 66, 65, 61,
+                    61, 34, 44, 34,
+                    115, 111, 109, 101,
+                    73, 110, 116, 34,
+                    58, 49, 50, 51,
+                    52, 44, 34, 115,
+                    111, 109, 101, 83,
+                    116, 114, 105, 110,
+                    103, 34, 58, 34,
+                    72, 101, 108, 108,
+                    111, 34, 125,
+                ])
         )
-        #expect(payload.metadata == ["encoding": Array("json/plain".utf8)])
+        #expect(payload.metadata == ["encoding": Data("json/plain".utf8)])
 
         let convertedData = try payloadConverter.convertPayload(
             payload,

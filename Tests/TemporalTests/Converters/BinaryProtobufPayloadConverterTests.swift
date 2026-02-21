@@ -45,8 +45,8 @@ struct BinaryProtobufPayloadConverterTests {
         }
 
         let payload = try payloadConverter.convertValue(testMessage)
-        #expect(payload.data == [8, 1])
-        #expect(payload.metadata == ["encoding": Array("binary/protobuf".utf8)])
+        #expect(payload.data == Data([8, 1]))
+        #expect(payload.metadata == ["encoding": Data("binary/protobuf".utf8)])
 
         let convertedMessage = try payloadConverter.convertPayload(
             payload,

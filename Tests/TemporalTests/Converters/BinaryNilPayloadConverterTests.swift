@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
+import SwiftProtobuf
 import Temporal
 import Testing
 
@@ -23,7 +25,7 @@ struct BinaryNilPayloadConverterTests {
 
         let payload = try payloadConverter.convertValue(Optional<String>.none)
         #expect(payload.data == .init())
-        #expect(payload.metadata == ["encoding": Array("binary/null".utf8)])
+        #expect(payload.metadata == ["encoding": Data("binary/null".utf8)])
 
         let convertedNil = try payloadConverter.convertPayload(
             payload,
@@ -42,7 +44,10 @@ struct BinaryNilPayloadConverterTests {
 
         #expect(throws: (any Error).self) {
             try payloadConverter.convertPayload(
-                .init(data: .init(), metadata: [:]),
+                Api.Common.V1.Payload.with {
+                    $0.data = .init()
+                    $0.metadata = [:]
+                },
                 as: String.self
             )
         }

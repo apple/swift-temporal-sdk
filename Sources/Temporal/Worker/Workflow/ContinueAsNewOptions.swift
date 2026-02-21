@@ -57,7 +57,7 @@ public struct ContinueAsNewOptions: Sendable {
     /// memo data is not indexed and cannot be used for workflow queries.
     ///
     /// If `nil`, the new workflow execution uses the same memo as the current workflow.
-    // TODO: Double check if this should be TemporalPayload or Any
+    // TODO: Double check if this should be Api.Common.V1.Payload or Any
     public var memo: [String: any Sendable]?
 
     // TODO: Add support for the below

@@ -28,7 +28,7 @@ public struct HandleQueryInput<Query: WorkflowQueryDefinition>: Sendable {
     public var definition: Query
 
     /// Headers containing metadata and context information for query execution.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input parameters to be passed to the query handler for execution.
     public var input: Query.Input

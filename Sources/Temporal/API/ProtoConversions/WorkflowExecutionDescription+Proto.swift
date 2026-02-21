@@ -25,7 +25,7 @@ extension PendingActivityInfo {
     init(_ raw: Api.Workflow.V1.PendingActivityInfo) {
         self.activityID = raw.activityID
         self.activityType = .init(raw.activityType)
-        self.heartbeatDetails = raw.heartbeatDetails.payloads.map { TemporalPayload(temporalAPIPayload: $0) }
+        self.heartbeatDetails = raw.heartbeatDetails.payloads
         self.lastHeartbeatTime = raw.lastHeartbeatTime.date
         self.lastStartedTime = raw.lastStartedTime.date
         self.state = .init(raw.state)

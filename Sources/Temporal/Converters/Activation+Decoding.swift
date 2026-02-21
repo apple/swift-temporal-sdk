@@ -196,12 +196,12 @@ extension Coresdk.WorkflowActivation.WorkflowActivation {
     }
 
     private func decode(payload: inout Api.Common.V1.Payload, payloadCodec: some PayloadCodec) async throws {
-        payload = .init(temporalPayload: try await payloadCodec.decode(payload: .init(temporalAPIPayload: payload)))
+        payload = try await payloadCodec.decode(payload: payload)
     }
 
     private func decode(payloads: inout [Api.Common.V1.Payload], payloadCodec: some PayloadCodec) async throws {
         for index in payloads.indices {
-            payloads[index] = .init(temporalPayload: try await payloadCodec.decode(payload: .init(temporalAPIPayload: payloads[index])))
+            payloads[index] = try await payloadCodec.decode(payload: payloads[index])
         }
     }
 
@@ -211,9 +211,7 @@ extension Coresdk.WorkflowActivation.WorkflowActivation {
 
     private func decode(payloadDictionary: inout [String: Api.Common.V1.Payload], payloadCodec: some PayloadCodec) async throws {
         for key in payloadDictionary.keys {
-            payloadDictionary[key] = .init(
-                temporalPayload: try await payloadCodec.decode(payload: .init(temporalAPIPayload: payloadDictionary[key]!))
-            )
+            payloadDictionary[key] = try await payloadCodec.decode(payload: payloadDictionary[key]!)
         }
     }
 

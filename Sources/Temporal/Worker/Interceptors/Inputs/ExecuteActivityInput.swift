@@ -18,7 +18,7 @@ public struct ExecuteActivityInput<Activity: ActivityDefinition>: Sendable {
     public var definition: Activity
 
     /// Headers containing metadata and context information for activity execution.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input parameters to be passed to the activity for execution.
     public var input: Activity.Input
@@ -29,7 +29,7 @@ public struct ExecuteActivityInput<Activity: ActivityDefinition>: Sendable {
     ///   - definition: The activity definition containing type and execution information.
     ///   - headers: The headers containing metadata and context for execution.
     ///   - input: The input parameters for activity execution.
-    package init(definition: Activity, headers: [String: TemporalPayload], input: Activity.Input) {
+    package init(definition: Activity, headers: [String: Api.Common.V1.Payload], input: Activity.Input) {
         self.definition = definition
         self.headers = headers
         self.input = input

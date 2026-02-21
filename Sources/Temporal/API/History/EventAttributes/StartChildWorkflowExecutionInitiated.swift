@@ -33,7 +33,7 @@ extension HistoryEvent.Attributes {
         public var taskQueue: TaskQueue
 
         /// Input arguments for the child workflow.
-        public var input: [TemporalPayload]
+        public var input: [Api.Common.V1.Payload]
 
         /// Total workflow execution timeout including retries and continue as new.
         public var workflowExecutionTimeout: Duration?
@@ -63,10 +63,10 @@ extension HistoryEvent.Attributes {
         public var cronSchedule: String?
 
         /// Headers for the child workflow.
-        public var headers: [String: TemporalPayload]
+        public var headers: [String: Api.Common.V1.Payload]
 
         /// Memo data for the child workflow.
-        public var memo: [String: TemporalPayload]
+        public var memo: [String: Api.Common.V1.Payload]
 
         /// Search attributes for the child workflow.
         public var searchAttributes: SearchAttributeCollection
@@ -86,7 +86,7 @@ extension HistoryEvent.Attributes {
             workflowID: String,
             workflowType: String,
             taskQueue: TaskQueue,
-            input: [TemporalPayload],
+            input: [Api.Common.V1.Payload],
             workflowExecutionTimeout: Duration? = nil,
             workflowRunTimeout: Duration? = nil,
             workflowTaskTimeout: Duration? = nil,
@@ -96,8 +96,8 @@ extension HistoryEvent.Attributes {
             workflowIDReusePolicy: WorkflowIDReusePolicy = .unspecified,
             retryPolicy: RetryPolicy? = nil,
             cronSchedule: String?,
-            headers: [String: TemporalPayload] = [:],
-            memo: [String: TemporalPayload] = [:],
+            headers: [String: Api.Common.V1.Payload] = [:],
+            memo: [String: Api.Common.V1.Payload] = [:],
             searchAttributes: SearchAttributeCollection,
             inheritBuildID: Bool,
             priority: Priority? = nil

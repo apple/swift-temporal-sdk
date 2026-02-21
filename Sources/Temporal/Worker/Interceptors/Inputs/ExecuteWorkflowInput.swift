@@ -15,7 +15,7 @@
 /// Input structure containing parameters and context for workflow execution in interceptor chains.
 public struct ExecuteWorkflowInput<Workflow: WorkflowDefinition>: Sendable {
     /// Headers containing metadata and context information for workflow execution.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input parameters to be passed to the workflow for execution.
     public var input: Workflow.Input
@@ -25,7 +25,7 @@ public struct ExecuteWorkflowInput<Workflow: WorkflowDefinition>: Sendable {
     /// - Parameters:
     ///   - headers: The headers containing metadata and context for execution.
     ///   - input: The input parameters for workflow execution.
-    package init(headers: [String: TemporalPayload], input: Workflow.Input) {
+    package init(headers: [String: Api.Common.V1.Payload], input: Workflow.Input) {
         self.headers = headers
         self.input = input
     }

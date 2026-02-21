@@ -225,14 +225,14 @@ struct WorkflowInstance: Sendable {
             input = () as! Workflow.Input
         } else {
             input = try self.payloadConverter.convertPayloads(
-                initializeWorkflow.arguments.map { TemporalPayload(temporalAPIPayload: $0) },
+                initializeWorkflow.arguments,
                 as: (Workflow.Input).self
             )
         }
 
         // Initially setting memo, search attributes and random seed.
         try Self.$isOnWorkflowInstance.withValue(true) {
-            self.stateMachine.setMemo(initializeWorkflow.memo.fields.mapValues { .init(.init(temporalAPIPayload: $0)) })
+            self.stateMachine.setMemo(initializeWorkflow.memo.fields.mapValues { .init($0) })
             self.stateMachine.setSearchAttributes(try .init(initializeWorkflow.searchAttributes))
             self.stateMachine.updateRandomnessSeed(initializeWorkflow.randomnessSeed)
         }
@@ -291,7 +291,7 @@ struct WorkflowInstance: Sendable {
             switch workflowResult {
             case .success(let output):
                 self.logger.trace("Workflow finished")
-                let dataConversionResult = await Result { () async throws -> TemporalPayload in
+                let dataConversionResult = await Result { () async throws -> Api.Common.V1.Payload in
                     try self.payloadConverter.convertValueHandlingVoid(output)
                 }
                 switch dataConversionResult {
@@ -494,9 +494,9 @@ struct WorkflowInstance: Sendable {
                 await self.runSignal(
                     signal: signal,
                     workflow: workflow,
-                    headers: signalWorkflow.headers.mapValues { TemporalPayload(temporalAPIPayload: $0) },
+                    headers: signalWorkflow.headers,
                     context: workflowContext,
-                    temporalPayloads: signalWorkflow.input.map { .init(temporalAPIPayload: $0) }
+                    temporalPayloads: signalWorkflow.input
                 )
             }
         }
@@ -505,9 +505,9 @@ struct WorkflowInstance: Sendable {
     private func runSignal<Signal: WorkflowSignalDefinition>(
         signal: Signal,
         workflow: Signal.Workflow,
-        headers: [String: TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
         context: WorkflowContext,
-        temporalPayloads: [TemporalPayload]
+        temporalPayloads: [Api.Common.V1.Payload]
     ) async {
         let input: Signal.Input
         do {
@@ -612,8 +612,8 @@ struct WorkflowInstance: Sendable {
                     query: query,
                     workflow: workflow,
                     context: workflowContext,
-                    headers: queryWorkflow.headers.mapValues { TemporalPayload(temporalAPIPayload: $0) },
-                    temporalPayloads: queryWorkflow.arguments.map { .init(temporalAPIPayload: $0) }
+                    headers: queryWorkflow.headers,
+                    temporalPayloads: queryWorkflow.arguments
                 )
             }
         }
@@ -624,8 +624,8 @@ struct WorkflowInstance: Sendable {
         query: Query,
         workflow: Workflow,
         context: WorkflowContext,
-        headers: [String: TemporalPayload],
-        temporalPayloads: [TemporalPayload]
+        headers: [String: Api.Common.V1.Payload],
+        temporalPayloads: [Api.Common.V1.Payload]
     ) async where Query.Workflow == Workflow {
         let input: Query.Input
         do {
@@ -770,8 +770,8 @@ struct WorkflowInstance: Sendable {
                     update: update,
                     workflow: workflow,
                     workflowContext: workflowContext,
-                    headers: updateWorkflow.headers.mapValues { TemporalPayload(temporalAPIPayload: $0) },
-                    temporalPayloads: updateWorkflow.input.map { .init(temporalAPIPayload: $0) }
+                    headers: updateWorkflow.headers,
+                    temporalPayloads: updateWorkflow.input
                 )
             }
         }
@@ -783,8 +783,8 @@ struct WorkflowInstance: Sendable {
         update: Update,
         workflow: Workflow,
         workflowContext: WorkflowContext,
-        headers: [String: TemporalPayload],
-        temporalPayloads: [TemporalPayload]
+        headers: [String: Api.Common.V1.Payload],
+        temporalPayloads: [Api.Common.V1.Payload]
     ) async where Update.Workflow == Workflow {
         // The input is given to both the validator method and the update method to match
         // other temporal SDKs we are passing two separately converted inputs to disallow

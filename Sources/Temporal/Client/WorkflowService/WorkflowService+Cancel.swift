@@ -100,7 +100,7 @@ extension TemporalClient.WorkflowService {
                     $0.firstExecutionRunID = firstExecutionRunID
                 }
                 $0.identity = self.configuration.identity
-                $0.details.payloads = detailPayloads.map { .init(temporalPayload: $0) }
+                $0.details.payloads = detailPayloads
             },
             callOptions: callOptions
         )

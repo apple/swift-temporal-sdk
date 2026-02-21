@@ -571,10 +571,10 @@ struct ActivityWorkerTests {
                         $0.workflowID = "WorkflowID1"
                     }
                     $0.start.headerFields = [
-                        "key": .init(temporalPayload: testValue)
+                        "key": testValue
                     ]
                     $0.start.input = [
-                        .init(temporalPayload: originalInput)
+                        originalInput
                     ]
                 }
             )
@@ -583,7 +583,7 @@ struct ActivityWorkerTests {
             let completion = try await activityTaskCompletionIterator.next()
             let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
-                $0.result.completed.result = .init(temporalPayload: expectedOutput)
+                $0.result.completed.result = expectedOutput
             }
             #expect(completion == expectedCompletion)
             group.cancelAll()

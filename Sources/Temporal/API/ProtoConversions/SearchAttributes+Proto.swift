@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import struct Foundation.Data
 import struct Foundation.Date
 
 extension Api.Common.V1.SearchAttributes {
@@ -21,8 +22,8 @@ extension Api.Common.V1.SearchAttributes {
             // This should be okay to force since the collection can only be created
             // in a type safe way and only handles primitives.
             var payload = try! DataConverter.default.payloadConverter.convertValue(value)
-            payload.metadata["type"] = Array(key.type.indexedValueTypeString.utf8)
-            indexedFields[key.name] = .init(temporalPayload: payload)
+            payload.metadata["type"] = Data(key.type.indexedValueTypeString.utf8)
+            indexedFields[key.name] = payload
         }
     }
 }
@@ -49,7 +50,7 @@ extension SearchAttributeCollection.StorageValue {
         guard let stringType = String(data: rawType, encoding: .utf8) else { return nil }
         guard let type = SearchAttributeType(indexedValueTypeString: stringType) else { return nil }
 
-        let payload = TemporalPayload(temporalAPIPayload: payload)
+        let payload = payload
         let payloadConverter = DataConverter.default.payloadConverter
 
         let value: Self =

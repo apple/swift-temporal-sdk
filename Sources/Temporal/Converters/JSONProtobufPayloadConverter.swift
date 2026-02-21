@@ -24,7 +24,7 @@ public struct JSONProtobufPayloadConverter: EncodingPayloadConverter {
 
     public init() {}
 
-    public func convertValue(_ value: some Any) throws -> TemporalPayload {
+    public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {
         guard let value = value as? any Message else {
             throw EncodingError()
         }
@@ -33,7 +33,7 @@ public struct JSONProtobufPayloadConverter: EncodingPayloadConverter {
     }
 
     public func convertPayload<Value>(
-        _ payload: TemporalPayload,
+        _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type
     ) throws -> Value {
         guard let messageType = Value.self as? any Message.Type else {
@@ -46,10 +46,10 @@ public struct JSONProtobufPayloadConverter: EncodingPayloadConverter {
     }
 
     private func convertPayload<Value: Message>(
-        _ payload: TemporalPayload,
+        _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type
     ) throws -> Value {
-        guard let jsonString = String(data: Data(payload.data), encoding: .utf8) else {
+        guard let jsonString = String(data: payload.data, encoding: .utf8) else {
             throw DecodingError()
         }
 

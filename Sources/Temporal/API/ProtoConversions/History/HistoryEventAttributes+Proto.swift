@@ -149,14 +149,14 @@ extension HistoryEvent.Attributes.WorkflowExecutionStarted {
             parentWorkflowExecution: rawValue.hasParentWorkflowExecution ? .init(rawValue.parentWorkflowExecution) : nil,
             parentInitiatedEventID: rawValue.parentInitiatedEventID > 0 ? Int(rawValue.parentInitiatedEventID) : nil,
             taskQueue: .init(rawValue.taskQueue),
-            input: rawValue.input.payloads.map { .init(temporalAPIPayload: $0) },
+            input: rawValue.input.payloads,
             workflowExecutionTimeout: rawValue.hasWorkflowExecutionTimeout ? .init(rawValue.workflowExecutionTimeout) : nil,
             workflowRunTimeout: rawValue.hasWorkflowRunTimeout ? .init(rawValue.workflowRunTimeout) : nil,
             workflowTaskTimeout: rawValue.hasWorkflowTaskTimeout ? .init(rawValue.workflowTaskTimeout) : nil,
             continuedExecutionRunID: rawValue.continuedExecutionRunID.nilIfEmpty,
             initiator: .init(rawValue.initiator),
             continuedFailure: rawValue.hasContinuedFailure ? .init(temporalAPIFailure: rawValue.continuedFailure) : nil,
-            lastCompletionResult: rawValue.lastCompletionResult.payloads.map { .init(temporalAPIPayload: $0) },
+            lastCompletionResult: rawValue.lastCompletionResult.payloads,
             originalExecutionRunID: rawValue.originalExecutionRunID,
             identity: rawValue.identity.nilIfEmpty,
             firstExecutionRunID: rawValue.firstExecutionRunID,
@@ -165,10 +165,10 @@ extension HistoryEvent.Attributes.WorkflowExecutionStarted {
             workflowExecutionExpirationTime: rawValue.hasWorkflowExecutionExpirationTime ? rawValue.workflowExecutionExpirationTime.date : nil,
             cronSchedule: rawValue.cronSchedule.nilIfEmpty,
             firstWorkflowTaskBackoff: rawValue.hasFirstWorkflowTaskBackoff ? .init(rawValue.firstWorkflowTaskBackoff) : nil,
-            memo: rawValue.memo.fields.mapValues { .init(temporalAPIPayload: $0) },
+            memo: rawValue.memo.fields.mapValues { $0 },
             searchAttributes: try .init(rawValue.searchAttributes),
             prevAutoResetPoints: rawValue.prevAutoResetPoints.points.map { .init($0) },
-            headers: rawValue.header.fields.mapValues { .init(temporalAPIPayload: $0) },
+            headers: rawValue.header.fields.mapValues { $0 },
             parentInitiatedEventVersion: rawValue.parentInitiatedEventVersion > 0 ? Int(rawValue.parentInitiatedEventVersion) : nil,
             workflowID: rawValue.workflowID,
             sourceVersionStamp: rawValue.hasSourceVersionStamp ? .init(rawValue.sourceVersionStamp) : nil,
@@ -185,7 +185,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionStarted {
 extension HistoryEvent.Attributes.WorkflowExecutionCompleted {
     init(_ rawValue: Api.History.V1.WorkflowExecutionCompletedEventAttributes) {
         self = .init(
-            result: rawValue.result.payloads.map { .init(temporalAPIPayload: $0) },
+            result: rawValue.result.payloads,
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
             newExecutionRunID: rawValue.newExecutionRunID.nilIfEmpty
         )
@@ -287,8 +287,8 @@ extension HistoryEvent.Attributes.ActivityTaskScheduled {
             activityID: rawValue.activityID,
             activityType: rawValue.activityType.name,
             taskQueue: .init(rawValue.taskQueue),
-            headers: rawValue.header.fields.mapValues { .init(temporalAPIPayload: $0) },
-            input: rawValue.input.payloads.map { .init(temporalAPIPayload: $0) },
+            headers: rawValue.header.fields.mapValues { $0 },
+            input: rawValue.input.payloads,
             scheduleToCloseTimeout: rawValue.hasScheduleToCloseTimeout ? .init(rawValue.scheduleToCloseTimeout) : nil,
             scheduleToStartTimeout: rawValue.hasScheduleToStartTimeout ? .init(rawValue.scheduleToStartTimeout) : nil,
             startToCloseTimeout: rawValue.hasStartToCloseTimeout ? .init(rawValue.startToCloseTimeout) : nil,
@@ -318,7 +318,7 @@ extension HistoryEvent.Attributes.ActivityTaskStarted {
 extension HistoryEvent.Attributes.ActivityTaskCompleted {
     init(_ rawValue: Api.History.V1.ActivityTaskCompletedEventAttributes) {
         self = .init(
-            result: rawValue.result.payloads.map { .init(temporalAPIPayload: $0) },
+            result: rawValue.result.payloads,
             scheduledEventID: Int(rawValue.scheduledEventID),
             startedEventID: Int(rawValue.startedEventID),
             identity: rawValue.identity.nilIfEmpty,
@@ -382,7 +382,7 @@ extension HistoryEvent.Attributes.ActivityTaskCancelRequested {
 extension HistoryEvent.Attributes.ActivityTaskCanceled {
     init(_ rawValue: Api.History.V1.ActivityTaskCanceledEventAttributes) {
         self = .init(
-            details: rawValue.details.payloads.map { .init(temporalAPIPayload: $0) },
+            details: rawValue.details.payloads,
             latestCancelRequestedEventID: Int(rawValue.latestCancelRequestedEventID),
             scheduledEventID: Int(rawValue.scheduledEventID),
             startedEventID: Int(rawValue.startedEventID),
@@ -407,9 +407,9 @@ extension HistoryEvent.Attributes.MarkerRecorded {
     init(_ rawValue: Api.History.V1.MarkerRecordedEventAttributes) {
         self = .init(
             markerName: rawValue.markerName,
-            details: rawValue.details.mapValues { $0.payloads.map { .init(temporalAPIPayload: $0) } },
+            details: rawValue.details.mapValues { $0.payloads },
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
-            headers: rawValue.header.fields.mapValues { .init(temporalAPIPayload: $0) },
+            headers: rawValue.header.fields.mapValues { $0 },
             failure: rawValue.hasFailure ? .init(temporalAPIFailure: rawValue.failure) : nil
         )
     }
@@ -419,9 +419,9 @@ extension HistoryEvent.Attributes.WorkflowExecutionSignaled {
     init(_ rawValue: Api.History.V1.WorkflowExecutionSignaledEventAttributes) {
         self = .init(
             signalName: rawValue.signalName,
-            input: rawValue.input.payloads.map { .init(temporalAPIPayload: $0) },
+            input: rawValue.input.payloads,
             identity: rawValue.identity.nilIfEmpty,
-            headers: rawValue.header.fields.mapValues { .init(temporalAPIPayload: $0) },
+            headers: rawValue.header.fields.mapValues { $0 },
             skipGenerateWorkflowTask: rawValue.skipGenerateWorkflowTask,
             externalWorkflowExecution: .init(rawValue.externalWorkflowExecution)
         )
@@ -432,7 +432,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionTerminated {
     init(_ rawValue: Api.History.V1.WorkflowExecutionTerminatedEventAttributes) {
         self = .init(
             reason: rawValue.reason.nilIfEmpty,
-            details: rawValue.details.payloads.map { .init(temporalAPIPayload: $0) },
+            details: rawValue.details.payloads,
             identity: rawValue.identity.nilIfEmpty
         )
     }
@@ -453,7 +453,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionCanceled {
     init(_ rawValue: Api.History.V1.WorkflowExecutionCanceledEventAttributes) {
         self = .init(
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
-            details: rawValue.details.payloads.map { .init(temporalAPIPayload: $0) }
+            details: rawValue.details.payloads
         )
     }
 }
@@ -503,13 +503,13 @@ extension HistoryEvent.Attributes.WorkflowExecutionContinuedAsNew {
             newExecutionRunID: rawValue.newExecutionRunID,
             workflowType: rawValue.workflowType.name,
             taskQueue: .init(rawValue.taskQueue),
-            input: rawValue.input.payloads.map { .init(temporalAPIPayload: $0) },
+            input: rawValue.input.payloads,
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
             initiator: .init(rawValue.initiator),
             failure: rawValue.hasFailure ? .init(temporalAPIFailure: rawValue.failure) : nil,
-            lastCompletionResult: rawValue.lastCompletionResult.payloads.map { .init(temporalAPIPayload: $0) },
-            headers: rawValue.header.fields.mapValues { .init(temporalAPIPayload: $0) },
-            memo: rawValue.memo.fields.mapValues { .init(temporalAPIPayload: $0) },
+            lastCompletionResult: rawValue.lastCompletionResult.payloads,
+            headers: rawValue.header.fields.mapValues { $0 },
+            memo: rawValue.memo.fields.mapValues { $0 },
             searchAttributes: try .init(rawValue.searchAttributes),
             inheritBuildID: rawValue.inheritBuildID
         )
@@ -524,7 +524,7 @@ extension HistoryEvent.Attributes.StartChildWorkflowExecutionInitiated {
             workflowID: rawValue.workflowID,
             workflowType: rawValue.workflowType.name,
             taskQueue: .init(rawValue.taskQueue),
-            input: rawValue.input.payloads.map { .init(temporalAPIPayload: $0) },
+            input: rawValue.input.payloads,
             workflowExecutionTimeout: rawValue.hasWorkflowExecutionTimeout ? .init(rawValue.workflowExecutionTimeout) : nil,
             workflowRunTimeout: rawValue.hasWorkflowRunTimeout ? .init(rawValue.workflowRunTimeout) : nil,
             workflowTaskTimeout: rawValue.hasWorkflowTaskTimeout ? .init(rawValue.workflowTaskTimeout) : nil,
@@ -534,8 +534,8 @@ extension HistoryEvent.Attributes.StartChildWorkflowExecutionInitiated {
             workflowIDReusePolicy: .init(rawValue.workflowIDReusePolicy),
             retryPolicy: rawValue.hasRetryPolicy ? .init(retryPolicy: rawValue.retryPolicy) : nil,
             cronSchedule: rawValue.cronSchedule.nilIfEmpty,
-            headers: rawValue.header.fields.mapValues { .init(temporalAPIPayload: $0) },
-            memo: rawValue.memo.fields.mapValues { .init(temporalAPIPayload: $0) },
+            headers: rawValue.header.fields.mapValues { $0 },
+            memo: rawValue.memo.fields.mapValues { $0 },
             searchAttributes: try .init(rawValue.searchAttributes),
             inheritBuildID: rawValue.inheritBuildID,
             priority: rawValue.hasPriority ? .init(rawValue.priority) : nil
@@ -566,7 +566,7 @@ extension HistoryEvent.Attributes.ChildWorkflowExecutionStarted {
             initiatedEventID: Int(rawValue.initiatedEventID),
             workflowExecution: .init(rawValue.workflowExecution),
             workflowType: rawValue.workflowType.name,
-            headers: rawValue.header.fields.mapValues { .init(temporalAPIPayload: $0) }
+            headers: rawValue.header.fields.mapValues { $0 }
         )
     }
 }
@@ -574,7 +574,7 @@ extension HistoryEvent.Attributes.ChildWorkflowExecutionStarted {
 extension HistoryEvent.Attributes.ChildWorkflowExecutionCompleted {
     init(_ rawValue: Api.History.V1.ChildWorkflowExecutionCompletedEventAttributes) {
         self = .init(
-            result: rawValue.result.payloads.map { .init(temporalAPIPayload: $0) },
+            result: rawValue.result.payloads,
             namespace: rawValue.namespace,
             namespaceID: rawValue.namespaceID,
             workflowExecution: .init(rawValue.workflowExecution),
@@ -603,7 +603,7 @@ extension HistoryEvent.Attributes.ChildWorkflowExecutionFailed {
 extension HistoryEvent.Attributes.ChildWorkflowExecutionCanceled {
     init(_ rawValue: Api.History.V1.ChildWorkflowExecutionCanceledEventAttributes) {
         self = .init(
-            details: rawValue.details.payloads.map { .init(temporalAPIPayload: $0) },
+            details: rawValue.details.payloads,
             namespace: rawValue.namespace,
             namespaceID: rawValue.namespaceID,
             workflowExecution: .init(rawValue.workflowExecution),
@@ -649,10 +649,10 @@ extension HistoryEvent.Attributes.SignalExternalWorkflowExecutionInitiated {
             namespaceID: rawValue.namespaceID,
             workflowExecution: .init(rawValue.workflowExecution),
             signalName: rawValue.signalName,
-            input: rawValue.input.payloads.map { .init(temporalAPIPayload: $0) },
+            input: rawValue.input.payloads,
             control: rawValue.control.nilIfEmpty,
             childWorkflowOnly: rawValue.childWorkflowOnly,
-            headers: rawValue.header.fields.mapValues { .init(temporalAPIPayload: $0) },
+            headers: rawValue.header.fields.mapValues { $0 },
         )
     }
 }
@@ -732,7 +732,7 @@ extension HistoryEvent.Attributes.WorkflowPropertiesModifiedExternally {
             newWorkflowTaskTimeout: rawValue.hasNewWorkflowTaskTimeout ? .init(rawValue.newWorkflowTaskTimeout) : nil,
             newWorkflowRunTimeout: rawValue.hasNewWorkflowRunTimeout ? .init(rawValue.newWorkflowRunTimeout) : nil,
             newWorkflowExecutionTimeout: rawValue.hasNewWorkflowExecutionTimeout ? .init(rawValue.newWorkflowExecutionTimeout) : nil,
-            upsertedMemo: rawValue.upsertedMemo.fields.mapValues { .init(temporalAPIPayload: $0) }
+            upsertedMemo: rawValue.upsertedMemo.fields.mapValues { $0 }
         )
     }
 }
@@ -750,7 +750,7 @@ extension HistoryEvent.Attributes.WorkflowPropertiesModified {
     init(_ rawValue: Api.History.V1.WorkflowPropertiesModifiedEventAttributes) {
         self = .init(
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
-            upsertedMemo: rawValue.upsertedMemo.fields.mapValues { .init(temporalAPIPayload: $0) }
+            upsertedMemo: rawValue.upsertedMemo.fields.mapValues { $0 }
         )
     }
 }
@@ -770,7 +770,7 @@ extension HistoryEvent.Attributes.NexusOperationScheduled {
             endpoint: rawValue.endpoint,
             service: rawValue.service,
             operation: rawValue.operation,
-            input: .init(temporalAPIPayload: rawValue.input),
+            input: rawValue.input,
             scheduleToCloseTimeout: rawValue.hasScheduleToCloseTimeout ? .init(rawValue.scheduleToCloseTimeout) : nil,
             nexusHeader: rawValue.nexusHeader,
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
@@ -795,7 +795,7 @@ extension HistoryEvent.Attributes.NexusOperationCompleted {
     init(_ rawValue: Api.History.V1.NexusOperationCompletedEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
-            result: .init(temporalAPIPayload: rawValue.result),
+            result: rawValue.result,
             requestID: rawValue.requestID
         )
     }

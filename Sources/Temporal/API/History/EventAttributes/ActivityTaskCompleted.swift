@@ -18,7 +18,7 @@ extension HistoryEvent.Attributes {
         /// Serialized results of the activity.
         ///
         /// IE: The return value of the activity function.
-        public var result: [TemporalPayload]
+        public var result: [Api.Common.V1.Payload]
 
         /// The id of the `ACTIVITY_TASK_SCHEDULED` event this completion corresponds to.
         public var scheduledEventID: Int
@@ -35,7 +35,7 @@ extension HistoryEvent.Attributes {
 
         /// Creates event attributes for when an activity task has completed.
         public init(
-            result: [TemporalPayload],
+            result: [Api.Common.V1.Payload],
             scheduledEventID: Int,
             startedEventID: Int,
             identity: String? = nil,

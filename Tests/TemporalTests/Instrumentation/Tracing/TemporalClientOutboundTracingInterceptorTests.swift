@@ -67,7 +67,7 @@ struct TemporalClientOutboundTracingInterceptorTests {
                     let traceHeaderPayload = try #require(
                         input.headers.first(where: { key, value in
                             key == "_tracer-data"  // default Temporal tracing header key
-                        })?.1 as? TemporalPayload
+                        })?.1 as? Api.Common.V1.Payload
                     )
 
                     let traceHeader: TemporalTraceID = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
@@ -124,7 +124,7 @@ struct TemporalClientOutboundTracingInterceptorTests {
                         let traceHeaderPayload = try #require(
                             input.headers.first(where: { key, value in
                                 key == "_tracer-data"  // default Temporal tracing header key
-                            })?.1 as? TemporalPayload
+                            })?.1 as? Api.Common.V1.Payload
                         )
 
                         let traceHeader: TemporalTraceID = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(

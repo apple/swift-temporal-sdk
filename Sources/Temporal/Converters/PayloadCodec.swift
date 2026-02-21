@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// A payload codec transforms an array of ``TemporalPayload`` into another ``TemporalPayload`` array.
+/// A payload codec transforms an array of ``Api/Common/V1/Payload`` into another ``Api/Common/V1/Payload`` array.
 ///
 /// An example use is compressing or encrypting your workflow execution data.
 ///
@@ -22,13 +22,13 @@ public protocol PayloadCodec: Sendable {
     ///
     /// - Parameter payload: The input payload, e.g. the output of a workflow or an activity.
     /// - Returns: The encoded payload e.g. the compressed or encrypted version of the input payload.
-    func encode(payload: TemporalPayload) async throws -> TemporalPayload
+    func encode(payload: Api.Common.V1.Payload) async throws -> Api.Common.V1.Payload
 
     /// Decodes the payload.
     ///
     /// - Parameter payload: The input payload, e.g. the input to a workflow or activity.
     /// - Returns: The decoded payload, e.g. the uncompressed or decrypted payload.
-    func decode(payload: TemporalPayload) async throws -> TemporalPayload
+    func decode(payload: Api.Common.V1.Payload) async throws -> Api.Common.V1.Payload
 }
 
 extension PayloadCodec {
@@ -41,7 +41,7 @@ extension PayloadCodec {
 
         switch temporalFailure.failureInfo {
         case .application(var application):
-            var encodedDetails = [TemporalPayload]()
+            var encodedDetails = [Api.Common.V1.Payload]()
 
             for detail in application.details {
                 encodedDetails.append(try await self.encode(payload: detail))
@@ -51,7 +51,7 @@ extension PayloadCodec {
             temporalFailure.failureInfo = .application(application)
 
         case .cancelled(var cancelled):
-            var encodedDetails = [TemporalPayload]()
+            var encodedDetails = [Api.Common.V1.Payload]()
 
             for detail in cancelled.details {
                 encodedDetails.append(try await self.encode(payload: detail))
@@ -65,7 +65,7 @@ extension PayloadCodec {
             break
 
         case .timeout(var timeout):
-            var encodedDetails = [TemporalPayload]()
+            var encodedDetails = [Api.Common.V1.Payload]()
 
             for detail in timeout.lastHeartbeatDetails {
                 encodedDetails.append(try await self.encode(payload: detail))
@@ -97,7 +97,7 @@ extension PayloadCodec {
 
         switch temporalFailure.failureInfo {
         case .application(var application):
-            var decodedDetails = [TemporalPayload]()
+            var decodedDetails = [Api.Common.V1.Payload]()
 
             for detail in application.details {
                 decodedDetails.append(try await self.decode(payload: detail))
@@ -107,7 +107,7 @@ extension PayloadCodec {
             temporalFailure.failureInfo = .application(application)
 
         case .cancelled(var cancelled):
-            var decodedDetails = [TemporalPayload]()
+            var decodedDetails = [Api.Common.V1.Payload]()
 
             for detail in cancelled.details {
                 decodedDetails.append(try await self.decode(payload: detail))
@@ -117,7 +117,7 @@ extension PayloadCodec {
             temporalFailure.failureInfo = .cancelled(cancelled)
 
         case .terminated(var terminated):
-            var decodedDetails = [TemporalPayload]()
+            var decodedDetails = [Api.Common.V1.Payload]()
 
             for detail in terminated.details {
                 decodedDetails.append(try await self.decode(payload: detail))
@@ -127,7 +127,7 @@ extension PayloadCodec {
             temporalFailure.failureInfo = .terminated(terminated)
 
         case .timeout(var timeout):
-            var decodedDetails = [TemporalPayload]()
+            var decodedDetails = [Api.Common.V1.Payload]()
 
             for detail in timeout.lastHeartbeatDetails {
                 decodedDetails.append(try await self.decode(payload: detail))

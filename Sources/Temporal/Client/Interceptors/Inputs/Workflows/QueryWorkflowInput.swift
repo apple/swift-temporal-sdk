@@ -29,7 +29,7 @@ public struct QueryWorkflowInput<each Input: Sendable>: Sendable {
     public var rejectionCondition: QueryRejectionCondition?
 
     /// Headers to include with the query request.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input arguments to pass to the query handler.
     public var input: (repeat each Input)
@@ -52,7 +52,7 @@ public struct QueryWorkflowInput<each Input: Sendable>: Sendable {
         runID: String? = nil,
         queryName: String,
         rejectionCondition: QueryRejectionCondition? = nil,
-        headers: [String: TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
         input: repeat each Input,
         callOptions: CallOptions? = nil
     ) {

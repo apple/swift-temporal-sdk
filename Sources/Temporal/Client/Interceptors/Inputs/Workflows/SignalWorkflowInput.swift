@@ -26,7 +26,7 @@ public struct SignalWorkflowInput<each Input: Sendable>: Sendable {
     public var name: String
 
     /// Headers to include with the signal request.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input arguments to pass to the signal handler.
     public var input: (repeat each Input)
@@ -47,7 +47,7 @@ public struct SignalWorkflowInput<each Input: Sendable>: Sendable {
         id: String,
         runID: String? = nil,
         name: String,
-        headers: [String: TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
         input: repeat each Input,
         callOptions: CallOptions? = nil
     ) {

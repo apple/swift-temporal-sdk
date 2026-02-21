@@ -21,7 +21,7 @@ public struct SignalChildWorkflowInput<each Input: Sendable>: Sendable {
     public var name: String
 
     /// Headers containing metadata and context information for child workflow signal execution.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input parameters to be passed to the child workflow signal handler for processing.
     public var input: (repeat each Input)

@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import SwiftProtobuf
 import Temporal
 import Testing
 
@@ -174,14 +175,8 @@ struct DefaultFailureConverterTests {
             failureInfo: .application(
                 .init(
                     details: [
-                        TemporalPayload(
-                            data: Array(detail1.utf8),
-                            metadata: [:]
-                        ),
-                        TemporalPayload(
-                            data: Array(detail2.utf8),
-                            metadata: [:]
-                        ),
+                        Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
+                        Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
                     ],
                     type: "MyErrorType",
                     isNonRetryable: true
@@ -198,14 +193,8 @@ struct DefaultFailureConverterTests {
 
         let decodedError = try #require(error as? ApplicationError)
         let expectedDetails = [
-            TemporalPayload(
-                data: Array(detail1.utf8),
-                metadata: [:]
-            ),
-            TemporalPayload(
-                data: Array(detail2.utf8),
-                metadata: [:]
-            ),
+            Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
+            Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
         ]
         #expect(decodedError.message == "My Error")
         #expect(decodedError.stackTrace == "Some stack trace")
@@ -225,14 +214,8 @@ struct DefaultFailureConverterTests {
             failureInfo: .cancelled(
                 .init(
                     details: [
-                        TemporalPayload(
-                            data: Array(detail1.utf8),
-                            metadata: [:]
-                        ),
-                        TemporalPayload(
-                            data: Array(detail2.utf8),
-                            metadata: [:]
-                        ),
+                        Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
+                        Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
                     ]
                 )
             )
@@ -247,14 +230,8 @@ struct DefaultFailureConverterTests {
 
         let decodedError = try #require(error as? CanceledError)
         let expectedDetails = [
-            TemporalPayload(
-                data: Array(detail1.utf8),
-                metadata: [:]
-            ),
-            TemporalPayload(
-                data: Array(detail2.utf8),
-                metadata: [:]
-            ),
+            Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
+            Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
         ]
         #expect(decodedError.message == "My Error")
         #expect(decodedError.stackTrace == "Some stack trace")
@@ -278,14 +255,8 @@ struct DefaultFailureConverterTests {
             failureInfo: .cancelled(
                 .init(
                     details: [
-                        TemporalPayload(
-                            data: Array(detail1.utf8),
-                            metadata: [:]
-                        ),
-                        TemporalPayload(
-                            data: Array(detail2.utf8),
-                            metadata: [:]
-                        ),
+                        Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
+                        Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
                     ]
                 )
             )
@@ -300,14 +271,8 @@ struct DefaultFailureConverterTests {
 
         let decodedError = try #require(error as? CanceledError)
         let expectedDetails = [
-            TemporalPayload(
-                data: Array(detail1.utf8),
-                metadata: [:]
-            ),
-            TemporalPayload(
-                data: Array(detail2.utf8),
-                metadata: [:]
-            ),
+            Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
+            Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
         ]
         #expect(decodedError.message == "My Error")
         #expect(decodedError.stackTrace == "Some stack trace")
@@ -353,14 +318,8 @@ struct DefaultFailureConverterTests {
                 .init(
                     type: .startToClose,
                     lastHeartbeatDetails: [
-                        TemporalPayload(
-                            data: Array(detail1.utf8),
-                            metadata: [:]
-                        ),
-                        TemporalPayload(
-                            data: Array(detail2.utf8),
-                            metadata: [:]
-                        ),
+                        Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
+                        Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
                     ]
                 )
             )
@@ -375,14 +334,14 @@ struct DefaultFailureConverterTests {
 
         let decodedError = try #require(error as? TimeoutError)
         let expectedDetails = [
-            TemporalPayload(
-                data: Array(detail1.utf8),
-                metadata: [:]
-            ),
-            TemporalPayload(
-                data: Array(detail2.utf8),
-                metadata: [:]
-            ),
+            Api.Common.V1.Payload.with {
+                $0.data = Data(detail1.utf8)
+                $0.metadata = [:]
+            },
+            Api.Common.V1.Payload.with {
+                $0.data = Data(detail2.utf8)
+                $0.metadata = [:]
+            },
         ]
         #expect(decodedError.message == "My Error")
         #expect(decodedError.stackTrace == "Some stack trace")

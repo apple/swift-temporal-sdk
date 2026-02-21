@@ -20,9 +20,7 @@ extension Api.Failure.V1.Failure {
             $0.message = temporalFailure.message
             $0.source = temporalFailure.source
             $0.stackTrace = temporalFailure.stackTrace
-            $0.encodedAttributes =
-                temporalFailure.encodedAttributes
-                .flatMap { .init(temporalPayload: $0) } ?? .init()
+            $0.encodedAttributes = temporalFailure.encodedAttributes ?? .init()
             $0.failureInfo = temporalFailure.failureInfo.flatMap { .init(failureInfo: $0) }
         }
 
@@ -63,7 +61,6 @@ extension Api.Failure.V1.ApplicationFailureInfo {
             if !application.details.isEmpty {
                 $0.details = .with {
                     $0.payloads = application.details
-                        .map { Api.Common.V1.Payload(temporalPayload: $0) }
                 }
             }
             if let nextRetryDelay = application.nextRetryDelay {
@@ -78,7 +75,6 @@ extension Api.Failure.V1.CanceledFailureInfo {
         self = .with {
             $0.details = .with {
                 $0.payloads = cancelled.details
-                    .map { Api.Common.V1.Payload(temporalPayload: $0) }
             }
         }
     }
@@ -129,7 +125,6 @@ extension Api.Failure.V1.TimeoutFailureInfo {
             $0.timeoutType = .init(timeout.type)
             $0.lastHeartbeatDetails = .with {
                 $0.payloads = timeout.lastHeartbeatDetails
-                    .map { Api.Common.V1.Payload(temporalPayload: $0) }
             }
         }
     }
@@ -141,7 +136,7 @@ extension TemporalFailure {
             message: temporalAPIFailure.message,
             source: temporalAPIFailure.source,
             stackTrace: temporalAPIFailure.stackTrace,
-            encodedAttributes: .init(temporalAPIPayload: temporalAPIFailure.encodedAttributes),
+            encodedAttributes: temporalAPIFailure.encodedAttributes,
             failureInfo: temporalAPIFailure.failureInfo.flatMap { .init(temporalAPIFailureInfo: $0) }
         )
 
@@ -157,7 +152,7 @@ extension TemporalFailure.FailureInfo {
         case .applicationFailureInfo(let applicationFailureInfo):
             self = .application(
                 .init(
-                    details: applicationFailureInfo.details.payloads.map { .init(temporalAPIPayload: $0) },
+                    details: applicationFailureInfo.details.payloads,
                     type: applicationFailureInfo.type,
                     isNonRetryable: applicationFailureInfo.nonRetryable,
                     nextRetryDelay: .init(protobufDuration: applicationFailureInfo.nextRetryDelay)
@@ -166,7 +161,7 @@ extension TemporalFailure.FailureInfo {
         case .canceledFailureInfo(let canceledFailureInfo):
             self = .cancelled(
                 .init(
-                    details: canceledFailureInfo.details.payloads.map { .init(temporalAPIPayload: $0) }
+                    details: canceledFailureInfo.details.payloads
                 )
             )
         case .childWorkflowExecutionFailureInfo(let childWorkflowExecutionFailureInfo):
@@ -205,7 +200,7 @@ extension TemporalFailure.FailureInfo {
 
                         return timeoutType
                     }(),
-                    lastHeartbeatDetails: timeoutInfo.lastHeartbeatDetails.payloads.map { .init(temporalAPIPayload: $0) }
+                    lastHeartbeatDetails: timeoutInfo.lastHeartbeatDetails.payloads
                 )
             )
         case .terminatedFailureInfo:

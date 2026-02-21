@@ -16,7 +16,7 @@ extension HistoryEvent.Attributes {
     /// Event attributes for when a child workflow execution has completed.
     public struct ChildWorkflowExecutionCompleted: Hashable, Sendable {
         /// The result returned by the child workflow.
-        public var result: [TemporalPayload]
+        public var result: [Api.Common.V1.Payload]
 
         /// Namespace of the child workflow.
         ///
@@ -40,7 +40,7 @@ extension HistoryEvent.Attributes {
 
         /// Creates event attributes for when a child workflow execution has completed.
         public init(
-            result: [TemporalPayload],
+            result: [Api.Common.V1.Payload],
             namespace: String,
             namespaceID: String,
             workflowExecution: WorkflowExecutionID,

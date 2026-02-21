@@ -37,17 +37,17 @@ struct TemporalTraceRecording {
 
     func recordOutbound<R: Sendable>(
         spanName: String,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         setRequestAttributes: (any Span) -> Void,
         setResponseAttributes: ((any Span, R) -> Void)? = nil,
-        next: (_ headers: [String: TemporalPayload]) async throws -> R
+        next: (_ headers: [String: Api.Common.V1.Payload]) async throws -> R
     ) async throws -> R {
         let serviceContext = ServiceContext.current ?? .topLevel
 
         // This works around a compiler crash on 6.2+ by defining a separate closure
         // that we pass without escaping it.
         var result: R? = nil
-        let callMe: (any Span, [String: TemporalPayload]) async throws -> Void = { span, headers in
+        let callMe: (any Span, [String: Api.Common.V1.Payload]) async throws -> Void = { span, headers in
             let r = try await next(headers)
             setResponseAttributes?(span, r)
             result = r
@@ -89,7 +89,7 @@ struct TemporalTraceRecording {
     // Overload accepting async `next`.
     func recordInbound<R: Sendable>(
         spanName: String,
-        headers: [String: TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
         setSpanAttributes: (any Span) -> Void,
         next: () async throws -> R
     ) async throws -> R {
@@ -115,7 +115,7 @@ struct TemporalTraceRecording {
     // Overload accepting sync `next`.
     func recordInbound<R: Sendable>(
         spanName: String,
-        headers: [String: TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
         setSpanAttributes: (any Span) -> Void,
         next: () throws -> R
     ) throws -> R {
@@ -140,7 +140,7 @@ struct TemporalTraceRecording {
 
     /// Extracts raw Temporal tracing header into a new `ServiceContext`.
     private func makeInboundServiceContext(
-        headers: [String: TemporalPayload]
+        headers: [String: Api.Common.V1.Payload]
     ) throws -> ServiceContext {
         var serviceContext = ServiceContext.topLevel
 

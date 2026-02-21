@@ -33,7 +33,7 @@ extension HistoryEvent.Attributes {
         public var signalName: String
 
         /// Serialized arguments to provide to the signal handler.
-        public var input: [TemporalPayload]
+        public var input: [Api.Common.V1.Payload]
 
         /// - Note: Deprecated - This field is no longer used.
         public var control: String?
@@ -42,7 +42,7 @@ extension HistoryEvent.Attributes {
         public var childWorkflowOnly: Bool
 
         /// Headers to pass with the signal.
-        public var headers: [String: TemporalPayload]
+        public var headers: [String: Api.Common.V1.Payload]
 
         /// Creates event attributes for when a signal to an external workflow execution has been initiated.
         public init(
@@ -51,10 +51,10 @@ extension HistoryEvent.Attributes {
             namespaceID: String,
             workflowExecution: WorkflowExecutionID,
             signalName: String,
-            input: [TemporalPayload],
+            input: [Api.Common.V1.Payload],
             control: String? = nil,
             childWorkflowOnly: Bool,
-            headers: [String: TemporalPayload] = [:]
+            headers: [String: Api.Common.V1.Payload] = [:]
         ) {
             self.workflowTaskCompletedEventID = workflowTaskCompletedEventID
             self.namespace = namespace

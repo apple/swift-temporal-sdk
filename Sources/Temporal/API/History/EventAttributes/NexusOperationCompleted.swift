@@ -23,7 +23,7 @@ extension HistoryEvent.Attributes {
         /// Serialized result of the Nexus operation.
         ///
         /// The response of the Nexus handler. Delivered either via a completion callback or as a response to a synchronous operation.
-        public var result: TemporalPayload
+        public var result: Api.Common.V1.Payload
 
         /// The request ID allocated at schedule time.
         public var requestID: String
@@ -31,7 +31,7 @@ extension HistoryEvent.Attributes {
         /// Creates event attributes for when a Nexus operation has completed successfully.
         public init(
             scheduledEventID: Int,
-            result: TemporalPayload,
+            result: Api.Common.V1.Payload,
             requestID: String
         ) {
             self.scheduledEventID = scheduledEventID

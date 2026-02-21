@@ -18,7 +18,7 @@ public struct TemporalFailure: Hashable, Sendable {
         var message: String
         var source: String
         var stackTrace: String
-        var encodedAttributes: TemporalPayload?
+        var encodedAttributes: Api.Common.V1.Payload?
         var cause: TemporalFailure?
         var failureInfo: FailureInfo?
 
@@ -26,7 +26,7 @@ public struct TemporalFailure: Hashable, Sendable {
             message: String,
             source: String,
             stackTrace: String,
-            encodedAttributes: TemporalPayload? = nil,
+            encodedAttributes: Api.Common.V1.Payload? = nil,
             cause: TemporalFailure? = nil,
             failureInfo: FailureInfo? = nil
         ) {
@@ -52,7 +52,7 @@ public struct TemporalFailure: Hashable, Sendable {
     public enum FailureInfo: Sendable, Hashable {
         public struct Application: Sendable, Hashable {
             /// The details of the error.
-            public var details: [TemporalPayload]
+            public var details: [Api.Common.V1.Payload]
 
             /// The string type of the error if any.
             public var type: String
@@ -71,7 +71,7 @@ public struct TemporalFailure: Hashable, Sendable {
             ///   - isNonRetryable: Boolean indicating wehter the error was set as non-retry. Defaults to `false`.
             ///   - nextRetryDelay: Delay duration before the next retry attempt. Defaults to `nil`.
             public init(
-                details: [TemporalPayload] = [],
+                details: [Api.Common.V1.Payload] = [],
                 type: String = "",
                 isNonRetryable: Bool = false,
                 nextRetryDelay: Duration? = nil
@@ -98,14 +98,14 @@ public struct TemporalFailure: Hashable, Sendable {
 
         public struct Cancelled: Sendable, Hashable {
             /// The details of the error.
-            public var details: [TemporalPayload]
+            public var details: [Api.Common.V1.Payload]
 
             /// Initializes a new cancelled error.
             ///
             /// - Parameters:
             ///   - details: The details of the error. Defaults to empty details.
             public init(
-                details: [TemporalPayload] = []
+                details: [Api.Common.V1.Payload] = []
             ) {
                 self.details = details
             }
@@ -113,14 +113,14 @@ public struct TemporalFailure: Hashable, Sendable {
 
         public struct Terminated: Sendable, Hashable {
             /// The details of the error.
-            public var details: [TemporalPayload]
+            public var details: [Api.Common.V1.Payload]
 
             /// Initializes a new terminated error.
             ///
             /// - Parameters:
             ///   - details: The details of the error. Defaults to empty details.
             public init(
-                details: [TemporalPayload] = []
+                details: [Api.Common.V1.Payload] = []
             ) {
                 self.details = details
             }
@@ -201,7 +201,7 @@ public struct TemporalFailure: Hashable, Sendable {
             /// The type of timeout.
             public var type: TimeoutType
             /// The details of the last heartbeat.
-            public var lastHeartbeatDetails: [TemporalPayload]
+            public var lastHeartbeatDetails: [Api.Common.V1.Payload]
 
             /// Initializes a new terminated error.
             ///
@@ -210,7 +210,7 @@ public struct TemporalFailure: Hashable, Sendable {
             ///   - lastHeartbeatDetails: The details of the last heartbeat. Defaults to empty details.
             public init(
                 type: TimeoutType,
-                lastHeartbeatDetails: [TemporalPayload] = []
+                lastHeartbeatDetails: [Api.Common.V1.Payload] = []
             ) {
                 self.type = type
                 self.lastHeartbeatDetails = lastHeartbeatDetails
@@ -266,7 +266,7 @@ public struct TemporalFailure: Hashable, Sendable {
     ///   - Overwrites the original stack_trace with an empty string.
     ///   - The resulting JSON object is converted to Payload using the default PayloadConverter and should be processed
     ///     by the user-provided PayloadCodec
-    public var encodedAttributes: TemporalPayload? {
+    public var encodedAttributes: Api.Common.V1.Payload? {
         get { self._storage.encodedAttributes }
         set { self._uniqueStorage().encodedAttributes = newValue }
     }
@@ -299,7 +299,7 @@ public struct TemporalFailure: Hashable, Sendable {
         message: String,
         source: String,
         stackTrace: String,
-        encodedAttributes: TemporalPayload? = nil,
+        encodedAttributes: Api.Common.V1.Payload? = nil,
         cause: TemporalFailure? = nil,
         failureInfo: FailureInfo? = nil
     ) {

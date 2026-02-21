@@ -18,7 +18,7 @@ public struct MakeContinueAsNewErrorInput<each Input: Sendable>: Sendable {
     public var options: ContinueAsNewOptions
 
     /// Headers containing metadata and context information for continue-as-new execution.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input parameters to be passed to the restarted workflow for execution.
     public var input: (repeat each Input)

@@ -24,7 +24,7 @@ public struct HandleUpdateInput<Update: WorkflowUpdateDefinition>: Sendable {
     public var definition: Update
 
     /// Headers containing metadata and context information for update execution.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input parameters to be passed to the update handler for execution.
     public var input: Update.Input

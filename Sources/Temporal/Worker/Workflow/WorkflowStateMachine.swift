@@ -106,7 +106,7 @@ struct WorkflowStateMachine: ~Copyable {
             var activationFailure: TemporalFailure?
 
             /// The headers passed into the initial execution.
-            var headers: [String: TemporalPayload]
+            var headers: [String: Api.Common.V1.Payload]
 
             /// The current memo.
             var memo: [String: TemporalRawValue]
@@ -315,7 +315,7 @@ struct WorkflowStateMachine: ~Copyable {
 
     mutating func sleep(
         for duration: Duration,
-        summary: TemporalPayload?,
+        summary: Api.Common.V1.Payload?,
         sequenceNumber: UInt32,
         continuation: CheckedContinuation<Void, any Error>
     ) {
@@ -332,7 +332,7 @@ struct WorkflowStateMachine: ~Copyable {
                     }
 
                     if let summary {
-                        $0.userMetadata.summary = .init(temporalPayload: summary)
+                        $0.userMetadata.summary = summary
                     }
                 }
             )
@@ -444,8 +444,8 @@ struct WorkflowStateMachine: ~Copyable {
         activityType: String,
         options: ActivityExecutionOptions,
         workflowTaskQueue: String,
-        headers: [String: TemporalPayload],
-        input: [TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
+        input: [Api.Common.V1.Payload],
         continuation: CheckedContinuation<Coresdk.ActivityResult.ActivityResolution, any Error>
     ) {
         switch consume self.state {
@@ -541,7 +541,7 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
-    mutating func queryFinished(id: String, temporalPayload: TemporalPayload) {
+    mutating func queryFinished(id: String, temporalPayload: Api.Common.V1.Payload) {
         switch consume self.state {
         case .active(var active):
             active.commands.append(
@@ -549,7 +549,7 @@ struct WorkflowStateMachine: ~Copyable {
                     $0.respondToQuery = .with {
                         $0.queryID = id
                         $0.succeeded = .with {
-                            $0.response = .init(temporalPayload: temporalPayload)
+                            $0.response = temporalPayload
                         }
                     }
                 }
@@ -588,14 +588,14 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
-    mutating func updateCompleted(id: String, temporalPayload: TemporalPayload) {
+    mutating func updateCompleted(id: String, temporalPayload: Api.Common.V1.Payload) {
         switch consume self.state {
         case .active(var active):
             active.commands.append(
                 .with {
                     $0.updateResponse = .with {
                         $0.protocolInstanceID = id
-                        $0.completed = .init(temporalPayload: temporalPayload)
+                        $0.completed = temporalPayload
                     }
                 }
             )
@@ -623,10 +623,10 @@ struct WorkflowStateMachine: ~Copyable {
         namespace: String,
         taskQueue: String,
         workflowName: String,
-        headers: [String: TemporalPayload],
-        inputs: [TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
+        inputs: [Api.Common.V1.Payload],
         childWorkflowOptions: ChildWorkflowOptions,
-        memo: [String: TemporalPayload]?,
+        memo: [String: Api.Common.V1.Payload]?,
         state: UntypedChildWorkflowHandle.State,
         continuation: CheckedContinuation<(String, String), any Error>
     ) {
@@ -712,8 +712,8 @@ struct WorkflowStateMachine: ~Copyable {
         sequenceNumber: UInt32,
         childWorkflowID: String,
         signalName: String,
-        headers: [String: TemporalPayload],
-        inputs: [TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
+        inputs: [Api.Common.V1.Payload],
         continuation: CheckedContinuation<Void, any Error>
     ) {
         switch consume self.state {
@@ -724,8 +724,8 @@ struct WorkflowStateMachine: ~Copyable {
                         $0.seq = sequenceNumber
                         $0.childWorkflowID = childWorkflowID
                         $0.signalName = signalName
-                        $0.args = inputs.map { .init(temporalPayload: $0) }
-                        $0.headers = headers.mapValues { .init(temporalPayload: $0) }
+                        $0.args = inputs
+                        $0.headers = headers
                     }
                 }
             )
@@ -842,7 +842,7 @@ struct WorkflowStateMachine: ~Copyable {
                 .with {
                     $0.modifyWorkflowProperties = .with {
                         $0.upsertedMemo = .with {
-                            $0.fields = memo.mapValues { $0.flatMap { .init(temporalPayload: $0.payload) } ?? .init() }
+                            $0.fields = memo.mapValues { $0.flatMap { $0.payload } ?? .init() }
                         }
                     }
                 }
@@ -907,13 +907,13 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
-    mutating func workflowFinished(temporalPayload: TemporalPayload) {
+    mutating func workflowFinished(temporalPayload: Api.Common.V1.Payload) {
         switch consume self.state {
         case .active(var active):
             active.commands.append(
                 .with {
                     $0.completeWorkflowExecution = .with {
-                        $0.result = .init(temporalPayload: temporalPayload)
+                        $0.result = temporalPayload
                     }
                 }
             )

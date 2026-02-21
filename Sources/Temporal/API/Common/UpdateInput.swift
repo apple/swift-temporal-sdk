@@ -17,15 +17,15 @@ public struct UpdateInput: Hashable, Sendable {
     /// Headers that are passed with the Update from the requesting entity.
     ///
     /// These can include things like auth or tracing tokens.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The name of the Update handler to invoke on the target Workflow.
     public var name: String
 
     /// The arguments to pass to the named Update handler.
-    public var arguments: [TemporalPayload]
+    public var arguments: [Api.Common.V1.Payload]
 
-    public init(headers: [String: TemporalPayload], name: String, arguments: [TemporalPayload]) {
+    public init(headers: [String: Api.Common.V1.Payload], name: String, arguments: [Api.Common.V1.Payload]) {
         self.headers = headers
         self.name = name
         self.arguments = arguments
