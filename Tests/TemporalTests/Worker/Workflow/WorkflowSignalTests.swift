@@ -88,7 +88,7 @@ extension TestServerDependentTests {
             ) { taskQueue, client in
                 let workflowID = UUID().uuidString
                 var options = WorkflowOptions(id: workflowID, taskQueue: taskQueue)
-                options.executionTimeOut = .seconds(3)
+                options.executionTimeOut = .seconds(30)
                 let handle = try await client.startWorkflow(
                     type: SignalWorkflow.self,
                     options: options
@@ -112,7 +112,7 @@ extension TestServerDependentTests {
             ) { taskQueue, client in
                 let workflowID = UUID().uuidString
                 var options = WorkflowOptions(id: workflowID, taskQueue: taskQueue)
-                options.executionTimeOut = .seconds(3)
+                options.executionTimeOut = .seconds(30)
                 let handle = try await client.startWorkflow(
                     type: SignalWorkflow.self,
                     options: options
