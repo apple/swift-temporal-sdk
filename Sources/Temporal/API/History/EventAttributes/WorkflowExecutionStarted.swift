@@ -40,7 +40,7 @@ extension HistoryEvent.Attributes {
         public var taskQueue: TaskQueue
 
         /// SDK will deserialize this and provide it as arguments to the workflow function.
-        public var input: [TemporalPayload]
+        public var input: [Api.Common.V1.Payload]
 
         /// Total workflow execution timeout including retries and continue as new.
         public var workflowExecutionTimeout: Duration?
@@ -61,7 +61,7 @@ extension HistoryEvent.Attributes {
         public var continuedFailure: TemporalFailure?
 
         /// The completion result from the previous execution.
-        public var lastCompletionResult: [TemporalPayload]
+        public var lastCompletionResult: [Api.Common.V1.Payload]
 
         /// This is the run id when the WorkflowExecutionStarted event was written.
         ///
@@ -94,7 +94,7 @@ extension HistoryEvent.Attributes {
         public var firstWorkflowTaskBackoff: Duration?
 
         /// Memo data attached to the workflow.
-        public var memo: [String: TemporalPayload]
+        public var memo: [String: Api.Common.V1.Payload]
 
         /// Search attributes for the workflow.
         public var searchAttributes: SearchAttributeCollection
@@ -103,7 +103,7 @@ extension HistoryEvent.Attributes {
         public var prevAutoResetPoints: [ResetPoint]
 
         /// Headers passed to the workflow.
-        public var headers: [String: TemporalPayload]
+        public var headers: [String: Api.Common.V1.Payload]
 
         /// Version of the child execution initiated event in parent workflow.
         ///
@@ -166,14 +166,14 @@ extension HistoryEvent.Attributes {
             parentWorkflowExecution: WorkflowExecutionID? = nil,
             parentInitiatedEventID: Int? = nil,
             taskQueue: TaskQueue,
-            input: [TemporalPayload],
+            input: [Api.Common.V1.Payload],
             workflowExecutionTimeout: Duration? = nil,
             workflowRunTimeout: Duration? = nil,
             workflowTaskTimeout: Duration? = nil,
             continuedExecutionRunID: String? = nil,
             initiator: ContinueAsNewInitiator,
             continuedFailure: TemporalFailure? = nil,
-            lastCompletionResult: [TemporalPayload] = [],
+            lastCompletionResult: [Api.Common.V1.Payload] = [],
             originalExecutionRunID: String,
             identity: String? = nil,
             firstExecutionRunID: String,
@@ -182,10 +182,10 @@ extension HistoryEvent.Attributes {
             workflowExecutionExpirationTime: Date? = nil,
             cronSchedule: String? = nil,
             firstWorkflowTaskBackoff: Duration? = nil,
-            memo: [String: TemporalPayload] = [:],
+            memo: [String: Api.Common.V1.Payload] = [:],
             searchAttributes: SearchAttributeCollection,
             prevAutoResetPoints: [ResetPoint] = [],
-            headers: [String: TemporalPayload] = [:],
+            headers: [String: Api.Common.V1.Payload] = [:],
             parentInitiatedEventVersion: Int? = nil,
             workflowID: String,
             sourceVersionStamp: WorkerVersionStamp? = nil,

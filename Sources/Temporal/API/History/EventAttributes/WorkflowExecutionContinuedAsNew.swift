@@ -25,7 +25,7 @@ extension HistoryEvent.Attributes {
         public var taskQueue: TaskQueue
 
         /// Input arguments for the new workflow.
-        public var input: [TemporalPayload]
+        public var input: [Api.Common.V1.Payload]
 
         /// Timeout of a single workflow run.
         public var workflowRunTimeout: Duration?
@@ -45,13 +45,13 @@ extension HistoryEvent.Attributes {
         /// - Note: Deprecated - When supported by the server the final event will be `WorkflowExecutionFailed` with `newExecutionRunID` set.
         public var failure: TemporalFailure?
 
-        public var lastCompletionResult: [TemporalPayload]
+        public var lastCompletionResult: [Api.Common.V1.Payload]
 
         /// Headers for the new workflow.
-        public var headers: [String: TemporalPayload]
+        public var headers: [String: Api.Common.V1.Payload]
 
         /// Memo data for the new workflow.
-        public var memo: [String: TemporalPayload]
+        public var memo: [String: Api.Common.V1.Payload]
 
         /// Search attributes for the new workflow.
         public var searchAttributes: SearchAttributeCollection
@@ -65,16 +65,16 @@ extension HistoryEvent.Attributes {
             newExecutionRunID: String,
             workflowType: String,
             taskQueue: TaskQueue,
-            input: [TemporalPayload],
+            input: [Api.Common.V1.Payload],
             workflowRunTimeout: Duration? = nil,
             workflowTaskTimeout: Duration? = nil,
             workflowTaskCompletedEventID: Int,
             backoffStartInterval: Duration? = nil,
             initiator: ContinueAsNewInitiator,
             failure: TemporalFailure? = nil,
-            lastCompletionResult: [TemporalPayload],
-            headers: [String: TemporalPayload] = [:],
-            memo: [String: TemporalPayload] = [:],
+            lastCompletionResult: [Api.Common.V1.Payload],
+            headers: [String: Api.Common.V1.Payload] = [:],
+            memo: [String: Api.Common.V1.Payload] = [:],
             searchAttributes: SearchAttributeCollection,
             inheritBuildID: Bool
         ) {

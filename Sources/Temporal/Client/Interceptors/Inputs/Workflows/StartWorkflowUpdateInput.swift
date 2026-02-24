@@ -32,7 +32,7 @@ public struct StartWorkflowUpdateInput<each Input: Sendable>: Sendable {
     public var firstExecutionRunID: String?
 
     /// Headers to include with the update request.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input arguments to pass to the update handler.
     public var input: (repeat each Input)
@@ -57,7 +57,7 @@ public struct StartWorkflowUpdateInput<each Input: Sendable>: Sendable {
         updateID: String,
         updateName: String,
         firstExecutionRunID: String? = nil,
-        headers: [String: TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
         input: repeat each Input,
         callOptions: CallOptions? = nil
     ) {

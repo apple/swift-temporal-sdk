@@ -46,9 +46,9 @@ struct JSONProtobufPayloadConverterTests {
 
         let payload = try payloadConverter.convertValue(testMessage)
         #expect(
-            payload.data == [123, 34, 115, 101, 99, 111, 110, 100, 115, 34, 58, 34, 49, 34, 125]
+            payload.data == Data([123, 34, 115, 101, 99, 111, 110, 100, 115, 34, 58, 34, 49, 34, 125])
         )
-        #expect(payload.metadata == ["encoding": Array("json/protobuf".utf8)])
+        #expect(payload.metadata == ["encoding": Data("json/protobuf".utf8)])
 
         let convertedMessage = try payloadConverter.convertPayload(
             payload,

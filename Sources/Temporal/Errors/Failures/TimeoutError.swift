@@ -27,7 +27,7 @@ public struct TimeoutError: TemporalFailureError {
     public var type: TimeoutType
 
     /// The details of the last heartbeat.
-    public var lastHeartbeatDetails: [TemporalPayload]
+    public var lastHeartbeatDetails: [Api.Common.V1.Payload]
 
     /// Initializes a new timed out error.
     ///
@@ -42,7 +42,7 @@ public struct TimeoutError: TemporalFailureError {
         type: TimeoutType,
         cause: (any Error)? = nil,
         stackTrace: String = "",
-        lastHeartbeatDetails: [TemporalPayload] = []
+        lastHeartbeatDetails: [Api.Common.V1.Payload] = []
     ) {
         self.message = message
         self.type = type

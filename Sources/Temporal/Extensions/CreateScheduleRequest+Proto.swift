@@ -40,7 +40,7 @@ extension Api.Workflowservice.V1.CreateScheduleRequest {
         if let memo = scheduleOptions?.memo {
             var temporalPayloads = [String: Api.Common.V1.Payload]()
             for (key, value) in memo {
-                temporalPayloads[key] = .init(temporalPayload: try await dataConverter.convertValue(value))
+                temporalPayloads[key] = try await dataConverter.convertValue(value)
             }
             self.memo = .with {
                 $0.fields = temporalPayloads

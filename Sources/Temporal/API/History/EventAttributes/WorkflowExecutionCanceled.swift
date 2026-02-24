@@ -19,12 +19,12 @@ extension HistoryEvent.Attributes {
         public var workflowTaskCompletedEventID: Int
 
         /// Details provided when the workflow was canceled.
-        public var details: [TemporalPayload]
+        public var details: [Api.Common.V1.Payload]
 
         /// Creates event attributes for when a workflow execution has been canceled.
         public init(
             workflowTaskCompletedEventID: Int,
-            details: [TemporalPayload]
+            details: [Api.Common.V1.Payload]
         ) {
             self.workflowTaskCompletedEventID = workflowTaskCompletedEventID
             self.details = details

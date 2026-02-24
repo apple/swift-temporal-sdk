@@ -397,7 +397,9 @@ extension WorkflowContext.Implementation {
         input: StartChildWorkflowInput<repeat each Input>
     ) async throws -> UntypedChildWorkflowHandle {
         try await intercept(Interceptor.startChildWorkflow, input: input) { input in
-            let inputPayloads: [TemporalPayload]
+            // If payload conversion fails this will potentially bubble up and fail the run/handler method
+            // That's expected and should normally cause a workflow task failure.
+            let inputPayloads: [Api.Common.V1.Payload]
             do {
                 inputPayloads = try self.payloadConverter.convertValues(repeat each input.input)
             } catch {
@@ -421,7 +423,7 @@ extension WorkflowContext.Implementation {
         input: MakeContinueAsNewErrorInput<repeat each Input>
     ) async throws -> ContinueAsNewError {
         try await intercept(Interceptor.makeContinueAsNewError, input: input) { input in
-            let inputPayloads: [TemporalPayload]
+            let inputPayloads: [Api.Common.V1.Payload]
             do {
                 inputPayloads = try self.payloadConverter.convertValues(repeat each input.input)
             } catch {

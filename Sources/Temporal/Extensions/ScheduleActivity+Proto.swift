@@ -19,8 +19,8 @@ extension Coresdk.WorkflowCommands.ScheduleActivity {
         id: UInt32,
         activityType: String,
         workflowTaskQueue: String,
-        headers: [String: TemporalPayload],
-        input: [TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
+        input: [Api.Common.V1.Payload],
         options: ActivityOptions
     ) {
         self = .init()
@@ -29,7 +29,7 @@ extension Coresdk.WorkflowCommands.ScheduleActivity {
         self.activityID = options.activityID ?? String(id)
         self.taskQueue = options.taskQueue ?? workflowTaskQueue
         self.doNotEagerlyExecute = options.disableEagerActivityExecution
-        self.arguments = input.map { .init(temporalPayload: $0) }
+        self.arguments = input
         self.cancellationType = .init(cancellationType: options.cancellationType)
         self.versioningIntent = .init(versioningIntent: options.versioningIntent)
 
@@ -49,7 +49,7 @@ extension Coresdk.WorkflowCommands.ScheduleActivity {
             self.retryPolicy = .init(retryPolicy: retryPolicy)
         }
         if !headers.isEmpty {
-            self.headers = headers.mapValues { .init(temporalPayload: $0) }
+            self.headers = headers
         }
     }
 }

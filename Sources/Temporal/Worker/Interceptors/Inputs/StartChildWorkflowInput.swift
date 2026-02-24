@@ -21,7 +21,7 @@ public struct StartChildWorkflowInput<each Input: Sendable>: Sendable {
     public var options: ChildWorkflowOptions
 
     /// Headers containing metadata and context information for child workflow startup and execution.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input parameters to be passed to the child workflow for execution.
     public var input: (repeat each Input)

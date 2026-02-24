@@ -25,10 +25,10 @@ extension HistoryEvent.Attributes {
         public var taskQueue: TaskQueue
 
         /// Headers to pass to the activity.
-        public var headers: [String: TemporalPayload]
+        public var headers: [String: Api.Common.V1.Payload]
 
         /// Input arguments for the activity.
-        public var input: [TemporalPayload]
+        public var input: [Api.Common.V1.Payload]
 
         /// Indicates how long the caller is willing to wait for an activity completion.
         ///
@@ -72,8 +72,8 @@ extension HistoryEvent.Attributes {
             activityID: String,
             activityType: String,
             taskQueue: TaskQueue,
-            headers: [String: TemporalPayload],
-            input: [TemporalPayload],
+            headers: [String: Api.Common.V1.Payload],
+            input: [Api.Common.V1.Payload],
             scheduleToCloseTimeout: Duration? = nil,
             scheduleToStartTimeout: Duration? = nil,
             startToCloseTimeout: Duration? = nil,

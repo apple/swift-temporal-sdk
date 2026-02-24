@@ -19,8 +19,8 @@ extension Coresdk.WorkflowCommands.ContinueAsNewWorkflowExecution {
         self = .with {
             $0.workflowType = continueAsNewError.workflowName
             $0.taskQueue = continueAsNewError.taskQueue
-            $0.arguments = continueAsNewError.inputs.map { .init(temporalPayload: $0) }
-            $0.memo = continueAsNewError.memo.flatMap { $0.mapValues { .init(temporalPayload: $0.payload) } } ?? [:]
+            $0.arguments = continueAsNewError.inputs
+            $0.memo = continueAsNewError.memo.flatMap { $0.mapValues { $0.payload } } ?? [:]
             $0.retryPolicy = .init(retryPolicy: continueAsNewError.retryPolicy ?? .init())
         }
 
@@ -37,7 +37,7 @@ extension Coresdk.WorkflowCommands.ContinueAsNewWorkflowExecution {
         }
 
         if !continueAsNewError.headers.isEmpty {
-            self.headers = continueAsNewError.headers.mapValues { .init(temporalPayload: $0) }
+            self.headers = continueAsNewError.headers
         }
     }
 }

@@ -15,11 +15,11 @@
 /// A raw value that is already decoded but not converted.
 public struct TemporalRawValue: Hashable, Sendable {
     /// The raw payload value.
-    public let payload: TemporalPayload
+    public let payload: Api.Common.V1.Payload
 
     /// Initialized a new temporal raw value.
     /// - Parameter payload: The raw value's payload.
-    public init(_ payload: TemporalPayload) {
+    public init(_ payload: Api.Common.V1.Payload) {
         self.payload = payload
     }
 }

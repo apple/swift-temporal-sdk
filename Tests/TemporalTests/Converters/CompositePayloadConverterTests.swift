@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import SwiftProtobuf
 import Temporal
 import Testing
 
@@ -45,20 +46,23 @@ struct CompositePayloadConverterTests {
 
         static let encoding = "binary/plain"
 
-        func convertValue(_ value: some Any) throws -> TemporalPayload {
-            return .init(data: [], metadata: ["encoding": Array(Self.encoding.utf8)])
+        func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {
+            return Api.Common.V1.Payload.with {
+                $0.data = Data()
+                $0.metadata = ["encoding": Data(Self.encoding.utf8)]
+            }
         }
 
         func convertPayload<Value>(
-            _ payload: TemporalPayload,
+            _ payload: Api.Common.V1.Payload,
             as valueType: Value.Type
         ) throws -> Value {
             // Add a "watermark" to the payload to identify this converter and not the normal binary one decoded this
-            let payloadData = payload.data + [0, 0]
+            let payloadData = payload.data + Data([0, 0])
             if valueType is [UInt8].Type {
-                return (payloadData as! Value)
+                return (Array(payloadData) as! Value)
             } else if valueType is Data.Type {
-                return Data(payloadData) as! Value
+                return payloadData as! Value
             }
 
             throw DecodingError()
@@ -71,7 +75,7 @@ struct CompositePayloadConverterTests {
         let converter = CompositePayloadConverter(MockBinaryPayloadConverter(), realBinaryConverter)
         let value: [UInt8] = [1, 2, 3]
         let payload = try converter.convertValue(value)
-        #expect(payload.metadata == ["encoding": Array("binary/plain".utf8)])
+        #expect(payload.metadata == ["encoding": Data("binary/plain".utf8)])
         // The mock converter won't have actually converted the value
         #expect(payload.data == .init())
 

@@ -22,8 +22,8 @@ extension Api.Workflowservice.V1.StartWorkflowExecutionRequest {
         workflowTypeName: String,
         workflowOptions: WorkflowOptions,
         dataConverter: DataConverter,
-        headers: [String: TemporalPayload],
-        inputs: [TemporalPayload]
+        headers: [String: Api.Common.V1.Payload],
+        inputs: [Api.Common.V1.Payload]
     ) async throws {
         self = .with {
             $0.namespace = namespace
@@ -35,7 +35,7 @@ extension Api.Workflowservice.V1.StartWorkflowExecutionRequest {
             $0.workflowIDReusePolicy = .init(workflowIDReusePolicy: workflowOptions.idReusePolicy)
             $0.workflowIDConflictPolicy = .init(workflowIDConflictPolicy: workflowOptions.idConflictPolicy)
             $0.input = .with {
-                $0.payloads = inputs.map { .init(temporalPayload: $0) }
+                $0.payloads = inputs
             }
         }
 
@@ -50,7 +50,7 @@ extension Api.Workflowservice.V1.StartWorkflowExecutionRequest {
         if let memo = workflowOptions.memo {
             var temporalPayloads = [String: Api.Common.V1.Payload]()
             for (key, value) in memo {
-                temporalPayloads[key] = .init(temporalPayload: try await dataConverter.convertValue(value))
+                temporalPayloads[key] = try await dataConverter.convertValue(value)
             }
             self.memo = .with {
                 $0.fields = temporalPayloads

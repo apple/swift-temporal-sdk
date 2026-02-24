@@ -39,7 +39,7 @@ extension TemporalClient.WorkflowService {
     public func startWorkflow<each Input: Sendable>(
         name: String,
         options: WorkflowOptions,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         input: repeat each Input
     ) async throws -> String {
         let response: Api.Workflowservice.V1.StartWorkflowExecutionResponse = try await self.client.unary(
@@ -79,7 +79,7 @@ extension TemporalClient.WorkflowService {
     public func startWorkflow<Workflow: WorkflowDefinition>(
         type: Workflow.Type = Workflow.self,
         options: WorkflowOptions,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         input: Workflow.Input
     ) async throws -> String {
         try await self.startWorkflow(
@@ -105,7 +105,7 @@ extension TemporalClient.WorkflowService {
     public func startWorkflow<Workflow: WorkflowDefinition>(
         type: Workflow.Type = Workflow.self,
         options: WorkflowOptions,
-        headers: [String: TemporalPayload] = [:]
+        headers: [String: Api.Common.V1.Payload] = [:]
     ) async throws -> String where Workflow.Input == Void {
         try await self.startWorkflow(
             name: type.name,

@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// A data converter encodes data from your application to a ``TemporalPayload`` before sending it
+import SwiftProtobuf
+
+/// A data converter encodes data from your application to an ``Api/Common/V1/Payload`` before sending it
 /// to the temporal server.
 ///
 /// When the server sends data back to a worker the data converter decodes it before
@@ -53,8 +55,8 @@ public struct DataConverter: Sendable {
 
     package func convertValues<each Value>(
         _ values: repeat (each Value)?
-    ) async throws -> [TemporalPayload] {
-        var payloads = [TemporalPayload]()
+    ) async throws -> [Api.Common.V1.Payload] {
+        var payloads = [Api.Common.V1.Payload]()
         for value in repeat each values {
             try await payloads.append(self.convertValue(value))
         }
@@ -63,9 +65,9 @@ public struct DataConverter: Sendable {
 
     package func convertValue<Value>(
         _ value: Value?
-    ) async throws -> TemporalPayload {
+    ) async throws -> Api.Common.V1.Payload {
         if value is Void {
-            return .init(data: .init(), metadata: [:])
+            return .init()
         }
 
         let payload = try self.payloadConverter.convertValue(value)
@@ -79,7 +81,7 @@ public struct DataConverter: Sendable {
     }
 
     package func convertPayloads<each Value>(
-        _ payloads: [TemporalPayload],
+        _ payloads: [Api.Common.V1.Payload],
         as valueTypes: repeat (each Value).Type
     ) async throws -> (repeat each Value) {
         var payloads = payloads
@@ -99,7 +101,7 @@ public struct DataConverter: Sendable {
     }
 
     package func convertPayload<Value>(
-        _ payload: TemporalPayload,
+        _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type = Value.self
     ) async throws -> Value {
         if Value.self == Void.self {

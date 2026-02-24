@@ -28,10 +28,10 @@ public struct ContinueAsNewError: TemporalError {
     var workflowName: String
 
     /// The workflow's inputs.
-    var inputs: [TemporalPayload]
+    var inputs: [Api.Common.V1.Payload]
 
     /// The headers for continue as new.
-    var headers: [String: TemporalPayload]
+    var headers: [String: Api.Common.V1.Payload]
 
     /// The task queue to continue as new.
     var taskQueue: String
@@ -53,8 +53,8 @@ public struct ContinueAsNewError: TemporalError {
 
     init(
         workflowContext: WorkflowContext,
-        headers: [String: TemporalPayload],
-        inputs: [TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
+        inputs: [Api.Common.V1.Payload],
         options: ContinueAsNewOptions,
         payloadConverter: any PayloadConverter
     ) throws {

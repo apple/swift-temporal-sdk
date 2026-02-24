@@ -20,8 +20,8 @@ extension Coresdk.WorkflowCommands.ScheduleLocalActivity {
     init(
         id: UInt32,
         activityType: String,
-        headers: [String: TemporalPayload],
-        input: [TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
+        input: [Api.Common.V1.Payload],
         options: LocalActivityOptions,
         attempt: UInt32?,
         originalScheduleTime: Google_Protobuf_Timestamp?
@@ -30,7 +30,7 @@ extension Coresdk.WorkflowCommands.ScheduleLocalActivity {
         self.seq = id
         self.activityType = activityType
         self.activityID = options.activityID ?? String(id)
-        self.arguments = input.map { .init(temporalPayload: $0) }
+        self.arguments = input
         self.cancellationType = .init(cancellationType: options.cancellationType)
 
         if let scheduleToCloseTimeout = options.scheduleToCloseTimeout {
@@ -46,7 +46,7 @@ extension Coresdk.WorkflowCommands.ScheduleLocalActivity {
             self.retryPolicy = .init(retryPolicy: retryPolicy)
         }
         if !headers.isEmpty {
-            self.headers = headers.mapValues { .init(temporalPayload: $0) }
+            self.headers = headers
         }
         if let attempt {
             self.attempt = attempt

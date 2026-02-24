@@ -15,9 +15,9 @@
 extension UpdateInput {
     init(_ rawValue: Api.Update.V1.Input) {
         self = .init(
-            headers: rawValue.header.fields.mapValues { .init(temporalAPIPayload: $0) },
+            headers: rawValue.header.fields,
             name: rawValue.name,
-            arguments: rawValue.args.payloads.map { .init(temporalAPIPayload: $0) }
+            arguments: rawValue.args.payloads
         )
     }
 }

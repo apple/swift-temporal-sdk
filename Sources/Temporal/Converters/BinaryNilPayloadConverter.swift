@@ -22,7 +22,7 @@ public struct BinaryNilPayloadConverter: EncodingPayloadConverter {
     /// Creates a new binary nil payload converter.
     public init() {}
 
-    public func convertValue(_ value: some Any) throws -> TemporalPayload {
+    public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {
         guard let optionalValue = value as? any OptionalValue, optionalValue.isNil else {
             throw EncodingError()
         }
@@ -31,7 +31,7 @@ public struct BinaryNilPayloadConverter: EncodingPayloadConverter {
     }
 
     public func convertPayload<Value>(
-        _ payload: TemporalPayload,
+        _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type
     ) throws -> Value {
         guard payload.data.isEmpty else {

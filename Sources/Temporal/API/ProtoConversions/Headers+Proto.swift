@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension Api.Common.V1.Header {
-    init(_ dictionary: [String: TemporalPayload], with payloadCodec: (any PayloadCodec)?) async throws {
+    init(_ dictionary: [String: Api.Common.V1.Payload], with payloadCodec: (any PayloadCodec)?) async throws {
         self = .init()
         self.fields.reserveCapacity(dictionary.count)
         for (key, value) in dictionary {
@@ -21,17 +21,17 @@ extension Api.Common.V1.Header {
                 // If there is a payload codec, use it to encode the headers:
                 // https://github.com/temporalio/sdk-dotnet/blob/5b15fb8523879db47c3442cf3cfc739643d1ed14/src/Temporalio/Client/TemporalClient.Workflow.cs#L840
                 let payloadEncodedValue = try await payloadCodec.encode(payload: value)
-                self.fields[key] = .init(temporalPayload: payloadEncodedValue)
+                self.fields[key] = payloadEncodedValue
             } else {
-                self.fields[key] = .init(temporalPayload: value)
+                self.fields[key] = value
             }
         }
     }
 
-    func decoded(with payloadCodec: (any PayloadCodec)?) async throws -> [String: TemporalPayload] {
-        var result = [String: TemporalPayload]()
+    func decoded(with payloadCodec: (any PayloadCodec)?) async throws -> [String: Api.Common.V1.Payload] {
+        var result = [String: Api.Common.V1.Payload]()
         for (key, value) in self.fields {
-            result[key] = try await payloadCodec?.decode(payload: .init(temporalAPIPayload: value)) ?? .init(temporalAPIPayload: value)
+            result[key] = try await payloadCodec?.decode(payload: value) ?? value
         }
         return result
     }

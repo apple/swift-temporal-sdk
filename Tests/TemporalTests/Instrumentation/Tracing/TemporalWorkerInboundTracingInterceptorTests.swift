@@ -14,6 +14,7 @@
 
 import Foundation
 import Logging
+import SwiftProtobuf
 import Temporal
 import Testing
 import Tracing
@@ -64,7 +65,7 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             ).makeWorkflowInboundInterceptor()
         )
 
-        let mockIncomingHeaders: [String: TemporalPayload] = await [
+        let mockIncomingHeaders: [String: Api.Common.V1.Payload] = await [
             // reflects structure of the default Temporal tracing header
             "_tracer-data": try DataConverter.default.convertValue(
                 TemporalTraceID(traceparent: traceID)
@@ -115,7 +116,7 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             ).makeWorkflowInboundInterceptor()
         )
 
-        let mockIncomingHeaders: [String: TemporalPayload] = await [
+        let mockIncomingHeaders: [String: Api.Common.V1.Payload] = await [
             // reflects structure of the default Temporal tracing header
             "_tracer-data": try DataConverter.default.convertValue(
                 TemporalTraceID(traceparent: traceID)
@@ -171,7 +172,7 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             ).makeActivityInboundInterceptor()
         )
 
-        let mockIncomingHeaders: [String: TemporalPayload] = await [
+        let mockIncomingHeaders: [String: Api.Common.V1.Payload] = await [
             // reflects structure of the default Temporal tracing header
             "_tracer-data": try DataConverter.default.convertValue(
                 TemporalTraceID(traceparent: traceID)
@@ -217,7 +218,7 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             ).makeActivityInboundInterceptor()
         )
 
-        let mockIncomingHeaders: [String: TemporalPayload] = await [
+        let mockIncomingHeaders: [String: Api.Common.V1.Payload] = await [
             // reflects structure of the default Temporal tracing header
             "_tracer-data": try DataConverter.default.convertValue(
                 TemporalTraceID(traceparent: traceID)

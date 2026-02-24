@@ -42,7 +42,7 @@ extension TemporalClient.WorkflowService {
         workflowID: String,
         runID: String? = nil,
         signalName: String,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         input: repeat each Input,
         callOptions: CallOptions? = nil
     ) async throws {
@@ -56,7 +56,7 @@ extension TemporalClient.WorkflowService {
             $0.signalName = signalName
             $0.requestID = UUID().uuidString
             $0.input = .with {
-                $0.payloads = inputPayloads.map { .init(temporalPayload: $0) }
+                $0.payloads = inputPayloads
             }
 
             if let runID {
@@ -95,7 +95,7 @@ extension TemporalClient.WorkflowService {
         workflowID: String,
         runID: String? = nil,
         signalType: Signal.Type = Signal.self,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         input: Signal.Input,
         callOptions: CallOptions? = nil
     ) async throws {
@@ -127,7 +127,7 @@ extension TemporalClient.WorkflowService {
         workflowID: String,
         runID: String? = nil,
         signalType: Signal.Type = Signal.self,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         callOptions: CallOptions? = nil
     ) async throws where Signal.Input == Void {
         try await self.signalWorkflow(

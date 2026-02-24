@@ -23,7 +23,7 @@ public struct StartWorkflowInput<each Input: Sendable>: Sendable {
     public var options: WorkflowOptions
 
     /// Headers to include with the workflow start request.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// The input arguments to pass to the workflow.
     public var input: (repeat each Input)
@@ -42,7 +42,7 @@ public struct StartWorkflowInput<each Input: Sendable>: Sendable {
     public init(
         name: String,
         options: WorkflowOptions,
-        headers: [String: TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
         input: repeat each Input,
         callOptions: CallOptions? = nil
     ) {

@@ -12,14 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
 import Temporal
 
 struct FailingPayloadCodec: PayloadCodec {
-    func encode(payload: TemporalPayload) async throws -> TemporalPayload {
+    func encode(payload: Api.Common.V1.Payload) async throws -> Api.Common.V1.Payload {
         throw CancellationError()
     }
 
-    func decode(payload: TemporalPayload) async throws -> TemporalPayload {
+    func decode(payload: Api.Common.V1.Payload) async throws -> Api.Common.V1.Payload {
         throw CancellationError()
     }
 }

@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import SwiftProtobuf
 import Temporal
 import Testing
 import Tracing
@@ -92,7 +93,7 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                         let traceHeaderPayload = try #require(
                             input.headers.first(where: { key, value in
                                 key == "_tracer-data"  // default Temporal tracing header key
-                            })?.1 as? TemporalPayload
+                            })?.1 as? Api.Common.V1.Payload
                         )
 
                         let traceHeader: TemporalTraceID = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
@@ -175,7 +176,7 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                             let traceHeaderPayload = try #require(
                                 input.headers.first(where: { key, value in
                                     key == "_tracer-data"  // default Temporal tracing header key
-                                })?.1 as? TemporalPayload
+                                })?.1 as? Api.Common.V1.Payload
                             )
 
                             let traceHeader: TemporalTraceID = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(

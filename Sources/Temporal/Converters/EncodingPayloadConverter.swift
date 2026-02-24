@@ -12,6 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
+import struct Foundation.Data
+
 /// A payload converter that decodes/encodes only from/to a single encoding kind.
 public protocol EncodingPayloadConverter: PayloadConverter {
     /// The name of the encoding.
@@ -21,9 +25,16 @@ public protocol EncodingPayloadConverter: PayloadConverter {
 extension EncodingPayloadConverter {
     internal func createPayload(
         for data: some Sequence<UInt8>,
-        additionalMetadata: [String: [UInt8]] = [:]
-    ) -> TemporalPayload {
-        let metadata = additionalMetadata.merging([Encodings.encodingKey: Array(Self.encoding.utf8)]) { clientSpecified, _ in clientSpecified }
-        return .init(data: Array(data), metadata: metadata)
+        additionalMetadata: [String: Data] = [:]
+    ) -> Api.Common.V1.Payload {
+        let encodingData = Data(Self.encoding.utf8)
+        var metadata = additionalMetadata
+        if metadata[Encodings.encodingKey] == nil {
+            metadata[Encodings.encodingKey] = encodingData
+        }
+        return .with {
+            $0.data = Data(data)
+            $0.metadata = metadata
+        }
     }
 }

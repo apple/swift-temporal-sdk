@@ -27,7 +27,7 @@ public struct PendingActivityInfo: Hashable, Sendable {
     /// The current execution state of the activity.
     public var state: PendingActivityState
     /// The most recent heartbeat details sent by the activity.
-    public var heartbeatDetails: [TemporalPayload]
+    public var heartbeatDetails: [Api.Common.V1.Payload]
     /// The timestamp when the most recent heartbeat was recorded.
     public var lastHeartbeatTime: Date
     /// The timestamp when the activity most recently started execution.

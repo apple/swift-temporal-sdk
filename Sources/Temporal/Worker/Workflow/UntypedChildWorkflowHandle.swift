@@ -181,7 +181,7 @@ public struct UntypedChildWorkflowHandle: Sendable {
         switch result.status {
         case .completed(let completed):
             return try payloadConverter.convertPayloadHandlingVoid(
-                .init(temporalAPIPayload: completed.result),
+                completed.result,
                 as: Result.self
             )
         case .failed(let failure):

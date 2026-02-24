@@ -115,7 +115,7 @@ public struct ActivityExecutionContext: Sendable {
         ///
         /// These details are preserved across activity retries and can be used
         /// to resume activity execution from a known state.
-        private var heartbeatDetails: [TemporalPayload]
+        private var heartbeatDetails: [Api.Common.V1.Payload]
 
         /// The data converter used for payload serialization.
         private var dataConverter: DataConverter
@@ -158,7 +158,7 @@ public struct ActivityExecutionContext: Sendable {
             workflowNamespace: String,
             workflowRunID: String,
             workflowType: String,
-            heartbeatDetails: [TemporalPayload],
+            heartbeatDetails: [Api.Common.V1.Payload],
             dataConverter: DataConverter
         ) {
             self.activityID = activityID
@@ -315,7 +315,7 @@ extension ActivityExecutionContext {
             workflowNamespace: activityTaskStart.workflowNamespace,
             workflowRunID: activityTaskStart.workflowExecution.runID,
             workflowType: activityTaskStart.workflowType,
-            heartbeatDetails: activityTaskStart.heartbeatDetails.map { .init(temporalAPIPayload: $0) },
+            heartbeatDetails: activityTaskStart.heartbeatDetails,
             dataConverter: dataConverter
         )
 

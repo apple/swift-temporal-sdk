@@ -15,7 +15,7 @@
 /// Result of an activity execution.
 enum ActivityExecutionResult: Hashable, Sendable {
     /// Activity finished successfully with a result.
-    case completed(result: TemporalPayload)
+    case completed(result: Api.Common.V1.Payload)
     /// Activity failed with a failure.
     case failed(failure: TemporalFailure)
     /// Activity was cancelled with a cancellation failure.

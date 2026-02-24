@@ -26,9 +26,7 @@ extension Api.Schedule.V1.ScheduleAction {
         self.startWorkflow.workflowID = scheduleActionStartWorkflow.options.id
         self.startWorkflow.workflowType.name = scheduleActionStartWorkflow.workflowName
         self.startWorkflow.taskQueue.name = scheduleActionStartWorkflow.options.taskQueue
-        self.startWorkflow.input.payloads = try await dataConverter.convertValues(scheduleActionStartWorkflow.input).map {
-            .init(temporalPayload: $0)
-        }
+        self.startWorkflow.input.payloads = try await dataConverter.convertValues(scheduleActionStartWorkflow.input)
         if !scheduleActionStartWorkflow.headers.isEmpty {
             self.startWorkflow.header = try await .init(scheduleActionStartWorkflow.headers, with: dataConverter.payloadCodec)
         }
@@ -43,7 +41,7 @@ extension Api.Schedule.V1.ScheduleAction {
         if let memo = scheduleActionStartWorkflow.options.memo {
             var temporalPayloads = [String: Api.Common.V1.Payload]()
             for (key, value) in memo {
-                temporalPayloads[key] = .init(temporalPayload: try await dataConverter.convertValue(value))
+                temporalPayloads[key] = try await dataConverter.convertValue(value)
             }
             self.startWorkflow.memo = .with {
                 $0.fields = temporalPayloads
@@ -65,12 +63,12 @@ extension ScheduleAction {
                 input = () as! Input
             } else {
                 input = try await dataConverter.convertPayloads(
-                    proto.input.payloads.map { .init(temporalAPIPayload: $0) },
+                    proto.input.payloads,
                     as: Input.self
                 )
             }
 
-            let headers: [String: TemporalPayload]
+            let headers: [String: Api.Common.V1.Payload]
             if proto.hasHeader && !proto.header.fields.isEmpty {
                 headers = try await proto.header.decoded(with: dataConverter.payloadCodec)
             } else {

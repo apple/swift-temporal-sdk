@@ -123,6 +123,6 @@ public struct WorkflowExecution: Hashable, Sendable {
         executionTime = raw.hasExecutionTime ? raw.executionTime.date : nil
         historyLength = Int(raw.historyLength)
         searchAttributes = try .init(raw.searchAttributes)
-        memo = raw.memo.fields.mapValues { .init(.init(temporalAPIPayload: $0)) }
+        memo = raw.memo.fields.mapValues { .init($0) }
     }
 }

@@ -27,7 +27,7 @@ extension HistoryEvent.Attributes {
         /// Input for the operation.
         ///
         /// The server converts this into Nexus request content and the appropriate content headers internally when sending the StartOperation request. On the handler side, if it is also backed by Temporal, the content is transformed back to the original Payload stored in this event.
-        public var input: TemporalPayload
+        public var input: Api.Common.V1.Payload
 
         /// Schedule-to-close timeout for this operation.
         ///
@@ -57,7 +57,7 @@ extension HistoryEvent.Attributes {
             endpoint: String,
             service: String,
             operation: String,
-            input: TemporalPayload,
+            input: Api.Common.V1.Payload,
             scheduleToCloseTimeout: Duration? = nil,
             nexusHeader: [String: String] = [:],
             workflowTaskCompletedEventID: Int,

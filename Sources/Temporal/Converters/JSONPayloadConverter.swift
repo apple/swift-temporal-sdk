@@ -53,25 +53,25 @@ public struct JSONPayloadConverter: EncodingPayloadConverter {
         self.jsonDecoder = jsonDecoder
     }
 
-    public func convertValue(_ value: some Any) throws -> TemporalPayload {
+    public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {
         guard let encodable = value as? any Encodable else {
             throw EncodingError()
         }
 
         let encodedValue = try self.jsonEncoder.encode(encodable)
 
-        return createPayload(for: Array(encodedValue))
+        return createPayload(for: encodedValue)
     }
 
     public func convertPayload<Value>(
-        _ payload: TemporalPayload,
+        _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type
     ) throws -> Value {
         guard let decodableType = Value.self as? any Decodable.Type else {
             throw DecodingError()
         }
 
-        let decoded = try self.jsonDecoder.decode(decodableType, from: Data(payload.data))
+        let decoded = try self.jsonDecoder.decode(decodableType, from: payload.data)
         // This force unwrap is safe
         return decoded as! Value
     }

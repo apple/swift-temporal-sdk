@@ -16,7 +16,7 @@ extension HistoryEvent.Attributes {
     /// Event attributes for when an activity task has been canceled.
     public struct ActivityTaskCanceled: Hashable, Sendable {
         /// Additional information that the activity reported upon confirming cancellation.
-        public var details: [TemporalPayload]
+        public var details: [Api.Common.V1.Payload]
 
         /// id of the most recent `ACTIVITY_TASK_CANCEL_REQUESTED` event which refers to the same activity.
         public var latestCancelRequestedEventID: Int
@@ -36,7 +36,7 @@ extension HistoryEvent.Attributes {
 
         /// Creates event attributes for when an activity task has been canceled.
         public init(
-            details: [TemporalPayload],
+            details: [Api.Common.V1.Payload],
             latestCancelRequestedEventID: Int,
             scheduledEventID: Int,
             startedEventID: Int,

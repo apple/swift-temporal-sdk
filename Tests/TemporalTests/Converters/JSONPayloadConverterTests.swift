@@ -24,8 +24,8 @@ struct JSONPayloadConverterTests {
 
         let payload = try payloadConverter.convertValue(Optional<String>.none)
 
-        #expect(payload.data == [110, 117, 108, 108])
-        #expect(payload.metadata == ["encoding": Array("json/plain".utf8)])
+        #expect(payload.data == Data([110, 117, 108, 108]))
+        #expect(payload.metadata == ["encoding": Data("json/plain".utf8)])
 
         #expect(try payloadConverter.convertPayload(payload, as: Optional<String>.self) == nil)
     }
@@ -35,8 +35,8 @@ struct JSONPayloadConverterTests {
         let payloadConverter = JSONPayloadConverter()
 
         let payload = try payloadConverter.convertValue([UInt8]([1, 2, 3]))
-        #expect(payload.data == [91, 49, 44, 50, 44, 51, 93])
-        #expect(payload.metadata == ["encoding": Array("json/plain".utf8)])
+        #expect(payload.data == Data([91, 49, 44, 50, 44, 51, 93]))
+        #expect(payload.metadata == ["encoding": Data("json/plain".utf8)])
 
         let convertedArray = try payloadConverter.convertPayload(
             payload,
@@ -50,8 +50,8 @@ struct JSONPayloadConverterTests {
         let payloadConverter = JSONPayloadConverter()
 
         let payload = try payloadConverter.convertValue(Data([1, 2, 3]))
-        #expect(payload.data == [34, 65, 81, 73, 68, 34])
-        #expect(payload.metadata == ["encoding": Array("json/plain".utf8)])
+        #expect(payload.data == Data([34, 65, 81, 73, 68, 34]))
+        #expect(payload.metadata == ["encoding": Data("json/plain".utf8)])
 
         let convertedData = try payloadConverter.convertPayload(
             payload,
@@ -65,8 +65,8 @@ struct JSONPayloadConverterTests {
         let payloadConverter = JSONPayloadConverter()
 
         let payload = try payloadConverter.convertValue("Hello")
-        #expect(payload.data == [34, 72, 101, 108, 108, 111, 34])
-        #expect(payload.metadata == ["encoding": Array("json/plain".utf8)])
+        #expect(payload.data == Data([34, 72, 101, 108, 108, 111, 34]))
+        #expect(payload.metadata == ["encoding": Data("json/plain".utf8)])
 
         let convertedData = try payloadConverter.convertPayload(
             payload,
@@ -89,29 +89,30 @@ struct JSONPayloadConverterTests {
 
         let payload = try payloadConverter.convertValue(testCodable)
         #expect(
-            payload.data == [
-                123, 34, 115, 111,
-                109, 101, 66, 111,
-                111, 108, 34, 58,
-                116, 114, 117, 101,
-                44, 34, 115, 111,
-                109, 101, 68, 97,
-                116, 97, 34, 58,
-                34, 65, 81, 73,
-                68, 66, 65, 61,
-                61, 34, 44, 34,
-                115, 111, 109, 101,
-                73, 110, 116, 34,
-                58, 49, 50, 51,
-                52, 44, 34, 115,
-                111, 109, 101, 83,
-                116, 114, 105, 110,
-                103, 34, 58, 34,
-                72, 101, 108, 108,
-                111, 34, 125,
-            ]
+            payload.data
+                == Data([
+                    123, 34, 115, 111,
+                    109, 101, 66, 111,
+                    111, 108, 34, 58,
+                    116, 114, 117, 101,
+                    44, 34, 115, 111,
+                    109, 101, 68, 97,
+                    116, 97, 34, 58,
+                    34, 65, 81, 73,
+                    68, 66, 65, 61,
+                    61, 34, 44, 34,
+                    115, 111, 109, 101,
+                    73, 110, 116, 34,
+                    58, 49, 50, 51,
+                    52, 44, 34, 115,
+                    111, 109, 101, 83,
+                    116, 114, 105, 110,
+                    103, 34, 58, 34,
+                    72, 101, 108, 108,
+                    111, 34, 125,
+                ])
         )
-        #expect(payload.metadata == ["encoding": Array("json/plain".utf8)])
+        #expect(payload.metadata == ["encoding": Data("json/plain".utf8)])
 
         let convertedData = try payloadConverter.convertPayload(
             payload,

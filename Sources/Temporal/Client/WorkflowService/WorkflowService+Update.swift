@@ -48,7 +48,7 @@ extension TemporalClient.WorkflowService {
         firstExecutionRunID: String? = nil,
         updateID: String = UUID().uuidString,
         updateName: String,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         input: repeat each Input,
         resultTypes: repeat (each Result).Type,
         callOptions: CallOptions? = nil
@@ -97,7 +97,7 @@ extension TemporalClient.WorkflowService {
         firstExecutionRunID: String? = nil,
         updateType: Update.Type = Update.self,
         updateID: String = UUID().uuidString,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         input: Update.Input,
         callOptions: CallOptions? = nil
     ) async throws -> Update.Output {
@@ -140,7 +140,7 @@ extension TemporalClient.WorkflowService {
         firstExecutionRunID: String? = nil,
         updateID: String = UUID().uuidString,
         updateName: String,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         input: repeat each Input,
         callOptions: CallOptions? = nil
     ) async throws -> String {
@@ -160,7 +160,7 @@ extension TemporalClient.WorkflowService {
             $0.request.meta.identity = self.configuration.identity
             $0.request.meta.updateID = updateID
             $0.request.input.name = updateName
-            $0.request.input.args.payloads = inputPayloads.map { .init(temporalPayload: $0) }
+            $0.request.input.args.payloads = inputPayloads
             // TODO: Add support for wait policy
             //            $0.waitPolicy
         }
@@ -209,7 +209,7 @@ extension TemporalClient.WorkflowService {
         firstExecutionRunID: String? = nil,
         updateType: Update.Type = Update.self,
         updateID: String = UUID().uuidString,
-        headers: [String: TemporalPayload] = [:],
+        headers: [String: Api.Common.V1.Payload] = [:],
         input: Update.Input,
         callOptions: CallOptions? = nil
     ) async throws -> String {
@@ -273,7 +273,7 @@ extension TemporalClient.WorkflowService {
                     switch response.outcome.value {
                     case .success(let success):
                         return try await self.configuration.dataConverter.convertPayloads(
-                            success.payloads.map { .init(temporalAPIPayload: $0) },
+                            success.payloads,
                             as: repeat each resultTypes
                         )
                     case .failure(let failure):

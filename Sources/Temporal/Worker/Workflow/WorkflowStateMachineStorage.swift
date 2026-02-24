@@ -179,9 +179,9 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         activityType: String,
         options: ActivityExecutionOptions,
         workflowTaskQueue: String,
-        headers: [String: TemporalPayload],
-        input: [TemporalPayload]
-    ) async throws -> TemporalPayload {
+        headers: [String: Api.Common.V1.Payload],
+        input: [Api.Common.V1.Payload]
+    ) async throws -> Api.Common.V1.Payload {
         if Task.isCancelled {
             throw CanceledError(message: "Activity cancelled before scheduled")
         }
@@ -210,7 +210,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
 
             switch result.status {
             case .completed(let completed):
-                return .init(temporalAPIPayload: completed.result)
+                return completed.result
             case .failed(let failed):
                 let error = self.failureConverter.convertTemporalFailure(
                     .init(temporalAPIFailure: failed.failure),
@@ -249,7 +249,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         self.stateMachine.removeCondition(id: id).resume()
     }
 
-    func queryFinished(id: String, temporalPayload: TemporalPayload) {
+    func queryFinished(id: String, temporalPayload: Api.Common.V1.Payload) {
         self.stateMachine.queryFinished(id: id, temporalPayload: temporalPayload)
     }
 
@@ -261,7 +261,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         self.stateMachine.updateAccepted(id: id)
     }
 
-    func updateCompleted(id: String, temporalPayload: TemporalPayload) {
+    func updateCompleted(id: String, temporalPayload: Api.Common.V1.Payload) {
         self.stateMachine.updateCompleted(id: id, temporalPayload: temporalPayload)
     }
 
@@ -273,8 +273,8 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         namespace: String,
         taskQueue: String,
         workflowName: String,
-        headers: [String: TemporalPayload],
-        inputs: [TemporalPayload],
+        headers: [String: Api.Common.V1.Payload],
+        inputs: [Api.Common.V1.Payload],
         childWorkflowOptions: ChildWorkflowOptions,
         interceptors: [any WorkflowOutboundInterceptor]
     ) async throws -> UntypedChildWorkflowHandle {
@@ -285,9 +285,9 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
             )
         }
 
-        let childWorkflowMemo: [String: TemporalPayload]?
+        let childWorkflowMemo: [String: Api.Common.V1.Payload]?
         if let memo = childWorkflowOptions.memo {
-            var temporalPayloads: [String: TemporalPayload] = [:]
+            var temporalPayloads: [String: Api.Common.V1.Payload] = [:]
             for (key, value) in memo {
                 do {
                     temporalPayloads[key] = try self.payloadConverter.convertValue(value)
@@ -387,8 +387,8 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
     func signalChildWorkflow(
         childWorkflowID: String,
         signalName: String,
-        headers: [String: TemporalPayload],
-        inputs: [TemporalPayload]
+        headers: [String: Api.Common.V1.Payload],
+        inputs: [Api.Common.V1.Payload]
     ) async throws {
         // If we are already cancelled no point in scheduling a timer
         if Task.isCancelled {
@@ -433,7 +433,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         }
     }
 
-    func workflowFinished(temporalPayload: TemporalPayload) {
+    func workflowFinished(temporalPayload: Api.Common.V1.Payload) {
         self.stateMachine.workflowFinished(temporalPayload: temporalPayload)
     }
 

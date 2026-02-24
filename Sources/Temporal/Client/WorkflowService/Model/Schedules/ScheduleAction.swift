@@ -26,7 +26,7 @@ public enum ScheduleAction<Input: Sendable>: Sendable {
         public var options: WorkflowOptions
 
         /// Custom headers to include with the workflow execution.
-        public var headers: [String: TemporalPayload]
+        public var headers: [String: Api.Common.V1.Payload]
 
         /// Creates a schedule action for starting workflow executions with input data.
         ///
@@ -38,7 +38,7 @@ public enum ScheduleAction<Input: Sendable>: Sendable {
         public init(
             workflowName: String,
             options: WorkflowOptions,
-            headers: [String: TemporalPayload] = [:],
+            headers: [String: Api.Common.V1.Payload] = [:],
             input: Input
         ) {
             self.workflowName = workflowName
@@ -56,7 +56,7 @@ public enum ScheduleAction<Input: Sendable>: Sendable {
         public init(
             workflowName: String,
             options: WorkflowOptions,
-            headers: [String: TemporalPayload] = [:]
+            headers: [String: Api.Common.V1.Payload] = [:]
         ) where Input == Void {
             self.init(workflowName: workflowName, options: options, headers: headers, input: ())
         }
@@ -71,7 +71,7 @@ public enum ScheduleAction<Input: Sendable>: Sendable {
         public init<Workflow: WorkflowDefinition>(
             workflowType: Workflow.Type = Workflow.self,
             options: WorkflowOptions,
-            headers: [String: TemporalPayload] = [:],
+            headers: [String: Api.Common.V1.Payload] = [:],
             input: Workflow.Input
         ) where Workflow.Input == Input {
             self.init(
@@ -91,7 +91,7 @@ public enum ScheduleAction<Input: Sendable>: Sendable {
         public init<Workflow: WorkflowDefinition>(
             workflowType: Workflow.Type = Workflow.self,
             options: WorkflowOptions,
-            headers: [String: TemporalPayload] = [:],
+            headers: [String: Api.Common.V1.Payload] = [:],
         ) where Workflow.Input == Void, Workflow.Input == Input {
             self.init(workflowType: workflowType, options: options, headers: headers, input: ())
         }

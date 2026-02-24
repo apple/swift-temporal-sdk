@@ -32,8 +32,8 @@ struct BinaryPayloadConverterTests {
         let payloadConverter = BinaryPayloadConverter()
 
         let payload = try payloadConverter.convertValue([UInt8]([1, 2, 3]))
-        #expect(payload.data == [1, 2, 3])
-        #expect(payload.metadata == ["encoding": Array("binary/plain".utf8)])
+        #expect(payload.data == Data([1, 2, 3]))
+        #expect(payload.metadata == ["encoding": Data("binary/plain".utf8)])
 
         let convertedArray = try payloadConverter.convertPayload(
             payload,
@@ -47,8 +47,8 @@ struct BinaryPayloadConverterTests {
         let payloadConverter = BinaryPayloadConverter()
 
         let payload = try payloadConverter.convertValue(Optional.some([UInt8]([1, 2, 3])))
-        #expect(payload.data == [1, 2, 3])
-        #expect(payload.metadata == ["encoding": Array("binary/plain".utf8)])
+        #expect(payload.data == Data([1, 2, 3]))
+        #expect(payload.metadata == ["encoding": Data("binary/plain".utf8)])
 
         let convertedArray = try payloadConverter.convertPayload(
             payload,
@@ -62,8 +62,8 @@ struct BinaryPayloadConverterTests {
         let payloadConverter = BinaryPayloadConverter()
 
         let payload = try payloadConverter.convertValue(Data([1, 2, 3]))
-        #expect(payload.data == [1, 2, 3])
-        #expect(payload.metadata == ["encoding": Array("binary/plain".utf8)])
+        #expect(payload.data == Data([1, 2, 3]))
+        #expect(payload.metadata == ["encoding": Data("binary/plain".utf8)])
 
         let convertedData = try payloadConverter.convertPayload(
             payload,

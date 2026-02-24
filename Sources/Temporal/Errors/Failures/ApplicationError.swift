@@ -30,7 +30,7 @@ public struct ApplicationError: TemporalFailureError {
     public var stackTrace: String
 
     /// The details of the error.
-    public var details: [TemporalPayload]
+    public var details: [Api.Common.V1.Payload]
 
     /// The string type of the error if any.
     public var type: String?
@@ -55,7 +55,7 @@ public struct ApplicationError: TemporalFailureError {
         message: String,
         cause: (any Error)? = nil,
         stackTrace: String = "",
-        details: [TemporalPayload] = [],
+        details: [Api.Common.V1.Payload] = [],
         type: String? = nil,
         isNonRetryable: Bool = false,
         nextRetryDelay: Duration? = nil

@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import SwiftProtobuf
 import Temporal
 import Testing
 
@@ -28,7 +29,7 @@ struct DataConverterTests {
 
         let payload = try await dataConverter.convertValue(())
 
-        #expect(payload.data == Array(Data()))
+        #expect(payload.data == Data())
         #expect(payload.metadata == [:])
     }
 
@@ -42,9 +43,9 @@ struct DataConverterTests {
 
         let payload = try await dataConverter.convertValue([UInt8]([1, 2, 3]))
 
-        #expect(payload.data == Array(Data([1, 2, 3]).base64EncodedData()))
-        #expect(payload.metadata["encoding"] == Array("binary/plain".utf8))
-        #expect(payload.metadata["codec"] == Array("application/base64".utf8))
+        #expect(payload.data == Data([1, 2, 3]).base64EncodedData())
+        #expect(payload.metadata["encoding"] == Data("binary/plain".utf8))
+        #expect(payload.metadata["codec"] == Data("application/base64".utf8))
     }
 
     @Test
@@ -57,8 +58,8 @@ struct DataConverterTests {
 
         let payload = try await dataConverter.convertValue([String]([]))
 
-        #expect(payload.data == Array("[]".utf8))
-        #expect(payload.metadata["encoding"] == Array("json/plain".utf8))
+        #expect(payload.data == Data("[]".utf8))
+        #expect(payload.metadata["encoding"] == Data("json/plain".utf8))
         #expect(payload.metadata["codec"] == nil)
     }
 
@@ -98,10 +99,10 @@ struct DataConverterTests {
             payloadCodec: Base64PayloadCodec()
         )
 
-        let payload = TemporalPayload(
-            data: Array(Data()),
-            metadata: [:]
-        )
+        let payload = Api.Common.V1.Payload.with {
+            $0.data = Data()
+            $0.metadata = [:]
+        }
         let void: Void? = try await dataConverter.convertPayloads([payload], as: Void.self) as Void
 
         #expect(void! == ())
@@ -115,13 +116,13 @@ struct DataConverterTests {
             payloadCodec: Base64PayloadCodec()
         )
 
-        let payload = TemporalPayload(
-            data: Array(Data([1, 2, 3]).base64EncodedData()),
-            metadata: [
-                "codec": Array("application/base64".utf8),
-                "encoding": Array("binary/plain".utf8),
+        let payload = Api.Common.V1.Payload.with {
+            $0.data = Data([1, 2, 3]).base64EncodedData()
+            $0.metadata = [
+                "codec": Data("application/base64".utf8),
+                "encoding": Data("binary/plain".utf8),
             ]
-        )
+        }
         let array = try await dataConverter.convertPayloads([payload], as: Array<UInt8>.self)
 
         #expect(array == Array([1, 2, 3]))
@@ -135,7 +136,10 @@ struct DataConverterTests {
             payloadCodec: Base64PayloadCodec()
         )
 
-        let payload = TemporalPayload(data: .init(), metadata: ["encoding": Array("binary/null".utf8)])
+        let payload = Api.Common.V1.Payload.with {
+            $0.data = Data()
+            $0.metadata = ["encoding": Data("binary/null".utf8)]
+        }
 
         let convertedNil = try await dataConverter.convertPayload(
             payload,
@@ -155,7 +159,12 @@ struct DataConverterTests {
 
         await #expect(throws: (any Error).self) {
             try await dataConverter.convertPayloads(
-                [TemporalPayload(data: [], metadata: [:])],
+                [
+                    Api.Common.V1.Payload.with {
+                        $0.data = Data()
+                        $0.metadata = [:]
+                    }
+                ],
                 as: Array<UInt8>.self
             )
         }
@@ -171,7 +180,12 @@ struct DataConverterTests {
 
         await #expect(throws: CancellationError.self) {
             try await dataConverter.convertPayloads(
-                [TemporalPayload(data: [], metadata: [:])],
+                [
+                    Api.Common.V1.Payload.with {
+                        $0.data = Data()
+                        $0.metadata = [:]
+                    }
+                ],
                 as: Array<UInt8>.self
             )
         }
@@ -191,7 +205,10 @@ struct DataConverterTests {
             message: "Message",
             stackTrace: "StackTrace",
             details: [
-                .init(data: Array("details".utf8), metadata: [:])
+                Api.Common.V1.Payload.with {
+                    $0.data = Data("details".utf8)
+                    $0.metadata = [:]
+                }
             ],
             type: "TestError",
             isNonRetryable: false,
@@ -207,10 +224,10 @@ struct DataConverterTests {
         let expectedFailureInfo = TemporalFailure.FailureInfo.application(
             .init(
                 details: [
-                    .init(
-                        data: Array(Data("details".utf8).base64EncodedData()),
-                        metadata: ["codec": Array("application/base64".utf8)]
-                    )
+                    Api.Common.V1.Payload.with {
+                        $0.data = Data("details".utf8).base64EncodedData()
+                        $0.metadata = ["codec": Data("application/base64".utf8)]
+                    }
                 ],
                 type: "TestError",
                 isNonRetryable: false,

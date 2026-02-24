@@ -16,7 +16,7 @@ extension HistoryEvent.Attributes {
     /// Event attributes for when a child workflow execution has been canceled.
     public struct ChildWorkflowExecutionCanceled: Hashable, Sendable {
         /// Details provided when the child workflow was canceled.
-        public var details: [TemporalPayload]
+        public var details: [Api.Common.V1.Payload]
 
         /// Namespace of the child workflow.
         ///
@@ -40,7 +40,7 @@ extension HistoryEvent.Attributes {
 
         /// Creates event attributes for when a child workflow execution has been canceled.
         public init(
-            details: [TemporalPayload],
+            details: [Api.Common.V1.Payload],
             namespace: String,
             namespaceID: String,
             workflowExecution: WorkflowExecutionID,

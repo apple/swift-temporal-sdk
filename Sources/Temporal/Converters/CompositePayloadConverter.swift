@@ -12,11 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+import struct Foundation.Data
+
 /// A payload converter that uses multiple implementations to perform payload
 /// conversions.
 ///
 /// When encoding a value, each converter is tried in sequence until one of
-/// them is able to convert the value to a ``TemporalPayload``.
+/// them is able to convert the value to an ``Api/Common/V1/Payload``.
 ///
 /// When decoding the encoding of the payload is examined and the first
 /// underlying converter that reports processing that encoding is used for
@@ -31,7 +33,7 @@ public struct CompositePayloadConverter<each Converter: EncodingPayloadConverter
         self.converter = (repeat each converter)
     }
 
-    public func convertValue(_ value: some Any) throws -> TemporalPayload {
+    public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {
         if let value = value as? TemporalRawValue {
             return value.payload
         }
@@ -46,7 +48,7 @@ public struct CompositePayloadConverter<each Converter: EncodingPayloadConverter
     }
 
     public func convertPayload<Value>(
-        _ payload: TemporalPayload,
+        _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type
     ) throws -> Value {
         if Value.self == TemporalRawValue.self {
@@ -58,7 +60,7 @@ public struct CompositePayloadConverter<each Converter: EncodingPayloadConverter
         }
 
         for (type, converter) in repeat ((each Converter).self, each converter) {
-            if Array(type.encoding.utf8) == encoding {
+            if Data(type.encoding.utf8) == encoding {
                 return try converter.convertPayload(payload, as: valueType)
             }
         }

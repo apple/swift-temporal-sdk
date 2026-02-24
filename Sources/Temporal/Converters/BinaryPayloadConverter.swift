@@ -24,7 +24,7 @@ public struct BinaryPayloadConverter: EncodingPayloadConverter {
     /// Initializes a new binary payload converter.
     public init() {}
 
-    public func convertValue(_ value: some Any) throws -> TemporalPayload {
+    public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {
         // We are checking if the value is a Sequence of UInt8 first since
         // otherwise we would wrongly convert empty Array's of other Element types.
         // This is how Swift's dynamic casting for empty works
@@ -41,14 +41,14 @@ public struct BinaryPayloadConverter: EncodingPayloadConverter {
     }
 
     public func convertPayload<Value>(
-        _ payload: TemporalPayload,
+        _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type
     ) throws -> Value {
         // The force unwraps are safe
         if valueType is [UInt8].Type {
-            return payload.data as! Value
+            return Array(payload.data) as! Value
         } else if valueType is Data.Type {
-            return Data(payload.data) as! Value
+            return payload.data as! Value
         }
 
         throw DecodingError()

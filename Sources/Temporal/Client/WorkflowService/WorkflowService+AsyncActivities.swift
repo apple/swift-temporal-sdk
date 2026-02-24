@@ -48,13 +48,13 @@ extension TemporalClient.WorkflowService {
 
         var detailsPayloads: Api.Common.V1.Payloads?
         if let items = options?.details, !items.isEmpty {
-            var payloads: [TemporalPayload] = []
+            var payloads: [Api.Common.V1.Payload] = []
             for item in items {
                 payloads.append(try await dataConverter.convertValue(item))
             }
 
             detailsPayloads = .with {
-                $0.payloads = payloads.map { .init(temporalPayload: $0) }
+                $0.payloads = payloads
             }
         }
 
@@ -116,7 +116,7 @@ extension TemporalClient.WorkflowService {
 
         let payload = try await dataConverter.convertValue(result)
         let resultPayloads = Api.Common.V1.Payloads.with {
-            $0.payloads = [.init(temporalPayload: payload)]
+            $0.payloads = [payload]
         }
 
         switch activity {
@@ -176,7 +176,7 @@ extension TemporalClient.WorkflowService {
         if let items = options?.lastHeartbeatDetails, !items.isEmpty {
             let payloads = try await dataConverter.convertValues(items)
             lastHeartbeatDetails = .with {
-                $0.payloads = payloads.map { .init(temporalPayload: $0) }
+                $0.payloads = payloads
             }
         }
 
@@ -234,7 +234,7 @@ extension TemporalClient.WorkflowService {
         if let items = options?.details, !items.isEmpty {
             let payloads = try await dataConverter.convertValues(items)
             detailsPayloads = .with {
-                $0.payloads = payloads.map { .init(temporalPayload: $0) }
+                $0.payloads = payloads
             }
         }
 

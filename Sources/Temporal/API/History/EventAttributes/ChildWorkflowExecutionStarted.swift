@@ -33,7 +33,7 @@ extension HistoryEvent.Attributes {
         public var workflowType: String
 
         /// Headers passed to the child workflow.
-        public var headers: [String: TemporalPayload]
+        public var headers: [String: Api.Common.V1.Payload]
 
         /// Creates event attributes for when a child workflow execution has started.
         public init(
@@ -42,7 +42,7 @@ extension HistoryEvent.Attributes {
             initiatedEventID: Int,
             workflowExecution: WorkflowExecutionID,
             workflowType: String,
-            headers: [String: TemporalPayload]
+            headers: [String: Api.Common.V1.Payload]
         ) {
             self.namespace = namespace
             self.namespaceID = namespaceID

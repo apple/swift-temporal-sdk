@@ -21,7 +21,7 @@
 /// - ``JSONPayloadConverter``
 ///
 /// When converting payloads to values the converter retrives the `encoding` value
-/// of the payloads ``TemporalPayload/metadata``.
+/// of the payloads ``Api/Common/V1/Payload/metadata``.
 /// Then it tries to convert the payload using the matching payload converter.
 public struct DefaultPayloadConverter: PayloadConverter {
     private struct EncodingError: Error {}
@@ -40,12 +40,12 @@ public struct DefaultPayloadConverter: PayloadConverter {
     /// Initializes a new default payload converter.
     public init() {}
 
-    public func convertValue(_ value: some Any) throws -> TemporalPayload {
+    public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {
         return try converter.convertValue(value)
     }
 
     public func convertPayload<Value>(
-        _ payload: TemporalPayload,
+        _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type
     ) throws -> Value {
         return try converter.convertPayload(payload, as: valueType)

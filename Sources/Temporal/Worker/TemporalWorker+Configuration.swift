@@ -373,7 +373,7 @@ extension TemporalWorker {
         ///   - instrumentation: The worker client's instrumentation configuration.
         ///   - versioningStrategy: Versioning strategy of the worker, defaults to none.
         ///   - clientIdentity: A human-readable string that identifies the worker client. By default, it is set to the SDK name and version followed by a randomly generated ID.
-        ///   - dataConverter: Converts to encode and decode ``TemporalPayload``s before sending it.
+        ///   - dataConverter: Converts to encode and decode payloads before sending it.
         ///   - interceptors: Interceptors of the worker, earlier ones wrap later ones. Defaults to a tracing interceptor.
         ///   - apiKey: The API key to use for authenticating with a Temporal Cloud instance. Defaults to none.
         public init(

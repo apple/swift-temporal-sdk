@@ -32,7 +32,7 @@ extension WorkflowInfo {
             runID: runID,
             taskQueue: taskQueue,
             namespace: namespace,
-            headers: initializeWorkflow.headers.mapValues { .init(temporalAPIPayload: $0) }
+            headers: initializeWorkflow.headers
         )
         if !initializeWorkflow.continuedFromExecutionRunID.isEmpty {
             self.continuedRunID = initializeWorkflow.continuedFromExecutionRunID
@@ -55,7 +55,7 @@ extension WorkflowInfo {
         }
         if initializeWorkflow.hasLastCompletionResult {
             self.lastResult = initializeWorkflow.lastCompletionResult.payloads.map {
-                .init(.init(temporalAPIPayload: $0))
+                .init($0)
             }
         }
         if initializeWorkflow.hasParentWorkflowInfo {

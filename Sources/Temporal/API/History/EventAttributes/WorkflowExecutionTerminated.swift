@@ -17,14 +17,14 @@ extension HistoryEvent.Attributes {
         /// User/client provided reason for termination.
         public var reason: String?
 
-        public var details: [TemporalPayload]
+        public var details: [Api.Common.V1.Payload]
 
         /// ID of the client who requested termination.
         public var identity: String?
 
         public init(
             reason: String? = nil,
-            details: [TemporalPayload] = [],
+            details: [Api.Common.V1.Payload] = [],
             identity: String? = nil
         ) {
             self.reason = reason

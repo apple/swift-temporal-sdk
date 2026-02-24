@@ -12,11 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// A payload converter transforms between Swift types and ``TemporalPayload``.
+/// A payload converter transforms between Swift types and ``Api/Common/V1/Payload``.
 ///
 /// - Important: Payload converters **must be** deterministic since they are called from within a workflow.
 public protocol PayloadConverter: Sendable {
-    /// Converts the given value to a ``TemporalPayload``.
+    /// Converts the given value to an ``Api/Common/V1/Payload``.
     ///
     /// If a converter can't convert a type it is expected to throw an error.
     ///
@@ -24,7 +24,7 @@ public protocol PayloadConverter: Sendable {
     ///
     /// - Parameter value: The value to convert.
     /// - Returns: The converted payload.
-    func convertValue(_ value: some Any) throws -> TemporalPayload
+    func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload
 
     /// Converts the given payload to a Swift type.
     ///
@@ -33,7 +33,7 @@ public protocol PayloadConverter: Sendable {
     ///   - valueType: The expected return type.
     /// - Returns: The converted type.
     func convertPayload<Value>(
-        _ payload: TemporalPayload,
+        _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type
     ) throws -> Value
 }
@@ -41,8 +41,8 @@ public protocol PayloadConverter: Sendable {
 extension PayloadConverter {
     package func convertValues<each Value>(
         _ values: repeat (each Value)
-    ) throws -> [TemporalPayload] {
-        var payloads = [TemporalPayload]()
+    ) throws -> [Api.Common.V1.Payload] {
+        var payloads = [Api.Common.V1.Payload]()
         for value in repeat each values {
             try payloads.append(self.convertValueHandlingVoid(value))
         }
@@ -51,16 +51,16 @@ extension PayloadConverter {
 
     package func convertValueHandlingVoid<Value>(
         _ value: Value
-    ) throws -> TemporalPayload {
+    ) throws -> Api.Common.V1.Payload {
         if value is Void {
-            return .init(data: .init(), metadata: [:])
+            return .init()
         }
 
         return try self.convertValue(value)
     }
 
     package func convertPayloads<each Value>(
-        _ payloads: [TemporalPayload],
+        _ payloads: [Api.Common.V1.Payload],
         as valueTypes: repeat (each Value).Type
     ) throws -> (repeat each Value) {
 
@@ -81,7 +81,7 @@ extension PayloadConverter {
     }
 
     package func convertPayloadHandlingVoid<Value>(
-        _ payload: TemporalPayload,
+        _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type = Value.self
     ) throws -> Value {
         if Value.self == Void.self {

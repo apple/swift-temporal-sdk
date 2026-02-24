@@ -23,9 +23,9 @@ extension Coresdk.WorkflowCommands.StartChildWorkflowExecution {
         generatedWorkflowID: String,
         taskQueue: String,
         parentSearchAttributes: SearchAttributeCollection? = nil,
-        memo: [String: TemporalPayload]?,
-        headers: [String: TemporalPayload],
-        inputs: [TemporalPayload]
+        memo: [String: Api.Common.V1.Payload]?,
+        headers: [String: Api.Common.V1.Payload],
+        inputs: [Api.Common.V1.Payload]
     ) {
         self = .with {
             $0.seq = sequenceNumber
@@ -33,7 +33,7 @@ extension Coresdk.WorkflowCommands.StartChildWorkflowExecution {
             $0.workflowID = childWorkflowOptions.id ?? generatedWorkflowID
             $0.workflowType = workflowName
             $0.taskQueue = childWorkflowOptions.taskQueue ?? taskQueue
-            $0.input = inputs.map { .init(temporalPayload: $0) }
+            $0.input = inputs
             $0.parentClosePolicy = .init(parentClosePolicy: childWorkflowOptions.parentClosePolicy)
             $0.workflowIDReusePolicy = .init(workflowIDReusePolicy: childWorkflowOptions.idReusePolicy)
             $0.cancellationType = .init(childWorkflowCancellationType: childWorkflowOptions.cancellationType)
@@ -47,7 +47,7 @@ extension Coresdk.WorkflowCommands.StartChildWorkflowExecution {
             self.searchAttributes = Api.Common.V1.SearchAttributes(mergedAttributes).indexedFields
         }
 
-        self.headers = headers.mapValues { .init(temporalPayload: $0) }
+        self.headers = headers
 
         if let retryPolicy = childWorkflowOptions.retryPolicy {
             self.retryPolicy = .init(retryPolicy: retryPolicy)
@@ -66,7 +66,7 @@ extension Coresdk.WorkflowCommands.StartChildWorkflowExecution {
         }
 
         if let memo {
-            self.memo = memo.mapValues { .init(temporalPayload: $0) }
+            self.memo = memo
         }
 
         if let cronSchedule = childWorkflowOptions.cronSchedule {

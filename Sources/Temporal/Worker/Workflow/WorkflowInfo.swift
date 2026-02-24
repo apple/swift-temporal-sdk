@@ -125,7 +125,7 @@ public struct WorkflowInfo: Sendable {
     ///
     /// Headers can be used to pass additional metadata and context
     /// to the workflow execution.
-    public var headers: [String: TemporalPayload]
+    public var headers: [String: Api.Common.V1.Payload]
 
     /// Information about the parent workflow if this is a child workflow.
     ///
@@ -160,7 +160,7 @@ public struct WorkflowInfo: Sendable {
         runID: String,
         taskQueue: String,
         namespace: String,
-        headers: [String: TemporalPayload]
+        headers: [String: Api.Common.V1.Payload]
     ) {
         self.attempt = attempt
         self.startTime = startTime
