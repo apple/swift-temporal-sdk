@@ -16,7 +16,7 @@ extension HistoryEvent.Attributes {
     /// Event attributes for when a child workflow execution has failed.
     public struct ChildWorkflowExecutionFailed: Hashable, Sendable {
         /// The failure that caused the child workflow to fail.
-        public var failure: TemporalFailure
+        public var failure: Api.Failure.V1.Failure
 
         /// Namespace of the child workflow.
         ///
@@ -43,7 +43,7 @@ extension HistoryEvent.Attributes {
 
         /// Creates event attributes for when a child workflow execution has failed.
         public init(
-            failure: TemporalFailure,
+            failure: Api.Failure.V1.Failure,
             namespace: String,
             namespaceID: String,
             workflowExecution: WorkflowExecutionID,

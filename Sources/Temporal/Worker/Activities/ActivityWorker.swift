@@ -343,17 +343,17 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                                             error
                                         }
 
-                                    let temporalFailure = await self.dataConverter.convertError(errorToConvert)
-                                    return .init(
-                                        taskToken: Data(taskToken.bytes),
-                                        result: {
-                                            if case .cancelled = temporalFailure.failureInfo {
-                                                .cancelled(failure: temporalFailure)
-                                            } else {
-                                                .failed(failure: temporalFailure)
-                                            }
-                                        }()
-                                    )
+                                    let failure = await self.dataConverter.convertError(errorToConvert)
+                                    return .with {
+                                        $0.taskToken = Data(taskToken.bytes)
+                                        if let failureInfo = failure.failureInfo,
+                                            case .canceledFailureInfo = failureInfo
+                                        {
+                                            $0.result.cancelled.failure = failure
+                                        } else {
+                                            $0.result.failed.failure = failure
+                                        }
+                                    }
                                 }
 
                                 // TODO: What should we do if sending the completion fails?

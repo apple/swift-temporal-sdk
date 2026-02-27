@@ -32,7 +32,7 @@ extension HistoryEvent.Attributes {
         /// Some uses of markers, like a local activity, could "fail".
         ///
         /// If they did that is recorded here.
-        public var failure: TemporalFailure?
+        public var failure: Api.Failure.V1.Failure?
 
         /// Creates event attributes for when a marker has been recorded.
         public init(
@@ -40,7 +40,7 @@ extension HistoryEvent.Attributes {
             details: [String: [Api.Common.V1.Payload]] = [:],
             workflowTaskCompletedEventID: Int,
             headers: [String: Api.Common.V1.Payload] = [:],
-            failure: TemporalFailure? = nil
+            failure: Api.Failure.V1.Failure? = nil
         ) {
             self.markerName = markerName
             self.details = details

@@ -23,7 +23,7 @@ extension HistoryEvent.Attributes {
         public var scheduledEventID: Int
 
         /// Cancellation details.
-        public var failure: TemporalFailure
+        public var failure: Api.Failure.V1.Failure
 
         /// The request ID allocated at schedule time.
         public var requestID: String
@@ -31,7 +31,7 @@ extension HistoryEvent.Attributes {
         /// Creates event attributes for when a Nexus operation has been canceled.
         public init(
             scheduledEventID: Int,
-            failure: TemporalFailure,
+            failure: Api.Failure.V1.Failure,
             requestID: String
         ) {
             self.scheduledEventID = scheduledEventID

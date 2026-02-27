@@ -148,7 +148,9 @@ extension TemporalClient.WorkflowService {
                         historyRunID = newExecutionRunID
                         continue
                     }
-                    let error = await self.configuration.dataConverter.convertTemporalFailure(failed.failure)
+                    let error = await self.configuration.dataConverter.convertFailure(
+                        failed.failure
+                    )
                     throw WorkflowFailedError(cause: error)
 
                 case .workflowExecutionContinuedAsNew(let continuedAsNew):

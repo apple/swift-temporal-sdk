@@ -25,7 +25,7 @@ extension HistoryEvent.Attributes {
         public var cause: WorkflowTaskFailedCause
 
         /// The failure details.
-        public var failure: TemporalFailure
+        public var failure: Api.Failure.V1.Failure
 
         /// If a worker explicitly failed this task, it's identity.
         public var identity: String?
@@ -55,7 +55,7 @@ extension HistoryEvent.Attributes {
             scheduledEventID: Int,
             startedEventID: Int,
             cause: WorkflowTaskFailedCause = .unspecified,
-            failure: TemporalFailure,
+            failure: Api.Failure.V1.Failure,
             identity: String? = nil,
             baseRunID: String? = nil,
             newRunID: String? = nil,

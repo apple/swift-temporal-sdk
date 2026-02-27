@@ -28,7 +28,7 @@ extension HistoryEvent.Attributes {
 
         /// Will be set to the most recent failure details, if this task has previously failed and then
         /// been retried.
-        public var lastFailure: TemporalFailure?
+        public var lastFailure: Api.Failure.V1.Failure?
 
         /// Version info of the worker to whom this task was dispatched.
         /// - Note: Deprecated - This field is no longer used.
@@ -46,7 +46,7 @@ extension HistoryEvent.Attributes {
             identity: String? = nil,
             requestID: String,
             attempt: Int,
-            lastFailure: TemporalFailure? = nil,
+            lastFailure: Api.Failure.V1.Failure? = nil,
             workerVersion: WorkerVersionStamp? = nil,
             buildIDRedirectCounter: Int
         ) {

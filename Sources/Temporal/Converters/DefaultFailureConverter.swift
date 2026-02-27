@@ -12,12 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
+
 /// The default failure converter.
 ///
 /// This converter transforms any Swift error into a ``TemporalError``.
 ///
 /// It also provides the option to encode the ``TemporalError/message`` and ``TemporalError/stackTrace``
-/// into the ``TemporalFailure/encodedAttributes`` field.
+/// into the ``Api/Failure/V1/Failure/encodedAttributes`` field.
 /// This behavior is configured via the ``DefaultFailureConverter/encodeCommonAttributes`` property.
 public struct DefaultFailureConverter: FailureConverter {
     /// Indicates wether the common attributes should be encoded.
@@ -31,7 +33,7 @@ public struct DefaultFailureConverter: FailureConverter {
     public func convertError(
         _ error: any Error,
         payloadConverter: some PayloadConverter
-    ) -> TemporalFailure {
+    ) -> Api.Failure.V1.Failure {
         // Use as TemporalFailureError if it already is one,
         // otherwise create a new one as an application failure
         let temporalFailureError = error as? any TemporalFailureError ?? ApplicationError(error: error)
@@ -63,16 +65,16 @@ public struct DefaultFailureConverter: FailureConverter {
         return temporalFailure
     }
 
-    public func convertTemporalFailure(
-        _ temporalFailure: TemporalFailure,
+    public func convertFailure(
+        _ temporalFailure: Api.Failure.V1.Failure,
         payloadConverter: some PayloadConverter
     ) -> any Error {
         var temporalFailure = temporalFailure
 
-        if let encodedAttributes = temporalFailure.encodedAttributes {
+        if temporalFailure.hasEncodedAttributes {
             do {
                 let decodedAttributes = try payloadConverter.convertPayloadHandlingVoid(
-                    encodedAttributes,
+                    temporalFailure.encodedAttributes,
                     as: [String: String].self
                 )
 
@@ -84,7 +86,7 @@ public struct DefaultFailureConverter: FailureConverter {
                     temporalFailure.stackTrace = stackTrace
                 }
 
-                temporalFailure.encodedAttributes = nil
+                temporalFailure.encodedAttributes = .init()
 
             } catch {
                 // Do nothing. C# SDK does the same
@@ -92,101 +94,98 @@ public struct DefaultFailureConverter: FailureConverter {
         }
 
         var cause: (any Error)?
-        if let causeTemporalFailure = temporalFailure.cause {
-            cause = self.convertTemporalFailure(
-                causeTemporalFailure,
+        if temporalFailure.hasCause {
+            cause = self.convertFailure(
+                temporalFailure.cause,
                 payloadConverter: payloadConverter
             )
         }
 
         switch temporalFailure.failureInfo {
-        case .application(let application):
+        case .applicationFailureInfo(let application):
             return ApplicationError(
                 message: temporalFailure.message,
                 cause: cause,
                 stackTrace: temporalFailure.stackTrace,
-                details: application.details,
+                details: application.details.payloads,
                 type: application.type,
-                isNonRetryable: application.isNonRetryable,
-                nextRetryDelay: application.nextRetryDelay
+                isNonRetryable: application.nonRetryable,
+                nextRetryDelay: .init(protobufDuration: application.nextRetryDelay)
             )
-        case .cancelled(let cancelled):
+        case .canceledFailureInfo(let cancelled):
             return CanceledError(
                 message: temporalFailure.message,
                 cause: cause,
                 stackTrace: temporalFailure.stackTrace,
-                details: cancelled.details
+                details: cancelled.details.payloads
             )
 
-        case .terminated(let terminated):
+        case .terminatedFailureInfo(_):
             return TerminatedError(
                 message: temporalFailure.message,
                 cause: cause,
                 stackTrace: temporalFailure.stackTrace,
-                details: terminated.details
+                details: []
             )
 
-        case .childWorkflowExecution(let childWorkflowExecution):
+        case .childWorkflowExecutionFailureInfo(let childWorkflowExecution):
             return ChildWorkflowError(
                 message: temporalFailure.message,
                 cause: cause,
                 stackTrace: temporalFailure.stackTrace,
                 namespace: childWorkflowExecution.namespace,
-                workflowID: childWorkflowExecution.workflowID,
-                runID: childWorkflowExecution.runID,
-                workflowName: childWorkflowExecution.workflowName,
-                retryState: childWorkflowExecution.retryState
+                workflowID: childWorkflowExecution.workflowExecution.workflowID,
+                runID: childWorkflowExecution.workflowExecution.runID,
+                workflowName: childWorkflowExecution.workflowType.name,
+                retryState: RetryState(retryState: childWorkflowExecution.retryState)
             )
 
-        case .activity(let activity):
+        case .activityFailureInfo(let activity):
             return ActivityError(
                 message: temporalFailure.message,
                 cause: cause,
                 stackTrace: temporalFailure.stackTrace,
-                scheduledEventID: activity.scheduledEventID,
-                startedEventID: activity.startedEventID,
+                scheduledEventID: Int(activity.scheduledEventID),
+                startedEventID: Int(activity.startedEventID),
                 activityID: activity.activityID,
-                activityType: activity.activityType,
+                activityType: activity.activityType.name,
                 identity: activity.identity,
-                retryState: activity.retryState
+                retryState: RetryState(retryState: activity.retryState)
             )
 
-        case .timeout(let timeout):
+        case .timeoutFailureInfo(let timeout):
             return TimeoutError(
                 message: temporalFailure.message,
-                type: timeout.type,
+                type: TimeoutType(timeout.timeoutType),
                 cause: cause,
                 stackTrace: temporalFailure.stackTrace,
-                lastHeartbeatDetails: timeout.lastHeartbeatDetails
+                lastHeartbeatDetails: timeout.lastHeartbeatDetails.payloads
             )
-        case .server(let server):
+        case .serverFailureInfo(let server):
             return ServerError(
                 message: temporalFailure.message,
                 cause: cause,
                 stackTrace: temporalFailure.stackTrace,
-                isNonRetryable: server.isNonRetryable
+                isNonRetryable: server.nonRetryable
             )
-        case .none:
+        case .none, .resetWorkflowFailureInfo, .nexusOperationExecutionFailureInfo, .nexusHandlerFailureInfo:
             return BasicTemporalFailureError(
                 message: temporalFailure.message,
                 cause: cause,
                 stackTrace: temporalFailure.stackTrace
             )
-
-        case .DO_NOT_EXHAUSTIVELY_MATCH_OVER_THIS_ENUM:
-            fatalError("Unexpected case DO_NOT_EXHAUSTIVELY_MATCH_OVER_THIS_ENUM")
         }
     }
 
     private func convertTemporalFailureError(
         _ temporalFailureError: any TemporalFailureError,
         payloadConverter: some PayloadConverter
-    ) -> TemporalFailure {
-        var temporalFailure = TemporalFailure(
-            message: temporalFailureError.message,
-            source: "swift-temporal-sdk",
-            stackTrace: temporalFailureError.stackTrace
-        )
+    ) -> Api.Failure.V1.Failure {
+        var temporalFailure = Api.Failure.V1.Failure.with {
+            $0.message = temporalFailureError.message
+            $0.source = "swift-temporal-sdk"
+            $0.stackTrace = temporalFailureError.stackTrace
+        }
 
         if let cause = temporalFailureError.cause {
             temporalFailure.cause = self.convertError(
@@ -197,48 +196,62 @@ public struct DefaultFailureConverter: FailureConverter {
 
         switch temporalFailureError {
         case let applicationError as ApplicationError:
-            temporalFailure.failureInfo = .application(
-                .init(
-                    details: applicationError.details,
-                    type: applicationError.type ?? "",
-                    isNonRetryable: applicationError.isNonRetryable,
-                    nextRetryDelay: applicationError.nextRetryDelay
-                )
+            temporalFailure.failureInfo = .applicationFailureInfo(
+                .with {
+                    if !applicationError.details.isEmpty {
+                        $0.details = .with { $0.payloads = applicationError.details }
+                    }
+                    $0.type = applicationError.type ?? ""
+                    $0.nonRetryable = applicationError.isNonRetryable
+                    if let nextRetryDelay = applicationError.nextRetryDelay {
+                        $0.nextRetryDelay = .init(duration: nextRetryDelay)
+                    }
+                }
             )
         case let cancelledError as CanceledError:
-            temporalFailure.failureInfo = .cancelled(.init(details: cancelledError.details))
+            temporalFailure.failureInfo = .canceledFailureInfo(
+                .with { $0.details = .with { $0.payloads = cancelledError.details } }
+            )
 
         case let terminatedError as TerminatedError:
-            temporalFailure.failureInfo = .terminated(.init(details: terminatedError.details))
+            _ = terminatedError
+            temporalFailure.failureInfo = .terminatedFailureInfo(.init())
 
         case let timeoutError as TimeoutError:
-            temporalFailure.failureInfo = .timeout(.init(type: timeoutError.type, lastHeartbeatDetails: timeoutError.lastHeartbeatDetails))
+            temporalFailure.failureInfo = .timeoutFailureInfo(
+                .with {
+                    $0.timeoutType = .init(timeoutError.type)
+                    $0.lastHeartbeatDetails = .with { $0.payloads = timeoutError.lastHeartbeatDetails }
+                }
+            )
 
         case let childWorkflowError as ChildWorkflowError:
-            temporalFailure.failureInfo = .childWorkflowExecution(
-                .init(
-                    namespace: childWorkflowError.namespace,
-                    workflowID: childWorkflowError.workflowID,
-                    runID: childWorkflowError.runID,
-                    workflowName: childWorkflowError.workflowName,
-                    retryState: childWorkflowError.retryState
-                )
+            temporalFailure.failureInfo = .childWorkflowExecutionFailureInfo(
+                .with {
+                    $0.namespace = childWorkflowError.namespace
+                    $0.workflowExecution = .with {
+                        $0.workflowID = childWorkflowError.workflowID
+                        $0.runID = childWorkflowError.runID
+                    }
+                    $0.workflowType = .with { $0.name = childWorkflowError.workflowName }
+                    $0.retryState = .init(retryState: childWorkflowError.retryState)
+                }
             )
 
         case let activityError as ActivityError:
-            temporalFailure.failureInfo = .activity(
-                .init(
-                    scheduledEventID: activityError.scheduledEventID,
-                    startedEventID: activityError.startedEventID,
-                    identity: activityError.identity,
-                    activityType: activityError.activityType,
-                    activityID: activityError.activityID,
-                    retryState: activityError.retryState
-                )
+            temporalFailure.failureInfo = .activityFailureInfo(
+                .with {
+                    $0.scheduledEventID = Int64(activityError.scheduledEventID)
+                    $0.startedEventID = Int64(activityError.startedEventID)
+                    $0.identity = activityError.identity
+                    $0.activityType = .with { $0.name = activityError.activityType }
+                    $0.activityID = activityError.activityID
+                    $0.retryState = .init(retryState: activityError.retryState)
+                }
             )
 
         default:
-            temporalFailure.failureInfo = .application(.init(type: "\(type(of: temporalFailureError))"))
+            temporalFailure.failureInfo = .applicationFailureInfo(.with { $0.type = "\(type(of: temporalFailureError))" })
         }
         return temporalFailure
     }

@@ -216,6 +216,6 @@ extension Coresdk.WorkflowActivation.WorkflowActivation {
     }
 
     private func decode(temporalFailure: inout Api.Failure.V1.Failure, payloadCodec: some PayloadCodec) async throws {
-        temporalFailure = try await .init(temporalFailure: payloadCodec.decode(temporalFailure: .init(temporalAPIFailure: temporalFailure)))
+        temporalFailure = try await payloadCodec.decode(failure: temporalFailure)
     }
 }

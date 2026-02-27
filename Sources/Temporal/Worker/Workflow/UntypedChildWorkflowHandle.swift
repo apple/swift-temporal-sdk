@@ -185,13 +185,13 @@ public struct UntypedChildWorkflowHandle: Sendable {
                 as: Result.self
             )
         case .failed(let failure):
-            throw self.failureConverter.convertTemporalFailure(
-                .init(temporalAPIFailure: failure.failure),
+            throw self.failureConverter.convertFailure(
+                failure.failure,
                 payloadConverter: self.payloadConverter
             )
         case .cancelled(let cancelled):
-            throw self.failureConverter.convertTemporalFailure(
-                .init(temporalAPIFailure: cancelled.failure),
+            throw self.failureConverter.convertFailure(
+                cancelled.failure,
                 payloadConverter: self.payloadConverter
             )
         case .none:

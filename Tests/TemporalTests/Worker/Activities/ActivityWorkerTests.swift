@@ -480,7 +480,6 @@ struct ActivityWorkerTests {
                 $0.result.cancelled.failure.message = "Activity cancelled"
                 $0.result.cancelled.failure.source = "swift-temporal-sdk"
                 $0.result.cancelled.failure.stackTrace = ""
-                $0.result.cancelled.failure.encodedAttributes = .init()
                 $0.result.cancelled.failure.canceledFailureInfo.details = .init()
             }
             #expect(completion == expectedCompletion)
@@ -522,7 +521,6 @@ struct ActivityWorkerTests {
                 $0.result.failed.failure.message = "CustomMessage"
                 $0.result.failed.failure.source = "swift-temporal-sdk"
                 $0.result.failed.failure.stackTrace = "CustomStackTrace"
-                $0.result.failed.failure.encodedAttributes = .init()
                 $0.result.failed.failure.applicationFailureInfo = .init()
             }
             #expect(completion == expectedCompletion)
@@ -621,7 +619,6 @@ struct ActivityWorkerTests {
                 $0.result.failed.failure.message = "CancellationError()"
                 $0.result.failed.failure.source = "swift-temporal-sdk"
                 $0.result.failed.failure.stackTrace = ""
-                $0.result.failed.failure.encodedAttributes = .init()
                 $0.result.failed.failure.applicationFailureInfo.type = "CancellationError"
             }
             #expect(completion == expectedCompletion)
@@ -829,7 +826,6 @@ struct ActivityWorkerTests {
                 $0.result.failed.failure.message = "EncodingError()"
                 $0.result.failed.failure.source = "swift-temporal-sdk"
                 $0.result.failed.failure.stackTrace = ""
-                $0.result.failed.failure.encodedAttributes = .init()
                 $0.result.failed.failure.applicationFailureInfo.type = "EncodingError"
             }
             #expect(completion == expectedCompletion)

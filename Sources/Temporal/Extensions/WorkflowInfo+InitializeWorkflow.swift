@@ -50,8 +50,7 @@ extension WorkflowInfo {
             self.executionTimeout = .init(protobufDuration: initializeWorkflow.workflowExecutionTimeout)
         }
         if initializeWorkflow.hasContinuedFailure {
-            let failure = TemporalFailure(temporalAPIFailure: initializeWorkflow.continuedFailure)
-            self.lastFailure = failureConverter.convertTemporalFailure(failure, payloadConverter: payloadConverter)
+            self.lastFailure = failureConverter.convertFailure(initializeWorkflow.continuedFailure, payloadConverter: payloadConverter)
         }
         if initializeWorkflow.hasLastCompletionResult {
             self.lastResult = initializeWorkflow.lastCompletionResult.payloads.map {

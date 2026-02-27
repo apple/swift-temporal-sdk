@@ -190,7 +190,7 @@ extension TemporalClient.WorkflowService {
                     $0.workflowID = workflowID
                     if let runID { $0.runID = runID }
                     $0.activityID = activityID
-                    $0.failure = .init(temporalFailure: failure)
+                    $0.failure = failure
                     if let lastHeartbeatDetails { $0.lastHeartbeatDetails = lastHeartbeatDetails }
                 },
                 callOptions: options?.callOptions
@@ -203,7 +203,7 @@ extension TemporalClient.WorkflowService {
                     $0.namespace = self.configuration.namespace
                     $0.identity = self.configuration.identity
                     $0.taskToken = Data(token.bytes)
-                    $0.failure = .init(temporalFailure: failure)
+                    $0.failure = failure
                     if let lastHeartbeatDetails { $0.lastHeartbeatDetails = lastHeartbeatDetails }
                 },
                 callOptions: options?.callOptions

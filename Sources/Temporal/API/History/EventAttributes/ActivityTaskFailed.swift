@@ -16,7 +16,7 @@ extension HistoryEvent.Attributes {
     /// Event attributes for when an activity task has failed.
     public struct ActivityTaskFailed: Hashable, Sendable {
         /// Failure details.
-        public var failure: TemporalFailure
+        public var failure: Api.Failure.V1.Failure
 
         /// The id of the `ACTIVITY_TASK_SCHEDULED` event this failure corresponds to.
         public var scheduledEventID: Int
@@ -36,7 +36,7 @@ extension HistoryEvent.Attributes {
 
         /// Creates event attributes for when an activity task has failed.
         public init(
-            failure: TemporalFailure,
+            failure: Api.Failure.V1.Failure,
             scheduledEventID: Int,
             startedEventID: Int,
             identity: String? = nil,

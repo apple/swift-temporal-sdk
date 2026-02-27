@@ -98,12 +98,12 @@ struct WorkflowStateMachine: ~Copyable {
             /// An activation error leads to workflow task failure which leads to temporal retrying the workflow.
             ///
             /// This is different than workflow failure which signals an end state. Concretely, throwing a
-            /// ``TemporalFailureError`` from the workflows run method is considered a workflow failure
+            /// `` Api.Failure.V1.FailureError`` from the workflows run method is considered a workflow failure
             /// whereas throwing any other error is considered a workflow task failure.
             ///
             /// We cannot transition to another state yet because handlers might still have suspended continuations which
             /// we can only resume once we get a `RemoveFromCache` job.
-            var activationFailure: TemporalFailure?
+            var activationFailure: Api.Failure.V1.Failure?
 
             /// The headers passed into the initial execution.
             var headers: [String: Api.Common.V1.Payload]
@@ -558,14 +558,14 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
-    mutating func queryFailed(id: String, temporalFailure: TemporalFailure) {
+    mutating func queryFailed(id: String, failure: Api.Failure.V1.Failure) {
         switch consume self.state {
         case .active(var active):
             active.commands.append(
                 .with {
                     $0.respondToQuery = .with {
                         $0.queryID = id
-                        $0.failed = .init(temporalFailure: temporalFailure)
+                        $0.failed = failure
                     }
                 }
             )
@@ -603,14 +603,14 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
-    mutating func updateRejected(id: String, temporalFailure: TemporalFailure) {
+    mutating func updateRejected(id: String, failure: Api.Failure.V1.Failure) {
         switch consume self.state {
         case .active(var active):
             active.commands.append(
                 .with {
                     $0.updateResponse = .with {
                         $0.protocolInstanceID = id
-                        $0.rejected = .init(temporalFailure: temporalFailure)
+                        $0.rejected = failure
                     }
                 }
             )
@@ -921,13 +921,13 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
-    mutating func workflowFinished(temporalFailure: TemporalFailure) {
+    mutating func workflowFinished(failure: Api.Failure.V1.Failure) {
         switch consume self.state {
         case .active(var active):
             active.commands.append(
                 .with {
                     $0.failWorkflowExecution = .with {
-                        $0.failure = .init(temporalFailure: temporalFailure)
+                        $0.failure = failure
                     }
                 }
             )
@@ -935,17 +935,17 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
-    mutating func workflowTaskFailed(temporalFailure: TemporalFailure) {
+    mutating func workflowTaskFailed(failure: Api.Failure.V1.Failure) {
         switch consume self.state {
         case .active(var active):
-            active.activationFailure = temporalFailure
+            active.activationFailure = failure
             self = .init(state: .active(active))
         }
     }
 
     enum CommandsAction {
         case sendCommands([Coresdk.WorkflowCommands.WorkflowCommand])
-        case failActivation(TemporalFailure)
+        case failActivation(Api.Failure.V1.Failure)
     }
     mutating func commands() -> CommandsAction {
         switch consume self.state {

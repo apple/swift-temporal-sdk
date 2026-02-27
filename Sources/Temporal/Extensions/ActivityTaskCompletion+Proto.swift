@@ -24,9 +24,9 @@ extension Coresdk.ActivityTaskCompletion {
             case .completed(let payload):
                 $0.result.completed.result = payload
             case .failed(let failure):
-                $0.result.failed.failure = .init(temporalFailure: failure)
+                $0.result.failed.failure = failure
             case .cancelled(let failure):
-                $0.result.cancelled.failure = .init(temporalFailure: failure)
+                $0.result.cancelled.failure = failure
             case .willCompleteAsync:
                 $0.result.willCompleteAsync = .init()
             }

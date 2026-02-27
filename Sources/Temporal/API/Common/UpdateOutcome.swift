@@ -15,5 +15,5 @@
 /// The outcome of a Workflow Update: success or failure.
 public enum UpdateOutcome: Hashable, Sendable {
     case success([Api.Common.V1.Payload])
-    case failure(TemporalFailure)
+    case failure(Api.Failure.V1.Failure)
 }

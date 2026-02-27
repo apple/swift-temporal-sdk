@@ -25,7 +25,7 @@ extension HistoryEvent.Attributes {
         /// Failure details.
         ///
         /// A NexusOperationFailureInfo wrapping a CanceledFailureInfo.
-        public var failure: TemporalFailure
+        public var failure: Api.Failure.V1.Failure
 
         /// The id of the `NEXUS_OPERATION_SCHEDULED` event this cancel request corresponds to.
         public var scheduledEventID: Int64
@@ -34,7 +34,7 @@ extension HistoryEvent.Attributes {
         public init(
             requestedEventID: Int64,
             workflowTaskCompletedEventID: Int64,
-            failure: TemporalFailure,
+            failure: Api.Failure.V1.Failure,
             scheduledEventID: Int64
         ) {
             self.requestedEventID = requestedEventID

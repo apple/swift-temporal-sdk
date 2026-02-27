@@ -117,7 +117,7 @@ public struct DataConverter: Sendable {
         return try self.payloadConverter.convertPayload(payload, as: Value.self)
     }
 
-    package func convertError(_ error: any Error) async -> TemporalFailure {
+    package func convertError(_ error: any Error) async -> Api.Failure.V1.Failure {
         let temporalFailure = self.failureConverter.convertError(
             error,
             payloadConverter: self.payloadConverter
@@ -126,28 +126,27 @@ public struct DataConverter: Sendable {
         // If a payload codec is configured we have to encode it now.
         if let payloadCodec {
             do {
-                return try await payloadCodec.encode(temporalFailure: temporalFailure)
+                return try await payloadCodec.encode(failure: temporalFailure)
             } catch {
-                return TemporalFailure(
-                    message: "Failed to encode failure",
-                    source: "swift-temporal-sdk",
-                    stackTrace: ""
-                )
+                return Api.Failure.V1.Failure.with {
+                    $0.message = "Failed to encode failure"
+                    $0.source = "swift-temporal-sdk"
+                }
             }
         }
 
         return temporalFailure
     }
 
-    package func convertTemporalFailure(
-        _ temporalFailure: TemporalFailure
+    package func convertFailure(
+        _ temporalFailure: Api.Failure.V1.Failure
     ) async -> any Error {
         var temporalFailure = temporalFailure
 
         // If a payload codec is configured we have to decode the payload first.
         if let payloadCodec {
             do {
-                temporalFailure = try await payloadCodec.decode(temporalFailure: temporalFailure)
+                temporalFailure = try await payloadCodec.decode(failure: temporalFailure)
             } catch {
                 return BasicTemporalFailureError(
                     message: "Failed to decode failure",
@@ -156,7 +155,7 @@ public struct DataConverter: Sendable {
             }
         }
 
-        let error = self.failureConverter.convertTemporalFailure(
+        let error = self.failureConverter.convertFailure(
             temporalFailure,
             payloadConverter: self.payloadConverter
         )

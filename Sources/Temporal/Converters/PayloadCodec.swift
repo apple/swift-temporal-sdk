@@ -32,125 +32,104 @@ public protocol PayloadCodec: Sendable {
 }
 
 extension PayloadCodec {
-    func encode(temporalFailure: TemporalFailure) async throws -> TemporalFailure {
-        var temporalFailure = temporalFailure
+    func encode(failure: Api.Failure.V1.Failure) async throws -> Api.Failure.V1.Failure {
+        var failure = failure
 
-        if let encodedAttributes = temporalFailure.encodedAttributes {
-            temporalFailure.encodedAttributes = try await self.encode(payload: encodedAttributes)
+        if failure.hasEncodedAttributes {
+            failure.encodedAttributes = try await self.encode(payload: failure.encodedAttributes)
         }
 
-        switch temporalFailure.failureInfo {
-        case .application(var application):
-            var encodedDetails = [Api.Common.V1.Payload]()
-
-            for detail in application.details {
-                encodedDetails.append(try await self.encode(payload: detail))
+        switch failure.failureInfo {
+        case .applicationFailureInfo(var application):
+            var encodedPayloads = [Api.Common.V1.Payload]()
+            for payload in application.details.payloads {
+                encodedPayloads.append(try await self.encode(payload: payload))
             }
+            application.details.payloads = encodedPayloads
+            failure.failureInfo = .applicationFailureInfo(application)
 
-            application.details = encodedDetails
-            temporalFailure.failureInfo = .application(application)
-
-        case .cancelled(var cancelled):
-            var encodedDetails = [Api.Common.V1.Payload]()
-
-            for detail in cancelled.details {
-                encodedDetails.append(try await self.encode(payload: detail))
+        case .canceledFailureInfo(var cancelled):
+            var encodedPayloads = [Api.Common.V1.Payload]()
+            for payload in cancelled.details.payloads {
+                encodedPayloads.append(try await self.encode(payload: payload))
             }
+            cancelled.details.payloads = encodedPayloads
+            failure.failureInfo = .canceledFailureInfo(cancelled)
 
-            cancelled.details = encodedDetails
-            temporalFailure.failureInfo = .cancelled(cancelled)
+        case .timeoutFailureInfo(var timeout):
+            var encodedPayloads = [Api.Common.V1.Payload]()
+            for payload in timeout.lastHeartbeatDetails.payloads {
+                encodedPayloads.append(try await self.encode(payload: payload))
+            }
+            timeout.lastHeartbeatDetails.payloads = encodedPayloads
+            failure.failureInfo = .timeoutFailureInfo(timeout)
 
-        case .childWorkflowExecution, .terminated, .activity, .server:
-            // No details so nothing to encode
+        case .terminatedFailureInfo, .childWorkflowExecutionFailureInfo, .activityFailureInfo,
+            .serverFailureInfo, .resetWorkflowFailureInfo, .nexusOperationExecutionFailureInfo,
+            .nexusHandlerFailureInfo:
+            // No payload details to encode
             break
 
-        case .timeout(var timeout):
-            var encodedDetails = [Api.Common.V1.Payload]()
-
-            for detail in timeout.lastHeartbeatDetails {
-                encodedDetails.append(try await self.encode(payload: detail))
-            }
-
-            timeout.lastHeartbeatDetails = encodedDetails
-            temporalFailure.failureInfo = .timeout(timeout)
-
-        case nil:
+        case .none:
             break
-
-        case .some(.DO_NOT_EXHAUSTIVELY_MATCH_OVER_THIS_ENUM):
-            fatalError("Used DO_NOT_EXHAUSTIVELY_MATCH_OVER_THIS_ENUM failure info")
         }
 
-        if let cause = temporalFailure.cause {
-            temporalFailure.cause = try await self.encode(temporalFailure: cause)
+        if failure.hasCause {
+            failure.cause = try await self.encode(failure: failure.cause)
         }
 
-        return temporalFailure
+        return failure
     }
 
-    func decode(temporalFailure: TemporalFailure) async throws -> TemporalFailure {
-        var temporalFailure = temporalFailure
+    func decode(failure: Api.Failure.V1.Failure) async throws -> Api.Failure.V1.Failure {
+        var failure = failure
 
-        if let encodedAttributes = temporalFailure.encodedAttributes {
-            temporalFailure.encodedAttributes = try await self.decode(payload: encodedAttributes)
+        if failure.hasEncodedAttributes {
+            failure.encodedAttributes = try await self.decode(payload: failure.encodedAttributes)
         }
 
-        switch temporalFailure.failureInfo {
-        case .application(var application):
-            var decodedDetails = [Api.Common.V1.Payload]()
-
-            for detail in application.details {
-                decodedDetails.append(try await self.decode(payload: detail))
+        switch failure.failureInfo {
+        case .applicationFailureInfo(var application):
+            var decodedPayloads = [Api.Common.V1.Payload]()
+            for payload in application.details.payloads {
+                decodedPayloads.append(try await self.decode(payload: payload))
             }
+            application.details.payloads = decodedPayloads
+            failure.failureInfo = .applicationFailureInfo(application)
 
-            application.details = decodedDetails
-            temporalFailure.failureInfo = .application(application)
-
-        case .cancelled(var cancelled):
-            var decodedDetails = [Api.Common.V1.Payload]()
-
-            for detail in cancelled.details {
-                decodedDetails.append(try await self.decode(payload: detail))
+        case .canceledFailureInfo(var cancelled):
+            var decodedPayloads = [Api.Common.V1.Payload]()
+            for payload in cancelled.details.payloads {
+                decodedPayloads.append(try await self.decode(payload: payload))
             }
+            cancelled.details.payloads = decodedPayloads
+            failure.failureInfo = .canceledFailureInfo(cancelled)
 
-            cancelled.details = decodedDetails
-            temporalFailure.failureInfo = .cancelled(cancelled)
-
-        case .terminated(var terminated):
-            var decodedDetails = [Api.Common.V1.Payload]()
-
-            for detail in terminated.details {
-                decodedDetails.append(try await self.decode(payload: detail))
-            }
-
-            terminated.details = decodedDetails
-            temporalFailure.failureInfo = .terminated(terminated)
-
-        case .timeout(var timeout):
-            var decodedDetails = [Api.Common.V1.Payload]()
-
-            for detail in timeout.lastHeartbeatDetails {
-                decodedDetails.append(try await self.decode(payload: detail))
-            }
-
-            timeout.lastHeartbeatDetails = decodedDetails
-            temporalFailure.failureInfo = .timeout(timeout)
-
-        case .childWorkflowExecution, .activity, .server:
-            // No details so nothing to decode
+        case .terminatedFailureInfo:
+            // TerminatedFailureInfo has no payload details in the proto
             break
 
-        case nil:
+        case .timeoutFailureInfo(var timeout):
+            var decodedPayloads = [Api.Common.V1.Payload]()
+            for payload in timeout.lastHeartbeatDetails.payloads {
+                decodedPayloads.append(try await self.decode(payload: payload))
+            }
+            timeout.lastHeartbeatDetails.payloads = decodedPayloads
+            failure.failureInfo = .timeoutFailureInfo(timeout)
+
+        case .childWorkflowExecutionFailureInfo, .activityFailureInfo, .serverFailureInfo,
+            .resetWorkflowFailureInfo, .nexusOperationExecutionFailureInfo, .nexusHandlerFailureInfo:
+            // No payload details to decode
             break
 
-        case .some(.DO_NOT_EXHAUSTIVELY_MATCH_OVER_THIS_ENUM):
-            fatalError("Used DO_NOT_EXHAUSTIVELY_MATCH_OVER_THIS_ENUM failure info")
+        case .none:
+            break
         }
 
-        if let cause = temporalFailure.cause {
-            temporalFailure.cause = try await self.decode(temporalFailure: cause)
+        if failure.hasCause {
+            failure.cause = try await self.decode(failure: failure.cause)
         }
 
-        return temporalFailure
+        return failure
     }
 }

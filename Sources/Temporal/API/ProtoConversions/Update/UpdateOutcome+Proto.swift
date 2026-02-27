@@ -16,7 +16,7 @@ extension UpdateOutcome {
     init(_ rawValue: Api.Update.V1.Outcome) {
         self =
             switch rawValue.value {
-            case .failure(let failure): .failure(.init(temporalAPIFailure: failure))
+            case .failure(let failure): .failure(failure)
             case .success(let value): .success(value.payloads)
             case .none: fatalError("Unexpected nil value decoding UpdateOutcome.")
             }

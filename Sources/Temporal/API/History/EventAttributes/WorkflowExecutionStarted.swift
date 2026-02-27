@@ -58,7 +58,7 @@ extension HistoryEvent.Attributes {
         public var initiator: ContinueAsNewInitiator
 
         /// If this workflow was a continuation and that continuation failed, the details of that.
-        public var continuedFailure: TemporalFailure?
+        public var continuedFailure: Api.Failure.V1.Failure?
 
         /// The completion result from the previous execution.
         public var lastCompletionResult: [Api.Common.V1.Payload]
@@ -172,7 +172,7 @@ extension HistoryEvent.Attributes {
             workflowTaskTimeout: Duration? = nil,
             continuedExecutionRunID: String? = nil,
             initiator: ContinueAsNewInitiator,
-            continuedFailure: TemporalFailure? = nil,
+            continuedFailure: Api.Failure.V1.Failure? = nil,
             lastCompletionResult: [Api.Common.V1.Payload] = [],
             originalExecutionRunID: String,
             identity: String? = nil,

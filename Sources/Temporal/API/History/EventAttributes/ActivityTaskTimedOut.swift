@@ -17,7 +17,7 @@ extension HistoryEvent.Attributes {
     public struct ActivityTaskTimedOut: Hashable, Sendable {
         /// If this activity had failed, was retried, and then timed out, that failure is stored as the
         /// `cause` in here.
-        public var failure: TemporalFailure?
+        public var failure: Api.Failure.V1.Failure?
 
         /// The id of the `ACTIVITY_TASK_SCHEDULED` event this timeout corresponds to.
         public var scheduledEventID: Int
@@ -30,7 +30,7 @@ extension HistoryEvent.Attributes {
 
         /// Creates event attributes for when an activity task has timed out.
         public init(
-            failure: TemporalFailure? = nil,
+            failure: Api.Failure.V1.Failure? = nil,
             scheduledEventID: Int,
             startedEventID: Int,
             retryState: RetryState

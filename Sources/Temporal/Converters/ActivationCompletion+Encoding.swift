@@ -160,6 +160,6 @@ extension Coresdk.WorkflowCompletion.WorkflowActivationCompletion {
     }
 
     private func encode(temporalFailure: inout Api.Failure.V1.Failure, payloadCodec: some PayloadCodec) async throws {
-        temporalFailure = try await .init(temporalFailure: payloadCodec.encode(temporalFailure: .init(temporalAPIFailure: temporalFailure)))
+        temporalFailure = try await payloadCodec.encode(failure: temporalFailure)
     }
 }

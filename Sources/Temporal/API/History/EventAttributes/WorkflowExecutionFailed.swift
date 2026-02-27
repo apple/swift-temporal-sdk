@@ -16,7 +16,7 @@ extension HistoryEvent.Attributes {
     /// Event attributes for when a workflow execution has failed.
     public struct WorkflowExecutionFailed: Hashable, Sendable {
         /// Serialized result of workflow failure (ex: An exception thrown, or error returned).
-        public var failure: TemporalFailure
+        public var failure: Api.Failure.V1.Failure
 
         public var retryState: RetryState
 
@@ -27,7 +27,7 @@ extension HistoryEvent.Attributes {
         public var newExecutionRunID: String?
 
         public init(
-            failure: TemporalFailure,
+            failure: Api.Failure.V1.Failure,
             retryState: RetryState,
             workflowTaskCompletedEventID: Int,
             newExecutionRunID: String? = nil
