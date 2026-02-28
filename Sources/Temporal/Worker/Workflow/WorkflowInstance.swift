@@ -120,7 +120,7 @@ struct WorkflowInstance: Sendable {
         } catch {
             // We failed to initialize the workflow. This indicates a workflow task failure
             // so let's fail the activation and return here.
-            let temporalFailure = self.failureConverter.convertError(
+            let failure = self.failureConverter.convertError(
                 error,
                 payloadConverter: self.payloadConverter
             )
@@ -129,7 +129,7 @@ struct WorkflowInstance: Sendable {
                     $0.runID = activation.runID
                     $0.status = .failed(
                         .with {
-                            $0.failure = .init(temporalFailure: temporalFailure)
+                            $0.failure = failure
                         }
                     )
                 }
@@ -298,8 +298,8 @@ struct WorkflowInstance: Sendable {
                 case .success(let temporalPayload):
                     self.stateMachine.workflowFinished(temporalPayload: temporalPayload)
                 case .failure(let error):
-                    let temporalFailure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
-                    self.stateMachine.workflowTaskFailed(temporalFailure: temporalFailure)
+                    let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
+                    self.stateMachine.workflowTaskFailed(failure: failure)
                 }
             case .failure(let error):
                 self.logger.trace(
@@ -458,13 +458,13 @@ struct WorkflowInstance: Sendable {
                     )
                 }
             )
-        case .failActivation(let temporalFailure):
+        case .failActivation(let failure):
             try await self.workflowWorkerCompleteWorkflowActivation(
                 .with {
                     $0.runID = activation.runID
                     $0.status = .failed(
                         .with {
-                            $0.failure = .init(temporalFailure: temporalFailure)
+                            $0.failure = failure
                         }
                     )
                 }
@@ -581,8 +581,8 @@ struct WorkflowInstance: Sendable {
                                 LoggingKeys.errorMessage: "\(error)",
                             ]
                         )
-                        let temporalFailure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
-                        self.stateMachine.queryFailed(id: queryWorkflow.queryID, temporalFailure: temporalFailure)
+                        let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
+                        self.stateMachine.queryFailed(id: queryWorkflow.queryID, failure: failure)
                     }
                 }
                 return
@@ -596,12 +596,11 @@ struct WorkflowInstance: Sendable {
                 // If we fail to find a handler we treat it as a workflow task failure
                 // so that the workflow will get retried and a new code deploy can fix the issue.
                 self.stateMachine.workflowTaskFailed(
-                    temporalFailure: .init(
-                        message:
-                            "Query handler for \(queryWorkflow.queryType) expected but not found, known queries: [\(Workflow.queries.lazy.map { $0.name }.sorted().joined(separator: ","))",
-                        source: "swift-temporal-sdk",
-                        stackTrace: ""
-                    )
+                    failure: .with {
+                        $0.message =
+                            "Query handler for \(queryWorkflow.queryType) expected but not found, known queries: [\(Workflow.queries.lazy.map { $0.name }.sorted().joined(separator: ","))"
+                        $0.source = "swift-temporal-sdk"
+                    }
                 )
                 return
             }
@@ -684,8 +683,8 @@ struct WorkflowInstance: Sendable {
                     LoggingKeys.errorMessage: "\(error)",
                 ]
             )
-            let temporalFailure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
-            self.stateMachine.queryFailed(id: id, temporalFailure: temporalFailure)
+            let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
+            self.stateMachine.queryFailed(id: id, failure: failure)
         }
     }
 
@@ -753,12 +752,11 @@ struct WorkflowInstance: Sendable {
                 // If we fail to find a handler we treat it as a workflow task failure
                 // so that the workflow will get retried and a new code deploy can fix the issue.
                 self.stateMachine.workflowTaskFailed(
-                    temporalFailure: .init(
-                        message:
-                            "Update handler for \(updateWorkflow.name) expected but not found, known updates: [\(Workflow.updates.lazy.map { $0.name }.sorted().joined(separator: ","))",
-                        source: "swift-temporal-sdk",
-                        stackTrace: ""
-                    )
+                    failure: .with {
+                        $0.message =
+                            "Update handler for \(updateWorkflow.name) expected but not found, known updates: [\(Workflow.updates.lazy.map { $0.name }.sorted().joined(separator: ","))"
+                        $0.source = "swift-temporal-sdk"
+                    }
                 )
                 return
             }
@@ -807,7 +805,7 @@ struct WorkflowInstance: Sendable {
                 // Tell Temporal that we are rejecting the update because we aren't able to decode the input.
                 self.stateMachine.updateRejected(
                     id: id,
-                    temporalFailure: self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
+                    failure: self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
                 )
                 return nil
             }
@@ -842,8 +840,8 @@ struct WorkflowInstance: Sendable {
                         LoggingKeys.errorMessage: "\(error)",
                     ]
                 )
-                let temporalFailure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
-                self.stateMachine.updateRejected(id: id, temporalFailure: temporalFailure)
+                let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
+                self.stateMachine.updateRejected(id: id, failure: failure)
             }
         }
 
@@ -896,17 +894,17 @@ struct WorkflowInstance: Sendable {
             // Similar to errors thrown from the workflow's run method, errors thrown from
             // update handlers can lead to either update rejection or workflow task failure.
             // The categorization is identical to workflow's run method errors in that it depends
-            // if it is a TemporalFailureError or not.
+            // if it is a Api.Failure.V1.FailureError or not.
             // Updates have 5 states: admitted (reached server but not worker), accepted (validated but not
             // complete), rejected (failed validation), success, and failure.
             // Core just combines rejection (i.e. during validation) and failure (i.e. after validation) into the
             // same field in the proto and calls it "rejection".
             if let temporalFailureError = error as? any TemporalFailureError {
-                let temporalFailure = self.failureConverter.convertError(temporalFailureError, payloadConverter: self.payloadConverter)
-                self.stateMachine.updateRejected(id: id, temporalFailure: temporalFailure)
+                let failure = self.failureConverter.convertError(temporalFailureError, payloadConverter: self.payloadConverter)
+                self.stateMachine.updateRejected(id: id, failure: failure)
             } else {
-                let temporalFailure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
-                self.stateMachine.workflowTaskFailed(temporalFailure: temporalFailure)
+                let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
+                self.stateMachine.workflowTaskFailed(failure: failure)
             }
         }
     }
@@ -931,13 +929,13 @@ struct WorkflowInstance: Sendable {
         } else if let temporalFailureError = error as? any TemporalFailureError {
             // If the thrown error is a temporal failure error it needs to fail the whole
             // workflow.
-            let temporalFailure = self.failureConverter.convertError(temporalFailureError, payloadConverter: self.payloadConverter)
-            self.stateMachine.workflowFinished(temporalFailure: temporalFailure)
+            let failure = self.failureConverter.convertError(temporalFailureError, payloadConverter: self.payloadConverter)
+            self.stateMachine.workflowFinished(failure: failure)
         } else {
             // If it's any other error type we need to fail the activation
             // so that the workflow task can be retried
-            let temporalFailure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
-            self.stateMachine.workflowTaskFailed(temporalFailure: temporalFailure)
+            let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
+            self.stateMachine.workflowTaskFailed(failure: failure)
         }
     }
 }

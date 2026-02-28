@@ -155,7 +155,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionStarted {
             workflowTaskTimeout: rawValue.hasWorkflowTaskTimeout ? .init(rawValue.workflowTaskTimeout) : nil,
             continuedExecutionRunID: rawValue.continuedExecutionRunID.nilIfEmpty,
             initiator: .init(rawValue.initiator),
-            continuedFailure: rawValue.hasContinuedFailure ? .init(temporalAPIFailure: rawValue.continuedFailure) : nil,
+            continuedFailure: rawValue.hasContinuedFailure ? rawValue.continuedFailure : nil,
             lastCompletionResult: rawValue.lastCompletionResult.payloads,
             originalExecutionRunID: rawValue.originalExecutionRunID,
             identity: rawValue.identity.nilIfEmpty,
@@ -195,7 +195,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionCompleted {
 extension HistoryEvent.Attributes.WorkflowExecutionFailed {
     init(_ rawValue: Api.History.V1.WorkflowExecutionFailedEventAttributes) {
         self = .init(
-            failure: .init(temporalAPIFailure: rawValue.failure),
+            failure: rawValue.failure,
             retryState: .init(retryState: rawValue.retryState),
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
             newExecutionRunID: rawValue.newExecutionRunID.nilIfEmpty
@@ -270,7 +270,7 @@ extension HistoryEvent.Attributes.WorkflowTaskFailed {
             scheduledEventID: Int(rawValue.scheduledEventID),
             startedEventID: Int(rawValue.startedEventID),
             cause: .init(rawValue.cause),
-            failure: .init(temporalAPIFailure: rawValue.failure),
+            failure: rawValue.failure,
             identity: rawValue.identity.nilIfEmpty,
             baseRunID: rawValue.baseRunID.nilIfEmpty,
             newRunID: rawValue.newRunID.nilIfEmpty,
@@ -308,7 +308,7 @@ extension HistoryEvent.Attributes.ActivityTaskStarted {
             identity: rawValue.identity.nilIfEmpty,
             requestID: rawValue.requestID,
             attempt: Int(rawValue.attempt),
-            lastFailure: rawValue.hasLastFailure ? .init(temporalAPIFailure: rawValue.lastFailure) : nil,
+            lastFailure: rawValue.hasLastFailure ? rawValue.lastFailure : nil,
             workerVersion: rawValue.hasWorkerVersion ? .init(rawValue.workerVersion) : nil,
             buildIDRedirectCounter: Int(rawValue.buildIDRedirectCounter)
         )
@@ -330,7 +330,7 @@ extension HistoryEvent.Attributes.ActivityTaskCompleted {
 extension HistoryEvent.Attributes.ActivityTaskFailed {
     init(_ rawValue: Api.History.V1.ActivityTaskFailedEventAttributes) {
         self = .init(
-            failure: .init(temporalAPIFailure: rawValue.failure),
+            failure: rawValue.failure,
             scheduledEventID: Int(rawValue.scheduledEventID),
             startedEventID: Int(rawValue.startedEventID),
             identity: rawValue.identity.nilIfEmpty,
@@ -343,7 +343,7 @@ extension HistoryEvent.Attributes.ActivityTaskFailed {
 extension HistoryEvent.Attributes.ActivityTaskTimedOut {
     init(_ rawValue: Api.History.V1.ActivityTaskTimedOutEventAttributes) {
         self = .init(
-            failure: rawValue.hasFailure ? .init(temporalAPIFailure: rawValue.failure) : nil,
+            failure: rawValue.hasFailure ? rawValue.failure : nil,
             scheduledEventID: Int(rawValue.scheduledEventID),
             startedEventID: Int(rawValue.startedEventID),
             retryState: .init(retryState: rawValue.retryState)
@@ -410,7 +410,7 @@ extension HistoryEvent.Attributes.MarkerRecorded {
             details: rawValue.details.mapValues { $0.payloads },
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
             headers: rawValue.header.fields.mapValues { $0 },
-            failure: rawValue.hasFailure ? .init(temporalAPIFailure: rawValue.failure) : nil
+            failure: rawValue.hasFailure ? rawValue.failure : nil
         )
     }
 }
@@ -506,7 +506,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionContinuedAsNew {
             input: rawValue.input.payloads,
             workflowTaskCompletedEventID: Int(rawValue.workflowTaskCompletedEventID),
             initiator: .init(rawValue.initiator),
-            failure: rawValue.hasFailure ? .init(temporalAPIFailure: rawValue.failure) : nil,
+            failure: rawValue.hasFailure ? rawValue.failure : nil,
             lastCompletionResult: rawValue.lastCompletionResult.payloads,
             headers: rawValue.header.fields.mapValues { $0 },
             memo: rawValue.memo.fields.mapValues { $0 },
@@ -588,7 +588,7 @@ extension HistoryEvent.Attributes.ChildWorkflowExecutionCompleted {
 extension HistoryEvent.Attributes.ChildWorkflowExecutionFailed {
     init(_ rawValue: Api.History.V1.ChildWorkflowExecutionFailedEventAttributes) {
         self = .init(
-            failure: .init(temporalAPIFailure: rawValue.failure),
+            failure: rawValue.failure,
             namespace: rawValue.namespace,
             namespaceID: rawValue.namespaceID,
             workflowExecution: .init(rawValue.workflowExecution),
@@ -710,7 +710,7 @@ extension HistoryEvent.Attributes.WorkflowExecutionUpdateRejected {
             rejectedRequestMessageID: rawValue.rejectedRequestMessageID,
             rejectedRequestSequencingEventID: Int(rawValue.rejectedRequestSequencingEventID),
             rejectedRequest: .init(rawValue.rejectedRequest),
-            failure: .init(temporalAPIFailure: rawValue.failure)
+            failure: rawValue.failure
         )
     }
 }
@@ -805,7 +805,7 @@ extension HistoryEvent.Attributes.NexusOperationFailed {
     init(_ rawValue: Api.History.V1.NexusOperationFailedEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
-            failure: .init(temporalAPIFailure: rawValue.failure),
+            failure: rawValue.failure,
             requestID: rawValue.requestID
         )
     }
@@ -815,7 +815,7 @@ extension HistoryEvent.Attributes.NexusOperationCanceled {
     init(_ rawValue: Api.History.V1.NexusOperationCanceledEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
-            failure: .init(temporalAPIFailure: rawValue.failure),
+            failure: rawValue.failure,
             requestID: rawValue.requestID
         )
     }
@@ -825,7 +825,7 @@ extension HistoryEvent.Attributes.NexusOperationTimedOut {
     init(_ rawValue: Api.History.V1.NexusOperationTimedOutEventAttributes) {
         self = .init(
             scheduledEventID: Int(rawValue.scheduledEventID),
-            failure: .init(temporalAPIFailure: rawValue.failure),
+            failure: rawValue.failure,
             requestID: rawValue.requestID
         )
     }
@@ -855,7 +855,7 @@ extension HistoryEvent.Attributes.NexusOperationCancelRequestFailedEventAttribut
         self = .init(
             requestedEventID: rawValue.requestedEventID,
             workflowTaskCompletedEventID: rawValue.workflowTaskCompletedEventID,
-            failure: .init(temporalAPIFailure: rawValue.failure),
+            failure: rawValue.failure,
             scheduledEventID: rawValue.scheduledEventID
         )
     }

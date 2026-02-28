@@ -43,7 +43,7 @@ extension HistoryEvent.Attributes {
 
         /// The failure from the previous execution if it failed.
         /// - Note: Deprecated - When supported by the server the final event will be `WorkflowExecutionFailed` with `newExecutionRunID` set.
-        public var failure: TemporalFailure?
+        public var failure: Api.Failure.V1.Failure?
 
         public var lastCompletionResult: [Api.Common.V1.Payload]
 
@@ -71,7 +71,7 @@ extension HistoryEvent.Attributes {
             workflowTaskCompletedEventID: Int,
             backoffStartInterval: Duration? = nil,
             initiator: ContinueAsNewInitiator,
-            failure: TemporalFailure? = nil,
+            failure: Api.Failure.V1.Failure? = nil,
             lastCompletionResult: [Api.Common.V1.Payload],
             headers: [String: Api.Common.V1.Payload] = [:],
             memo: [String: Api.Common.V1.Payload] = [:],

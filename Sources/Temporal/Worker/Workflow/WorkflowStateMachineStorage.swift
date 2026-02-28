@@ -212,14 +212,14 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
             case .completed(let completed):
                 return completed.result
             case .failed(let failed):
-                let error = self.failureConverter.convertTemporalFailure(
-                    .init(temporalAPIFailure: failed.failure),
+                let error = self.failureConverter.convertFailure(
+                    failed.failure,
                     payloadConverter: self.payloadConverter
                 )
                 throw error
             case .cancelled(let cancelled):
-                let error = self.failureConverter.convertTemporalFailure(
-                    .init(temporalAPIFailure: cancelled.failure),
+                let error = self.failureConverter.convertFailure(
+                    cancelled.failure,
                     payloadConverter: self.payloadConverter
                 )
                 throw error
@@ -253,8 +253,8 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         self.stateMachine.queryFinished(id: id, temporalPayload: temporalPayload)
     }
 
-    func queryFailed(id: String, temporalFailure: TemporalFailure) {
-        self.stateMachine.queryFailed(id: id, temporalFailure: temporalFailure)
+    func queryFailed(id: String, failure: Api.Failure.V1.Failure) {
+        self.stateMachine.queryFailed(id: id, failure: failure)
     }
 
     func updateAccepted(id: String) {
@@ -265,8 +265,8 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         self.stateMachine.updateCompleted(id: id, temporalPayload: temporalPayload)
     }
 
-    func updateRejected(id: String, temporalFailure: TemporalFailure) {
-        self.stateMachine.updateRejected(id: id, temporalFailure: temporalFailure)
+    func updateRejected(id: String, failure: Api.Failure.V1.Failure) {
+        self.stateMachine.updateRejected(id: id, failure: failure)
     }
 
     func startChildWorkflow(
@@ -358,8 +358,8 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
             }
         case .cancelled(let cancelled):
             continuation.resume(
-                throwing: self.failureConverter.convertTemporalFailure(
-                    .init(temporalAPIFailure: cancelled.failure),
+                throwing: self.failureConverter.convertFailure(
+                    cancelled.failure,
                     payloadConverter: self.payloadConverter
                 )
             )
@@ -423,11 +423,11 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         let continuation = self.stateMachine.removeExternalWorkflowContinuation(sequenceNumber: resolveSignalExternalWorkflow.seq)
 
         if resolveSignalExternalWorkflow.hasFailure {
-            let temporalFailure = self.failureConverter.convertTemporalFailure(
-                .init(temporalAPIFailure: resolveSignalExternalWorkflow.failure),
+            let error = self.failureConverter.convertFailure(
+                resolveSignalExternalWorkflow.failure,
                 payloadConverter: self.payloadConverter
             )
-            continuation.resume(throwing: temporalFailure)
+            continuation.resume(throwing: error)
         } else {
             continuation.resume()
         }
@@ -437,12 +437,12 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         self.stateMachine.workflowFinished(temporalPayload: temporalPayload)
     }
 
-    func workflowFinished(temporalFailure: TemporalFailure) {
-        self.stateMachine.workflowFinished(temporalFailure: temporalFailure)
+    func workflowFinished(failure: Api.Failure.V1.Failure) {
+        self.stateMachine.workflowFinished(failure: failure)
     }
 
-    func workflowTaskFailed(temporalFailure: TemporalFailure) {
-        self.stateMachine.workflowTaskFailed(temporalFailure: temporalFailure)
+    func workflowTaskFailed(failure: Api.Failure.V1.Failure) {
+        self.stateMachine.workflowTaskFailed(failure: failure)
     }
 
     func activate(with activation: Coresdk.WorkflowActivation.WorkflowActivation) {

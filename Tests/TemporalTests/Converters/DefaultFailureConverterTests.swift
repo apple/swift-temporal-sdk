@@ -29,18 +29,13 @@ struct DefaultFailureConverterTests {
         let failureConverter = DefaultFailureConverter()
         let jsonPayloadConverter = JSONPayloadConverter()
 
-        let temporalFailure = failureConverter.convertError(
+        let failure = failureConverter.convertError(
             testError,
             payloadConverter: jsonPayloadConverter
         )
 
-        #expect(temporalFailure.message == "Error description")
-        let expectedFailureInfo = TemporalFailure.FailureInfo.application(
-            .init(
-                type: "TestError"
-            )
-        )
-        #expect(temporalFailure.failureInfo == expectedFailureInfo)
+        #expect(failure.message == "Error description")
+        #expect(failure.failureInfo == .applicationFailureInfo(.with { $0.type = "TestError" }))
     }
 
     @Test
@@ -56,13 +51,13 @@ struct DefaultFailureConverterTests {
         let failureConverter = DefaultFailureConverter()
         let jsonPayloadConverter = JSONPayloadConverter()
 
-        let temporalFailure = failureConverter.convertError(
+        let failure = failureConverter.convertError(
             applicationError,
             payloadConverter: jsonPayloadConverter
         )
 
-        let error = failureConverter.convertTemporalFailure(
-            temporalFailure,
+        let error = failureConverter.convertFailure(
+            failure,
             payloadConverter: jsonPayloadConverter
         )
 
@@ -88,13 +83,13 @@ struct DefaultFailureConverterTests {
         let failureConverter = DefaultFailureConverter()
         let jsonPayloadConverter = JSONPayloadConverter()
 
-        let temporalFailure = failureConverter.convertError(
+        let failure = failureConverter.convertError(
             applicationError,
             payloadConverter: jsonPayloadConverter
         )
 
-        let error = failureConverter.convertTemporalFailure(
-            temporalFailure,
+        let error = failureConverter.convertFailure(
+            failure,
             payloadConverter: jsonPayloadConverter
         )
 
@@ -117,24 +112,19 @@ struct DefaultFailureConverterTests {
         jsonEncoder.outputFormatting = .sortedKeys
         let jsonPayloadConverter = JSONPayloadConverter(jsonEncoder: jsonEncoder)
 
-        let temporalFailure = failureConverter.convertError(
+        let failure = failureConverter.convertError(
             testError,
             payloadConverter: jsonPayloadConverter
         )
 
-        #expect(temporalFailure.message == "Encoded failure")
-        #expect(temporalFailure.stackTrace == "")
+        #expect(failure.message == "Encoded failure")
+        #expect(failure.stackTrace == "")
         let expectedPayload = try jsonPayloadConverter.convertValue([
             "message": "Error description",
             "stackTrace": "",
         ])
-        #expect(temporalFailure.encodedAttributes == expectedPayload)
-        let expectedFailureInfo = TemporalFailure.FailureInfo.application(
-            .init(
-                type: "TestError"
-            )
-        )
-        #expect(temporalFailure.failureInfo == expectedFailureInfo)
+        #expect(failure.encodedAttributes == expectedPayload)
+        #expect(failure.failureInfo == .applicationFailureInfo(.with { $0.type = "TestError" }))
     }
 
     @Test
@@ -146,55 +136,68 @@ struct DefaultFailureConverterTests {
             "stackTrace": "Some stack trace",
         ])
 
-        let temporalFailure = TemporalFailure(
-            message: "Encoded failure",
-            source: "swift-temporal-sdk",
-            stackTrace: "",
-            encodedAttributes: encodedAttributes
-        )
+        let failure = Api.Failure.V1.Failure.with {
+            $0.message = "Encoded failure"
+            $0.source = "swift-temporal-sdk"
+            $0.stackTrace = ""
+            $0.encodedAttributes = encodedAttributes
+        }
 
-        let error = failureConverter.convertTemporalFailure(
-            temporalFailure,
+        let error = failureConverter.convertFailure(
+            failure,
             payloadConverter: jsonPayloadConverter
         )
 
         let basicTemporalFailureError = try #require(error as? BasicTemporalFailureError)
         #expect(basicTemporalFailureError.message == "Error description")
         #expect(basicTemporalFailureError.stackTrace == "Some stack trace")
-
     }
 
     @Test
     func temporalFailureWithApplicationInfo() async throws {
         let detail1 = "detail 1"
         let detail2 = "detail 2"
-        let temporalFailure = TemporalFailure(
-            message: "My Error",
-            source: "swift-temporal-sdk",
-            stackTrace: "Some stack trace",
-            failureInfo: .application(
-                .init(
-                    details: [
-                        Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
-                        Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
-                    ],
-                    type: "MyErrorType",
-                    isNonRetryable: true
-                )
+        let failure = Api.Failure.V1.Failure.with {
+            $0.message = "My Error"
+            $0.source = "swift-temporal-sdk"
+            $0.stackTrace = "Some stack trace"
+            $0.failureInfo = .applicationFailureInfo(
+                .with {
+                    $0.details = .with {
+                        $0.payloads = [
+                            Api.Common.V1.Payload.with {
+                                $0.data = Data(detail1.utf8)
+                                $0.metadata = [:]
+                            },
+                            Api.Common.V1.Payload.with {
+                                $0.data = Data(detail2.utf8)
+                                $0.metadata = [:]
+                            },
+                        ]
+                    }
+                    $0.type = "MyErrorType"
+                    $0.nonRetryable = true
+                }
             )
-        )
+        }
         let failureConverter = DefaultFailureConverter()
         let jsonPayloadConverter = JSONPayloadConverter()
 
-        let error = failureConverter.convertTemporalFailure(
-            temporalFailure,
+        let error = failureConverter.convertFailure(
+            failure,
             payloadConverter: jsonPayloadConverter
         )
 
         let decodedError = try #require(error as? ApplicationError)
         let expectedDetails = [
-            Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
-            Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
+            Api.Common.V1.Payload.with {
+                $0.data = Data(detail1.utf8)
+                $0.metadata = [:]
+            },
+            Api.Common.V1.Payload.with {
+                $0.data = Data(detail2.utf8)
+                $0.metadata = [:]
+            },
         ]
         #expect(decodedError.message == "My Error")
         #expect(decodedError.stackTrace == "Some stack trace")
@@ -207,31 +210,45 @@ struct DefaultFailureConverterTests {
     func temporalFailureWithCanceledInfo() async throws {
         let detail1 = "detail 1"
         let detail2 = "detail 2"
-        let temporalFailure = TemporalFailure(
-            message: "My Error",
-            source: "swift-temporal-sdk",
-            stackTrace: "Some stack trace",
-            failureInfo: .cancelled(
-                .init(
-                    details: [
-                        Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
-                        Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
-                    ]
-                )
+        let failure = Api.Failure.V1.Failure.with {
+            $0.message = "My Error"
+            $0.source = "swift-temporal-sdk"
+            $0.stackTrace = "Some stack trace"
+            $0.failureInfo = .canceledFailureInfo(
+                .with {
+                    $0.details = .with {
+                        $0.payloads = [
+                            Api.Common.V1.Payload.with {
+                                $0.data = Data(detail1.utf8)
+                                $0.metadata = [:]
+                            },
+                            Api.Common.V1.Payload.with {
+                                $0.data = Data(detail2.utf8)
+                                $0.metadata = [:]
+                            },
+                        ]
+                    }
+                }
             )
-        )
+        }
         let failureConverter = DefaultFailureConverter()
         let jsonPayloadConverter = JSONPayloadConverter()
 
-        let error = failureConverter.convertTemporalFailure(
-            temporalFailure,
+        let error = failureConverter.convertFailure(
+            failure,
             payloadConverter: jsonPayloadConverter
         )
 
         let decodedError = try #require(error as? CanceledError)
         let expectedDetails = [
-            Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
-            Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
+            Api.Common.V1.Payload.with {
+                $0.data = Data(detail1.utf8)
+                $0.metadata = [:]
+            },
+            Api.Common.V1.Payload.with {
+                $0.data = Data(detail2.utf8)
+                $0.metadata = [:]
+            },
         ]
         #expect(decodedError.message == "My Error")
         #expect(decodedError.stackTrace == "Some stack trace")
@@ -242,37 +259,51 @@ struct DefaultFailureConverterTests {
     func temporalFailureWithCancelledInfoAndCancelledCause() async throws {
         let detail1 = "detail 1"
         let detail2 = "detail 2"
-        let temporalFailure = TemporalFailure(
-            message: "My Error",
-            source: "swift-temporal-sdk",
-            stackTrace: "Some stack trace",
-            cause: .init(
-                message: "My inner error",
-                source: "swift-temporal-sdk",
-                stackTrace: "Some inner stack trace",
-                failureInfo: .cancelled(.init())
-            ),
-            failureInfo: .cancelled(
-                .init(
-                    details: [
-                        Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
-                        Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
-                    ]
-                )
+        let failure = Api.Failure.V1.Failure.with {
+            $0.message = "My Error"
+            $0.source = "swift-temporal-sdk"
+            $0.stackTrace = "Some stack trace"
+            $0.cause = .with {
+                $0.message = "My inner error"
+                $0.source = "swift-temporal-sdk"
+                $0.stackTrace = "Some inner stack trace"
+                $0.failureInfo = .canceledFailureInfo(.init())
+            }
+            $0.failureInfo = .canceledFailureInfo(
+                .with {
+                    $0.details = .with {
+                        $0.payloads = [
+                            Api.Common.V1.Payload.with {
+                                $0.data = Data(detail1.utf8)
+                                $0.metadata = [:]
+                            },
+                            Api.Common.V1.Payload.with {
+                                $0.data = Data(detail2.utf8)
+                                $0.metadata = [:]
+                            },
+                        ]
+                    }
+                }
             )
-        )
+        }
         let failureConverter = DefaultFailureConverter()
         let jsonPayloadConverter = JSONPayloadConverter()
 
-        let error = failureConverter.convertTemporalFailure(
-            temporalFailure,
+        let error = failureConverter.convertFailure(
+            failure,
             payloadConverter: jsonPayloadConverter
         )
 
         let decodedError = try #require(error as? CanceledError)
         let expectedDetails = [
-            Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
-            Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
+            Api.Common.V1.Payload.with {
+                $0.data = Data(detail1.utf8)
+                $0.metadata = [:]
+            },
+            Api.Common.V1.Payload.with {
+                $0.data = Data(detail2.utf8)
+                $0.metadata = [:]
+            },
         ]
         #expect(decodedError.message == "My Error")
         #expect(decodedError.stackTrace == "Some stack trace")
@@ -294,8 +325,8 @@ struct DefaultFailureConverterTests {
             retryState: .inProgress
         )
 
-        let temporalFailure = await DataConverter.default.convertError(error)
-        let convertedError = await DataConverter.default.convertTemporalFailure(temporalFailure)
+        let failure = await DataConverter.default.convertError(error)
+        let convertedError = await DataConverter.default.convertFailure(failure)
         let convertedChildWorkflowError = try #require(convertedError as? ChildWorkflowError)
         #expect(convertedChildWorkflowError.message == error.message)
         #expect(convertedChildWorkflowError.stackTrace == error.stackTrace)
@@ -310,25 +341,33 @@ struct DefaultFailureConverterTests {
     func temporalFailureWithTimeoutInfo() async throws {
         let detail1 = "detail 1"
         let detail2 = "detail 2"
-        let temporalFailure = TemporalFailure(
-            message: "My Error",
-            source: "swift-temporal-sdk",
-            stackTrace: "Some stack trace",
-            failureInfo: .timeout(
-                .init(
-                    type: .startToClose,
-                    lastHeartbeatDetails: [
-                        Api.Common.V1.Payload.with { $0.data = Data(detail1.utf8) },
-                        Api.Common.V1.Payload.with { $0.data = Data(detail2.utf8) },
-                    ]
-                )
+        let failure = Api.Failure.V1.Failure.with {
+            $0.message = "My Error"
+            $0.source = "swift-temporal-sdk"
+            $0.stackTrace = "Some stack trace"
+            $0.failureInfo = .timeoutFailureInfo(
+                .with {
+                    $0.timeoutType = .startToClose
+                    $0.lastHeartbeatDetails = .with {
+                        $0.payloads = [
+                            Api.Common.V1.Payload.with {
+                                $0.data = Data(detail1.utf8)
+                                $0.metadata = [:]
+                            },
+                            Api.Common.V1.Payload.with {
+                                $0.data = Data(detail2.utf8)
+                                $0.metadata = [:]
+                            },
+                        ]
+                    }
+                }
             )
-        )
+        }
         let failureConverter = DefaultFailureConverter()
         let jsonPayloadConverter = JSONPayloadConverter()
 
-        let error = failureConverter.convertTemporalFailure(
-            temporalFailure,
+        let error = failureConverter.convertFailure(
+            failure,
             payloadConverter: jsonPayloadConverter
         )
 

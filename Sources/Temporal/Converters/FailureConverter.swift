@@ -16,7 +16,7 @@
 ///
 /// - Important: Payload converters **must be** deterministic since they are called from within a workflow.
 public protocol FailureConverter: Sendable {
-    /// Converts the given error to a ``TemporalFailure``.
+    /// Converts the given error to an ``Api/Failure/V1/Failure``.
     ///
     /// - Parameter error: The error to convert.
     /// - Parameter payloadConverter: The payload converter to use to encode attributes.
@@ -24,15 +24,15 @@ public protocol FailureConverter: Sendable {
     func convertError(
         _ error: any Error,
         payloadConverter: some PayloadConverter
-    ) -> TemporalFailure
+    ) -> Api.Failure.V1.Failure
 
     /// Converts the given failure to a Swift error.
     ///
-    /// - Parameter temporalFailure: The failure to convert.
+    /// - Parameter failure: The failure to convert.
     /// - Parameter payloadConverter: The payload converter to use when decoding encoded attributes.
     /// - Returns: The converted error.
-    func convertTemporalFailure(
-        _ temporalFailure: TemporalFailure,
+    func convertFailure(
+        _ failure: Api.Failure.V1.Failure,
         payloadConverter: some PayloadConverter
     ) -> any Error
 }

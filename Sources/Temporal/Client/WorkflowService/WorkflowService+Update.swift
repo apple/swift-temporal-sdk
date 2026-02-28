@@ -277,7 +277,7 @@ extension TemporalClient.WorkflowService {
                             as: repeat each resultTypes
                         )
                     case .failure(let failure):
-                        let error = await self.configuration.dataConverter.convertTemporalFailure(.init(temporalAPIFailure: failure))
+                        let error = await self.configuration.dataConverter.convertFailure(failure)
                         throw WorkflowUpdateFailedError(cause: error)
                     case .none:
                         break

@@ -31,7 +31,7 @@ extension HistoryEvent.Attributes {
         public var rejectedRequest: UpdateRequest
 
         /// The cause of rejection.
-        public var failure: TemporalFailure
+        public var failure: Api.Failure.V1.Failure
 
         /// Creates event attributes for when a workflow execution update has been rejected.
         public init(
@@ -39,7 +39,7 @@ extension HistoryEvent.Attributes {
             rejectedRequestMessageID: String,
             rejectedRequestSequencingEventID: Int,
             rejectedRequest: UpdateRequest,
-            failure: TemporalFailure
+            failure: Api.Failure.V1.Failure
         ) {
             self.protocolInstanceID = protocolInstanceID
             self.rejectedRequestMessageID = rejectedRequestMessageID

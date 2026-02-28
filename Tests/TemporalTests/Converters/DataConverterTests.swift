@@ -215,26 +215,27 @@ struct DataConverterTests {
             nextRetryDelay: nil
         )
 
-        let temporalFailure = await dataConverter.convertError(applicationError)
+        let failure = await dataConverter.convertError(applicationError)
 
-        #expect(temporalFailure.message == "Encoded failure")
-        #expect(temporalFailure.source == "swift-temporal-sdk")
-        #expect(temporalFailure.stackTrace == "")
-        #expect(temporalFailure.encodedAttributes?.data != nil)
-        let expectedFailureInfo = TemporalFailure.FailureInfo.application(
-            .init(
-                details: [
-                    Api.Common.V1.Payload.with {
-                        $0.data = Data("details".utf8).base64EncodedData()
-                        $0.metadata = ["codec": Data("application/base64".utf8)]
-                    }
-                ],
-                type: "TestError",
-                isNonRetryable: false,
-                nextRetryDelay: nil
-            )
+        #expect(failure.message == "Encoded failure")
+        #expect(failure.source == "swift-temporal-sdk")
+        #expect(failure.stackTrace == "")
+        #expect(failure.encodedAttributes.data != Data())
+        let expectedFailureInfo = Api.Failure.V1.Failure.OneOf_FailureInfo.applicationFailureInfo(
+            .with {
+                $0.details = .with {
+                    $0.payloads = [
+                        Api.Common.V1.Payload.with {
+                            $0.data = Data("details".utf8).base64EncodedData()
+                            $0.metadata = ["codec": Data("application/base64".utf8)]
+                        }
+                    ]
+                }
+                $0.type = "TestError"
+                $0.nonRetryable = false
+            }
         )
-        #expect(temporalFailure.failureInfo == expectedFailureInfo)
+        #expect(failure.failureInfo == expectedFailureInfo)
     }
 
     @Test
@@ -248,25 +249,23 @@ struct DataConverterTests {
         )
 
         let convertedFailure = await dataConverter.convertError(TestError())
-        let expectedFailure = TemporalFailure(
-            message: "Failed to encode failure",
-            source: "swift-temporal-sdk",
-            stackTrace: ""
-        )
+        let expectedFailure = Api.Failure.V1.Failure.with {
+            $0.message = "Failed to encode failure"
+            $0.source = "swift-temporal-sdk"
+        }
 
         #expect(convertedFailure == expectedFailure)
     }
 
     @Test
-    func convertTemporalFailure() async throws {
+    func convertFailure() async throws {
         let dataConverter = DataConverter.default
 
-        let temporalFailure = TemporalFailure(
-            message: "Test message",
-            source: "swift-temporal-sdk",
-            stackTrace: ""
-        )
-        let error = await dataConverter.convertTemporalFailure(temporalFailure)
+        let failure = Api.Failure.V1.Failure.with {
+            $0.message = "Test message"
+            $0.source = "swift-temporal-sdk"
+        }
+        let error = await dataConverter.convertFailure(failure)
 
         let basicTemporalFailureError = try #require(error as? BasicTemporalFailureError)
         #expect(basicTemporalFailureError.message == "Test message")
