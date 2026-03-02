@@ -59,10 +59,10 @@ extension WorkflowHandle {
     /// - Throws: An error if the history cannot be retrieved or the workflow doesn't exist.
     public func fetchHistoryEvents(
         waitNewEvent: Bool = false,
-        eventFilterType: HistoryEventFilterType = .allEvent,
+        eventFilterType: Api.Enums.V1.HistoryEventFilterType = .allEvent,
         skipArchival: Bool = false,
         callOptions: CallOptions? = nil
-    ) async throws -> [HistoryEvent] {
+    ) async throws -> [Api.History.V1.HistoryEvent] {
         try await self.untypedHandle.fetchHistoryEvents(
             waitNewEvent: waitNewEvent,
             eventFilterType: eventFilterType,
@@ -134,7 +134,7 @@ extension WorkflowHandle {
     /// - Throws: An error if the query fails, is rejected, or the workflow doesn't exist.
     public func query<Query: WorkflowQueryDefinition>(
         queryType: Query.Type = Query.self,
-        rejectionCondition: QueryRejectionCondition? = nil,
+        rejectionCondition: Api.Enums.V1.QueryRejectCondition? = nil,
         input: Query.Input,
         callOptions: CallOptions? = nil
     ) async throws -> Query.Output {
@@ -160,7 +160,7 @@ extension WorkflowHandle {
     /// - Throws: An error if the query fails, is rejected, or the workflow doesn't exist.
     public func query<Query: WorkflowQueryDefinition>(
         queryType: Query.Type = Query.self,
-        rejectionCondition: QueryRejectionCondition? = nil,
+        rejectionCondition: Api.Enums.V1.QueryRejectCondition? = nil,
         callOptions: CallOptions? = nil
     ) async throws -> Query.Output where Query.Input == Void {
         try await self.query(

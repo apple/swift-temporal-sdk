@@ -62,8 +62,8 @@ struct WorkflowOptionsTests {
         #expect(request.workflowType.name == workflowType)
         #expect(request.taskQueue.name == options.taskQueue)
         #expect(request.requestID == requestId)
-        #expect(WorkflowIDReusePolicy(request.workflowIDReusePolicy) == options.idReusePolicy)
-        #expect(WorkflowIDConflictPolicy(request.workflowIDConflictPolicy) == options.idConflictPolicy)
+        #expect(request.workflowIDReusePolicy == options.idReusePolicy)
+        #expect(request.workflowIDConflictPolicy == options.idConflictPolicy)
 
         if let timeout = options.executionTimeOut {
             #expect(Duration(request.workflowExecutionTimeout) == timeout)

@@ -137,7 +137,7 @@ public struct DefaultFailureConverter: FailureConverter {
                 workflowID: childWorkflowExecution.workflowExecution.workflowID,
                 runID: childWorkflowExecution.workflowExecution.runID,
                 workflowName: childWorkflowExecution.workflowType.name,
-                retryState: RetryState(retryState: childWorkflowExecution.retryState)
+                retryState: childWorkflowExecution.retryState
             )
 
         case .activityFailureInfo(let activity):
@@ -150,13 +150,13 @@ public struct DefaultFailureConverter: FailureConverter {
                 activityID: activity.activityID,
                 activityType: activity.activityType.name,
                 identity: activity.identity,
-                retryState: RetryState(retryState: activity.retryState)
+                retryState: activity.retryState
             )
 
         case .timeoutFailureInfo(let timeout):
             return TimeoutError(
                 message: temporalFailure.message,
-                type: TimeoutType(timeout.timeoutType),
+                type: timeout.timeoutType,
                 cause: cause,
                 stackTrace: temporalFailure.stackTrace,
                 lastHeartbeatDetails: timeout.lastHeartbeatDetails.payloads
@@ -220,7 +220,7 @@ public struct DefaultFailureConverter: FailureConverter {
         case let timeoutError as TimeoutError:
             temporalFailure.failureInfo = .timeoutFailureInfo(
                 .with {
-                    $0.timeoutType = .init(timeoutError.type)
+                    $0.timeoutType = timeoutError.type
                     $0.lastHeartbeatDetails = .with { $0.payloads = timeoutError.lastHeartbeatDetails }
                 }
             )
@@ -234,7 +234,7 @@ public struct DefaultFailureConverter: FailureConverter {
                         $0.runID = childWorkflowError.runID
                     }
                     $0.workflowType = .with { $0.name = childWorkflowError.workflowName }
-                    $0.retryState = .init(retryState: childWorkflowError.retryState)
+                    $0.retryState = childWorkflowError.retryState
                 }
             )
 
@@ -246,7 +246,7 @@ public struct DefaultFailureConverter: FailureConverter {
                     $0.identity = activityError.identity
                     $0.activityType = .with { $0.name = activityError.activityType }
                     $0.activityID = activityError.activityID
-                    $0.retryState = .init(retryState: activityError.retryState)
+                    $0.retryState = activityError.retryState
                 }
             )
 

@@ -109,8 +109,8 @@ public protocol ClientOutboundInterceptor: Sendable {
     /// - Throws: Any error encountered during query processing or forwarding.
     func fetchWorkflowHistoryEvents(
         input: FetchWorkflowHistoryEventsInput,
-        next: (FetchWorkflowHistoryEventsInput) async throws -> [HistoryEvent]
-    ) async throws -> [HistoryEvent]
+        next: (FetchWorkflowHistoryEventsInput) async throws -> [Api.History.V1.HistoryEvent]
+    ) async throws -> [Api.History.V1.HistoryEvent]
 
     /// Intercepts workflow list operations.
     ///
@@ -352,8 +352,8 @@ extension ClientOutboundInterceptor {
 
     public func fetchWorkflowHistoryEvents(
         input: FetchWorkflowHistoryEventsInput,
-        next: (FetchWorkflowHistoryEventsInput) async throws -> [HistoryEvent]
-    ) async throws -> [HistoryEvent] {
+        next: (FetchWorkflowHistoryEventsInput) async throws -> [Api.History.V1.HistoryEvent]
+    ) async throws -> [Api.History.V1.HistoryEvent] {
         try await next(input)
     }
 

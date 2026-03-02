@@ -20,11 +20,11 @@ build-protos: $(PROTOC_GEN_SWIFT) $(PROTOC_GEN_GRPC_SWIFT) ./dependencies/sdk-co
 	rm -rf $(PROTO_OUT)
 	mkdir -p $(PROTO_OUT)
 
-	# Generate proto message types (.pb.swift) - PACKAGE in Temporal module
+	# Generate proto message types (.pb.swift) - PUBLIC in Temporal module
 	protoc --plugin $(PROTOC_GEN_SWIFT) \
 		--swift_out $(PROTO_OUT) \
 		--swift_opt=FileNaming=PathToUnderscores \
-		--swift_opt=Visibility=Package \
+		--swift_opt=Visibility=Public \
 		--swift_opt=UseAccessLevelOnImports=true \
 		-I ./dependencies/sdk-core/crates/common/protos/api_cloud_upstream \
 		-I ./dependencies/sdk-core/crates/common/protos/api_upstream \

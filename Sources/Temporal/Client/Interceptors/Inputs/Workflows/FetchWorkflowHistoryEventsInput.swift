@@ -26,7 +26,7 @@ public struct FetchWorkflowHistoryEventsInput: Sendable {
     public var waitNewEvent: Bool
 
     /// The types of events to include in the fetched history.
-    public var eventFilterType: HistoryEventFilterType
+    public var eventFilterType: Api.Enums.V1.HistoryEventFilterType
 
     /// Whether to skip events that have been archived.
     public var skipArchival: Bool
@@ -47,7 +47,7 @@ public struct FetchWorkflowHistoryEventsInput: Sendable {
         id: String,
         runID: String? = nil,
         waitNewEvent: Bool,
-        eventFilterType: HistoryEventFilterType,
+        eventFilterType: Api.Enums.V1.HistoryEventFilterType,
         skipArchival: Bool,
         callOptions: CallOptions? = nil
     ) {

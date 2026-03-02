@@ -106,8 +106,8 @@ extension TestServerDependentTests {
 
                 func fetchWorkflowHistoryEvents(
                     input: FetchWorkflowHistoryEventsInput,
-                    next: (FetchWorkflowHistoryEventsInput) async throws -> [HistoryEvent]
-                ) async throws -> [HistoryEvent] {
+                    next: (FetchWorkflowHistoryEventsInput) async throws -> [Api.History.V1.HistoryEvent]
+                ) async throws -> [Api.History.V1.HistoryEvent] {
                     self.interceptor.record(.resultWorkflow)
                     return try await next(input)
                 }

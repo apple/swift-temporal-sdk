@@ -96,8 +96,8 @@ public struct ChildWorkflowOptions: Sendable {
     /// fails, or is cancelled, enabling different coupling patterns between parent and
     /// child executions.
     ///
-    /// The default value is ``ParentClosePolicy/terminate``.
-    public var parentClosePolicy: ParentClosePolicy = .terminate
+    /// The default value is ``Api/Enums/V1/ParentClosePolicy/terminate``.
+    public var parentClosePolicy: Api.Enums.V1.ParentClosePolicy = .terminate
 
     /// Controls whether the child workflow can reuse a workflow ID from a previously closed workflow.
     ///
@@ -105,8 +105,8 @@ public struct ChildWorkflowOptions: Sendable {
     /// previously used by a completed workflow. Different policies enable various patterns
     /// for workflow deduplication and restart behavior.
     ///
-    /// The default value is ``WorkflowIDReusePolicy/allowDuplicate``.
-    public var idReusePolicy: WorkflowIDReusePolicy = .allowDuplicate
+    /// The default value is ``Api/Enums/V1/WorkflowIdReusePolicy/allowDuplicate``.
+    public var idReusePolicy: Api.Enums.V1.WorkflowIdReusePolicy = .allowDuplicate
 
     /// The cron schedule expression for recurring child workflow execution.
     ///
@@ -168,8 +168,8 @@ public struct ChildWorkflowOptions: Sendable {
         taskTimeout: Duration? = nil,
         memo: [String: any Sendable]? = nil,
         searchAttributes: SearchAttributeCollection? = nil,
-        parentClosePolicy: ParentClosePolicy = .terminate,
-        idReusePolicy: WorkflowIDReusePolicy = .allowDuplicate,
+        parentClosePolicy: Api.Enums.V1.ParentClosePolicy = .terminate,
+        idReusePolicy: Api.Enums.V1.WorkflowIdReusePolicy = .allowDuplicate,
         cronSchedule: String? = nil,
         cancellationType: ChildWorkflowCancellationType = .waitCancellationCompleted,
         versioningIntent: VersioningIntent = .unspecified

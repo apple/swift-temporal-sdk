@@ -331,7 +331,10 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                                     resultPayload = try await self.dataConverter.convertValue(output)
                                 } catch is CompleteAsyncError {  // Async completion of the activity
                                     logger.debug("Completing activity asynchronously", metadata: [LoggingKeys.activityName: "\(A.name)"])
-                                    return .init(taskToken: Data(taskToken.bytes), result: .willCompleteAsync)
+                                    return .with {
+                                        $0.taskToken = Data(taskToken.bytes)
+                                        $0.result = .with { $0.willCompleteAsync = .init() }
+                                    }
                                 } catch {
                                     let errorToConvert =
                                         switch runningActivity.cancellationReason {
@@ -358,10 +361,14 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
 
                                 // TODO: What should we do if sending the completion fails?
                                 try await self.sendActivityCompletion(
-                                    completion: .init(
-                                        taskToken: Data(taskToken.bytes),
-                                        result: .completed(result: resultPayload)
-                                    ),
+                                    completion: .with {
+                                        $0.taskToken = Data(taskToken.bytes)
+                                        $0.result = .with {
+                                            $0.completed = .with {
+                                                $0.result = resultPayload
+                                            }
+                                        }
+                                    },
                                     logger: logger
                                 )
 

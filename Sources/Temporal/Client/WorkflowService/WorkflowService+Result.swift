@@ -72,16 +72,16 @@ extension TemporalClient.WorkflowService {
     ///   - eventFilterType: The type of events to filter during retrieval. If nil, retrieves all event types.
     ///   - skipArchival: Whether to skip archived history events for faster retrieval. If true, only returns non-archived events; if nil or false, includes all events.
     ///   - callOptions: Custom call options including timeout settings for the RPC operation.
-    /// - Returns: An array of ``HistoryEvent`` objects representing the complete workflow execution history in chronological order.
+    /// - Returns: An array of ``Api/History/V1/HistoryEvent`` objects representing the complete workflow execution history in chronological order.
     /// - Throws: An error if the operation fails.
     public func fetchWorkflowHistoryEvents(
         id: String,
         runID: String? = nil,
         waitNewEvent: Bool? = nil,
-        eventFilterType: HistoryEventFilterType? = nil,
+        eventFilterType: Api.Enums.V1.HistoryEventFilterType? = nil,
         skipArchival: Bool? = nil,
         callOptions: CallOptions? = nil
-    ) async throws -> [HistoryEvent] {
+    ) async throws -> [Api.History.V1.HistoryEvent] {
         let eventStream = withFlattenedPagination { pageToken in
             let response: Api.Workflowservice.V1.GetWorkflowExecutionHistoryResponse = try await self.client.unary(
                 method: Api.Workflowservice.V1.WorkflowService.Method.GetWorkflowExecutionHistory.descriptor,
@@ -97,7 +97,7 @@ extension TemporalClient.WorkflowService {
                         $0.waitNewEvent = waitNewEvent
                     }
                     if let eventFilterType {
-                        $0.historyEventFilterType = .init(eventFilterType)
+                        $0.historyEventFilterType = eventFilterType
                     }
                     if let skipArchival {
                         $0.skipArchival = skipArchival
@@ -108,7 +108,6 @@ extension TemporalClient.WorkflowService {
             )
             return (elements: response.history.events, pageToken: response.nextPageToken)
         }
-        .map { try HistoryEvent($0) }
 
         let events = try await Array(eventStream)
 
@@ -123,7 +122,7 @@ extension TemporalClient.WorkflowService {
     func result<Output: Sendable>(
         historyRunID: String? = nil,
         followRuns: Bool = true,
-        fetchWorkflowHistoryEvents: (_ historyRunID: String?) async throws -> [HistoryEvent],
+        fetchWorkflowHistoryEvents: (_ historyRunID: String?) async throws -> [Api.History.V1.HistoryEvent],
     ) async throws -> Output {
         var historyRunID = historyRunID
 
@@ -132,20 +131,19 @@ extension TemporalClient.WorkflowService {
 
             for event in events {
                 switch event.attributes {
-                case .workflowExecutionCompleted(let completed):
-                    if followRuns, let newExecutionRunID = completed.newExecutionRunID, !newExecutionRunID.isEmpty {
-                        historyRunID = newExecutionRunID
+                case .workflowExecutionCompletedEventAttributes(let completed):
+                    if followRuns, !completed.newExecutionRunID.isEmpty {
+                        historyRunID = completed.newExecutionRunID
                         continue
                     }
-                    let payloads = completed.result
                     return try await self.configuration.dataConverter.convertPayloads(
-                        payloads,
+                        completed.result.payloads,
                         as: Output.self
                     )
 
-                case .workflowExecutionFailed(let failed):
-                    if followRuns, let newExecutionRunID = failed.newExecutionRunID, !newExecutionRunID.isEmpty {
-                        historyRunID = newExecutionRunID
+                case .workflowExecutionFailedEventAttributes(let failed):
+                    if followRuns, !failed.newExecutionRunID.isEmpty {
+                        historyRunID = failed.newExecutionRunID
                         continue
                     }
                     let error = await self.configuration.dataConverter.convertFailure(
@@ -153,7 +151,7 @@ extension TemporalClient.WorkflowService {
                     )
                     throw WorkflowFailedError(cause: error)
 
-                case .workflowExecutionContinuedAsNew(let continuedAsNew):
+                case .workflowExecutionContinuedAsNewEventAttributes(let continuedAsNew):
                     guard !continuedAsNew.newExecutionRunID.isEmpty else {
                         throw InvalidOperationError(message: "Continue as new missing new run ID")
                     }
@@ -166,9 +164,9 @@ extension TemporalClient.WorkflowService {
 
                     throw WorkflowContinuedAsNewError(newRunID: continuedAsNew.newExecutionRunID)
 
-                case .workflowExecutionTimedOut(let timedOut):
-                    if followRuns, let newExecutionRunID = timedOut.newExecutionRunID, !newExecutionRunID.isEmpty {
-                        historyRunID = newExecutionRunID
+                case .workflowExecutionTimedOutEventAttributes(let timedOut):
+                    if followRuns, !timedOut.newExecutionRunID.isEmpty {
+                        historyRunID = timedOut.newExecutionRunID
                         continue
                     }
 
@@ -179,19 +177,19 @@ extension TemporalClient.WorkflowService {
                         )
                     )
 
-                case .workflowExecutionCanceled(let canceled):
+                case .workflowExecutionCanceledEventAttributes(let canceled):
                     throw WorkflowFailedError(
                         cause: CanceledError(
                             message: "Workflow execution canceled",
-                            details: canceled.details
+                            details: canceled.details.payloads
                         )
                     )
 
-                case .workflowExecutionTerminated(let terminated):
+                case .workflowExecutionTerminatedEventAttributes(let terminated):
                     throw WorkflowFailedError(
                         cause: TerminatedError(
-                            message: "Workflow execution terminated: \(terminated.reason ?? "<none>")",
-                            details: terminated.details
+                            message: "Workflow execution terminated: \(terminated.reason.isEmpty ? "<none>" : terminated.reason)",
+                            details: terminated.details.payloads
                         )
                     )
 

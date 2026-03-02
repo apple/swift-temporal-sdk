@@ -169,8 +169,8 @@ extension TemporalClientTracingInterceptor {
 
         public func fetchWorkflowHistoryEvents(
             input: FetchWorkflowHistoryEventsInput,
-            next: (FetchWorkflowHistoryEventsInput) async throws -> [HistoryEvent]
-        ) async throws -> [HistoryEvent] {
+            next: (FetchWorkflowHistoryEventsInput) async throws -> [Api.History.V1.HistoryEvent]
+        ) async throws -> [Api.History.V1.HistoryEvent] {
             try await self.traceRecording.recordOutbound(
                 spanName:
                     Api.Workflowservice.V1.WorkflowService.Method.GetWorkflowExecutionHistory.descriptor.fullyQualifiedMethod,

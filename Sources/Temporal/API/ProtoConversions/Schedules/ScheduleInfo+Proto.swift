@@ -43,6 +43,6 @@ extension ScheduleInfo.ActionResult {
         self.scheduledAt = proto.scheduleTime.date
         self.startedAt = proto.actualTime.date
         self.action = .init(proto: proto.startWorkflowResult)
-        self.status = .init(temporalAPIWorkflowExecutionStatus: proto.startWorkflowStatus)
+        self.status = proto.startWorkflowStatus == .unspecified ? nil : proto.startWorkflowStatus
     }
 }

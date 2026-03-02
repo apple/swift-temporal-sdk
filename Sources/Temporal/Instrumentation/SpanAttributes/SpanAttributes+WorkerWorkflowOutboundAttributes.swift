@@ -50,11 +50,11 @@ extension Span {
         // swift-format-ignore: ReplaceForEachWithForLoop
         options.searchAttributes?.forEach { key, value in
             if let value {
-                self.attributes["\(TemporalTracingKeys.workflowSearchAttributesPrefix)\(key.name) (\(key.type.indexedValueTypeString))"] = "\(value)"
+                self.attributes["\(TemporalTracingKeys.workflowSearchAttributesPrefix)\(key.name) (\(String(describing: key.type)))"] = "\(value)"
             }
         }
-        self.attributes[TemporalTracingKeys.workflowParentClosePolicy] = options.parentClosePolicy.description
-        self.attributes[TemporalTracingKeys.workflowIdReusePolicy] = options.idReusePolicy.description
+        self.attributes[TemporalTracingKeys.workflowParentClosePolicy] = String(describing: options.parentClosePolicy)
+        self.attributes[TemporalTracingKeys.workflowIdReusePolicy] = String(describing: options.idReusePolicy)
         if let childCronSchedule = options.cronSchedule {
             self.attributes[TemporalTracingKeys.workflowCronSchedule] = childCronSchedule
         }
@@ -97,7 +97,7 @@ extension Span {
         // swift-format-ignore: ReplaceForEachWithForLoop
         options.searchAttributes?.forEach { key, value in
             if let value {
-                self.attributes["\(TemporalTracingKeys.workflowSearchAttributesPrefix)\(key.name) (\(key.type.indexedValueTypeString))"] = "\(value)"
+                self.attributes["\(TemporalTracingKeys.workflowSearchAttributesPrefix)\(key.name) (\(String(describing: key.type)))"] = "\(value)"
             }
         }
     }
@@ -263,7 +263,7 @@ extension Span {
         // swift-format-ignore: ReplaceForEachWithForLoop
         continueAsNewError.searchAttributes?.forEach { key, value in
             let typedKey = key.name
-            let typeString = key.type.indexedValueTypeString
+            let typeString = String(describing: key.type)
             let attrKey = "\(TemporalTracingKeys.workflowSearchAttributesPrefix)\(typedKey) (\(typeString))"
             self.attributes[attrKey] = String(describing: value)
         }

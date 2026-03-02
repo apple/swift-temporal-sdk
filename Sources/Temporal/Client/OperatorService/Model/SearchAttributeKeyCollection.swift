@@ -15,10 +15,10 @@
 /// Contains information about search attributes in a Temporal namespace.
 public struct SearchAttributeKeyCollection: Hashable, Sendable {
     /// Mapping of custom (user-registered) search attribute names to their data types.
-    public var customAttributes: [String: SearchAttributeType]
+    public var customAttributes: [String: Api.Enums.V1.IndexedValueType]
 
     /// Mapping of system (predefined) search attribute names to their data types.
-    public var systemAttributes: [String: SearchAttributeType]
+    public var systemAttributes: [String: Api.Enums.V1.IndexedValueType]
 
     /// Mapping from attribute names to their native storage types in the visibility store.
     public var storageSchema: [String: String]

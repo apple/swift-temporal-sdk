@@ -21,7 +21,7 @@ public import Foundation
 public struct SearchAttributeKey<Value: Sendable>: Hashable, Sendable {
     let storage: SearchAttributeKeyStorage
 
-    init(name: String, type: SearchAttributeType) {
+    init(name: String, type: Api.Enums.V1.IndexedValueType) {
         self.init(storage: .init(name: name, type: type))
     }
 
@@ -33,7 +33,7 @@ public struct SearchAttributeKey<Value: Sendable>: Hashable, Sendable {
     public var name: String { storage.name }
 
     /// The type of the attribute.
-    public var type: SearchAttributeType { storage.type }
+    public var type: Api.Enums.V1.IndexedValueType { storage.type }
 }
 
 extension SearchAttributeKey: CustomStringConvertible {
@@ -55,7 +55,7 @@ public struct AnySearchAttributeKey: Hashable, Sendable {
     public var name: String { storage.name }
 
     /// The type of the attribute.
-    public var type: SearchAttributeType { storage.type }
+    public var type: Api.Enums.V1.IndexedValueType { storage.type }
 }
 extension AnySearchAttributeKey: CustomStringConvertible {
     public var description: String { name }
@@ -63,13 +63,13 @@ extension AnySearchAttributeKey: CustomStringConvertible {
 
 struct SearchAttributeKeyStorage: Hashable, Sendable {
     let name: String
-    let type: SearchAttributeType
+    let type: Api.Enums.V1.IndexedValueType
 }
 
 // MARK: Define Search Attributes
 
 extension SearchAttributeKey where Value == Bool {
-    /// Creates a key for a ``SearchAttributeType/bool`` typed search attribute.
+    /// Creates a key for a ``Api/Enums/V1/IndexedValueType/bool`` typed search attribute.
     /// - Parameter name: The name of the attribute. Must be unique across all attributes.
     public static func bool(_ name: String) -> Self { .init(name: name, type: .bool) }
 
@@ -77,11 +77,11 @@ extension SearchAttributeKey where Value == Bool {
 }
 
 extension SearchAttributeKey where Value == String {
-    /// Creates a key for a ``SearchAttributeType/keyword`` typed search attribute.
+    /// Creates a key for a ``Api/Enums/V1/IndexedValueType/keyword`` typed search attribute.
     /// - Parameter name: The name of the attribute. Must be unique across all attributes.
     public static func keyword(_ name: String) -> Self { .init(name: name, type: .keyword) }
 
-    /// Creates a key for a ``SearchAttributeType/text`` typed search attribute.
+    /// Creates a key for a ``Api/Enums/V1/IndexedValueType/text`` typed search attribute.
     /// - Parameter name: The name of the attribute. Must be unique across all attributes.
     public static func text(_ name: String) -> Self { .init(name: name, type: .text) }
 
@@ -95,9 +95,9 @@ extension SearchAttributeKey where Value == String {
 }
 
 extension SearchAttributeKey where Value == Date {
-    /// Creates a key for a ``SearchAttributeType/dateTime`` typed search attribute.
+    /// Creates a key for a ``Api/Enums/V1/IndexedValueType/datetime`` typed search attribute.
     /// - Parameter name: The name of the attribute. Must be unique across all attributes.
-    public static func date(_ name: String) -> Self { .init(name: name, type: .dateTime) }
+    public static func date(_ name: String) -> Self { .init(name: name, type: .datetime) }
 
     public static let closeTime = Self.date("CloseTime")
     public static let executionTime = Self.date("ExecutionTime")
@@ -106,13 +106,13 @@ extension SearchAttributeKey where Value == Date {
 }
 
 extension SearchAttributeKey where Value == Double {
-    /// Creates a key for a ``SearchAttributeType/double`` typed search attribute.
+    /// Creates a key for a ``Api/Enums/V1/IndexedValueType/double`` typed search attribute.
     /// - Parameter name: The name of the attribute. Must be unique across all attributes.
     public static func double(_ name: String) -> Self { .init(name: name, type: .double) }
 }
 
 extension SearchAttributeKey where Value == Int {
-    /// Creates a key for a ``SearchAttributeType/int`` typed search attribute.
+    /// Creates a key for a ``Api/Enums/V1/IndexedValueType/int`` typed search attribute.
     /// - Parameter name: The name of the attribute. Must be unique across all attributes.
     public static func int(_ name: String) -> Self { .init(name: name, type: .int) }
 
@@ -123,7 +123,7 @@ extension SearchAttributeKey where Value == Int {
 }
 
 extension SearchAttributeKey where Value == [String] {
-    /// Creates a key for a ``SearchAttributeType/keywordList`` typed search attribute.
+    /// Creates a key for a ``Api/Enums/V1/IndexedValueType/keywordList`` typed search attribute.
     /// - Parameter name: The name of the attribute. Must be unique across all attributes.
     public static func keywordList(_ name: String) -> Self { .init(name: name, type: .keywordList) }
 

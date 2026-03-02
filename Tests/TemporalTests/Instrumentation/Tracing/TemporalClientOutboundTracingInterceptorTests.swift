@@ -16,6 +16,7 @@ import Foundation
 import GRPCCore
 import GRPCNIOTransportHTTP2Posix
 import Logging
+import SwiftProtobuf
 import Temporal
 import TemporalTestKit
 import Testing
@@ -92,7 +93,7 @@ struct TemporalClientOutboundTracingInterceptorTests {
                 #expect(attributes[TemporalTracingKeys.workflowQueryName]?.toSpanAttribute() == .string(Self.queryName))
                 #expect(
                     attributes[TemporalTracingKeys.workflowQueryRejectCondition]?.toSpanAttribute()
-                        == .string(QueryRejectionCondition.notOpen.description)
+                        == "\(Api.Enums.V1.QueryRejectCondition.notOpen)"
                 )
             } assertStatus: { status in
                 #expect(status == nil)
@@ -153,7 +154,7 @@ struct TemporalClientOutboundTracingInterceptorTests {
                     #expect(attributes[TemporalTracingKeys.workflowQueryName]?.toSpanAttribute() == .string(Self.queryName))
                     #expect(
                         attributes[TemporalTracingKeys.workflowQueryRejectCondition]?.toSpanAttribute()
-                            == .string(QueryRejectionCondition.notOpen.description)
+                            == "\(Api.Enums.V1.QueryRejectCondition.notOpen)"
                     )
                 } assertStatus: { status in
                     #expect(status == .some(.init(code: .error)))

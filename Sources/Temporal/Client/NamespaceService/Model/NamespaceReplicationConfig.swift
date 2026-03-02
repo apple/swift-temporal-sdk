@@ -21,7 +21,7 @@ public struct NamespaceReplicationConfig: Hashable, Sendable {
     public var clusters: [String]
 
     /// The current state of the replication process.
-    public var state: ReplicationState?
+    public var state: Api.Enums.V1.ReplicationState
 
     /// Creates a new replication configuration for a namespace.
     ///
@@ -32,7 +32,7 @@ public struct NamespaceReplicationConfig: Hashable, Sendable {
     public init(
         activeClusterName: String? = nil,
         clusters: [String],
-        state: ReplicationState? = nil
+        state: Api.Enums.V1.ReplicationState
     ) {
         self.activeClusterName = activeClusterName
         self.clusters = clusters

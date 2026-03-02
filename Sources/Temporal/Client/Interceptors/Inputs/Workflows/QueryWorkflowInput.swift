@@ -26,7 +26,7 @@ public struct QueryWorkflowInput<each Input: Sendable>: Sendable {
     public var queryName: String
 
     /// Optional condition under which the query should be rejected based on workflow state.
-    public var rejectionCondition: QueryRejectionCondition?
+    public var rejectionCondition: Api.Enums.V1.QueryRejectCondition?
 
     /// Headers to include with the query request.
     public var headers: [String: Api.Common.V1.Payload]
@@ -51,7 +51,7 @@ public struct QueryWorkflowInput<each Input: Sendable>: Sendable {
         id: String,
         runID: String? = nil,
         queryName: String,
-        rejectionCondition: QueryRejectionCondition? = nil,
+        rejectionCondition: Api.Enums.V1.QueryRejectCondition? = nil,
         headers: [String: Api.Common.V1.Payload],
         input: repeat each Input,
         callOptions: CallOptions? = nil

@@ -38,13 +38,13 @@ public struct WorkflowOptions: Sendable {
     ///
     /// Determines whether a workflow ID can be reused after a previous workflow with the same ID
     /// has completed. This policy affects workflow uniqueness constraints within the namespace.
-    public var idReusePolicy: WorkflowIDReusePolicy
+    public var idReusePolicy: Api.Enums.V1.WorkflowIdReusePolicy
 
     /// The conflict resolution policy for workflows started with the same ID as running executions.
     ///
     /// Specifies how to handle attempts to start a workflow when another workflow with the same ID
     /// is currently running. This policy helps prevent unintended duplicate executions.
-    public var idConflictPolicy: WorkflowIDConflictPolicy
+    public var idConflictPolicy: Api.Enums.V1.WorkflowIdConflictPolicy
 
     /// The maximum total execution time including retries and continue-as-new transitions.
     ///
@@ -88,8 +88,8 @@ public struct WorkflowOptions: Sendable {
         retryPolicy: RetryPolicy? = nil,
         executionTimeOut: Duration? = nil,
         searchAttributes: SearchAttributeCollection? = nil,
-        idReusePolicy: WorkflowIDReusePolicy = .allowDuplicate,
-        idConflictPolicy: WorkflowIDConflictPolicy = .fail,
+        idReusePolicy: Api.Enums.V1.WorkflowIdReusePolicy = .allowDuplicate,
+        idConflictPolicy: Api.Enums.V1.WorkflowIdConflictPolicy = .fail,
         callOptions: CallOptions? = nil
     ) {
         self.id = id
