@@ -433,6 +433,80 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         }
     }
 
+    func signalExternalWorkflow(
+        namespace: String,
+        workflowID: String,
+        runID: String?,
+        signalName: String,
+        headers: [String: Api.Common.V1.Payload],
+        inputs: [Api.Common.V1.Payload]
+    ) async throws {
+        if Task.isCancelled {
+            throw CanceledError(
+                message: "Task cancelled before signal scheduled"
+            )
+        }
+
+        let sequenceNumber = self.stateMachine.nextExternalSignalSequenceNumber()
+        try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                self.stateMachine.signalExternalWorkflow(
+                    sequenceNumber: sequenceNumber,
+                    namespace: namespace,
+                    workflowID: workflowID,
+                    runID: runID,
+                    signalName: signalName,
+                    headers: headers,
+                    inputs: inputs,
+                    continuation: continuation
+                )
+            }
+        } onCancel: {
+            self.stateMachine.cancelExternalSignalWorkflow(sequenceNumber: sequenceNumber)
+        }
+    }
+
+    func cancelExternalWorkflow(
+        namespace: String,
+        workflowID: String,
+        runID: String?
+    ) async throws {
+        if Task.isCancelled {
+            throw CanceledError(
+                message: "Task cancelled before cancel request scheduled"
+            )
+        }
+
+        let sequenceNumber = self.stateMachine.nextExternalCancelSequenceNumber()
+        try await withCheckedThrowingContinuation { continuation in
+            self.stateMachine.requestCancelExternalWorkflow(
+                sequenceNumber: sequenceNumber,
+                namespace: namespace,
+                workflowID: workflowID,
+                runID: runID,
+                continuation: continuation
+            )
+        }
+    }
+
+    func resolveRequestCancelExternalWorkflow(
+        _ resolveRequestCancelExternalWorkflow: Coresdk.WorkflowActivation.ResolveRequestCancelExternalWorkflow
+    ) async {
+        let continuation = self.stateMachine.removeExternalWorkflowCancelContinuation(
+            sequenceNumber: resolveRequestCancelExternalWorkflow.seq
+        )
+
+        if resolveRequestCancelExternalWorkflow.hasFailure {
+            let error = self.failureConverter.convertFailure(
+                resolveRequestCancelExternalWorkflow.failure,
+                payloadConverter: self.payloadConverter
+            )
+            continuation.resume(throwing: error)
+        } else {
+            continuation.resume()
+        }
+    }
+
     func workflowFinished(temporalPayload: Api.Common.V1.Payload) {
         self.stateMachine.workflowFinished(temporalPayload: temporalPayload)
     }

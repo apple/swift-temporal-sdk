@@ -666,9 +666,74 @@ public struct Workflow: Sendable {
         )
     }
 
-    // MARK: - Child Workflow
+    // MARK: - External Workflow
 
-    /// Starts a child workflow.
+    /// Returns a typed handle to an external workflow for type-safe signaling and cancellation.
+    ///
+    /// The external workflow handle allows a workflow to interact with any other workflow by ID,
+    /// regardless of whether it is a child workflow. This typed variant provides compile-time
+    /// safety for signal operations using ``WorkflowSignalDefinition``.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// let handle = Workflow.getExternalWorkflowHandle(
+    ///     ExternalTargetWorkflow.self,
+    ///     id: "other-workflow-id"
+    /// )
+    ///
+    /// // Signal the external workflow with type safety
+    /// try await handle.signal(signalType: ExternalTargetWorkflow.MySignal.self, input: signalData)
+    ///
+    /// // Cancel the external workflow
+    /// try await handle.cancel()
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - type: The workflow type of the external workflow.
+    ///   - id: The workflow ID of the external workflow.
+    ///   - runId: The optional run ID of the external workflow. If `nil`, targets the latest run.
+    /// - Returns: A typed handle to the external workflow.
+    public static func getExternalWorkflowHandle<W: WorkflowDefinition>(
+        _ type: W.Type,
+        id: String,
+        runId: String? = nil
+    ) -> ExternalWorkflowHandle<W> {
+        ExternalWorkflowHandle(
+            untypedHandle: self._context.getExternalWorkflowHandle(id: id, runId: runId)
+        )
+    }
+
+    /// Returns an untyped handle to an external workflow for signaling and cancellation.
+    ///
+    /// The external workflow handle allows a workflow to interact with any other workflow by ID,
+    /// regardless of whether it is a child workflow. This is useful for cross-workflow communication
+    /// and coordination when the workflow type is not known at compile time.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// let handle = Workflow.getExternalWorkflowHandle(id: "other-workflow-id")
+    ///
+    /// // Signal the external workflow
+    /// try await handle.signal(signalName: "mySignal", input: signalData)
+    ///
+    /// // Cancel the external workflow
+    /// try await handle.cancel()
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - id: The workflow ID of the external workflow.
+    ///   - runId: The optional run ID of the external workflow. If `nil`, targets the latest run.
+    /// - Returns: An untyped handle to the external workflow.
+    public static func getExternalWorkflowHandle(
+        id: String,
+        runId: String? = nil
+    ) -> UntypedExternalWorkflowHandle {
+        self._context.getExternalWorkflowHandle(id: id, runId: runId)
+    }
+
+    // MARK: - Child Workflow
     ///
     /// ## Usage
     ///

@@ -83,6 +83,28 @@ public protocol WorkflowOutboundInterceptor: Sendable {
         input: SignalChildWorkflowInput<repeat each Input>,
         next: (SignalChildWorkflowInput<repeat each Input>) async throws -> Void
     ) async throws
+
+    /// Intercepts external workflow signaling requests.
+    ///
+    /// - Parameters:
+    ///   - input: The external workflow signaling input containing signal details and payload.
+    ///   - next: A closure to invoke the next interceptor in the chain.
+    /// - Throws: Any error that occurs during signal delivery.
+    func signalExternalWorkflow<each Input>(
+        input: SignalExternalWorkflowInput<repeat each Input>,
+        next: (SignalExternalWorkflowInput<repeat each Input>) async throws -> Void
+    ) async throws
+
+    /// Intercepts external workflow cancellation requests.
+    ///
+    /// - Parameters:
+    ///   - input: The external workflow cancellation input containing workflow identification details.
+    ///   - next: A closure to invoke the next interceptor in the chain.
+    /// - Throws: Any error that occurs during cancellation.
+    func cancelExternalWorkflow(
+        input: CancelExternalWorkflowInput,
+        next: (CancelExternalWorkflowInput) async throws -> Void
+    ) async throws
 }
 
 extension WorkflowOutboundInterceptor {
@@ -164,6 +186,32 @@ extension WorkflowOutboundInterceptor {
     public func signalWorkflow<each Input>(
         input: SignalChildWorkflowInput<repeat each Input>,
         next: (SignalChildWorkflowInput<repeat each Input>) async throws -> Void
+    ) async throws {
+        try await next(input)
+    }
+
+    /// Default implementation that forwards external workflow signaling to the next interceptor without modification.
+    ///
+    /// - Parameters:
+    ///   - input: The external workflow signaling input containing signal details and payload.
+    ///   - next: A closure to invoke the next interceptor in the chain.
+    /// - Throws: Any error that occurs during signal delivery.
+    public func signalExternalWorkflow<each Input>(
+        input: SignalExternalWorkflowInput<repeat each Input>,
+        next: (SignalExternalWorkflowInput<repeat each Input>) async throws -> Void
+    ) async throws {
+        try await next(input)
+    }
+
+    /// Default implementation that forwards external workflow cancellation to the next interceptor without modification.
+    ///
+    /// - Parameters:
+    ///   - input: The external workflow cancellation input containing workflow identification details.
+    ///   - next: A closure to invoke the next interceptor in the chain.
+    /// - Throws: Any error that occurs during cancellation.
+    public func cancelExternalWorkflow(
+        input: CancelExternalWorkflowInput,
+        next: (CancelExternalWorkflowInput) async throws -> Void
     ) async throws {
         try await next(input)
     }
