@@ -272,6 +272,21 @@ package struct WorkflowContext: Sendable {
         )
     }
 
+    // MARK: External Workflow
+
+    func getExternalWorkflowHandle(
+        id: String,
+        runId: String?
+    ) -> UntypedExternalWorkflowHandle {
+        UntypedExternalWorkflowHandle(
+            id: id,
+            runId: runId,
+            stateMachine: self.stateMachine,
+            interceptors: self.outboundInterceptors,
+            payloadConverter: self.payloadConverter
+        )
+    }
+
     // MARK: Memo
 
     func getMemoValue<T>(for key: String) async throws -> T? {
@@ -436,6 +451,35 @@ extension WorkflowContext.Implementation {
                 inputs: inputPayloads,
                 options: input.options,
                 payloadConverter: self.payloadConverter
+            )
+        }
+    }
+
+    func signalExternalWorkflow<each Input>(
+        input: SignalExternalWorkflowInput<repeat each Input>
+    ) async throws {
+        try await intercept((any WorkflowOutboundInterceptor).signalExternalWorkflow, input: input) { input in
+            let payloads = try self.payloadConverter.convertValues(repeat each input.input)
+
+            try await self.stateMachine.signalExternalWorkflow(
+                namespace: Workflow.info.namespace,
+                workflowID: input.id,
+                runID: input.runId,
+                signalName: input.name,
+                headers: input.headers,
+                inputs: payloads
+            )
+        }
+    }
+
+    func cancelExternalWorkflow(
+        input: CancelExternalWorkflowInput
+    ) async throws {
+        try await intercept((any WorkflowOutboundInterceptor).cancelExternalWorkflow, input: input) { input in
+            try await self.stateMachine.cancelExternalWorkflow(
+                namespace: Workflow.info.namespace,
+                workflowID: input.id,
+                runID: input.runId
             )
         }
     }

@@ -366,8 +366,10 @@ struct WorkflowInstance: Sendable {
                 await Self.$isOnWorkflowInstance.withValue(true) {
                     await self.stateMachine.resolveExternalWorkflowSignal(resolveSignalExternalWorkflow)
                 }
-            case .resolveRequestCancelExternalWorkflow:
-                break
+            case .resolveRequestCancelExternalWorkflow(let resolveRequestCancelExternalWorkflow):
+                await Self.$isOnWorkflowInstance.withValue(true) {
+                    await self.stateMachine.resolveRequestCancelExternalWorkflow(resolveRequestCancelExternalWorkflow)
+                }
             case .queryWorkflow(let queryWorkflow):
                 self.queryWorkflow(
                     queryWorkflow,

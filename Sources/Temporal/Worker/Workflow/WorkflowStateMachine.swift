@@ -47,6 +47,9 @@ struct WorkflowStateMachine: ~Copyable {
             /// Next sequence number for signaling external workflows (including child workflows).
             var nextExternalSignalSequenceNumber: UInt32
 
+            /// Next sequence number for canceling external workflows.
+            var nextExternalCancelSequenceNumber: UInt32
+
             /// Number of current running and unfinished handlers.
             var numberOfActiveHandlers: Int
 
@@ -89,6 +92,9 @@ struct WorkflowStateMachine: ~Copyable {
             /// These are the current external workflow signal continuations that the workflow is waiting on.
             var externalWorkflowSignalContinuations: [UInt32: (CheckedContinuation<Void, any Error>)]
 
+            /// These are the current external workflow cancel continuations that the workflow is waiting on.
+            var externalWorkflowCancelContinuations: [UInt32: (CheckedContinuation<Void, any Error>)]
+
             /// Patches that have been detected.
             var patchesNotified: Set<String>
 
@@ -130,6 +136,7 @@ struct WorkflowStateMachine: ~Copyable {
             nextConditionSequenceNumber: 0,
             nextChildWorkflowSequenceNumber: 0,
             nextExternalSignalSequenceNumber: 0,
+            nextExternalCancelSequenceNumber: 0,
             numberOfActiveHandlers: 0,
             isReplaying: false,
             now: .now,
@@ -143,6 +150,7 @@ struct WorkflowStateMachine: ~Copyable {
             childWorkflowStartContinuations: [:],
             childWorkflowResultStates: [:],
             externalWorkflowSignalContinuations: [:],
+            externalWorkflowCancelContinuations: [:],
             patchesNotified: [],
             patchesMemoized: [:],
             headers: [:],
@@ -209,6 +217,16 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
+    mutating func nextExternalCancelSequenceNumber() -> UInt32 {
+        switch consume self.state {
+        case .active(var active):
+            let sequenceNumber = active.nextExternalCancelSequenceNumber
+            active.nextExternalCancelSequenceNumber += 1
+            self = .init(state: .active(active))
+            return sequenceNumber
+        }
+    }
+
     mutating func updateRandomnessSeed(_ seed: UInt64) {
         switch consume self.state {
         case .active(var active):
@@ -270,6 +288,12 @@ struct WorkflowStateMachine: ~Copyable {
             let externalWorkflowSignalContinuations = active.externalWorkflowSignalContinuations
             active.externalWorkflowSignalContinuations.removeAll()
             for continuation in externalWorkflowSignalContinuations {
+                continuation.value.resume(throwing: error)
+            }
+
+            let externalWorkflowCancelContinuations = active.externalWorkflowCancelContinuations
+            active.externalWorkflowCancelContinuations.removeAll()
+            for continuation in externalWorkflowCancelContinuations {
                 continuation.value.resume(throwing: error)
             }
 
@@ -758,6 +782,82 @@ struct WorkflowStateMachine: ~Copyable {
         case .active(var active):
             guard let continuation = active.externalWorkflowSignalContinuations.removeValue(forKey: sequenceNumber) else {
                 fatalError("Internal inconsistency: No continuation found for \(sequenceNumber)")
+            }
+
+            self = .init(state: .active(active))
+            return continuation
+        }
+    }
+
+    mutating func signalExternalWorkflow(
+        sequenceNumber: UInt32,
+        namespace: String,
+        workflowID: String,
+        runID: String?,
+        signalName: String,
+        headers: [String: Api.Common.V1.Payload],
+        inputs: [Api.Common.V1.Payload],
+        continuation: CheckedContinuation<Void, any Error>
+    ) {
+        switch consume self.state {
+        case .active(var active):
+            active.commands.append(
+                .with {
+                    $0.signalExternalWorkflowExecution = .with {
+                        $0.seq = sequenceNumber
+                        $0.workflowExecution = .with {
+                            $0.namespace = namespace
+                            $0.workflowID = workflowID
+                            $0.runID = runID ?? ""
+                        }
+                        $0.signalName = signalName
+                        $0.args = inputs
+                        $0.headers = headers
+                    }
+                }
+            )
+
+            active.externalWorkflowSignalContinuations[sequenceNumber] = continuation
+
+            self = .init(state: .active(active))
+        }
+    }
+
+    mutating func requestCancelExternalWorkflow(
+        sequenceNumber: UInt32,
+        namespace: String,
+        workflowID: String,
+        runID: String?,
+        continuation: CheckedContinuation<Void, any Error>
+    ) {
+        switch consume self.state {
+        case .active(var active):
+            active.commands.append(
+                .with {
+                    $0.requestCancelExternalWorkflowExecution = .with {
+                        $0.seq = sequenceNumber
+                        $0.workflowExecution = .with {
+                            $0.namespace = namespace
+                            $0.workflowID = workflowID
+                            $0.runID = runID ?? ""
+                        }
+                    }
+                }
+            )
+
+            active.externalWorkflowCancelContinuations[sequenceNumber] = continuation
+
+            self = .init(state: .active(active))
+        }
+    }
+
+    mutating func removeExternalWorkflowCancelContinuation(
+        sequenceNumber: UInt32
+    ) -> CheckedContinuation<Void, any Error> {
+        switch consume self.state {
+        case .active(var active):
+            guard let continuation = active.externalWorkflowCancelContinuations.removeValue(forKey: sequenceNumber) else {
+                fatalError("Internal inconsistency: No cancel continuation found for \(sequenceNumber)")
             }
 
             self = .init(state: .active(active))
