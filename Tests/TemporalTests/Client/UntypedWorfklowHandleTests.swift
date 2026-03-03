@@ -27,6 +27,13 @@ extension TestServerDependentTests {
             }
         }
 
+        @Workflow
+        final class ForeverWaitingWorkflow {
+            func run(input: String) async throws {
+                try await Workflow.condition { false }
+            }
+        }
+
         @Test(.timeLimit(.minutes(1)))
         func startWorkflow() async throws {
             let interceptor = InterceptedOperationsTests.WorkflowCountingInterceptor()
@@ -505,9 +512,9 @@ extension TestServerDependentTests {
                 workflows: [HelloWorldUntypedOperationsWorkflow.self]
             ) { taskQueue, client in
                 let handle = try await client.startWorkflow(
-                    name: "\(HelloWorldUntypedOperationsWorkflow.self)",
+                    name: "\(ForeverWaitingWorkflow.self)",
                     options: .init(id: workflowID, taskQueue: taskQueue),
-                    input: "Max",
+                    input: (),
                 )
 
                 try await handle.terminate(

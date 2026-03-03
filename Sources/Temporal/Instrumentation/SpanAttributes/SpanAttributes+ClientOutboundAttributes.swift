@@ -82,6 +82,32 @@ extension Span {
         }
     }
 
+    // MARK: Signal-with-Start Workflow
+
+    func setSignalWithStartWorkflowRequestSpanAttributes<each Input>(
+        input: SignalWithStartWorkflowInput<repeat each Input>
+    ) {
+        // The name of the workflow to start
+        self.attributes[TemporalTracingKeys.workflowName] = input.name
+        // The unique workflow identifier
+        self.attributes[TemporalTracingKeys.workflowId] = input.options.id
+        // The task queue to run the workflow on
+        self.attributes[TemporalTracingKeys.workflowTaskQueue] = input.options.taskQueue
+        // The signal name
+        self.attributes[TemporalTracingKeys.workflowSignalName] = input.signalName
+        // Total workflow execution timeout including retries and continue as new.
+        if let timeout = input.options.executionTimeOut?.description {
+            self.attributes[TemporalTracingKeys.workflowExecutionTimeout] = timeout
+        }
+        // The headers to include in the request.
+        // swift-format-ignore: ReplaceForEachWithForLoop
+        input.headers.forEach { key, value in
+            self.attributes["\(TemporalTracingKeys.workflowHeadersPrefix)\(key)"] = "\(value)"
+        }
+
+        // We do not record the input
+    }
+
     // MARK: Signal Workflow
 
     func setSignalWorkflowSpanAttributes<each Input>(input: SignalWorkflowInput<repeat each Input>) {

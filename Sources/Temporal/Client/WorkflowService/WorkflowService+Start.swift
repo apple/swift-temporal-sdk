@@ -60,6 +60,102 @@ extension TemporalClient.WorkflowService {
         return response.runID
     }
 
+    /// Starts a new workflow execution or signals an existing one atomically.
+    ///
+    /// This method uses the `SignalWithStartWorkflowExecution` RPC to atomically start a workflow
+    /// (if not already running) and send a signal to it. If the workflow is already running,
+    /// only the signal is delivered.
+    ///
+    /// - Parameters:
+    ///   - name: The registered name of the workflow type to execute.
+    ///   - options: Configuration options controlling workflow execution behavior, timeouts, and policies.
+    ///   - headers: Custom headers for tracing, authentication, or workflow context.
+    ///   - signalName: The name of the signal to send.
+    ///   - signalInput: The arguments to send with the signal.
+    ///   - input: The input parameters to pass to the workflow's execution method.
+    /// - Returns: The unique run ID of the workflow execution.
+    /// - Throws: An error if the operation fails.
+    func signalWithStartWorkflow<each Input: Sendable>(
+        name: String,
+        options: WorkflowOptions,
+        headers: [String: Api.Common.V1.Payload] = [:],
+        signalName: String,
+        signalInput: [any Sendable],
+        input: repeat each Input
+    ) async throws -> String {
+        let dataConverter = self.configuration.dataConverter
+
+        var signalPayloads = [Api.Common.V1.Payload]()
+        signalPayloads.reserveCapacity(signalInput.count)
+        for input in signalInput {
+            try await signalPayloads.append(dataConverter.convertValue(input))
+        }
+
+        let response: Api.Workflowservice.V1.SignalWithStartWorkflowExecutionResponse = try await self.client.unary(
+            method: Api.Workflowservice.V1.WorkflowService.Method.SignalWithStartWorkflowExecution.descriptor,
+            request: Api.Workflowservice.V1.SignalWithStartWorkflowExecutionRequest(
+                namespace: self.configuration.namespace,
+                identity: self.configuration.identity,
+                requestID: UUID().uuidString,
+                workflowTypeName: name,
+                workflowOptions: options,
+                dataConverter: dataConverter,
+                headers: headers,
+                inputs: dataConverter.convertValues(repeat each input),
+                signalName: signalName,
+                signalInput: signalPayloads
+            ),
+            callOptions: options.callOptions
+        )
+
+        return response.runID
+    }
+
+    /// Starts a new workflow execution or signals an existing one atomically,
+    /// using already-serialized signal payloads.
+    ///
+    /// This variant is used by the interceptor chain where signal arguments have already been
+    /// converted to payloads before entering the chain.
+    ///
+    /// - Parameters:
+    ///   - name: The registered name of the workflow type to execute.
+    ///   - options: Configuration options controlling workflow execution behavior, timeouts, and policies.
+    ///   - headers: Custom headers for tracing, authentication, or workflow context.
+    ///   - signalName: The name of the signal to send.
+    ///   - signalPayloads: The already-serialized signal arguments.
+    ///   - input: The input parameters to pass to the workflow's execution method.
+    /// - Returns: The unique run ID of the workflow execution.
+    /// - Throws: An error if the operation fails.
+    func signalWithStartWorkflow<each Input: Sendable>(
+        name: String,
+        options: WorkflowOptions,
+        headers: [String: Api.Common.V1.Payload] = [:],
+        signalName: String,
+        signalPayloads: [Api.Common.V1.Payload],
+        input: repeat each Input
+    ) async throws -> String {
+        let dataConverter = self.configuration.dataConverter
+
+        let response: Api.Workflowservice.V1.SignalWithStartWorkflowExecutionResponse = try await self.client.unary(
+            method: Api.Workflowservice.V1.WorkflowService.Method.SignalWithStartWorkflowExecution.descriptor,
+            request: Api.Workflowservice.V1.SignalWithStartWorkflowExecutionRequest(
+                namespace: self.configuration.namespace,
+                identity: self.configuration.identity,
+                requestID: UUID().uuidString,
+                workflowTypeName: name,
+                workflowOptions: options,
+                dataConverter: dataConverter,
+                headers: headers,
+                inputs: dataConverter.convertValues(repeat each input),
+                signalName: signalName,
+                signalInput: signalPayloads
+            ),
+            callOptions: options.callOptions
+        )
+
+        return response.runID
+    }
+
     /// Starts a new strongly-typed workflow execution using a workflow definition.
     ///
     /// This convenience method provides type-safe workflow starting using a

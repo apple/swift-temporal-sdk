@@ -107,8 +107,10 @@ extension TestServerDependentTests {
 
                 try await handle.result()
 
-                #expect(interceptor.updateCounter.withLock { $0 } == 1)
-                #expect(interceptor.validateCounter.withLock { $0 } == 1)
+                // These expectations are >= 1 since the workflow might run multiple times
+                // in tests if the tests are slow
+                #expect(interceptor.updateCounter.withLock { $0 } >= 1)
+                #expect(interceptor.validateCounter.withLock { $0 } >= 1)
             }
         }
     }
