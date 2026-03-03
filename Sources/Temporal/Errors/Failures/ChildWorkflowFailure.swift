@@ -36,7 +36,7 @@ public struct ChildWorkflowError: TemporalFailureError {
     public var workflowName: String
 
     /// The child workflow's retry state.
-    public var retryState: RetryState
+    public var retryState: Api.Enums.V1.RetryState
 
     /// Initializes a new application error.
     ///
@@ -57,7 +57,7 @@ public struct ChildWorkflowError: TemporalFailureError {
         workflowID: String,
         runID: String,
         workflowName: String,
-        retryState: RetryState
+        retryState: Api.Enums.V1.RetryState
     ) {
         self.message = message
         self.cause = cause

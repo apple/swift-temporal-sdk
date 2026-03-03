@@ -32,8 +32,8 @@ extension Api.Workflowservice.V1.StartWorkflowExecutionRequest {
             $0.taskQueue.name = workflowOptions.taskQueue
             $0.identity = identity
             $0.requestID = requestID
-            $0.workflowIDReusePolicy = .init(workflowIDReusePolicy: workflowOptions.idReusePolicy)
-            $0.workflowIDConflictPolicy = .init(workflowIDConflictPolicy: workflowOptions.idConflictPolicy)
+            $0.workflowIDReusePolicy = workflowOptions.idReusePolicy
+            $0.workflowIDConflictPolicy = workflowOptions.idConflictPolicy
             $0.input = .with {
                 $0.payloads = inputs
             }

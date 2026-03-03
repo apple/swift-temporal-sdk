@@ -74,10 +74,10 @@ extension UntypedWorkflowHandle {
     /// - Throws: An error if the history cannot be retrieved or the workflow doesn't exist.
     public func fetchHistoryEvents(
         waitNewEvent: Bool = false,
-        eventFilterType: HistoryEventFilterType = .allEvent,
+        eventFilterType: Api.Enums.V1.HistoryEventFilterType = .allEvent,
         skipArchival: Bool = false,
         callOptions: CallOptions? = nil
-    ) async throws -> [HistoryEvent] {
+    ) async throws -> [Api.History.V1.HistoryEvent] {
         try await self.interceptor.fetchWorkflowHistoryEvents(
             .init(
                 id: self.id,
@@ -138,7 +138,7 @@ extension UntypedWorkflowHandle {
     /// - Throws: An error if the query fails, is rejected, or the workflow doesn't exist.
     public func query<each Input: Sendable, each Result: Sendable>(
         queryName: String,
-        rejectionCondition: QueryRejectionCondition? = nil,
+        rejectionCondition: Api.Enums.V1.QueryRejectCondition? = nil,
         input: repeat each Input,
         resultTypes: repeat (each Result).Type,
         callOptions: CallOptions? = nil
@@ -397,7 +397,7 @@ extension TemporalClient.Interceptor {
 
     func fetchWorkflowHistoryEvents(
         _ input: FetchWorkflowHistoryEventsInput
-    ) async throws -> [HistoryEvent] {
+    ) async throws -> [Api.History.V1.HistoryEvent] {
         try await self.intercept((any ClientOutboundInterceptor).fetchWorkflowHistoryEvents, input: input) { input in
             try await self.workflowService.fetchWorkflowHistoryEvents(
                 id: input.id,

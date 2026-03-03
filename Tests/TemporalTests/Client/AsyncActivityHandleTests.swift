@@ -177,7 +177,7 @@ extension TestServerDependentTests {
                 try await asyncActivityHandle.heartbeat(options: .init(details: ["foo", "bar"]))
 
                 let description = try await handle.describe()
-                let payloads = description.pendingActivities.first!.heartbeatDetails
+                let payloads = description.pendingActivities.first!.heartbeatDetails.payloads
                 let foo: String = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(payloads[0], as: String.self)
                 let bar: String = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(payloads[1], as: String.self)
                 #expect(foo == "foo")

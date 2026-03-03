@@ -44,11 +44,42 @@ extension SearchAttributeCollection {
     }
 }
 
+extension Api.Enums.V1.IndexedValueType {
+    var indexedValueTypeString: String {
+        switch self {
+        case .unspecified: return ""
+        case .text: return "Text"
+        case .keyword: return "Keyword"
+        case .int: return "Int"
+        case .double: return "Double"
+        case .bool: return "Bool"
+        case .datetime: return "Datetime"
+        case .keywordList: return "KeywordList"
+        case .UNRECOGNIZED(let value):
+            fatalError("Unrecognized value when getting indexedValueTypeString: \(value)")
+        }
+    }
+}
+
+private func indexedValueType(fromString stringType: String) -> Api.Enums.V1.IndexedValueType? {
+    switch stringType {
+    case "": return .unspecified
+    case "Text": return .text
+    case "Keyword": return .keyword
+    case "Int": return .int
+    case "Double": return .double
+    case "Bool": return .bool
+    case "Datetime": return .datetime
+    case "KeywordList": return .keywordList
+    default: return nil
+    }
+}
+
 extension SearchAttributeCollection.StorageValue {
-    static func convertPayload(_ payload: Api.Common.V1.Payload) throws -> (value: Self, type: SearchAttributeType)? {
+    static func convertPayload(_ payload: Api.Common.V1.Payload) throws -> (value: Self, type: Api.Enums.V1.IndexedValueType)? {
         guard let rawType = payload.metadata["type"] else { return nil }
         guard let stringType = String(data: rawType, encoding: .utf8) else { return nil }
-        guard let type = SearchAttributeType(indexedValueTypeString: stringType) else { return nil }
+        guard let type = indexedValueType(fromString: stringType) else { return nil }
 
         let payload = payload
         let payloadConverter = DataConverter.default.payloadConverter
@@ -56,13 +87,15 @@ extension SearchAttributeCollection.StorageValue {
         let value: Self =
             switch type {
             case .bool: .bool(try payloadConverter.convertPayload(payload, as: Bool.self))
-            case .dateTime: .date(try payloadConverter.convertPayload(payload, as: Date.self))
+            case .datetime: .date(try payloadConverter.convertPayload(payload, as: Date.self))
             case .double: .double(try payloadConverter.convertPayload(payload, as: Double.self))
             case .int: .int(try payloadConverter.convertPayload(payload, as: Int.self))
             case .keyword, .text: .string(try payloadConverter.convertPayload(payload, as: String.self))
             case .keywordList: .stringArray(try payloadConverter.convertPayload(payload, as: [String].self))
             case .unspecified:
                 throw TemporalSDKError("Encountered unspecified search attribute type when converting from raw proto.")
+            case .UNRECOGNIZED(let value):
+                fatalError("Unrecognized IndexedValueType \(value) when converting search attribute payload.")
             }
 
         return (value, type)

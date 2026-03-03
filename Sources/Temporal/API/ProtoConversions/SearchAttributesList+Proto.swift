@@ -14,8 +14,8 @@
 
 extension SearchAttributeKeyCollection {
     init(proto: Api.Operatorservice.V1.ListSearchAttributesResponse) {
-        self.customAttributes = proto.customAttributes.mapValues { .init($0) }
-        self.systemAttributes = proto.systemAttributes.mapValues { .init($0) }
+        self.customAttributes = proto.customAttributes
+        self.systemAttributes = proto.systemAttributes
         self.storageSchema = proto.storageSchema
     }
 }

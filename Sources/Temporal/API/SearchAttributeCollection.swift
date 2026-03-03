@@ -89,7 +89,7 @@ extension SearchAttributeCollection: CustomDebugStringConvertible {
     public var debugDescription: String {
         "["
             + map { key, value in
-                "\(key.name)(\(key.type.indexedValueTypeString)): \(value.flatMap { .init(describing: $0) } ?? "<unset>" )"
+                "\(key.name)(\(String(describing: key.type))): \(value.flatMap { .init(describing: $0) } ?? "<unset>" )"
             }.joined(separator: ", ") + "]"
     }
 }

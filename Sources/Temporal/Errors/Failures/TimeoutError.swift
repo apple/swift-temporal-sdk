@@ -24,7 +24,7 @@ public struct TimeoutError: TemporalFailureError {
     public var stackTrace: String
 
     /// Type of the timeout.
-    public var type: TimeoutType
+    public var type: Api.Enums.V1.TimeoutType
 
     /// The details of the last heartbeat.
     public var lastHeartbeatDetails: [Api.Common.V1.Payload]
@@ -39,7 +39,7 @@ public struct TimeoutError: TemporalFailureError {
     ///   - lastHeartbeatDetails: The details of the last heartbeat.
     public init(
         message: String,
-        type: TimeoutType,
+        type: Api.Enums.V1.TimeoutType,
         cause: (any Error)? = nil,
         stackTrace: String = "",
         lastHeartbeatDetails: [Api.Common.V1.Payload] = []

@@ -44,7 +44,7 @@ extension TemporalClient.WorkflowService {
         workflowID: String,
         runID: String? = nil,
         queryName: String,
-        rejectionCondition: QueryRejectionCondition? = nil,
+        rejectionCondition: Api.Enums.V1.QueryRejectCondition? = nil,
         headers: [String: Api.Common.V1.Payload] = [:],
         input: repeat each Input,
         resultTypes: repeat (each Result).Type,
@@ -66,7 +66,7 @@ extension TemporalClient.WorkflowService {
                 $0.execution.runID = runID
             }
             if let rejectionCondition {
-                $0.queryRejectCondition = .init(queryRejectionCondition: rejectionCondition)
+                $0.queryRejectCondition = rejectionCondition
             }
         }
 
@@ -91,14 +91,13 @@ extension TemporalClient.WorkflowService {
 
         switch response.queryRejected.status {
         case .unspecified:
-            let payloads = response.queryResult.payloads
             return try await self.configuration.dataConverter.convertPayloads(
-                payloads,
+                response.queryResult.payloads,
                 as: repeat each resultTypes
             )
         case .running, .completed, .failed, .canceled, .terminated, .continuedAsNew, .timedOut, .paused, .UNRECOGNIZED:
             throw WorkflowQueryRejectedError(
-                workflowExecutionStatus: .init(temporalAPIWorkflowExecutionStatus: response.queryRejected.status)
+                workflowExecutionStatus: response.queryRejected.status
             )
         }
     }
@@ -124,7 +123,7 @@ extension TemporalClient.WorkflowService {
         workflowID: String,
         runID: String? = nil,
         queryType: Query.Type = Query.self,
-        rejectionCondition: QueryRejectionCondition? = nil,
+        rejectionCondition: Api.Enums.V1.QueryRejectCondition? = nil,
         headers: [String: Api.Common.V1.Payload] = [:],
         input: Query.Input,
         callOptions: CallOptions? = nil
@@ -160,7 +159,7 @@ extension TemporalClient.WorkflowService {
         workflowID: String,
         runID: String? = nil,
         queryType: Query.Type = Query.self,
-        rejectionCondition: QueryRejectionCondition? = nil,
+        rejectionCondition: Api.Enums.V1.QueryRejectCondition? = nil,
         headers: [String: Api.Common.V1.Payload] = [:],
         callOptions: CallOptions? = nil
     ) async throws -> Query.Output where Query.Input == Void {

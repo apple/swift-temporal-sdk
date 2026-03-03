@@ -53,7 +53,7 @@ extension ScheduleInfo {
         public var action: ActionExecution
 
         /// The final execution status of the workflow that was started by this action.
-        public var status: WorkflowExecutionStatus?
+        public var status: Api.Enums.V1.WorkflowExecutionStatus?
 
         /// Creates detailed information about a completed schedule action execution.
         ///
@@ -66,7 +66,7 @@ extension ScheduleInfo {
             scheduledAt: Date,
             startedAt: Date,
             action: ActionExecution,
-            status: WorkflowExecutionStatus?
+            status: Api.Enums.V1.WorkflowExecutionStatus?
         ) {
             self.scheduledAt = scheduledAt
             self.startedAt = startedAt

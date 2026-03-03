@@ -39,7 +39,7 @@ public struct ActivityError: TemporalFailureError {
     public var identity: String
 
     /// The retry state of the failed activity.
-    public var retryState: RetryState
+    public var retryState: Api.Enums.V1.RetryState
 
     /// Initializes a new application error.
     ///
@@ -62,7 +62,7 @@ public struct ActivityError: TemporalFailureError {
         activityID: String,
         activityType: String,
         identity: String,
-        retryState: RetryState
+        retryState: Api.Enums.V1.RetryState
     ) {
         self.message = message
         self.cause = cause

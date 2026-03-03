@@ -18,7 +18,7 @@ extension NamespaceReplicationConfig {
     init(proto: Api.Replication.V1.NamespaceReplicationConfig) {
         self.activeClusterName = proto.activeClusterName.isEmpty ? nil : proto.activeClusterName
         self.clusters = proto.clusters.map { $0.clusterName }
-        self.state = .init(proto: proto.state)
+        self.state = proto.state
     }
 }
 
@@ -31,8 +31,6 @@ extension Api.Replication.V1.NamespaceReplicationConfig {
                 $0.clusterName = cluster
             }
         }
-        if let state = replicationConfig.state {
-            self.state = .init(state: state)
-        }
+        self.state = replicationConfig.state
     }
 }

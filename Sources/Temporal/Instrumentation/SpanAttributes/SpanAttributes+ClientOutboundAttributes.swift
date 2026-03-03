@@ -119,7 +119,7 @@ extension Span {
 
         // The condition under which workflow state the query should be rejected
         if let rejectionCondition = input.rejectionCondition {
-            self.attributes[TemporalTracingKeys.workflowQueryRejectCondition] = rejectionCondition.description
+            self.attributes[TemporalTracingKeys.workflowQueryRejectCondition] = "\(rejectionCondition)"
         }
         // The headers to include in the request.
         // swift-format-ignore: ReplaceForEachWithForLoop
@@ -248,7 +248,7 @@ extension Span {
         }
         self.attributes[TemporalTracingKeys.workflowEventHistorySkipArchival] = input.skipArchival
         self.attributes[TemporalTracingKeys.workflowEventHistoryWaitNewEvent] = input.waitNewEvent
-        self.attributes[TemporalTracingKeys.workflowEventHistoryFilterType] = input.eventFilterType.description
+        self.attributes[TemporalTracingKeys.workflowEventHistoryFilterType] = String(describing: input.eventFilterType)
     }
 
     func setFetchWorkflowHistoryResponseSpanAttributes(count: Int) {

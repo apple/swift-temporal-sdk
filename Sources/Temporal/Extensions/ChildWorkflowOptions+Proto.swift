@@ -34,8 +34,8 @@ extension Coresdk.WorkflowCommands.StartChildWorkflowExecution {
             $0.workflowType = workflowName
             $0.taskQueue = childWorkflowOptions.taskQueue ?? taskQueue
             $0.input = inputs
-            $0.parentClosePolicy = .init(parentClosePolicy: childWorkflowOptions.parentClosePolicy)
-            $0.workflowIDReusePolicy = .init(workflowIDReusePolicy: childWorkflowOptions.idReusePolicy)
+            $0.parentClosePolicy = .init(rawValue: childWorkflowOptions.parentClosePolicy.rawValue) ?? .unspecified
+            $0.workflowIDReusePolicy = childWorkflowOptions.idReusePolicy
             $0.cancellationType = .init(childWorkflowCancellationType: childWorkflowOptions.cancellationType)
             $0.versioningIntent = .init(versioningIntent: childWorkflowOptions.versioningIntent)
         }

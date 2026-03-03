@@ -180,10 +180,10 @@ extension TemporalClient.InterceptedService {
         id: String,
         runID: String? = nil,
         waitNewEvent: Bool = false,
-        eventFilterType: HistoryEventFilterType = .allEvent,
+        eventFilterType: Api.Enums.V1.HistoryEventFilterType = .allEvent,
         skipArchival: Bool = false,
         callOptions: CallOptions? = nil
-    ) async throws -> [HistoryEvent] {
+    ) async throws -> [Api.History.V1.HistoryEvent] {
         try await self.interceptor.fetchWorkflowHistoryEvents(
             .init(
                 id: id,
@@ -252,7 +252,7 @@ extension TemporalClient.InterceptedService {
         id: String,
         runID: String? = nil,
         queryName: String,
-        rejectionCondition: QueryRejectionCondition? = nil,
+        rejectionCondition: Api.Enums.V1.QueryRejectCondition? = nil,
         input: repeat each Input,
         resultTypes: repeat (each Result).Type,
         callOptions: CallOptions? = nil

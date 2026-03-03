@@ -24,11 +24,11 @@ public struct WorkflowQueryRejectedError: TemporalError {
     public var stackTrace: String
 
     /// The workflow's execution status.
-    public var workflowExecutionStatus: WorkflowExecutionStatus
+    public var workflowExecutionStatus: Api.Enums.V1.WorkflowExecutionStatus
 
     public init(
         stackTrace: String = "",
-        workflowExecutionStatus: WorkflowExecutionStatus
+        workflowExecutionStatus: Api.Enums.V1.WorkflowExecutionStatus
     ) {
         self.message = "Workflow query rejected \(workflowExecutionStatus)"
         self.stackTrace = stackTrace
