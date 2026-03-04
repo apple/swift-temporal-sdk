@@ -350,7 +350,7 @@ jobs:
           echo "✅ XCFramework created: ${{ env.XCFRAMEWORK_NAME }}"
 
       - name: Upload macOS artifacts for bundle assembly
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: macos-libraries
           path: |
@@ -404,7 +404,7 @@ jobs:
             --crate-type=staticlib
 
       - name: Upload Linux x86_64 artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: linux-x86-libraries
           path: dependencies/sdk-core/target/x86_64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
@@ -450,7 +450,7 @@ jobs:
             --crate-type=staticlib
 
       - name: Upload Linux ARM64 artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: linux-arm-libraries
           path: dependencies/sdk-core/target/aarch64-unknown-linux-gnu/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
@@ -495,7 +495,7 @@ jobs:
             --crate-type=staticlib
 
       - name: Upload Linux MUSL x86_64 artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: linux-musl-x86-libraries
           path: dependencies/sdk-core/target/x86_64-unknown-linux-musl/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
@@ -540,7 +540,7 @@ jobs:
             --crate-type=staticlib
 
       - name: Upload Linux MUSL ARM64 artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: linux-musl-arm-libraries
           path: dependencies/sdk-core/target/aarch64-unknown-linux-musl/release/${{ env.TEMPORAL_BUILT_LIB_NAME }}
