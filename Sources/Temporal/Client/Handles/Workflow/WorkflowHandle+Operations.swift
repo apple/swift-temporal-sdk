@@ -197,6 +197,7 @@ extension WorkflowHandle {
     /// - Parameters:
     ///   - updateType: The update type.
     ///   - updateID: A unique identifier for this update operation. Defaults to a new UUID.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     ///   - input: The input data.
     ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
     /// - Returns: A handle for managing the update and retrieving its result.
@@ -204,12 +205,14 @@ extension WorkflowHandle {
     public func startUpdate<WorkflowUpdate: WorkflowUpdateDefinition>(
         updateType: WorkflowUpdate.Type = WorkflowUpdate.self,
         updateID: String = UUID().uuidString,
+        waitForStage: WorkflowUpdateStage,
         input: WorkflowUpdate.Input,
         callOptions: CallOptions? = nil
     ) async throws -> WorkflowUpdateHandle<WorkflowUpdate> {
         let untypedHandle = try await self.untypedHandle.startUpdate(
             updateName: updateType.name,
             updateID: updateID,
+            waitForStage: waitForStage,
             input: input,
             callOptions: callOptions
         )
@@ -220,8 +223,9 @@ extension WorkflowHandle {
     /// Executes a workflow update and waits for its completion in a single operation.
     ///
     /// This is a convenience method that combines starting an update with waiting for its result.
-    /// It internally calls ``startUpdate(updateType:updateID:input:callOptions:)`` followed by waiting for
-    /// the result, providing a simpler API for synchronous update operations.
+    /// It internally calls ``startUpdate(updateType:updateID:waitForStage:input:callOptions:)`` with
+    /// ``WorkflowUpdateStage/completed`` followed by waiting for the result, providing a simpler
+    /// API for synchronous update operations.
     ///
     /// - Parameters:
     ///   - updateType: The update type.

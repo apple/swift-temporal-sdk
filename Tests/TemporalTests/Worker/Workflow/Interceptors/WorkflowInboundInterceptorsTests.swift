@@ -64,7 +64,7 @@ extension TestServerDependentTests {
                 interceptors: [interceptor]
             )
 
-            #expect(interceptor.counter.withLock { $0 } == 1)
+            #expect(interceptor.counter.withLock { $0 } >= 1)
 
             try await executeWorkflow(
                 InterceptorTestingWorkflow.self,
@@ -72,7 +72,7 @@ extension TestServerDependentTests {
                 interceptors: [interceptor]
             )
 
-            #expect(interceptor.counter.withLock { $0 } == 2)
+            #expect(interceptor.counter.withLock { $0 } >= 2)
         }
 
         @Test

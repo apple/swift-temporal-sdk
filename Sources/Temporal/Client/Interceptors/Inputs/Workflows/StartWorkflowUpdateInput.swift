@@ -28,6 +28,9 @@ public struct StartWorkflowUpdateInput<each Input: Sendable>: Sendable {
     /// The name of the update handler to invoke in the workflow.
     public var updateName: String
 
+    /// The stage to wait for before returning from the update request.
+    public var waitForStage: WorkflowUpdateStage
+
     /// The run ID of the first execution in the workflow chain.
     public var firstExecutionRunID: String?
 
@@ -47,6 +50,7 @@ public struct StartWorkflowUpdateInput<each Input: Sendable>: Sendable {
     ///   - runID: The specific run ID of the workflow execution to update.
     ///   - updateID: A unique identifier for this specific update request.
     ///   - updateName: The name of the update handler to invoke in the workflow.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     ///   - firstExecutionRunID: The run ID of the first execution in the workflow chain.
     ///   - headers: Headers to include with the update request.
     ///   - input: The input arguments to pass to the update handler.
@@ -56,6 +60,7 @@ public struct StartWorkflowUpdateInput<each Input: Sendable>: Sendable {
         runID: String? = nil,
         updateID: String,
         updateName: String,
+        waitForStage: WorkflowUpdateStage,
         firstExecutionRunID: String? = nil,
         headers: [String: Api.Common.V1.Payload],
         input: repeat each Input,
@@ -65,6 +70,7 @@ public struct StartWorkflowUpdateInput<each Input: Sendable>: Sendable {
         self.runID = runID
         self.updateID = updateID
         self.updateName = updateName
+        self.waitForStage = waitForStage
         self.firstExecutionRunID = firstExecutionRunID
         self.headers = headers
         self.input = (repeat each input)

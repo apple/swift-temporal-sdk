@@ -306,6 +306,7 @@ extension TemporalClient {
     ///   - updateType: The ``WorkflowUpdateDefinition`` type that defines the update contract.
     ///   - updateInput: The input data to send with the update.
     ///   - updateID: A unique identifier for the update. Defaults to a new UUID.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     /// - Returns: A ``WorkflowUpdateHandle`` for managing the update and retrieving its result.
     /// - Throws: An error if the operation fails.
     public func startUpdateWithStartWorkflow<
@@ -317,7 +318,8 @@ extension TemporalClient {
         options: WorkflowOptions,
         updateType: Update.Type = Update.self,
         updateInput: Update.Input,
-        updateID: String = UUID().uuidString
+        updateID: String = UUID().uuidString,
+        waitForStage: WorkflowUpdateStage
     ) async throws -> WorkflowUpdateHandle<Update> {
         let untypedHandle = try await self.startUpdateWithStartWorkflow(
             name: Workflow.name,
@@ -325,7 +327,8 @@ extension TemporalClient {
             options: options,
             updateName: Update.name,
             updateInput: updateInput,
-            updateID: updateID
+            updateID: updateID,
+            waitForStage: waitForStage
         )
 
         return WorkflowUpdateHandle<Update>(untypedHandle: untypedHandle)
@@ -342,6 +345,7 @@ extension TemporalClient {
     ///   - input: The input data to pass to the workflow's run method.
     ///   - updateType: The ``WorkflowUpdateDefinition`` type that defines the update contract.
     ///   - updateID: A unique identifier for the update. Defaults to a new UUID.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     /// - Returns: A ``WorkflowUpdateHandle`` for managing the update and retrieving its result.
     /// - Throws: An error if the operation fails.
     public func startUpdateWithStartWorkflow<
@@ -352,7 +356,8 @@ extension TemporalClient {
         input: Workflow.Input,
         options: WorkflowOptions,
         updateType: Update.Type = Update.self,
-        updateID: String = UUID().uuidString
+        updateID: String = UUID().uuidString,
+        waitForStage: WorkflowUpdateStage
     ) async throws -> WorkflowUpdateHandle<Update> where Update.Input == Void {
         try await self.startUpdateWithStartWorkflow(
             type: type,
@@ -360,7 +365,8 @@ extension TemporalClient {
             options: options,
             updateType: updateType,
             updateInput: (),
-            updateID: updateID
+            updateID: updateID,
+            waitForStage: waitForStage
         )
     }
 
@@ -375,6 +381,7 @@ extension TemporalClient {
     ///   - updateType: The ``WorkflowUpdateDefinition`` type that defines the update contract.
     ///   - updateInput: The input data to send with the update.
     ///   - updateID: A unique identifier for the update. Defaults to a new UUID.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     /// - Returns: A ``WorkflowUpdateHandle`` for managing the update and retrieving its result.
     /// - Throws: An error if the operation fails.
     public func startUpdateWithStartWorkflow<
@@ -385,7 +392,8 @@ extension TemporalClient {
         options: WorkflowOptions,
         updateType: Update.Type = Update.self,
         updateInput: Update.Input,
-        updateID: String = UUID().uuidString
+        updateID: String = UUID().uuidString,
+        waitForStage: WorkflowUpdateStage
     ) async throws -> WorkflowUpdateHandle<Update> where Workflow.Input == Void {
         try await self.startUpdateWithStartWorkflow(
             type: type,
@@ -393,7 +401,8 @@ extension TemporalClient {
             options: options,
             updateType: updateType,
             updateInput: updateInput,
-            updateID: updateID
+            updateID: updateID,
+            waitForStage: waitForStage
         )
     }
 
@@ -401,7 +410,7 @@ extension TemporalClient {
     /// if not already running.
     ///
     /// This convenience method combines
-    /// ``startUpdateWithStartWorkflow(type:input:options:updateType:updateID:)``
+    /// ``startUpdateWithStartWorkflow(type:input:options:updateType:updateInput:updateID:waitForStage:)``
     /// with waiting for the update result into a single operation.
     ///
     /// - Parameters:
@@ -430,7 +439,8 @@ extension TemporalClient {
             options: options,
             updateType: updateType,
             updateInput: updateInput,
-            updateID: updateID
+            updateID: updateID,
+            waitForStage: .completed
         )
 
         return try await updateHandle.result()

@@ -248,6 +248,7 @@ extension TemporalClient {
     ///   - updateName: The name of the update handler to invoke.
     ///   - updateInput: The input data to send with the update.
     ///   - updateID: A unique identifier for the update. Defaults to a new UUID.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     ///   - callOptions: Optional gRPC call options for customizing the request.
     /// - Returns: An ``UntypedWorkflowUpdateHandle`` for managing the update and retrieving its result.
     /// - Throws: An error if the operation fails.
@@ -258,6 +259,7 @@ extension TemporalClient {
         updateName: String,
         updateInput: repeat each UpdateInput,
         updateID: String = UUID().uuidString,
+        waitForStage: WorkflowUpdateStage,
         callOptions: CallOptions? = nil
     ) async throws -> UntypedWorkflowUpdateHandle {
         // Convert variadic update input to [any Sendable].
@@ -278,6 +280,7 @@ extension TemporalClient {
             updateInput: updateInputs,
             updateID: updateID,
             updateHeaders: [:],  // TODO: We need to expose headers across all these start methods
+            waitForStage: waitForStage,
             callOptions: callOptions
         )
     }
@@ -286,7 +289,7 @@ extension TemporalClient {
     /// already running.
     ///
     /// This convenience method combines
-    /// ``startUpdateWithStartWorkflow(type:input:options:updateType:updateID:)``
+    /// ``startUpdateWithStartWorkflow(name:input:options:updateName:updateInput:updateID:waitForStage:callOptions:)``
     /// with waiting for the update result into a single operation.
     ///
     /// - Parameters:
@@ -321,6 +324,7 @@ extension TemporalClient {
             updateName: updateName,
             updateInput: repeat each updateInput,
             updateID: updateID,
+            waitForStage: .completed,
             callOptions: callOptions
         )
 
@@ -411,6 +415,7 @@ extension TemporalClient.Interceptor {
                 updateName: input.updateName,
                 updateHeaders: input.updateHeaders,
                 updateInput: updatePayloads,
+                waitForStage: input.waitForStage,
                 callOptions: input.callOptions
             )
 

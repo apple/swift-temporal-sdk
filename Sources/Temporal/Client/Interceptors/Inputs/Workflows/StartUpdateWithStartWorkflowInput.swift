@@ -45,7 +45,8 @@ public struct StartUpdateWithStartWorkflowInput<each Input: Sendable>: Sendable 
     /// The input data to send with the update.
     public var updateInput: [any Sendable]
 
-    // TODO: Add WorkflowUpdateStage wait for stage support
+    /// The stage to wait for before returning from the update request.
+    public var waitForStage: WorkflowUpdateStage
 
     /// Optional gRPC call options for customizing the request.
     public var callOptions: CallOptions?
@@ -61,6 +62,7 @@ public struct StartUpdateWithStartWorkflowInput<each Input: Sendable>: Sendable 
     ///   - updateInput: The input data to send with the update.
     ///   - updateID: A unique identifier for this update request.
     ///   - updateHeaders: Headers to include with the update request.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     ///   - callOptions: Optional gRPC call options for customizing the request.
     public init(
         name: String,
@@ -71,6 +73,7 @@ public struct StartUpdateWithStartWorkflowInput<each Input: Sendable>: Sendable 
         updateInput: [any Sendable],
         updateID: String,
         updateHeaders: [String: Api.Common.V1.Payload],
+        waitForStage: WorkflowUpdateStage,
         callOptions: CallOptions? = nil
     ) {
         self.name = name
@@ -81,6 +84,7 @@ public struct StartUpdateWithStartWorkflowInput<each Input: Sendable>: Sendable 
         self.updateName = updateName
         self.updateHeaders = updateHeaders
         self.updateInput = updateInput
+        self.waitForStage = waitForStage
         self.callOptions = callOptions
     }
 }

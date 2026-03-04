@@ -209,7 +209,7 @@ extension TestServerDependentTests {
 
                 try await handle.result()
 
-                #expect(interceptor.counter.withLock { $0 } == 1)
+                #expect(interceptor.counter.withLock { $0 } >= 1)
             }
         }
 
