@@ -1,0 +1,83 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Swift Temporal SDK open source project
+//
+// Copyright (c) 2026 Apple Inc. and the Swift Temporal SDK project authors
+// Licensed under MIT License
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of Swift Temporal SDK project authors
+//
+// SPDX-License-Identifier: MIT
+//
+//===----------------------------------------------------------------------===//
+
+import SwiftProtobuf
+
+extension Api.Workflowservice.V1.SignalWithStartWorkflowExecutionRequest {
+    package init(
+        namespace: String,
+        identity: String,
+        requestID: String,
+        workflowTypeName: String,
+        workflowOptions: WorkflowOptions,
+        dataConverter: DataConverter,
+        headers: [String: Api.Common.V1.Payload],
+        inputs: [Api.Common.V1.Payload],
+        signalName: String,
+        signalInput: [Api.Common.V1.Payload]
+    ) async throws {
+        // Signal-with-start does not support WORKFLOW_ID_CONFLICT_POLICY_FAIL.
+        // The default policy for signal-with-start is USE_EXISTING.
+        let conflictPolicy: Api.Enums.V1.WorkflowIdConflictPolicy =
+            workflowOptions.idConflictPolicy == .fail
+            ? .useExisting
+            : workflowOptions.idConflictPolicy
+
+        self = .with {
+            $0.namespace = namespace
+            $0.workflowID = workflowOptions.id
+            $0.workflowType.name = workflowTypeName
+            $0.taskQueue.name = workflowOptions.taskQueue
+            $0.identity = identity
+            $0.requestID = requestID
+            $0.workflowIDReusePolicy = workflowOptions.idReusePolicy
+            $0.workflowIDConflictPolicy = conflictPolicy
+            $0.input = .with {
+                $0.payloads = inputs
+            }
+            $0.signalName = signalName
+            if !signalInput.isEmpty {
+                $0.signalInput = .with {
+                    $0.payloads = signalInput
+                }
+            }
+        }
+
+        if let executionTimeOut = workflowOptions.executionTimeOut {
+            self.workflowExecutionTimeout = .init(duration: executionTimeOut)
+        }
+
+        if let retryPolicy = workflowOptions.retryPolicy {
+            self.retryPolicy = .init(retryPolicy: retryPolicy)
+        }
+
+        if let memo = workflowOptions.memo {
+            var temporalPayloads = [String: Api.Common.V1.Payload]()
+            for (key, value) in memo {
+                temporalPayloads[key] = try await dataConverter.convertValue(value)
+            }
+            self.memo = .with {
+                $0.fields = temporalPayloads
+            }
+        }
+
+        if let searchAttributes = workflowOptions.searchAttributes, !searchAttributes.isEmpty {
+            self.searchAttributes = .init(searchAttributes)
+        }
+
+        if !headers.isEmpty {
+            self.header = try await .init(headers, with: dataConverter.payloadCodec)
+        }
+    }
+}

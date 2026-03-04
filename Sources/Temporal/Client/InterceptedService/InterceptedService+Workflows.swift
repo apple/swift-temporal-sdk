@@ -34,15 +34,15 @@ extension TemporalClient.InterceptedService {
     ///   - name: The registered name of the workflow type to execute.
     ///   - options: Configuration options controlling workflow execution behavior, timeouts, and policies.
     ///   - input: The input parameters to pass to the workflow's execution method.
-    /// - Returns: The unique run ID of the started workflow execution for tracking and operations.
+    /// - Returns: An ``UntypedWorkflowHandle`` for monitoring and controlling the started workflow.
     /// - Throws: ``WorkflowAlreadyStartedError`` if a workflow with the same ID is already
     /// running (depending on ID reuse policy), or an error for other startup failures.
     package func startWorkflow<each Input: Sendable>(
         name: String,
         options: WorkflowOptions,
         input: repeat each Input,
-    ) async throws -> String {
-        let untypedHandle = try await self.interceptor.startWorkflow(
+    ) async throws -> UntypedWorkflowHandle {
+        try await self.interceptor.startWorkflow(
             .init(
                 name: name,
                 options: options,
@@ -50,13 +50,46 @@ extension TemporalClient.InterceptedService {
                 input: repeat each input
             )
         )
+    }
 
-        // This is safe as the `resultRunID` on the handle must be set when starting a workflow
-        guard let runID = untypedHandle.resultRunID else {  // runID is not set
-            fatalError("Internal consistency error: resultRunID not set for started workflow")
+    /// Starts a new workflow execution or signals an existing one atomically.
+    ///
+    /// This method serializes the signal arguments and routes through the interceptor chain
+    /// with signal data attached to the ``SignalWithStartWorkflowInput``.
+    ///
+    /// - Parameters:
+    ///   - name: The registered name of the workflow type to execute.
+    ///   - options: Configuration options controlling workflow execution behavior, timeouts, and policies.
+    ///   - signalName: The name of the signal to send with start.
+    ///   - signalInput: The signal arguments to serialize and send.
+    ///   - input: The input parameters to pass to the workflow's execution method.
+    /// - Returns: An ``UntypedWorkflowHandle`` for monitoring and controlling the started workflow.
+    /// - Throws: An error if the operation fails.
+    package func signalWithStartWorkflow<each Input: Sendable, each SignalInput: Sendable>(
+        name: String,
+        options: WorkflowOptions,
+        signalName: String,
+        signalInput: repeat each SignalInput,
+        input: repeat each Input
+    ) async throws -> UntypedWorkflowHandle {
+        // We need to convert the signal input to any Sendable since
+        // Swift only supports a single pack in a variadic generic type
+        var signalInputs = [any Sendable]()
+
+        for input in repeat each signalInput {
+            signalInputs.append(input)
         }
 
-        return runID
+        return try await self.interceptor.signalWithStartWorkflow(
+            .init(
+                name: name,
+                options: options,
+                headers: [:],
+                input: repeat each input,
+                signalName: signalName,
+                signalInput: signalInputs
+            )
+        )
     }
 
     /// Starts a workflow execution with the specified name and configuration but no input.
@@ -68,13 +101,13 @@ extension TemporalClient.InterceptedService {
     /// - Parameters:
     ///   - name: The registered name of the workflow type to execute.
     ///   - options: Configuration options controlling workflow execution behavior, timeouts, and policies.
-    /// - Returns: The unique run ID of the started workflow execution for tracking and operations.
+    /// - Returns: An ``UntypedWorkflowHandle`` for monitoring and controlling the started workflow.
     /// - Throws: ``WorkflowAlreadyStartedError`` if a workflow with the same ID is already
     /// running (depending on ID reuse policy), or an error for other startup failures.
     package func startWorkflow(
         name: String,
         options: WorkflowOptions
-    ) async throws -> String {
+    ) async throws -> UntypedWorkflowHandle {
         try await self.startWorkflow(
             name: name,
             options: options,
@@ -108,7 +141,7 @@ extension TemporalClient.InterceptedService {
         input: repeat each Input,
         resultTypes: repeat (each Result).Type,
     ) async throws -> (repeat each Result) {
-        let runID = try await self.startWorkflow(
+        let handle = try await self.startWorkflow(
             name: name,
             options: options,
             input: repeat each input
@@ -116,7 +149,7 @@ extension TemporalClient.InterceptedService {
 
         return try await self.workflowResult(
             id: options.id,
-            runID: runID,
+            runID: handle.resultRunID,
             resultTypes: repeat each resultTypes
         )
     }

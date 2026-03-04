@@ -133,6 +133,13 @@ extension TestServerDependentTests {
             }
         }
 
+        @Workflow
+        final class ForeverWaitingWorkflow {
+            func run(input: String) async throws {
+                try await Workflow.condition { false }
+            }
+        }
+
         @Test(.timeLimit(.minutes(1)))
         func startWorkflow() async throws {
             let interceptor = WorkflowCountingInterceptor()
@@ -145,11 +152,12 @@ extension TestServerDependentTests {
                 clientInterceptors: [interceptor],
                 workflows: [HelloWorldUntypedOperationsWorkflow.self]
             ) { taskQueue, client in
-                let runID = try await client.interceptedService.startWorkflow(
+                let handle = try await client.interceptedService.startWorkflow(
                     name: "\(HelloWorldUntypedOperationsWorkflow.self)",
                     options: .init(id: workflowID, taskQueue: taskQueue),
                     input: "Max",
                 )
+                let runID = handle.resultRunID
 
                 let result = try await client.interceptedService.workflowResult(
                     id: workflowID,
@@ -229,10 +237,11 @@ extension TestServerDependentTests {
                 clientInterceptors: [interceptor],
                 workflows: [SignalUntypedOperationsWorkflow.self],
             ) { taskQueue, client in
-                let runID = try await client.interceptedService.startWorkflow(
+                let handle = try await client.interceptedService.startWorkflow(
                     name: "\(SignalUntypedOperationsWorkflow.self)",
                     options: .init(id: workflowID, taskQueue: taskQueue)
                 )
+                let runID = handle.resultRunID
 
                 try await client.interceptedService.signalWorkflow(
                     id: workflowID,
@@ -270,10 +279,11 @@ extension TestServerDependentTests {
                 clientInterceptors: [interceptor],
                 workflows: [SignalUntypedOperationsWorkflow.self],
             ) { taskQueue, client in
-                let runID = try await client.interceptedService.startWorkflow(
+                let handle = try await client.interceptedService.startWorkflow(
                     name: "\(SignalUntypedOperationsWorkflow.self)",
                     options: .init(id: workflowID, taskQueue: taskQueue)
                 )
+                let runID = handle.resultRunID
 
                 try await client.interceptedService.signalWorkflow(
                     id: workflowID,
@@ -338,10 +348,11 @@ extension TestServerDependentTests {
                 clientInterceptors: [interceptor],
                 workflows: [QueryUntypedOperationsWorkflow.self],
             ) { taskQueue, client in
-                let runID = try await client.interceptedService.startWorkflow(
+                let handle = try await client.interceptedService.startWorkflow(
                     name: "\(QueryUntypedOperationsWorkflow.self)",
                     options: .init(id: workflowID, taskQueue: taskQueue)
                 )
+                let runID = handle.resultRunID
 
                 let queryResult = try await client.interceptedService.queryWorkflow(
                     id: workflowID,
@@ -380,10 +391,11 @@ extension TestServerDependentTests {
                 clientInterceptors: [interceptor],
                 workflows: [QueryUntypedOperationsWorkflow.self],
             ) { taskQueue, client in
-                let runID = try await client.interceptedService.startWorkflow(
+                let handle = try await client.interceptedService.startWorkflow(
                     name: "\(QueryUntypedOperationsWorkflow.self)",
                     options: .init(id: workflowID, taskQueue: taskQueue)
                 )
+                let runID = handle.resultRunID
 
                 let queryResult1 = try await client.interceptedService.queryWorkflow(
                     id: workflowID,
@@ -452,10 +464,11 @@ extension TestServerDependentTests {
                 clientInterceptors: [interceptor],
                 workflows: [UpdateUntypedOperationsWorkflow.self],
             ) { taskQueue, client in
-                let runID = try await client.interceptedService.startWorkflow(
+                let handle = try await client.interceptedService.startWorkflow(
                     name: "\(UpdateUntypedOperationsWorkflow.self)",
                     options: .init(id: workflowID, taskQueue: taskQueue)
                 )
+                let runID = handle.resultRunID
 
                 let updateID = try await client.interceptedService.startWorkflowUpdate(
                     id: workflowID,
@@ -501,10 +514,11 @@ extension TestServerDependentTests {
                 clientInterceptors: [interceptor],
                 workflows: [UpdateUntypedOperationsWorkflow.self],
             ) { taskQueue, client in
-                let runID = try await client.interceptedService.startWorkflow(
+                let handle = try await client.interceptedService.startWorkflow(
                     name: "\(UpdateUntypedOperationsWorkflow.self)",
                     options: .init(id: workflowID, taskQueue: taskQueue)
                 )
+                let runID = handle.resultRunID
 
                 let updateID = try await client.interceptedService.startWorkflowUpdate(
                     id: workflowID,
@@ -549,10 +563,11 @@ extension TestServerDependentTests {
                 clientInterceptors: [interceptor],
                 workflows: [UpdateUntypedOperationsWorkflow.self],
             ) { taskQueue, client in
-                let runID = try await client.interceptedService.startWorkflow(
+                let handle = try await client.interceptedService.startWorkflow(
                     name: "\(UpdateUntypedOperationsWorkflow.self)",
                     options: .init(id: workflowID, taskQueue: taskQueue)
                 )
+                let runID = handle.resultRunID
 
                 let updateResult = try await client.interceptedService.executeWorkflowUpdate(
                     id: workflowID,
@@ -592,11 +607,12 @@ extension TestServerDependentTests {
                 clientInterceptors: [interceptor],
                 workflows: [HelloWorldUntypedOperationsWorkflow.self]
             ) { taskQueue, client in
-                let runID = try await client.interceptedService.startWorkflow(
+                let handle = try await client.interceptedService.startWorkflow(
                     name: "\(HelloWorldUntypedOperationsWorkflow.self)",
                     options: .init(id: workflowID, taskQueue: taskQueue),
                     input: "Max",
                 )
+                let runID = handle.resultRunID
 
                 let description = try await client.interceptedService.describeWorkflow(
                     id: workflowID,
@@ -627,11 +643,12 @@ extension TestServerDependentTests {
                 clientInterceptors: [interceptor],
                 workflows: [HelloWorldUntypedOperationsWorkflow.self]
             ) { taskQueue, client in
-                let runID = try await client.interceptedService.startWorkflow(
+                let handle = try await client.interceptedService.startWorkflow(
                     name: "\(HelloWorldUntypedOperationsWorkflow.self)",
                     options: .init(id: workflowID, taskQueue: taskQueue),
                     input: "Max",
                 )
+                let runID = handle.resultRunID
 
                 try await client.interceptedService.cancelWorkflow(
                     id: workflowID,
@@ -660,11 +677,12 @@ extension TestServerDependentTests {
                 clientInterceptors: [interceptor],
                 workflows: [HelloWorldUntypedOperationsWorkflow.self]
             ) { taskQueue, client in
-                let runID = try await client.interceptedService.startWorkflow(
-                    name: "\(HelloWorldUntypedOperationsWorkflow.self)",
+                let handle = try await client.interceptedService.startWorkflow(
+                    name: "\(ForeverWaitingWorkflow.self)",
                     options: .init(id: workflowID, taskQueue: taskQueue),
-                    input: "Max",
+                    input: (),
                 )
+                let runID = handle.resultRunID
 
                 try await client.interceptedService.terminateWorkflow(
                     id: workflowID,

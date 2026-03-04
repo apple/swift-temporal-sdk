@@ -212,5 +212,58 @@ extension TestServerDependentTests {
                 #expect(interceptor.counter.withLock { $0 } == 1)
             }
         }
+
+        @Test
+        func signalWithStartNewWorkflow() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [SignalWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = UUID().uuidString
+                let options = WorkflowOptions(id: workflowID, taskQueue: taskQueue)
+
+                // Signal-with-start should start the workflow and deliver the signal
+                let handle = try await client.signalWithStartWorkflow(
+                    type: SignalWorkflow.self,
+                    options: options,
+                    signal: SignalWorkflow.Signal.self,
+                    signalInput: SignalWorkflow.SignalScenario.updateState
+                )
+
+                // The workflow should complete since the signal sets state to "signaled"
+                try await handle.result()
+            }
+        }
+
+        @Test
+        func signalWithStartExistingWorkflow() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [SignalWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = UUID().uuidString
+
+                // First, start the workflow normally
+                let handle = try await client.startWorkflow(
+                    type: SignalWorkflow.self,
+                    options: .init(id: workflowID, taskQueue: taskQueue)
+                )
+
+                // Now signal-with-start the same workflow ID - should not fail
+                // because the workflow already exists, it should just deliver the signal
+                let options = WorkflowOptions(id: workflowID, taskQueue: taskQueue)
+
+                let newHandle = try await client.signalWithStartWorkflow(
+                    type: SignalWorkflow.self,
+                    options: options,
+                    signal: SignalWorkflow.Signal.self,
+                    signalInput: SignalWorkflow.SignalScenario.updateState
+                )
+
+                // Both handles should reference the same workflow run
+                #expect(handle.resultRunID == newHandle.resultRunID)
+
+                // The workflow should complete since the signal sets state to "signaled"
+                try await handle.result()
+            }
+        }
     }
 }
