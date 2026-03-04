@@ -675,7 +675,7 @@ extension TestServerDependentTests {
                 taskQueue: "tq-\(UUID().uuidString)",
                 workerBuildID: "",
                 clientInterceptors: [interceptor],
-                workflows: [HelloWorldUntypedOperationsWorkflow.self]
+                workflows: [ForeverWaitingWorkflow.self]
             ) { taskQueue, client in
                 let handle = try await client.interceptedService.startWorkflow(
                     name: "\(ForeverWaitingWorkflow.self)",

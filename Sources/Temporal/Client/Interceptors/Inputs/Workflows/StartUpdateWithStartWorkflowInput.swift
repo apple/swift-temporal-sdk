@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift Temporal SDK open source project
 //
-// Copyright (c) 2026 Apple Inc. and the Swift Temporal SDK project authors
+// Copyright (c) 2025 Apple Inc. and the Swift Temporal SDK project authors
 // Licensed under MIT License
 //
 // See LICENSE.txt for license information
@@ -14,11 +14,11 @@
 
 public import struct GRPCCore.CallOptions
 
-/// Input parameters for signal-with-start workflow operations in client interceptors.
+/// Input parameters for update-with-start workflow operations in client interceptors.
 ///
-/// This type encapsulates the parameters needed to atomically start a workflow and send a signal
-/// to it. If the workflow is already running, only the signal is delivered.
-public struct SignalWithStartWorkflowInput<each Input: Sendable>: Sendable {
+/// This type encapsulates the parameters needed to atomically start a workflow (if not already
+/// running) and send an update to it.
+public struct StartUpdateWithStartWorkflowInput<each Input: Sendable>: Sendable {
     /// The name of the workflow type to start.
     public var name: String
 
@@ -31,42 +31,56 @@ public struct SignalWithStartWorkflowInput<each Input: Sendable>: Sendable {
     /// The input arguments to pass to the workflow.
     public var input: (repeat each Input)
 
-    /// Optional gRPC call options for customizing the start request.
-    public var callOptions: CallOptions?
+    /// A unique identifier for this update request.
+    public var updateID: String
 
-    /// The name of the signal to send with the start operation.
-    public var signalName: String
+    /// The name of the update handler to invoke in the workflow.
+    public var updateName: String
+
+    /// Headers to include with the update request.
+    public var updateHeaders: [String: Api.Common.V1.Payload]
 
     // Variadic generic types only support a single pack currently so we need to
     // fall back to any Sendable here
-    /// The serialized signal input data to send with the start operation.
-    public var signalInput: [any Sendable]
+    /// The input data to send with the update.
+    public var updateInput: [any Sendable]
 
-    /// Creates a new signal-with-start workflow input with the specified parameters.
+    // TODO: Add WorkflowUpdateStage wait for stage support
+
+    /// Optional gRPC call options for customizing the request.
+    public var callOptions: CallOptions?
+
+    /// Creates a new update-with-start workflow input with the specified parameters.
     ///
     /// - Parameters:
     ///   - name: The name of the workflow type to start.
     ///   - options: Configuration options controlling workflow execution behavior.
     ///   - headers: Headers to include with the workflow start request.
     ///   - input: The input arguments to pass to the workflow.
+    ///   - updateName: The name of the update handler to invoke in the workflow.
+    ///   - updateInput: The input data to send with the update.
+    ///   - updateID: A unique identifier for this update request.
+    ///   - updateHeaders: Headers to include with the update request.
     ///   - callOptions: Optional gRPC call options for customizing the request.
-    ///   - signalName: The name of the signal to send with the start operation.
-    ///   - signalInput: The signal input data to send with the start operation.
     public init(
         name: String,
+        input: repeat each Input,
         options: WorkflowOptions,
         headers: [String: Api.Common.V1.Payload],
-        input: repeat each Input,
-        callOptions: CallOptions? = nil,
-        signalName: String,
-        signalInput: [any Sendable]
+        updateName: String,
+        updateInput: [any Sendable],
+        updateID: String,
+        updateHeaders: [String: Api.Common.V1.Payload],
+        callOptions: CallOptions? = nil
     ) {
         self.name = name
         self.options = options
         self.headers = headers
         self.input = (repeat each input)
+        self.updateID = updateID
+        self.updateName = updateName
+        self.updateHeaders = updateHeaders
+        self.updateInput = updateInput
         self.callOptions = callOptions
-        self.signalName = signalName
-        self.signalInput = signalInput
     }
 }

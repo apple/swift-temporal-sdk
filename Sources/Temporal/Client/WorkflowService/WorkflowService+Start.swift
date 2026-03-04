@@ -71,7 +71,7 @@ extension TemporalClient.WorkflowService {
     ///   - options: Configuration options controlling workflow execution behavior, timeouts, and policies.
     ///   - headers: Custom headers for tracing, authentication, or workflow context.
     ///   - signalName: The name of the signal to send.
-    ///   - signalInput: The arguments to send with the signal.
+    ///   - signalInput: The input data to send with the signal.
     ///   - input: The input parameters to pass to the workflow's execution method.
     /// - Returns: The unique run ID of the workflow execution.
     /// - Throws: An error if the operation fails.
@@ -122,7 +122,7 @@ extension TemporalClient.WorkflowService {
     ///   - options: Configuration options controlling workflow execution behavior, timeouts, and policies.
     ///   - headers: Custom headers for tracing, authentication, or workflow context.
     ///   - signalName: The name of the signal to send.
-    ///   - signalPayloads: The already-serialized signal arguments.
+    ///   - signalPayloads: The already-serialized signal input data.
     ///   - input: The input parameters to pass to the workflow's execution method.
     /// - Returns: The unique run ID of the workflow execution.
     /// - Throws: An error if the operation fails.

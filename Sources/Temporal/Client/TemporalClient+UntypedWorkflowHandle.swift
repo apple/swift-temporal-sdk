@@ -12,6 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+public import struct GRPCCore.CallOptions
+
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
+
 extension TemporalClient {
     // MARK: - Start Workflow
 
@@ -51,7 +59,7 @@ extension TemporalClient {
 
     /// Starts a workflow execution with a signal atomically and returns a handle.
     ///
-    /// This method starts a workflow (if not already running) and send a signal to it atomically.
+    /// This method atomically starts a workflow (if not already running) and sends a signal to it.
     /// If the workflow is already running, only the signal is delivered.
     ///
     /// ## Run ID Behavior
@@ -65,22 +73,22 @@ extension TemporalClient {
     ///   - options: Configuration options including workflow ID, task queue, and execution policies.
     ///   - input: The input data to pass to the workflow.
     ///   - signalName: The name of the signal to send with the start operation.
-    ///   - signalInput: The input arguments to send with the signal.
+    ///   - signalInput: The input data to send with the signal.
     /// - Returns: An ``UntypedWorkflowHandle`` for monitoring and controlling the started workflow.
-    /// - Throws: An error if the workflow cannot be started due to validation failures or server issues.
+    /// - Throws: An error if the operation fails.
     public func signalWithStartWorkflow<each Input: Sendable, each SignalInput: Sendable>(
         name: String,
-        options: WorkflowOptions,
         input: repeat each Input,
+        options: WorkflowOptions,
         signalName: String,
         signalInput: repeat each SignalInput
     ) async throws -> UntypedWorkflowHandle {
         try await self.interceptedService.signalWithStartWorkflow(
             name: name,
+            input: repeat each input,
             options: options,
             signalName: signalName,
-            signalInput: repeat each signalInput,
-            input: repeat each input
+            signalInput: repeat each signalInput
         )
     }
 
@@ -226,9 +234,101 @@ extension TemporalClient {
         )
     }
 
-    // TODO: Possibly support `StartUpdateWithStartWorkflow`
-    // Start an update using its name, possibly starting the workflow at the same time.
-    // Also add interceptors.
+    // MARK: - Update-with-Start Workflow
+
+    /// Starts an update on a workflow, starting the workflow if not already running.
+    ///
+    /// This method atomically starts a workflow (if not already running) and sends an update
+    /// to it using the `ExecuteMultiOperation` RPC.
+    ///
+    /// - Parameters:
+    ///   - name: The workflow name that defines the business logic to execute.
+    ///   - options: Configuration options including workflow ID, task queue, and execution policies.
+    ///   - input: The input data to pass to the workflow's run method.
+    ///   - updateName: The name of the update handler to invoke.
+    ///   - updateInput: The input data to send with the update.
+    ///   - updateID: A unique identifier for the update. Defaults to a new UUID.
+    ///   - callOptions: Optional gRPC call options for customizing the request.
+    /// - Returns: An ``UntypedWorkflowUpdateHandle`` for managing the update and retrieving its result.
+    /// - Throws: An error if the operation fails.
+    public func startUpdateWithStartWorkflow<each WorkflowInput: Sendable, each UpdateInput: Sendable>(
+        name: String,
+        input: repeat each WorkflowInput,
+        options: WorkflowOptions,
+        updateName: String,
+        updateInput: repeat each UpdateInput,
+        updateID: String = UUID().uuidString,
+        callOptions: CallOptions? = nil
+    ) async throws -> UntypedWorkflowUpdateHandle {
+        // Convert variadic update input to [any Sendable].
+        // Filter out Void values since they cannot be JSON-serialized.
+        var updateInputs = [any Sendable]()
+        for input in repeat each updateInput {
+            if !(input is Void) {
+                updateInputs.append(input)
+            }
+        }
+
+        return try await self.interceptedService.startUpdateWithStartWorkflow(
+            name: name,
+            options: options,
+            headers: [:],  // TODO: We need to expose headers across all these start methods
+            input: repeat each input,
+            updateName: updateName,
+            updateInput: updateInputs,
+            updateID: updateID,
+            updateHeaders: [:],  // TODO: We need to expose headers across all these start methods
+            callOptions: callOptions
+        )
+    }
+
+    /// Executes an update on a workflow and waits for its result, starting the workflow if not
+    /// already running.
+    ///
+    /// This convenience method combines
+    /// ``startUpdateWithStartWorkflow(type:input:options:updateType:updateID:)``
+    /// with waiting for the update result into a single operation.
+    ///
+    /// - Parameters:
+    ///   - name: The workflow name that defines the business logic to execute.
+    ///   - options: Configuration options including workflow ID, task queue, and execution policies.
+    ///   - input: The input data to pass to the workflow's run method.
+    ///   - updateName: The name of the update handler to invoke.
+    ///   - updateInput: The input data to send with the update.
+    ///   - updateID: A unique identifier for the update. Defaults to a new UUID.
+    ///   - resultTypes: The expected return types from the update operation.
+    ///   - callOptions: Optional gRPC call options for customizing the request.
+    /// - Returns: The result of the update operation.
+    /// - Throws: An error if the operation fails.
+    public func executeUpdateWithStartWorkflow<
+        each WorkflowInput: Sendable,
+        each UpdateInput: Sendable,
+        each Result: Sendable
+    >(
+        name: String,
+        input: repeat each WorkflowInput,
+        options: WorkflowOptions,
+        updateName: String,
+        updateInput: repeat each UpdateInput,
+        updateID: String = UUID().uuidString,
+        resultTypes: repeat (each Result).Type,
+        callOptions: CallOptions? = nil
+    ) async throws -> (repeat each Result) {
+        let updateHandle = try await self.startUpdateWithStartWorkflow(
+            name: name,
+            input: repeat each input,
+            options: options,
+            updateName: updateName,
+            updateInput: repeat each updateInput,
+            updateID: updateID,
+            callOptions: callOptions
+        )
+
+        return try await updateHandle.result(
+            resultTypes: repeat each resultTypes,
+            callOptions: callOptions
+        )
+    }
 }
 
 extension TemporalClient.Interceptor {
@@ -276,6 +376,49 @@ extension TemporalClient.Interceptor {
                 runID: nil,  // runID is not set
                 resultRunID: runID,
                 firstExecutionRunID: runID
+            )
+        }
+    }
+
+    func startUpdateWithStartWorkflow<each Input>(
+        _ input: StartUpdateWithStartWorkflowInput<repeat each Input>
+    ) async throws -> UntypedWorkflowUpdateHandle {
+        try await withInterceptors(
+            interceptors,
+            input: input,
+            call: (any ClientOutboundInterceptor).startUpdateWithStartWorkflow
+        ) { input in
+            let dataConverter = self.workflowService.configuration.dataConverter
+
+            // Convert workflow input to payloads
+            let workflowPayloads = try await dataConverter.convertValues(
+                repeat each input.input
+            )
+
+            // Convert update input to payloads
+            var updatePayloads = [Api.Common.V1.Payload]()
+            updatePayloads.reserveCapacity(input.updateInput.count)
+            for updInput in input.updateInput {
+                try await updatePayloads.append(dataConverter.convertValue(updInput))
+            }
+
+            let result = try await self.workflowService.startUpdateWithStartWorkflow(
+                workflowName: input.name,
+                workflowOptions: input.options,
+                workflowHeaders: input.headers,
+                workflowInput: workflowPayloads,
+                updateID: input.updateID,
+                updateName: input.updateName,
+                updateHeaders: input.updateHeaders,
+                updateInput: updatePayloads,
+                callOptions: input.callOptions
+            )
+
+            return UntypedWorkflowUpdateHandle(
+                interceptor: self,
+                id: result.updateID,
+                workflowID: input.options.id,
+                workflowRunID: nil  // Not targeting a specific run
             )
         }
     }

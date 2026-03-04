@@ -54,7 +54,28 @@ extension TemporalClientTracingInterceptor {
             )
         }
 
-        // TODO: startUpdateWithStartWorkflow
+        public func startUpdateWithStartWorkflow<each Input>(
+            input: StartUpdateWithStartWorkflowInput<repeat each Input>,
+            next: (StartUpdateWithStartWorkflowInput<repeat each Input>) async throws ->
+                UntypedWorkflowUpdateHandle
+        ) async throws -> UntypedWorkflowUpdateHandle {
+            try await self.traceRecording.recordOutbound(
+                spanName:
+                    "\(Api.Workflowservice.V1.WorkflowService.Method.ExecuteMultiOperation.descriptor.fullyQualifiedMethod):\(input.updateName)",
+                headers: input.updateHeaders,
+                setRequestAttributes: { [input] span in
+                    span.setUpdateWithStartWorkflowRequestSpanAttributes(input: input)
+                },
+                setResponseAttributes: { span, response in
+                    span.setUpdateWithStartWorkflowResponseSpanAttributes(response: response)
+                },
+                next: { headers in
+                    var input = input
+                    input.updateHeaders = headers
+                    return try await next(input)
+                }
+            )
+        }
 
         public func signalWithStartWorkflow<each Input>(
             input: SignalWithStartWorkflowInput<repeat each Input>,
