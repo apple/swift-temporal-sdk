@@ -86,7 +86,7 @@ package struct BridgeClient: ~Copyable, Sendable {
                 queue.shutdown()
                 logger.debug("Beginning worker client graceful shutdown")
                 grpcClient.beginGracefulShutdown()
-                logger.info("Shut down task queue and worker client.")
+                logger.debug("Shut down task queue and worker client.")
             }
 
             // Build user_data context and retain it (as we're in a with style function)

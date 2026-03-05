@@ -300,7 +300,7 @@ where
                     self.logger.debug("Finished shutting down bridge worker.")
                 }
 
-                self.logger.info("Shut down task queue and worker client.")
+                self.logger.debug("Shut down task queue and worker client.")
                 throw error
             }
         }
@@ -338,7 +338,7 @@ where
                             do {
                                 try await group.next()
                             } catch {
-                                self.logger.error(
+                                self.logger.debug(
                                     "Initiating shut down of Temporal worker due to temporal activity / workflow worker error",
                                     metadata: [
                                         LoggingKeys.errorType: "\(type(of: error))",
@@ -373,7 +373,7 @@ where
                     }
                 }.value
             } onCancel: {
-                self.logger.info("Initiating shut down of Temporal worker")
+                self.logger.debug("Initiating shut down of Temporal worker")
                 worker.initiateShutdown()
             }
         }

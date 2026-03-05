@@ -61,16 +61,16 @@ extension TemporalClient.InterceptedService {
     ///   - name: The registered name of the workflow type to execute.
     ///   - options: Configuration options controlling workflow execution behavior, timeouts, and policies.
     ///   - signalName: The name of the signal to send with start.
-    ///   - signalInput: The signal arguments to serialize and send.
+    ///   - signalInput: The input data to send with the signal.
     ///   - input: The input parameters to pass to the workflow's execution method.
     /// - Returns: An ``UntypedWorkflowHandle`` for monitoring and controlling the started workflow.
     /// - Throws: An error if the operation fails.
     package func signalWithStartWorkflow<each Input: Sendable, each SignalInput: Sendable>(
         name: String,
+        input: repeat each Input,
         options: WorkflowOptions,
         signalName: String,
-        signalInput: repeat each SignalInput,
-        input: repeat each Input
+        signalInput: repeat each SignalInput
     ) async throws -> UntypedWorkflowHandle {
         // We need to convert the signal input to any Sendable since
         // Swift only supports a single pack in a variadic generic type
@@ -88,6 +88,49 @@ extension TemporalClient.InterceptedService {
                 input: repeat each input,
                 signalName: signalName,
                 signalInput: signalInputs
+            )
+        )
+    }
+
+    /// Starts a workflow (if not already running) and sends an update to it atomically.
+    ///
+    /// This method routes through the interceptor chain with update and workflow data
+    /// attached to the ``StartUpdateWithStartWorkflowInput``.
+    ///
+    /// - Parameters:
+    ///   - name: The registered name of the workflow type to start.
+    ///   - options: Configuration options controlling workflow execution behavior.
+    ///   - headers: Custom headers for the workflow start request.
+    ///   - input: The input data to pass to the workflow's execution method.
+    ///   - updateName: The name of the update handler to invoke.
+    ///   - updateInput: The input data to send with the update.
+    ///   - updateID: A unique identifier for this update operation.
+    ///   - updateHeaders: Custom headers for the update request.
+    ///   - callOptions: Optional gRPC call options for customizing the request.
+    /// - Returns: An ``UntypedWorkflowUpdateHandle`` for managing the update and retrieving its result.
+    /// - Throws: An error if the operation fails.
+    package func startUpdateWithStartWorkflow<each Input: Sendable>(
+        name: String,
+        options: WorkflowOptions,
+        headers: [String: Api.Common.V1.Payload] = [:],
+        input: repeat each Input,
+        updateName: String,
+        updateInput: [any Sendable],
+        updateID: String,
+        updateHeaders: [String: Api.Common.V1.Payload] = [:],
+        callOptions: CallOptions? = nil
+    ) async throws -> UntypedWorkflowUpdateHandle {
+        try await self.interceptor.startUpdateWithStartWorkflow(
+            .init(
+                name: name,
+                input: repeat each input,
+                options: options,
+                headers: headers,
+                updateName: updateName,
+                updateInput: updateInput,
+                updateID: updateID,
+                updateHeaders: updateHeaders,
+                callOptions: callOptions
             )
         )
     }
@@ -516,8 +559,4 @@ extension TemporalClient.InterceptedService {
             )
         )
     }
-
-    // TODO: Possibly support `StartUpdateWithStartWorkflow`
-    // Start an update using its name, possibly starting the workflow at the same time.
-    // Also add interceptors.
 }

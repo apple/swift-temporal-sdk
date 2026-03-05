@@ -113,5 +113,150 @@ extension TestServerDependentTests {
                 #expect(interceptor.validateCounter.withLock { $0 } >= 1)
             }
         }
+
+        // MARK: - Update-with-Start Tests
+
+        @Workflow
+        final class UpdateWithStartTargetWorkflow {
+            var value: String = ""
+
+            func run(input: String) async throws -> String {
+                try await Workflow.condition { !self.value.isEmpty }
+                return self.value
+            }
+
+            @WorkflowUpdate
+            func setValue(input: String) async -> String {
+                self.value = input
+                return "updated:\(input)"
+            }
+        }
+
+        @Test
+        func startUpdateWithStartNewWorkflow() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [UpdateWithStartTargetWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = "wf-\(UUID().uuidString)"
+                let options = WorkflowOptions(id: workflowID, taskQueue: taskQueue)
+
+                // Atomically start workflow and send update
+                let updateHandle = try await client.startUpdateWithStartWorkflow(
+                    type: UpdateWithStartTargetWorkflow.self,
+                    input: "initial",
+                    options: options,
+                    updateType: UpdateWithStartTargetWorkflow.SetValue.self,
+                    updateInput: "hello"
+                )
+
+                // Verify the update handle is returned and the result is correct
+                let updateResult = try await updateHandle.result()
+                #expect(updateResult == "updated:hello")
+
+                // Verify the workflow actually started and can complete
+                let workflowHandle = client.workflowHandle(
+                    type: UpdateWithStartTargetWorkflow.self,
+                    id: workflowID
+                )
+                let workflowResult = try await workflowHandle.result()
+                #expect(workflowResult == "hello")
+            }
+        }
+
+        @Test
+        func executeUpdateWithStartNewWorkflow() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [UpdateWithStartTargetWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = "wf-\(UUID().uuidString)"
+                let options = WorkflowOptions(id: workflowID, taskQueue: taskQueue)
+
+                // Convenience method that waits for the update result directly
+                let updateResult = try await client.executeUpdateWithStartWorkflow(
+                    type: UpdateWithStartTargetWorkflow.self,
+                    input: "initial",
+                    options: options,
+                    updateType: UpdateWithStartTargetWorkflow.SetValue.self,
+                    updateInput: "world"
+                )
+
+                #expect(updateResult == "updated:world")
+
+                // Verify the workflow started correctly
+                let workflowHandle = client.workflowHandle(
+                    type: UpdateWithStartTargetWorkflow.self,
+                    id: workflowID
+                )
+                let workflowResult = try await workflowHandle.result()
+                #expect(workflowResult == "world")
+            }
+        }
+
+        @Test
+        func updateWithStartExistingWorkflow() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [UpdateWithStartTargetWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = "wf-\(UUID().uuidString)"
+
+                // First, start the workflow normally
+                let handle = try await client.startWorkflow(
+                    type: UpdateWithStartTargetWorkflow.self,
+                    options: .init(id: workflowID, taskQueue: taskQueue),
+                    input: "initial"
+                )
+
+                // Now use update-with-start on the same workflow ID with useExisting policy
+                var options = WorkflowOptions(id: workflowID, taskQueue: taskQueue)
+                options.idConflictPolicy = .useExisting
+
+                let updateResult = try await client.executeUpdateWithStartWorkflow(
+                    type: UpdateWithStartTargetWorkflow.self,
+                    input: "ignored",
+                    options: options,
+                    updateType: UpdateWithStartTargetWorkflow.SetValue.self,
+                    updateInput: "from-existing"
+                )
+
+                // The update should be delivered to the existing workflow
+                #expect(updateResult == "updated:from-existing")
+
+                // The existing workflow should complete with the update value
+                let workflowResult = try await handle.result()
+                #expect(workflowResult == "from-existing")
+            }
+        }
+
+        @Test
+        func untypedUpdateWithStart() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [UpdateWithStartTargetWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = "wf-\(UUID().uuidString)"
+                let options = WorkflowOptions(id: workflowID, taskQueue: taskQueue)
+
+                // Use the untyped variant with string names
+                let updateHandle = try await client.startUpdateWithStartWorkflow(
+                    name: UpdateWithStartTargetWorkflow.name,
+                    input: "initial",
+                    options: options,
+                    updateName: UpdateWithStartTargetWorkflow.SetValue.name,
+                    updateInput: "untyped-hello"
+                )
+
+                // Retrieve the result using the untyped handle
+                let updateResult: String = try await updateHandle.result(
+                    resultTypes: String.self
+                )
+                #expect(updateResult == "updated:untyped-hello")
+
+                // Verify the workflow started and can complete
+                let workflowHandle = client.untypedWorkflowHandle(id: workflowID)
+                let workflowResult: String = try await workflowHandle.result(
+                    resultTypes: String.self
+                )
+                #expect(workflowResult == "untyped-hello")
+            }
+        }
     }
 }

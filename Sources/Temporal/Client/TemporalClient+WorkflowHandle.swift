@@ -12,6 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
+
 extension TemporalClient {
     // MARK: - Start Workflow
 
@@ -75,8 +81,8 @@ extension TemporalClient {
 
     /// Starts a workflow execution with a signal atomically and returns a handle.
     ///
-    /// This method starts a workflow (if not already running) and send a signal to it atomically.
-    /// If the workflow is already running, only the signal is delivered.
+    /// This method atomically starts a workflow (if not already running) and sends a typed
+    /// signal to it. If the workflow is already running, only the signal is delivered.
     ///
     /// ## Run ID Behavior
     ///
@@ -86,23 +92,23 @@ extension TemporalClient {
     ///
     /// - Parameters:
     ///   - type: The workflow type that defines the business logic to execute.
+    ///   - input: The input data to pass to the workflow's execution method.
     ///   - options: Configuration options including workflow ID, task queue, and execution policies.
-    ///   - input: The input data to pass to the workflow.
-    ///   - signal: The signal type to send with the start operation.
+    ///   - signalType: The ``WorkflowSignalDefinition`` type that defines the signal contract.
     ///   - signalInput: The input data to send with the signal.
     /// - Returns: A ``WorkflowHandle`` for monitoring and controlling the started workflow.
-    /// - Throws: An error if the workflow cannot be started due to validation failures or server issues.
+    /// - Throws: An error if the operation fails.
     public func signalWithStartWorkflow<Workflow: WorkflowDefinition, Signal: WorkflowSignalDefinition>(
         type: Workflow.Type = Workflow.self,
-        options: WorkflowOptions,
         input: Workflow.Input,
-        signal: Signal.Type,
+        options: WorkflowOptions,
+        signalType: Signal.Type = Signal.self,
         signalInput: Signal.Input
     ) async throws -> WorkflowHandle<Workflow> {
         let untypedHandle = try await self.signalWithStartWorkflow(
-            name: type.name,
-            options: options,
+            name: Workflow.name,
             input: input,
+            options: options,
             signalName: Signal.name,
             signalInput: signalInput
         )
@@ -112,28 +118,56 @@ extension TemporalClient {
         )
     }
 
-    /// Starts a workflow execution with no input but with a typed signal atomically and returns a handle.
+    /// Starts a workflow execution with a signal atomically and returns a handle, for signals
+    /// that require no input.
     ///
-    /// This convenience method is for workflows that require no input but need a signal-with-start operation.
+    /// This convenience method is for signals that require no input parameters.
+    ///
+    /// - Parameters:
+    ///   - type: The workflow type that defines the business logic to execute.
+    ///   - input: The input data to pass to the workflow's execution method.
+    ///   - options: Configuration options including workflow ID, task queue, and execution policies.
+    ///   - signalType: The ``WorkflowSignalDefinition`` type that defines the signal contract.
+    /// - Returns: A ``WorkflowHandle`` for monitoring and controlling the started workflow.
+    /// - Throws: An error if the operation fails.
+    public func signalWithStartWorkflow<Workflow: WorkflowDefinition, Signal: WorkflowSignalDefinition>(
+        type: Workflow.Type = Workflow.self,
+        input: Workflow.Input,
+        options: WorkflowOptions,
+        signalType: Signal.Type = Signal.self
+    ) async throws -> WorkflowHandle<Workflow> where Signal.Input == Void {
+        try await self.signalWithStartWorkflow(
+            type: type,
+            input: input,
+            options: options,
+            signalType: signalType,
+            signalInput: ()
+        )
+    }
+
+    /// Starts a workflow execution with a signal atomically and returns a handle, for workflows
+    /// that require no input.
+    ///
+    /// This convenience method is for workflows that require no input parameters.
     ///
     /// - Parameters:
     ///   - type: The workflow type that defines the business logic to execute.
     ///   - options: Configuration options including workflow ID, task queue, and execution policies.
-    ///   - signal: The signal type to send with the start operation.
+    ///   - signalType: The ``WorkflowSignalDefinition`` type that defines the signal contract.
     ///   - signalInput: The input data to send with the signal.
     /// - Returns: A ``WorkflowHandle`` for monitoring and controlling the started workflow.
-    /// - Throws: An error if the workflow cannot be started due to validation failures or server issues.
+    /// - Throws: An error if the operation fails.
     public func signalWithStartWorkflow<Workflow: WorkflowDefinition, Signal: WorkflowSignalDefinition>(
         type: Workflow.Type = Workflow.self,
         options: WorkflowOptions,
-        signal: Signal.Type,
+        signalType: Signal.Type = Signal.self,
         signalInput: Signal.Input
     ) async throws -> WorkflowHandle<Workflow> where Workflow.Input == Void {
         try await self.signalWithStartWorkflow(
             type: type,
-            options: options,
             input: (),
-            signal: signal,
+            options: options,
+            signalType: signalType,
             signalInput: signalInput
         )
     }
@@ -258,7 +292,213 @@ extension TemporalClient {
         )
     }
 
-    // TODO: Possibly support `StartUpdateWithStartWorkflow`
-    // Start an update using its name, possibly starting the workflow at the same time.
-    // Also add interceptors.
+    // MARK: - Update-with-Start Workflow
+
+    /// Starts an update on a workflow, starting the workflow if not already running.
+    ///
+    /// This method atomically starts a workflow (if not already running) and sends a typed
+    /// update to it using the `ExecuteMultiOperation` RPC.
+    ///
+    /// - Parameters:
+    ///   - type: The workflow type that defines the business logic to execute.
+    ///   - options: Configuration options including workflow ID, task queue, and execution policies.
+    ///   - input: The input data to pass to the workflow's run method.
+    ///   - updateType: The ``WorkflowUpdateDefinition`` type that defines the update contract.
+    ///   - updateInput: The input data to send with the update.
+    ///   - updateID: A unique identifier for the update. Defaults to a new UUID.
+    /// - Returns: A ``WorkflowUpdateHandle`` for managing the update and retrieving its result.
+    /// - Throws: An error if the operation fails.
+    public func startUpdateWithStartWorkflow<
+        Workflow: WorkflowDefinition,
+        Update: WorkflowUpdateDefinition
+    >(
+        type: Workflow.Type = Workflow.self,
+        input: Workflow.Input,
+        options: WorkflowOptions,
+        updateType: Update.Type = Update.self,
+        updateInput: Update.Input,
+        updateID: String = UUID().uuidString
+    ) async throws -> WorkflowUpdateHandle<Update> {
+        let untypedHandle = try await self.startUpdateWithStartWorkflow(
+            name: Workflow.name,
+            input: input,
+            options: options,
+            updateName: Update.name,
+            updateInput: updateInput,
+            updateID: updateID
+        )
+
+        return WorkflowUpdateHandle<Update>(untypedHandle: untypedHandle)
+    }
+
+    /// Starts an update on a workflow, starting the workflow if not already running,
+    /// for updates that require no input.
+    ///
+    /// This convenience method is for updates that require no input parameters.
+    ///
+    /// - Parameters:
+    ///   - type: The workflow type that defines the business logic to execute.
+    ///   - options: Configuration options including workflow ID, task queue, and execution policies.
+    ///   - input: The input data to pass to the workflow's run method.
+    ///   - updateType: The ``WorkflowUpdateDefinition`` type that defines the update contract.
+    ///   - updateID: A unique identifier for the update. Defaults to a new UUID.
+    /// - Returns: A ``WorkflowUpdateHandle`` for managing the update and retrieving its result.
+    /// - Throws: An error if the operation fails.
+    public func startUpdateWithStartWorkflow<
+        Workflow: WorkflowDefinition,
+        Update: WorkflowUpdateDefinition
+    >(
+        type: Workflow.Type = Workflow.self,
+        input: Workflow.Input,
+        options: WorkflowOptions,
+        updateType: Update.Type = Update.self,
+        updateID: String = UUID().uuidString
+    ) async throws -> WorkflowUpdateHandle<Update> where Update.Input == Void {
+        try await self.startUpdateWithStartWorkflow(
+            type: type,
+            input: input,
+            options: options,
+            updateType: updateType,
+            updateInput: (),
+            updateID: updateID
+        )
+    }
+
+    /// Starts an update on a workflow, starting the workflow if not already running,
+    /// for workflows that require no input.
+    ///
+    /// This convenience method is for workflows that require no input parameters.
+    ///
+    /// - Parameters:
+    ///   - type: The workflow type that defines the business logic to execute.
+    ///   - options: Configuration options including workflow ID, task queue, and execution policies.
+    ///   - updateType: The ``WorkflowUpdateDefinition`` type that defines the update contract.
+    ///   - updateInput: The input data to send with the update.
+    ///   - updateID: A unique identifier for the update. Defaults to a new UUID.
+    /// - Returns: A ``WorkflowUpdateHandle`` for managing the update and retrieving its result.
+    /// - Throws: An error if the operation fails.
+    public func startUpdateWithStartWorkflow<
+        Workflow: WorkflowDefinition,
+        Update: WorkflowUpdateDefinition
+    >(
+        type: Workflow.Type = Workflow.self,
+        options: WorkflowOptions,
+        updateType: Update.Type = Update.self,
+        updateInput: Update.Input,
+        updateID: String = UUID().uuidString
+    ) async throws -> WorkflowUpdateHandle<Update> where Workflow.Input == Void {
+        try await self.startUpdateWithStartWorkflow(
+            type: type,
+            input: (),
+            options: options,
+            updateType: updateType,
+            updateInput: updateInput,
+            updateID: updateID
+        )
+    }
+
+    /// Executes an update on a workflow and waits for its result, starting the workflow
+    /// if not already running.
+    ///
+    /// This convenience method combines
+    /// ``startUpdateWithStartWorkflow(type:input:options:updateType:updateID:)``
+    /// with waiting for the update result into a single operation.
+    ///
+    /// - Parameters:
+    ///   - type: The workflow type that defines the business logic to execute.
+    ///   - options: Configuration options including workflow ID, task queue, and execution policies.
+    ///   - input: The input data to pass to the workflow's run method.
+    ///   - updateType: The ``WorkflowUpdateDefinition`` type that defines the update contract.
+    ///   - updateInput: The input data to send with the update.
+    ///   - updateID: A unique identifier for the update. Defaults to a new UUID.
+    /// - Returns: The result of the update operation.
+    /// - Throws: An error if the operation fails.
+    public func executeUpdateWithStartWorkflow<
+        Workflow: WorkflowDefinition,
+        Update: WorkflowUpdateDefinition
+    >(
+        type: Workflow.Type = Workflow.self,
+        input: Workflow.Input,
+        options: WorkflowOptions,
+        updateType: Update.Type = Update.self,
+        updateInput: Update.Input,
+        updateID: String = UUID().uuidString
+    ) async throws -> Update.Output {
+        let updateHandle = try await self.startUpdateWithStartWorkflow(
+            type: type,
+            input: input,
+            options: options,
+            updateType: updateType,
+            updateInput: updateInput,
+            updateID: updateID
+        )
+
+        return try await updateHandle.result()
+    }
+
+    /// Executes an update on a workflow and waits for its result, starting the workflow
+    /// if not already running, for updates that require no input.
+    ///
+    /// This convenience method is for updates that require no input parameters.
+    ///
+    /// - Parameters:
+    ///   - type: The workflow type that defines the business logic to execute.
+    ///   - options: Configuration options including workflow ID, task queue, and execution policies.
+    ///   - input: The input data to pass to the workflow's run method.
+    ///   - updateType: The ``WorkflowUpdateDefinition`` type that defines the update contract.
+    ///   - updateID: A unique identifier for the update. Defaults to a new UUID.
+    /// - Returns: The result of the update operation.
+    /// - Throws: An error if the operation fails.
+    public func executeUpdateWithStartWorkflow<
+        Workflow: WorkflowDefinition,
+        Update: WorkflowUpdateDefinition
+    >(
+        type: Workflow.Type = Workflow.self,
+        input: Workflow.Input,
+        options: WorkflowOptions,
+        updateType: Update.Type = Update.self,
+        updateID: String = UUID().uuidString
+    ) async throws -> Update.Output where Update.Input == Void {
+        try await self.executeUpdateWithStartWorkflow(
+            type: type,
+            input: input,
+            options: options,
+            updateType: updateType,
+            updateInput: (),
+            updateID: updateID
+        )
+    }
+
+    /// Executes an update on a workflow and waits for its result, starting the workflow
+    /// if not already running, for workflows that require no input.
+    ///
+    /// This convenience method is for workflows that require no input parameters.
+    ///
+    /// - Parameters:
+    ///   - type: The workflow type that defines the business logic to execute.
+    ///   - options: Configuration options including workflow ID, task queue, and execution policies.
+    ///   - updateType: The ``WorkflowUpdateDefinition`` type that defines the update contract.
+    ///   - updateInput: The input data to send with the update.
+    ///   - updateID: A unique identifier for the update. Defaults to a new UUID.
+    /// - Returns: The result of the update operation.
+    /// - Throws: An error if the operation fails.
+    public func executeUpdateWithStartWorkflow<
+        Workflow: WorkflowDefinition,
+        Update: WorkflowUpdateDefinition
+    >(
+        type: Workflow.Type = Workflow.self,
+        options: WorkflowOptions,
+        updateType: Update.Type = Update.self,
+        updateInput: Update.Input,
+        updateID: String = UUID().uuidString
+    ) async throws -> Update.Output where Workflow.Input == Void {
+        try await self.executeUpdateWithStartWorkflow(
+            type: type,
+            input: (),
+            options: options,
+            updateType: updateType,
+            updateInput: updateInput,
+            updateID: updateID
+        )
+    }
 }

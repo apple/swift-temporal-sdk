@@ -225,7 +225,7 @@ extension TestServerDependentTests {
                 let handle = try await client.signalWithStartWorkflow(
                     type: SignalWorkflow.self,
                     options: options,
-                    signal: SignalWorkflow.Signal.self,
+                    signalType: SignalWorkflow.Signal.self,
                     signalInput: SignalWorkflow.SignalScenario.updateState
                 )
 
@@ -254,7 +254,7 @@ extension TestServerDependentTests {
                 let newHandle = try await client.signalWithStartWorkflow(
                     type: SignalWorkflow.self,
                     options: options,
-                    signal: SignalWorkflow.Signal.self,
+                    signalType: SignalWorkflow.Signal.self,
                     signalInput: SignalWorkflow.SignalScenario.updateState
                 )
 

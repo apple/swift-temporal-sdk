@@ -195,6 +195,43 @@ extension Span {
         }
     }
 
+    // MARK: Update-with-Start Workflow
+
+    func setUpdateWithStartWorkflowRequestSpanAttributes<each Input>(
+        input: StartUpdateWithStartWorkflowInput<repeat each Input>
+    ) {
+        // The name of the workflow to start
+        self.attributes[TemporalTracingKeys.workflowName] = input.name
+        // The unique workflow identifier
+        self.attributes[TemporalTracingKeys.workflowId] = input.options.id
+        // The task queue to run the workflow on
+        self.attributes[TemporalTracingKeys.workflowTaskQueue] = input.options.taskQueue
+        // The update identifier
+        self.attributes[TemporalTracingKeys.workflowUpdateId] = input.updateID
+        // The update name
+        self.attributes[TemporalTracingKeys.workflowUpdateName] = input.updateName
+        // Total workflow execution timeout including retries and continue as new.
+        if let timeout = input.options.executionTimeOut?.description {
+            self.attributes[TemporalTracingKeys.workflowExecutionTimeout] = timeout
+        }
+        // The headers to include in the request.
+        // swift-format-ignore: ReplaceForEachWithForLoop
+        input.updateHeaders.forEach { key, value in
+            self.attributes["\(TemporalTracingKeys.workflowHeadersPrefix)\(key)"] = "\(value)"
+        }
+
+        // We do not record the input
+    }
+
+    func setUpdateWithStartWorkflowResponseSpanAttributes(response: UntypedWorkflowUpdateHandle) {
+        // Update ID recorded in request
+
+        // Workflow run ID used for updates if present to ensure a very specific run to call
+        if let workflowRunId = response.workflowRunID {
+            self.attributes[TemporalTracingKeys.workflowRunId] = workflowRunId
+        }
+    }
+
     // MARK: Describe Workflow
 
     func setDescribeWorkflowRequestSpanAttributes(input: DescribeWorkflowInput) {

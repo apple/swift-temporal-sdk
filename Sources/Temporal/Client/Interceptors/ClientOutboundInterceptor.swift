@@ -41,7 +41,17 @@ public protocol ClientOutboundInterceptor: Sendable {
         next: (SignalWithStartWorkflowInput<repeat each Input>) async throws -> UntypedWorkflowHandle
     ) async throws -> UntypedWorkflowHandle
 
-    // TODO: startUpdateWithStartWorkflow
+    /// Intercepts update-with-start workflow operations.
+    ///
+    /// - Parameters:
+    ///   - input: The update-with-start input containing workflow start configuration, update name, and parameters.
+    ///   - next: A closure that forwards the operation to the next interceptor.
+    /// - Returns: An untyped workflow update handle for the started update.
+    /// - Throws: Any error encountered during update-with-start processing or forwarding.
+    func startUpdateWithStartWorkflow<each Input>(
+        input: StartUpdateWithStartWorkflowInput<repeat each Input>,
+        next: (StartUpdateWithStartWorkflowInput<repeat each Input>) async throws -> UntypedWorkflowUpdateHandle
+    ) async throws -> UntypedWorkflowUpdateHandle
 
     /// Intercepts workflow signal operations.
     ///
@@ -324,6 +334,13 @@ extension ClientOutboundInterceptor {
         input: SignalWithStartWorkflowInput<repeat each Input>,
         next: (SignalWithStartWorkflowInput<repeat each Input>) async throws -> UntypedWorkflowHandle
     ) async throws -> UntypedWorkflowHandle {
+        try await next(input)
+    }
+
+    public func startUpdateWithStartWorkflow<each Input>(
+        input: StartUpdateWithStartWorkflowInput<repeat each Input>,
+        next: (StartUpdateWithStartWorkflowInput<repeat each Input>) async throws -> UntypedWorkflowUpdateHandle
+    ) async throws -> UntypedWorkflowUpdateHandle {
         try await next(input)
     }
 
