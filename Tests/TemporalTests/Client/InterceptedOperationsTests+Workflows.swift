@@ -475,6 +475,7 @@ extension TestServerDependentTests {
                     runID: runID,
                     firstExecutionRunID: runID,
                     updateName: "\(UpdateUntypedOperationsWorkflow.Update.self)",
+                    waitForStage: .accepted,
                     input: "testRegularUpdate"
                 )
 
@@ -524,7 +525,8 @@ extension TestServerDependentTests {
                     id: workflowID,
                     runID: runID,
                     firstExecutionRunID: runID,
-                    updateName: "NoInputUpdate"
+                    updateName: "NoInputUpdate",
+                    waitForStage: .accepted
                 )
 
                 let updateResult = try await client.interceptedService.workflowUpdateResult(

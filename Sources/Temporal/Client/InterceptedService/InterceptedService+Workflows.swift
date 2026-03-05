@@ -106,6 +106,7 @@ extension TemporalClient.InterceptedService {
     ///   - updateInput: The input data to send with the update.
     ///   - updateID: A unique identifier for this update operation.
     ///   - updateHeaders: Custom headers for the update request.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     ///   - callOptions: Optional gRPC call options for customizing the request.
     /// - Returns: An ``UntypedWorkflowUpdateHandle`` for managing the update and retrieving its result.
     /// - Throws: An error if the operation fails.
@@ -118,6 +119,7 @@ extension TemporalClient.InterceptedService {
         updateInput: [any Sendable],
         updateID: String,
         updateHeaders: [String: Api.Common.V1.Payload] = [:],
+        waitForStage: WorkflowUpdateStage,
         callOptions: CallOptions? = nil
     ) async throws -> UntypedWorkflowUpdateHandle {
         try await self.interceptor.startUpdateWithStartWorkflow(
@@ -130,6 +132,7 @@ extension TemporalClient.InterceptedService {
                 updateInput: updateInput,
                 updateID: updateID,
                 updateHeaders: updateHeaders,
+                waitForStage: waitForStage,
                 callOptions: callOptions
             )
         )
@@ -388,6 +391,7 @@ extension TemporalClient.InterceptedService {
     ///   - firstExecutionRunID: The run ID of the first execution in the chain for validation. If nil, no chain validation is performed.
     ///   - updateName: The name of the update handler defined in the workflow.
     ///   - updateID: A unique identifier for this update operation. Defaults to a new UUID.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     ///   - input: The input parameters to pass to the update handler.
     ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
     /// - Returns: The unique update ID that can be used to retrieve results later.
@@ -398,6 +402,7 @@ extension TemporalClient.InterceptedService {
         firstExecutionRunID: String? = nil,
         updateName: String,
         updateID: String = UUID().uuidString,
+        waitForStage: WorkflowUpdateStage,
         input: repeat each Input,
         callOptions: CallOptions? = nil
     ) async throws -> String {
@@ -407,6 +412,7 @@ extension TemporalClient.InterceptedService {
                 runID: runID,
                 updateID: updateID,
                 updateName: updateName,
+                waitForStage: waitForStage,
                 firstExecutionRunID: firstExecutionRunID,
                 headers: [:],
                 input: repeat each input,
@@ -450,6 +456,7 @@ extension TemporalClient.InterceptedService {
             firstExecutionRunID: firstExecutionRunID,
             updateName: updateName,
             updateID: updateID,
+            waitForStage: .completed,
             input: repeat each input,
             callOptions: callOptions
         )

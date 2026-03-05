@@ -338,6 +338,7 @@ extension TestServerDependentTests {
 
                 let updateHandle = try await handle.startUpdate(
                     updateName: "\(UpdateUntypedOperationsWorkflow.Update.self)",
+                    waitForStage: .accepted,
                     input: "testRegularUpdate"
                 )
 
@@ -378,7 +379,8 @@ extension TestServerDependentTests {
                 )
 
                 let updateHandle = try await handle.startUpdate(
-                    updateName: "NoInputUpdate"
+                    updateName: "NoInputUpdate",
+                    waitForStage: .accepted
                 )
 
                 let updateResult = try await updateHandle.result(

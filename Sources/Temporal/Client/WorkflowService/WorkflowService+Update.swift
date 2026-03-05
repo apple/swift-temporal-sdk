@@ -59,6 +59,7 @@ extension TemporalClient.WorkflowService {
             firstExecutionRunID: firstExecutionRunID,
             updateID: updateID,
             updateName: updateName,
+            waitForStage: .completed,
             headers: headers,
             input: repeat each input,
             callOptions: callOptions
@@ -118,10 +119,10 @@ extension TemporalClient.WorkflowService {
 
     /// Initiates a workflow update by name without waiting for completion.
     ///
-    /// This method sends an update request to a running workflow and returns immediately
-    /// after the update is accepted, without waiting for the update to complete. Use this
-    /// method when you want to start an update asynchronously and retrieve results later
-    /// using ``workflowUpdateResult(workflowID:runID:updateID:resultTypes:callOptions:)``.
+    /// This method sends an update request to a running workflow and returns after reaching
+    /// the specified wait stage. Use this method when you want to start an update and control
+    /// how long to wait before getting the response. Retrieve results later using
+    /// ``workflowUpdateResult(workflowID:runID:updateID:resultTypes:callOptions:)``.
     ///
     /// - Parameters:
     ///   - workflowID: The unique identifier of the target workflow.
@@ -129,6 +130,7 @@ extension TemporalClient.WorkflowService {
     ///   - firstExecutionRunID: The run ID of the first execution in the chain for validation. If nil, no chain validation is performed.
     ///   - updateID: A unique identifier for this update operation. Defaults to a new UUID.
     ///   - updateName: The name of the update handler defined in the workflow.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     ///   - headers: Custom headers for tracing, authentication, or update context.
     ///   - input: The input parameters to pass to the update handler.
     ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
@@ -140,11 +142,11 @@ extension TemporalClient.WorkflowService {
         firstExecutionRunID: String? = nil,
         updateID: String = UUID().uuidString,
         updateName: String,
+        waitForStage: WorkflowUpdateStage,
         headers: [String: Api.Common.V1.Payload] = [:],
         input: repeat each Input,
         callOptions: CallOptions? = nil
     ) async throws -> String {
-        // TODO: Precondition for WaitForStage options
         let dataConverter = configuration.dataConverter
         let inputPayloads = try await dataConverter.convertValues(repeat each input)
 
@@ -161,8 +163,7 @@ extension TemporalClient.WorkflowService {
             $0.request.meta.updateID = updateID
             $0.request.input.name = updateName
             $0.request.input.args.payloads = inputPayloads
-            // TODO: Add support for wait policy
-            //            $0.waitPolicy
+            $0.waitPolicy.lifecycleStage = .init(waitForStage)
         }
 
         if !headers.isEmpty {
@@ -180,7 +181,7 @@ extension TemporalClient.WorkflowService {
             } catch {
                 throw error
             }
-        } while response.stage.rawValue < Api.Enums.V1.UpdateWorkflowExecutionLifecycleStage.accepted.rawValue
+        } while response.stage.rawValue < Api.Enums.V1.UpdateWorkflowExecutionLifecycleStage(waitForStage).rawValue
 
         return updateID
     }
@@ -189,7 +190,7 @@ extension TemporalClient.WorkflowService {
     ///
     /// This convenience method provides type-safe workflow updating using a
     /// ``WorkflowUpdateDefinition`` that encapsulates the update name and input type.
-    /// The method returns immediately after the update is accepted, allowing you to
+    /// The method returns after reaching the specified wait stage, allowing you to
     /// retrieve results later using the returned update ID.
     ///
     /// - Parameters:
@@ -198,6 +199,7 @@ extension TemporalClient.WorkflowService {
     ///   - firstExecutionRunID: The run ID of the first execution in the chain for validation. If nil, no chain validation is performed.
     ///   - updateType: The ``WorkflowUpdateDefinition`` type that defines the update contract.
     ///   - updateID: A unique identifier for this update operation. Defaults to a new UUID.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     ///   - headers: Custom headers for tracing, authentication, or update context.
     ///   - input: The input parameter matching the update definition's `Input` type.
     ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
@@ -209,6 +211,7 @@ extension TemporalClient.WorkflowService {
         firstExecutionRunID: String? = nil,
         updateType: Update.Type = Update.self,
         updateID: String = UUID().uuidString,
+        waitForStage: WorkflowUpdateStage,
         headers: [String: Api.Common.V1.Payload] = [:],
         input: Update.Input,
         callOptions: CallOptions? = nil
@@ -219,6 +222,7 @@ extension TemporalClient.WorkflowService {
             firstExecutionRunID: firstExecutionRunID,
             updateID: updateID,
             updateName: Update.name,
+            waitForStage: waitForStage,
             headers: headers,
             input: input,
             callOptions: callOptions
@@ -232,7 +236,7 @@ extension TemporalClient.WorkflowService {
     /// This method waits for a workflow update to complete and returns its results.
     /// It uses long polling to efficiently wait until the update finishes processing,
     /// automatically handling retries and connection timeouts. Use this method after
-    /// starting an update with ``startWorkflowUpdate(workflowID:runID:firstExecutionRunID:updateID:updateName:headers:input:callOptions:)``.
+    /// starting an update with ``startWorkflowUpdate(workflowID:runID:firstExecutionRunID:updateID:updateName:waitForStage:headers:input:callOptions:)``.
     ///
     /// - Parameters:
     ///   - workflowID: The unique identifier of the target workflow.

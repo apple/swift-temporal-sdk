@@ -188,6 +188,7 @@ extension UntypedWorkflowHandle {
     /// - Parameters:
     ///   - updateName: The update name.
     ///   - updateID: A unique identifier for this update operation. Defaults to a new UUID.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     ///   - input: The input data.
     ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
     /// - Returns: A handle for managing the update and retrieving its result.
@@ -195,6 +196,7 @@ extension UntypedWorkflowHandle {
     public func startUpdate<each Input: Sendable>(
         updateName: String,
         updateID: String = UUID().uuidString,
+        waitForStage: WorkflowUpdateStage,
         input: repeat each Input,
         callOptions: CallOptions? = nil
     ) async throws -> UntypedWorkflowUpdateHandle {
@@ -204,6 +206,7 @@ extension UntypedWorkflowHandle {
                 runID: self.runID,
                 updateID: updateID,
                 updateName: updateName,
+                waitForStage: waitForStage,
                 firstExecutionRunID: firstExecutionRunID,
                 headers: [:],
                 input: repeat each input,
@@ -215,7 +218,7 @@ extension UntypedWorkflowHandle {
     /// Executes a workflow update and waits for its completion in a single operation.
     ///
     /// This is a convenience method that combines starting an update with waiting for its result.
-    /// It internally calls ``startUpdate(updateName:updateID:input:callOptions:)`` followed by waiting for
+    /// It internally calls ``startUpdate(updateName:updateID:waitForStage:input:callOptions:)`` followed by waiting for
     /// the result, providing a simpler API for synchronous update operations.
     ///
     /// - Parameters:
@@ -236,6 +239,7 @@ extension UntypedWorkflowHandle {
         let updateHandle = try await self.startUpdate(
             updateName: updateName,
             updateID: updateID,
+            waitForStage: .completed,
             input: repeat each input,
             callOptions: callOptions
         )
@@ -341,6 +345,7 @@ extension TemporalClient.Interceptor {
                 firstExecutionRunID: input.firstExecutionRunID,
                 updateID: input.updateID,
                 updateName: input.updateName,
+                waitForStage: input.waitForStage,
                 headers: input.headers,
                 input: input.input,
                 callOptions: input.callOptions

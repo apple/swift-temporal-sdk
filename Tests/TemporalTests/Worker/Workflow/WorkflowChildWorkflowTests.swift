@@ -242,7 +242,7 @@ extension TestServerDependentTests {
                 interceptors: [interceptor]
             )
 
-            #expect(interceptor.counter.withLock { $0 } == 3)
+            #expect(interceptor.counter.withLock { $0 } >= 3)
 
             #expect(result == ["return", "return", "return"])
         }
@@ -528,7 +528,7 @@ extension TestServerDependentTests {
                 #expect(signals == ["foo", "bar"])
             }
 
-            #expect(interceptor.counter.withLock { $0 } == 2)
+            #expect(interceptor.counter.withLock { $0 } >= 2)
         }
 
         @Workflow

@@ -58,6 +58,28 @@ extension TestServerDependentTests {
         }
 
         @Test
+        func startUpdateWithAcceptedStage() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [UpdateWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = UUID().uuidString
+                let handle = try await client.startWorkflow(
+                    type: UpdateWorkflow.self,
+                    options: .init(id: workflowID, taskQueue: taskQueue)
+                )
+                let updateHandle = try await handle.startUpdate(
+                    updateType: UpdateWorkflow.Update.self,
+                    waitForStage: .accepted,
+                    input: "test-accepted"
+                )
+                let result = try await updateHandle.result()
+                #expect(result == "Hello from update, test-accepted")
+
+                try await handle.result()
+            }
+        }
+
+        @Test
         func interceptsUpdate() async throws {
             final class CountingInterceptor: WorkerInterceptor {
                 let updateCounter: Mutex<Int> = .init(0)
@@ -146,7 +168,8 @@ extension TestServerDependentTests {
                     input: "initial",
                     options: options,
                     updateType: UpdateWithStartTargetWorkflow.SetValue.self,
-                    updateInput: "hello"
+                    updateInput: "hello",
+                    waitForStage: .accepted
                 )
 
                 // Verify the update handle is returned and the result is correct
@@ -241,7 +264,8 @@ extension TestServerDependentTests {
                     input: "initial",
                     options: options,
                     updateName: UpdateWithStartTargetWorkflow.SetValue.name,
-                    updateInput: "untyped-hello"
+                    updateInput: "untyped-hello",
+                    waitForStage: .accepted
                 )
 
                 // Retrieve the result using the untyped handle

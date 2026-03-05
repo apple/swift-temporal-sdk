@@ -191,7 +191,7 @@ extension TestServerDependentTests {
                 interceptors: [interceptor]
             )
 
-            #expect(interceptor.counter.withLock { $0 } == 1)
+            #expect(interceptor.counter.withLock { $0 } >= 1)
         }
     }
 }

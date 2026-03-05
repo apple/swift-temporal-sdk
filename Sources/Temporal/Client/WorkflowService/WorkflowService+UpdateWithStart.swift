@@ -46,6 +46,7 @@ extension TemporalClient.WorkflowService {
     ///   - updateName: The name of the update handler to invoke.
     ///   - updateHeaders: Custom headers for the update request.
     ///   - updateInput: The serialized update input payloads.
+    ///   - waitForStage: The stage to wait for before returning from the update request.
     ///   - callOptions: Optional gRPC call options for customizing the request.
     /// - Returns: An ``UpdateWithStartResult`` containing the workflow run ID and update ID.
     /// - Throws: An error if the operation fails.
@@ -58,6 +59,7 @@ extension TemporalClient.WorkflowService {
         updateName: String,
         updateHeaders: [String: Api.Common.V1.Payload],
         updateInput: [Api.Common.V1.Payload],
+        waitForStage: WorkflowUpdateStage,
         callOptions: CallOptions? = nil
     ) async throws -> UpdateWithStartResult {
         let dataConverter = self.configuration.dataConverter
@@ -82,7 +84,7 @@ extension TemporalClient.WorkflowService {
             $0.request.meta.updateID = updateID
             $0.request.input.name = updateName
             $0.request.input.args.payloads = updateInput
-            $0.waitPolicy.lifecycleStage = .accepted
+            $0.waitPolicy.lifecycleStage = .init(waitForStage)
         }
 
         if !updateHeaders.isEmpty {
@@ -118,7 +120,7 @@ extension TemporalClient.WorkflowService {
                 updateResp = response.responses[1].updateWorkflow
             }
         } while updateResp == nil
-            || updateResp!.stage.rawValue < Api.Enums.V1.UpdateWorkflowExecutionLifecycleStage.accepted.rawValue
+            || updateResp!.stage.rawValue < Api.Enums.V1.UpdateWorkflowExecutionLifecycleStage(waitForStage).rawValue
 
         return UpdateWithStartResult(
             runID: runID ?? "",
