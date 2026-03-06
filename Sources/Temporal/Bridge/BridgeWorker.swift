@@ -49,15 +49,13 @@ package final class BridgeWorker: BridgeWorkerProtocol {
         // –– Workflows ––
         workflowTaskPollerBehavior: TemporalWorker.Configuration.PollerBehavior,
         maxCachedWorkflows: UInt32,
-        maxConcurrentWorkflowTasks: UInt,
+        tuner: WorkerTuner,
         nonstickyToStickyPollRatio: Float,
         stickyQueueScheduleToStartTimeoutMs: UInt64,
         nondeterminismAsWorkflowFail: Bool,
         nondeterminismAsWorkflowFailForTypes: [String],
         // –– Activities ––
         activityTaskPollerBehavior: TemporalWorker.Configuration.PollerBehavior,
-        maxConcurrentActivities: UInt,
-        maxConcurrentLocalActivities: UInt,
         maxActivitiesPerSecond: Double,
         maxTaskQueueActivitiesPerSecond: Double,
         // –– Heartbeat throttling ––
@@ -67,13 +65,10 @@ package final class BridgeWorker: BridgeWorkerProtocol {
         nexusTaskPollerBehavior: TemporalWorker.Configuration.PollerBehavior,
         gracefulShutdownPeriodMs: UInt64
     ) throws {
-        var tuner = TemporalCoreTunerHolder()
-        tuner.workflow_slot_supplier.tag = FixedSize
-        tuner.workflow_slot_supplier.fixed_size.num_slots = maxConcurrentWorkflowTasks
-        tuner.activity_slot_supplier.tag = FixedSize
-        tuner.activity_slot_supplier.fixed_size.num_slots = maxConcurrentActivities
-        tuner.local_activity_slot_supplier.tag = FixedSize
-        tuner.local_activity_slot_supplier.fixed_size.num_slots = maxConcurrentLocalActivities
+        var bridgeTuner = TemporalCoreTunerHolder()
+        bridgeTuner.workflow_slot_supplier = .init(tuner.workflowSlotSupplier)
+        bridgeTuner.activity_slot_supplier = .init(tuner.activitySlotSupplier)
+        bridgeTuner.local_activity_slot_supplier = .init(tuner.localActivitySlotSupplier)
 
         self.worker = try Self.withWorkerOptions(
             namespace: namespace,
@@ -82,7 +77,7 @@ package final class BridgeWorker: BridgeWorkerProtocol {
             hasActivities: hasActivities,
             hasWorkflows: hasWorkflows,
             versioningStrategy: versioningStrategy,
-            tuner: tuner,
+            tuner: bridgeTuner,
             maxCachedWorkflows: maxCachedWorkflows,
             stickyQueueTimeoutMs: stickyQueueScheduleToStartTimeoutMs,
             maxHeartbeatThrottleIntervalMs: maxHeartbeatThrottleIntervalMs,
@@ -131,14 +126,12 @@ package final class BridgeWorker: BridgeWorkerProtocol {
             hasWorkflows: hasWorkflows,
             workflowTaskPollerBehavior: configuration.workflowTaskPollerBehavior,
             maxCachedWorkflows: UInt32(configuration.maxCachedWorkflows),
-            maxConcurrentWorkflowTasks: UInt(configuration.maxConcurrentWorkflowTasks),
+            tuner: configuration.tuner,
             nonstickyToStickyPollRatio: Float(configuration.nonstickyToStickyPollRatio),
             stickyQueueScheduleToStartTimeoutMs: configuration.stickyQueueScheduleToStartTimeout.milliseconds,
             nondeterminismAsWorkflowFail: true,
             nondeterminismAsWorkflowFailForTypes: [],
             activityTaskPollerBehavior: configuration.activityTaskPollerBehavior,
-            maxConcurrentActivities: UInt(configuration.maxConcurrentActivities),
-            maxConcurrentLocalActivities: UInt(configuration.maxConcurrentLocalActivities),
             maxActivitiesPerSecond: configuration.maxActivitiesPerSecond,
             maxTaskQueueActivitiesPerSecond: configuration.maxTaskQueueActivitiesPerSecond,
             defaultHeartbeatThrottleIntervalMs: configuration.defaultHeartbeatThrottleInterval.milliseconds,

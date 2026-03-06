@@ -350,33 +350,28 @@ public struct TemporalTestServer: Sendable {
     /// plaintext transport to the test server. The worker runs concurrently while your `body` closure
     /// executes; once the closure finishes (or throws), the worker task is cancelled and torn down.
     ///
-    /// The worker can be customized with namespace, task queue, interceptors, activities, workflows,
-    /// logging, and heartbeat throttling. By default, a fresh random task queue is used so tests
-    /// remain isolated.
-    ///
     /// ## Usage
     ///
     /// ```swift
     /// let testServer = TemporalTestServer.testServer!
-    /// let result = try await testServer.withConnectedWorker(
+    /// var config = TemporalWorker.Configuration(
     ///     namespace: "default",
+    ///     taskQueue: UUID().uuidString,
+    ///     instrumentation: .init(serverHostname: "localhost")
+    /// )
+    /// let result = try await testServer.withConnectedWorker(
+    ///     configuration: config,
     ///     activities: [MyActivity()],
     ///     workflows: [MyWorkflow.self]
     /// ) { worker in
     ///     // Interact with the system under test while the worker is running.
-    ///     // For example, start a workflow from a connected client (e.g. via `withConnectedClient()`),
-    ///     // then await its result.
     /// }
     ///
     /// #expect(result == "...")
     /// ```
     ///
     /// - Parameters:
-    ///   - namespace: Temporal namespace to register the worker with. Defaults to `"default"`.
-    ///   - taskQueue: Task queue the worker will poll. Defaults to a fresh random UUID to avoid collisions between tests.
-    ///   - workerBuildID: Optional Build ID for worker versioning. (Defaults to an empty string.)
-    ///   - maxHeartbeatThrottleInterval: Maximum server-side heartbeat throttle interval used by the worker. Defaults to 60 seconds.
-    ///   - interceptors: Worker interceptors to install for testing/tracing.
+    ///   - configuration: Worker configuration including namespace, task queue, interceptors, and tuning parameters.
     ///   - activities: Activity implementations to register on the worker.
     ///   - workflows: Workflow types to register on the worker.
     ///   - logger: Logger used by the worker. Defaults to a stdout `Logger` at `.info`.
@@ -386,11 +381,7 @@ public struct TemporalTestServer: Sendable {
     /// - Note: The worker is run concurrently in a `TaskGroup`. The group is cancelled after the first task
     ///   (typically your `body`) completes. The transport uses plaintext HTTP/2 and is intended for test environments only.
     public func withConnectedWorker<Result: Sendable>(
-        namespace: String = "default",
-        taskQueue: String = UUID().uuidString,
-        workerBuildID: String = "",
-        maxHeartbeatThrottleInterval: Duration = .seconds(60),
-        interceptors: [any WorkerInterceptor] = [],
+        configuration: TemporalWorker.Configuration,
         activities: [any ActivityDefinition] = [],
         workflows: [any WorkflowDefinition.Type] = [],
         logger: Logger = {
@@ -401,11 +392,7 @@ public struct TemporalTestServer: Sendable {
         _ body: sending @escaping @isolated(any) (TemporalWorker) async throws -> sending Result
     ) async throws -> sending Result {
         try await self.withConnectedWorker(
-            namespace: namespace,
-            taskQueue: taskQueue,
-            workerBuildID: workerBuildID,
-            maxHeartbeatThrottleInterval: maxHeartbeatThrottleInterval,
-            interceptors: interceptors,
+            configuration: configuration,
             activities: activities,
             workflows: workflows,
             workerType: TemporalWorker.self,
@@ -417,11 +404,7 @@ public struct TemporalTestServer: Sendable {
 
     /// Creates a connected Temporal worker for test scenarios including a specific worker type.
     package func withConnectedWorker<Result: Sendable, Worker: TemporalWorkerProtocol>(
-        namespace: String = "default",
-        taskQueue: String = UUID().uuidString,
-        workerBuildID: String = "",
-        maxHeartbeatThrottleInterval: Duration = .seconds(60),
-        interceptors: [any WorkerInterceptor] = [],
+        configuration: TemporalWorker.Configuration,
         activities: [any ActivityDefinition] = [],
         workflows: [any WorkflowDefinition.Type] = [],
         workerType: Worker.Type = Worker.self,
@@ -437,18 +420,8 @@ public struct TemporalTestServer: Sendable {
 
             let (host, port) = self.hostAndPort()
 
-            var workerConfiguration = TemporalWorker.Configuration(
-                namespace: namespace,
-                taskQueue: taskQueue,
-                instrumentation: .init(serverHostname: host),
-                clientIdentity: nil,  // defaults to the SDK name and version followed by a unique ID
-                dataConverter: .default
-            )
-            workerConfiguration.interceptors = interceptors
-            workerConfiguration.maxHeartbeatThrottleInterval = maxHeartbeatThrottleInterval
-
             let worker = Worker(
-                for: workerConfiguration,
+                for: configuration,
                 transport: try .http2NIOPosix(
                     target: .dns(host: host, port: port),
                     transportSecurity: .plaintext,  // plaintext transport for testing
