@@ -21,7 +21,14 @@ import Testing
 
 import protocol GRPCCore.ClientTransport
 
-@Suite(.temporalTestServer, .temporalTimeSkippingTestServer, .timeLimit(.minutes(1)))
+// Serialized: Makes it easier to understand which test fails and doesn't overwhelm the Temporal test server
+// TimeLimit: Ensures that nothing gets stuck forever
+@Suite(
+    .temporalTestServer,
+    .temporalTimeSkippingTestServer,
+    .serialized,
+    .timeLimit(.minutes(2))
+)
 enum TestServerDependentTests {}
 
 func withTestClient<Result: Sendable>(

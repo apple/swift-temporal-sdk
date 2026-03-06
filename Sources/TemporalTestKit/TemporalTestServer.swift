@@ -15,7 +15,9 @@
 #if canImport(Testing)
 import GRPCNIOTransportHTTP2Posix
 import GRPCCore
+import GRPCServiceLifecycle
 import NIOPosix
+import SwiftProtobuf
 public import Logging
 public import Temporal
 public import Testing
@@ -108,7 +110,20 @@ public struct TemporalTestServer: Sendable {
     @TaskLocal
     public static var timeSkippingTestServer: TemporalTestServer? = nil
 
+    /// Whether this server supports time skipping.
+    public var supportsTimeSkipping: Bool {
+        self.testServiceClient != nil
+    }
+
     private let serverTarget: String
+    private let testServiceClient: Api.Testservice.V1.TestService.Client<HTTP2ClientTransport.Posix>?
+    @TaskLocal
+    private static var autoTimeSkippingDisabled: Bool = false
+
+    /// Whether automatic time skipping is currently enabled.
+    var isAutoTimeSkippingEnabled: Bool {
+        self.supportsTimeSkipping && !Self.autoTimeSkippingDisabled
+    }
 
     // tune the dev server for high throughput during parallel testing, otherwise running into "resource exhausted" errors
     private static let devServerOptions: BridgeTestServer.DevServerOptions = {
@@ -159,7 +174,8 @@ public struct TemporalTestServer: Sendable {
             devServerOptions: Self.devServerOptions,
         ) { bridgeTestServer, target in
             let testServer = TemporalTestServer(
-                serverTarget: target
+                serverTarget: target,
+                testServiceClient: nil
             )
             return try await body(testServer)
         }
@@ -205,10 +221,38 @@ public struct TemporalTestServer: Sendable {
         _ body: (borrowing TemporalTestServer) async throws -> Void
     ) async throws {
         try await BridgeTestServer.withBridgeTestServer { bridgeTestServer, target in
-            let testServer = TemporalTestServer(
-                serverTarget: target
+            let parts = target.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
+            guard let host = parts.first.map(String.init),
+                parts.count > 1,
+                let port = Int(parts[1])
+            else {
+                fatalError("Invalid host and port received from test server.")
+            }
+
+            let grpcClient = GRPCClient(
+                transport: try .http2NIOPosix(
+                    target: .dns(host: host, port: port),
+                    transportSecurity: .plaintext,
+                    config: .defaults,
+                    resolverRegistry: .defaults,
+                    serviceConfig: .init(),
+                    eventLoopGroup: .singletonMultiThreadedEventLoopGroup
+                )
             )
-            return try await body(testServer)
+
+            return try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await grpcClient.run()
+                }
+
+                let testServer = TemporalTestServer(
+                    serverTarget: target,
+                    testServiceClient: .init(wrapping: grpcClient)
+                )
+                try await body(testServer)
+
+                grpcClient.beginGracefulShutdown()
+            }
         }
     }
 
@@ -273,6 +317,14 @@ public struct TemporalTestServer: Sendable {
     ) async throws -> Result {
         let (host, port) = self.hostAndPort()
 
+        // Auto-inject the time-skipping interceptor when connected to a
+        // time-skipping server. It is placed first so it wraps all other
+        // interceptors, matching the behavior of the C# and Ruby SDKs.
+        var allInterceptors: [any Temporal.ClientInterceptor] = interceptors
+        if self.supportsTimeSkipping {
+            allInterceptors.insert(TimeSkippingClientInterceptor(testServer: self), at: 0)
+        }
+
         return try await TemporalClient.connect(
             transport: .http2NIOPosix(
                 target: .dns(host: host, port: port),
@@ -284,7 +336,7 @@ public struct TemporalTestServer: Sendable {
             ),
             configuration: .init(
                 instrumentation: .init(serverHostname: host),
-                interceptors: interceptors
+                interceptors: allInterceptors
             ),
             logger: logger,
         ) { client in
@@ -421,6 +473,98 @@ public struct TemporalTestServer: Sendable {
             let result = await group.nextResult()!
             group.cancelAll()
             return try result.get()!
+        }
+    }
+
+    // MARK: - Time Control
+
+    /// Advances the test server time by the specified duration.
+    ///
+    /// When connected to a time-skipping test server, this method instructs the server to
+    /// fast-forward its internal clock by the given duration. This causes any pending timers
+    /// or scheduled events within that time window to fire immediately.
+    ///
+    /// - Parameter duration: The amount of time to advance the server clock.
+    /// - Throws: An error if the server does not support time skipping or the RPC fails.
+    public func sleep(_ duration: Duration) async throws {
+        guard let testServiceClient else {
+            preconditionFailure("sleep(_:) is only supported on time-skipping test servers")
+        }
+        _ = try await testServiceClient.unlockTimeSkippingWithSleep(
+            .with {
+                $0.duration = .with {
+                    $0.seconds = duration.components.seconds
+                    $0.nanos = Int32(duration.components.attoseconds / 1_000_000_000)
+                }
+            }
+        )
+    }
+
+    /// Returns the current time as known to the test server.
+    ///
+    /// When connected to a time-skipping test server, this returns the server's internal
+    /// time, which may differ from wall-clock time due to time skipping.
+    ///
+    /// - Returns: The current server time.
+    /// - Throws: An error if the server does not support time skipping or the RPC fails.
+    public func currentTime() async throws -> Date {
+        guard let testServiceClient else {
+            preconditionFailure("currentTime() is only supported on time-skipping test servers")
+        }
+        return try await testServiceClient.getCurrentTime(.init()).time.date
+    }
+
+    /// Executes a closure with automatic time skipping temporarily disabled.
+    ///
+    /// While automatic time skipping is disabled, calls to `handle.result`
+    /// will not unlock the time-skipping server's clock. Time will only advance through
+    /// explicit calls to ``sleep(_:)`` or real-time passage.
+    ///
+    /// This is useful when you need to observe intermediate workflow states without
+    /// time being advanced automatically.
+    ///
+    /// - Parameter body: The closure to execute with auto-time-skipping disabled.
+    /// - Returns: The result of the closure.
+    /// - Throws: Any error thrown by the closure.
+    public func withAutoTimeSkippingDisabled<Result: Sendable>(
+        _ body: () async throws -> Result
+    ) async rethrows -> Result {
+        try await Self.$autoTimeSkippingDisabled.withValue(true) {
+            try await body()
+        }
+    }
+
+    /// Unlocks time skipping for the duration of the given closure, then re-locks it.
+    ///
+    /// This is used internally by ``TimeSkippingClientInterceptor`` to allow time to
+    /// advance while waiting for workflow results.
+    func withTimeSkippingUnlocked<Result: Sendable>(
+        _ body: () async throws -> Result
+    ) async throws -> Result {
+        guard let testServiceClient else {
+            return try await body()
+        }
+
+        _ = try await testServiceClient.unlockTimeSkipping(.init())
+
+        var userCodeSucceeded = false
+        do {
+            let result = try await body()
+            userCodeSucceeded = true
+            _ = try await testServiceClient.lockTimeSkipping(.init())
+            return result
+        } catch {
+            // Re-lock time skipping. If user code failed, swallow lock errors
+            // to preserve the original error.
+            do {
+                _ = try await testServiceClient.lockTimeSkipping(.init())
+            } catch {
+                if userCodeSucceeded {
+                    throw error
+                }
+                // Swallow lock error when user code already failed
+            }
+            throw error
         }
     }
 

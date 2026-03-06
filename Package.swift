@@ -109,6 +109,7 @@ let package = Package(
             name: "TemporalTestKit",
             dependencies: [
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+                .product(name: "GRPCServiceLifecycle", package: "grpc-swift-extras"),
                 .target(name: "Temporal"),
             ]
         ),
