@@ -47,8 +47,10 @@ extension TemporalWorker {
     /// Adjust operational settings after initialization:
     ///
     /// ```swift
-    /// config.maxConcurrentWorkflowTasks = 50
-    /// config.maxConcurrentActivities = 200
+    /// config.tuner = WorkerTuner(
+    ///     workflowSlotSupplier: .fixedSize(.init(maximumSlots: 50)),
+    ///     activitySlotSupplier: .fixedSize(.init(maximumSlots: 200))
+    /// )
     /// config.gracefulShutdownPeriod = .seconds(30)
     /// ```
     public struct Configuration: Sendable {
@@ -301,13 +303,17 @@ extension TemporalWorker {
         /// - Important: Ensure that you only configure either an API key or mTLS.
         public var apiKey: String?
 
+        /// Controls how task processing slots are allocated for workflow, activity,
+        /// and local activity tasks.
+        ///
+        /// By default, all three slot suppliers use fixed-size with 100 slots each.
+        public var tuner: WorkerTuner = WorkerTuner()
+
         // –– Workflows ––
         /// Polling behavior for workflows (default max `5`).
         public var workflowTaskPollerBehavior: PollerBehavior = .simpleMaximum(maximum: 5)
         /// Maximum number of workflow instances to cache in memory (default `1000`).
         public var maxCachedWorkflows: Int = 1_000
-        /// Maximum concurrent workflow tasks the worker will execute (default `100`).
-        public var maxConcurrentWorkflowTasks: Int = 100
         /// Ratio of non-sticky to sticky workflow task polls (0.0–1.0, default `0.2`).
         public var nonstickyToStickyPollRatio: Double = 0.2
         /// Timeout for a sticky workflow task from schedule to start before falling back (default `10 sec`).
@@ -316,10 +322,6 @@ extension TemporalWorker {
         // –– Activities ––
         /// Polling behavior for activities (default max `5`).
         public var activityTaskPollerBehavior: PollerBehavior = .simpleMaximum(maximum: 5)
-        /// Maximum concurrent remote activities (default `100`).
-        public var maxConcurrentActivities: Int = 100
-        /// Maximum concurrent local activities (default `100`).
-        public var maxConcurrentLocalActivities: Int = 100
         /// Global throttle for activity start rate (units/sec, default `100_000`).
         public var maxActivitiesPerSecond: Double = 100_000
 
@@ -421,6 +423,20 @@ extension TemporalWorker {
         /// - `worker.heartbeatintervalms`: The worker heartbeat interval in milliseconds (defaults to 0,
         /// which disables worker heartbeats).
         ///
+        /// ## Tuner configuration keys
+        ///
+        /// The following keys configure the worker tuner. If no tuner keys are present,
+        /// the default ``WorkerTuner`` is used (fixed-size with 100 slots for each task type).
+        ///
+        /// - `worker.tuner.workflow.type`: Slot supplier type -- `"fixed"` or `"resource-based"`.
+        /// - `worker.tuner.workflow.maxslots`: Maximum slots for workflow tasks (fixed-size only).
+        /// - `worker.tuner.activity.type`: Slot supplier type -- `"fixed"` or `"resource-based"`.
+        /// - `worker.tuner.activity.maxslots`: Maximum slots for activity tasks (fixed-size only).
+        /// - `worker.tuner.localactivity.type`: Slot supplier type -- `"fixed"` or `"resource-based"`.
+        /// - `worker.tuner.localactivity.maxslots`: Maximum slots for local activity tasks (fixed-size only).
+        /// - `worker.tuner.targetmemoryusage`: Target memory usage for resource-based suppliers (0.0--1.0).
+        /// - `worker.tuner.targetcpuusage`: Target CPU usage for resource-based suppliers (0.0--1.0).
+        ///
         /// - Parameters:
         ///   - configReader: The configuration reader containing the required configuration values.
         ///   - dataConverter: The converter for encoding and decoding payloads. Defaults to the
@@ -453,6 +469,57 @@ extension TemporalWorker {
             // Set optional configuration values that have defaults
             if let heartbeatIntervalMs = snapshot.int(forKey: .workerHeartbeatIntervalMs) {
                 self.workerHeartbeatInterval = .milliseconds(heartbeatIntervalMs)
+            }
+
+            // Read tuner configuration
+            let workflowType = snapshot.string(forKey: .workerTunerWorkflowType)
+            let activityType = snapshot.string(forKey: .workerTunerActivityType)
+            let localActivityType = snapshot.string(forKey: .workerTunerLocalActivityType)
+
+            // Only override the default tuner if at least one tuner key is present
+            if workflowType != nil || activityType != nil || localActivityType != nil {
+                let targetMemoryUsage = snapshot.double(forKey: .workerTunerTargetMemoryUsage) ?? 0.8
+                let targetCpuUsage = snapshot.double(forKey: .workerTunerTargetCpuUsage) ?? 0.9
+                let tunerOptions = ResourceBasedTunerOptions(
+                    targetMemoryUsage: targetMemoryUsage,
+                    targetCpuUsage: targetCpuUsage
+                )
+
+                self.tuner = WorkerTuner(
+                    workflowSlotSupplier: Self.slotSupplier(
+                        type: workflowType,
+                        maxSlots: snapshot.int(forKey: .workerTunerWorkflowMaxSlots),
+                        tunerOptions: tunerOptions
+                    ),
+                    activitySlotSupplier: Self.slotSupplier(
+                        type: activityType,
+                        maxSlots: snapshot.int(forKey: .workerTunerActivityMaxSlots),
+                        tunerOptions: tunerOptions
+                    ),
+                    localActivitySlotSupplier: Self.slotSupplier(
+                        type: localActivityType,
+                        maxSlots: snapshot.int(forKey: .workerTunerLocalActivityMaxSlots),
+                        tunerOptions: tunerOptions
+                    )
+                )
+            }
+        }
+
+        /// Builds a ``SlotSupplier`` from configuration values.
+        private static func slotSupplier(
+            type: String?,
+            maxSlots: Int?,
+            tunerOptions: ResourceBasedTunerOptions
+        ) -> SlotSupplier {
+            switch type {
+            case "resource-based":
+                return .resourceBased(
+                    .init(),
+                    tunerOptions: tunerOptions
+                )
+            default:
+                // Default to fixed-size
+                return .fixedSize(.init(maximumSlots: maxSlots ?? 100))
             }
         }
     }

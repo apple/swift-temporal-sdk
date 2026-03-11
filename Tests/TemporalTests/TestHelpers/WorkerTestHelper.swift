@@ -61,6 +61,40 @@ func withTestClient<Result: Sendable>(
 }
 
 func withTestWorkerAndClient<Result: Sendable, Worker: TemporalWorkerProtocol>(
+    configuration: TemporalWorker.Configuration,
+    clientInterceptors: [any ClientInterceptor] = [],
+    activities: [any ActivityDefinition] = [],
+    workflows: [any WorkflowDefinition.Type] = [],
+    workerType: Worker.Type = TemporalWorker.self,
+    clientLogger: Logger = {
+        var logger = Logger(label: "TestClient", factory: { StreamLogHandler.standardOutput(label: $0) })
+        logger.logLevel = .info
+        return logger
+    }(),
+    workerLogger: Logger = {
+        var logger = Logger(label: "TestWorker", factory: { StreamLogHandler.standardOutput(label: $0) })
+        logger.logLevel = .info
+        return logger
+    }(),
+    _ body: sending @escaping @isolated(any) (String, TemporalClient) async throws -> sending Result
+) async throws -> Result {
+    try await TemporalTestServer.testServer!.withConnectedWorker(
+        configuration: configuration,
+        activities: activities,
+        workflows: workflows,
+        workerType: workerType,
+        logger: workerLogger
+    ) { worker in
+        try await TemporalTestServer.testServer!.withConnectedClient(
+            logger: clientLogger,
+            interceptors: clientInterceptors
+        ) { client, _, _ in
+            try await body(configuration.taskQueue, client)
+        }
+    }
+}
+
+func withTestWorkerAndClient<Result: Sendable, Worker: TemporalWorkerProtocol>(
     namespace: String = "default",
     taskQueue: String = UUID().uuidString,
     workerBuildID: String = "",
@@ -82,22 +116,58 @@ func withTestWorkerAndClient<Result: Sendable, Worker: TemporalWorkerProtocol>(
     }(),
     _ body: sending @escaping @isolated(any) (String, TemporalClient) async throws -> sending Result
 ) async throws -> Result {
-    try await TemporalTestServer.testServer!.withConnectedWorker(
+    let (host, _) = TemporalTestServer.testServer!.hostAndPort()
+    var config = TemporalWorker.Configuration(
         namespace: namespace,
         taskQueue: taskQueue,
-        workerBuildID: workerBuildID,
-        maxHeartbeatThrottleInterval: maxHeartbeatThrottleInterval,
-        interceptors: interceptors,
+        instrumentation: .init(serverHostname: host),
+        clientIdentity: nil,
+        dataConverter: .default
+    )
+    config.interceptors = interceptors
+    config.maxHeartbeatThrottleInterval = maxHeartbeatThrottleInterval
+    return try await withTestWorkerAndClient(
+        configuration: config,
+        clientInterceptors: clientInterceptors,
+        activities: activities,
+        workflows: workflows,
+        workerType: workerType,
+        clientLogger: clientLogger,
+        workerLogger: workerLogger,
+        body
+    )
+}
+
+func withTimeSkippingTestWorkerAndClient<Result: Sendable, Worker: TemporalWorkerProtocol>(
+    configuration: TemporalWorker.Configuration,
+    clientInterceptors: [any ClientInterceptor] = [],
+    activities: [any ActivityDefinition] = [],
+    workflows: [any WorkflowDefinition.Type] = [],
+    workerType: Worker.Type = TemporalWorker.self,
+    clientLogger: Logger = {
+        var logger = Logger(label: "TestClient", factory: { StreamLogHandler.standardOutput(label: $0) })
+        logger.logLevel = .info
+        return logger
+    }(),
+    workerLogger: Logger = {
+        var logger = Logger(label: "TestWorker", factory: { StreamLogHandler.standardOutput(label: $0) })
+        logger.logLevel = .info
+        return logger
+    }(),
+    _ body: sending @escaping @isolated(any) (String, TemporalClient) async throws -> sending Result
+) async throws -> Result {
+    try await TemporalTestServer.timeSkippingTestServer!.withConnectedWorker(
+        configuration: configuration,
         activities: activities,
         workflows: workflows,
         workerType: workerType,
         logger: workerLogger
     ) { worker in
-        try await TemporalTestServer.testServer!.withConnectedClient(
+        try await TemporalTestServer.timeSkippingTestServer!.withConnectedClient(
             logger: clientLogger,
             interceptors: clientInterceptors
         ) { client, _, _ in
-            try await body(taskQueue, client)
+            try await body(configuration.taskQueue, client)
         }
     }
 }
@@ -124,24 +194,26 @@ func withTimeSkippingTestWorkerAndClient<Result: Sendable, Worker: TemporalWorke
     }(),
     _ body: sending @escaping @isolated(any) (String, TemporalClient) async throws -> sending Result
 ) async throws -> Result {
-    try await TemporalTestServer.timeSkippingTestServer!.withConnectedWorker(
+    let (host, _) = TemporalTestServer.timeSkippingTestServer!.hostAndPort()
+    var config = TemporalWorker.Configuration(
         namespace: namespace,
         taskQueue: taskQueue,
-        workerBuildID: workerBuildID,
-        maxHeartbeatThrottleInterval: maxHeartbeatThrottleInterval,
-        interceptors: interceptors,
+        instrumentation: .init(serverHostname: host),
+        clientIdentity: nil,
+        dataConverter: .default
+    )
+    config.interceptors = interceptors
+    config.maxHeartbeatThrottleInterval = maxHeartbeatThrottleInterval
+    return try await withTimeSkippingTestWorkerAndClient(
+        configuration: config,
+        clientInterceptors: clientInterceptors,
         activities: activities,
         workflows: workflows,
         workerType: workerType,
-        logger: workerLogger
-    ) { worker in
-        try await TemporalTestServer.timeSkippingTestServer!.withConnectedClient(
-            logger: clientLogger,
-            interceptors: clientInterceptors
-        ) { client, _, _ in
-            try await body(taskQueue, client)
-        }
-    }
+        clientLogger: clientLogger,
+        workerLogger: workerLogger,
+        body
+    )
 }
 
 func executeWorkflow<Workflow: WorkflowDefinition>(

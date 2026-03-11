@@ -34,4 +34,26 @@ extension ConfigKey {
 
     /// The optional worker heartbeat interval in milliseconds of the ``TemporalWorker``.
     static let workerHeartbeatIntervalMs: ConfigKey = ["worker", "heartbeatintervalms"]
+
+    // MARK: - Tuner
+
+    /// The optional slot supplier type for workflow tasks (`"fixed"` or `"resource-based"`).
+    static let workerTunerWorkflowType: ConfigKey = ["worker", "tuner", "workflow", "type"]
+    /// The optional maximum slots for fixed-size workflow task supplier.
+    static let workerTunerWorkflowMaxSlots: ConfigKey = ["worker", "tuner", "workflow", "maxslots"]
+
+    /// The optional slot supplier type for activity tasks (`"fixed"` or `"resource-based"`).
+    static let workerTunerActivityType: ConfigKey = ["worker", "tuner", "activity", "type"]
+    /// The optional maximum slots for fixed-size activity task supplier.
+    static let workerTunerActivityMaxSlots: ConfigKey = ["worker", "tuner", "activity", "maxslots"]
+
+    /// The optional slot supplier type for local activity tasks (`"fixed"` or `"resource-based"`).
+    static let workerTunerLocalActivityType: ConfigKey = ["worker", "tuner", "localactivity", "type"]
+    /// The optional maximum slots for fixed-size local activity task supplier.
+    static let workerTunerLocalActivityMaxSlots: ConfigKey = ["worker", "tuner", "localactivity", "maxslots"]
+
+    /// The optional target memory usage for resource-based slot suppliers (0.0--1.0).
+    static let workerTunerTargetMemoryUsage: ConfigKey = ["worker", "tuner", "targetmemoryusage"]
+    /// The optional target CPU usage for resource-based slot suppliers (0.0--1.0).
+    static let workerTunerTargetCpuUsage: ConfigKey = ["worker", "tuner", "targetcpuusage"]
 }
