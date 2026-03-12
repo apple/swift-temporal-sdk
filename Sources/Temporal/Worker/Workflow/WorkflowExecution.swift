@@ -99,6 +99,12 @@ public struct WorkflowExecution: Hashable, Sendable {
     /// metadata about the workflow execution.
     public var memo: [String: TemporalRawValue]
 
+    /// The current status of this workflow execution.
+    ///
+    /// Indicates whether the workflow is running, completed, failed,
+    /// canceled, terminated, continued as new, timed out, or paused.
+    public var status: Api.Enums.V1.WorkflowExecutionStatus
+
     /// Search attributes associated with this workflow execution.
     ///
     /// Search attributes enable indexing and querying of workflow executions
@@ -122,6 +128,7 @@ public struct WorkflowExecution: Hashable, Sendable {
         closeTime = raw.hasCloseTime ? raw.closeTime.date : nil
         executionTime = raw.hasExecutionTime ? raw.executionTime.date : nil
         historyLength = Int(raw.historyLength)
+        status = raw.status
         searchAttributes = try .init(raw.searchAttributes)
         memo = raw.memo.fields.mapValues { .init($0) }
     }
