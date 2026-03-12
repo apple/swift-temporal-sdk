@@ -127,12 +127,12 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         self.stateMachine.fireTimer(fireTimer)?.resume()
     }
 
-    func handlerStarted() {
-        self.stateMachine.handlerStarted()
+    func handlerStarted(name: String, updateId: String?, unfinishedPolicy: HandlerUnfinishedPolicy) {
+        self.stateMachine.handlerStarted(name: name, updateId: updateId, unfinishedPolicy: unfinishedPolicy)
     }
 
-    func handlerFinished() {
-        self.stateMachine.handlerFinished()
+    func handlerFinished(name: String, updateId: String?) {
+        self.stateMachine.handlerFinished(name: name, updateId: updateId)
     }
 
     func allHandlersFinished() -> Bool {
@@ -525,6 +525,10 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
 
     func isReplaying() -> Bool {
         return self.stateMachine.isReplaying()
+    }
+
+    func unfinishedWarnHandlerEntries() -> [WorkflowStateMachine.ActiveHandlerEntry] {
+        return self.stateMachine.unfinishedWarnHandlerEntries()
     }
 
     func now() -> Date {

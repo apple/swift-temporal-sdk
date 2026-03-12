@@ -33,4 +33,11 @@ extension AttributeSyntax {
         guard let boolLiteral = element.expression.as(BooleanLiteralExprSyntax.self) else { return nil }
         return boolLiteral.literal.tokenKind == .keyword(.true)
     }
+
+    func memberAccessNameForArgument(named name: String) -> String? {
+        guard case let .argumentList(arguments) = arguments else { return nil }
+        guard let element = arguments.first(where: { $0.label?.text == name }) else { return nil }
+        guard let memberAccess = element.expression.as(MemberAccessExprSyntax.self) else { return nil }
+        return memberAccess.declName.baseName.text
+    }
 }

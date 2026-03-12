@@ -57,11 +57,15 @@ public struct WorkflowUpdateMacro: PeerMacro {
 
         var nameDecl: DeclSyntax?
         var descriptionDecl: DeclSyntax?
+        var unfinishedPolicyDecl: DeclSyntax?
         if let name = node.stringLiteralValueForArgument(named: "name") {
             nameDecl = "\(raw: rawAccessModifier)static var name: String { \(name) }"
         }
         if let description = node.stringLiteralValueForArgument(named: "description") {
             descriptionDecl = "\(raw: rawAccessModifier)static var description: String? { \(description) }"
+        }
+        if let policyName = node.memberAccessNameForArgument(named: "unfinishedPolicy") {
+            unfinishedPolicyDecl = "\(raw: rawAccessModifier)static var unfinishedPolicy: HandlerUnfinishedPolicy { .\(raw: policyName) }"
         }
 
         let updateName = functionDecl.name.text.capitalizingFirst()
@@ -71,7 +75,7 @@ public struct WorkflowUpdateMacro: PeerMacro {
                 \(raw: rawAccessModifier)typealias Input = \(input.type)
                 \(raw: rawAccessModifier)typealias Output = \(raw: returnType)
                 \(raw: rawAccessModifier)typealias Workflow = \(parentClass.name)
-                
+
                 let _run: @Sendable (Workflow, Input) async throws -> Output
                 init(run: @Sendable @escaping (Workflow, Input) async throws -> Output) {
                     self._run = run
@@ -81,6 +85,7 @@ public struct WorkflowUpdateMacro: PeerMacro {
                 }
                 \(nameDecl)
                 \(descriptionDecl)
+                \(unfinishedPolicyDecl)
             }
             """,
             """

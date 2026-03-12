@@ -75,6 +75,13 @@ public protocol WorkflowUpdateDefinition<Workflow>: Sendable {
     /// users understand the update's functionality. Defaults to `nil`.
     static var description: String? { get }
 
+    /// The policy for handling unfinished instances of this handler when the workflow exits.
+    ///
+    /// This controls what happens when the workflow completes (successfully, with failure,
+    /// cancellation, or continue-as-new) while this update handler is still running.
+    /// Defaults to ``HandlerUnfinishedPolicy/warnAndAbandon``.
+    static var unfinishedPolicy: HandlerUnfinishedPolicy { get }
+
     /// Validates the update input before execution.
     ///
     /// This method is called before the update is executed to validate the input data
@@ -115,6 +122,14 @@ extension WorkflowUpdateDefinition {
     /// Instance property providing access to the static description.
     var description: String? {
         Self.description
+    }
+
+    /// Default implementation returning ``HandlerUnfinishedPolicy/warnAndAbandon``.
+    public static var unfinishedPolicy: HandlerUnfinishedPolicy { .warnAndAbandon }
+
+    /// Instance property providing access to the static unfinished policy.
+    var unfinishedPolicy: HandlerUnfinishedPolicy {
+        Self.unfinishedPolicy
     }
 
     /// Default implementation that performs no validation.

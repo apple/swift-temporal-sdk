@@ -18,6 +18,16 @@ import struct Foundation.Date
 import struct Foundation.UUID
 
 struct WorkflowStateMachine: ~Copyable {
+    /// An entry representing a currently running handler.
+    struct ActiveHandlerEntry: Sendable {
+        /// The name of the handler (signal or update name).
+        var name: String
+        /// The update ID if this is an update handler, `nil` for signals.
+        var updateId: String?
+        /// The unfinished policy for this handler.
+        var unfinishedPolicy: HandlerUnfinishedPolicy
+    }
+
     /// The state of the workflow.
     enum State: ~Copyable {
         /// The state when the workflow is actively running.
@@ -52,6 +62,9 @@ struct WorkflowStateMachine: ~Copyable {
 
             /// Number of current running and unfinished handlers.
             var numberOfActiveHandlers: Int
+
+            /// Descriptions of currently running handlers, used for warning on unfinished handlers.
+            var activeHandlerEntries: [ActiveHandlerEntry]
 
             /// Whether or not the activation is replaying past events.
             var isReplaying: Bool
@@ -138,6 +151,7 @@ struct WorkflowStateMachine: ~Copyable {
             nextExternalSignalSequenceNumber: 0,
             nextExternalCancelSequenceNumber: 0,
             numberOfActiveHandlers: 0,
+            activeHandlerEntries: [],
             isReplaying: false,
             now: .now,
             continueAsNewSuggested: false,
@@ -399,18 +413,32 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
-    mutating func handlerStarted() {
+    mutating func handlerStarted(name: String, updateId: String?, unfinishedPolicy: HandlerUnfinishedPolicy) {
         switch consume self.state {
         case .active(var active):
             active.numberOfActiveHandlers += 1
+            active.activeHandlerEntries.append(
+                ActiveHandlerEntry(name: name, updateId: updateId, unfinishedPolicy: unfinishedPolicy)
+            )
             self = .init(state: .active(active))
         }
     }
 
-    mutating func handlerFinished() {
+    mutating func handlerFinished(name: String, updateId: String?) {
         switch consume self.state {
         case .active(var active):
             active.numberOfActiveHandlers -= 1
+            if let updateId {
+                // For updates, match on updateId for precise identification
+                if let index = active.activeHandlerEntries.firstIndex(where: { $0.updateId == updateId }) {
+                    active.activeHandlerEntries.remove(at: index)
+                }
+            } else {
+                // For signals, match on name (first matching entry)
+                if let index = active.activeHandlerEntries.firstIndex(where: { $0.name == name && $0.updateId == nil }) {
+                    active.activeHandlerEntries.remove(at: index)
+                }
+            }
             self = .init(state: .active(active))
         }
     }
@@ -419,6 +447,15 @@ struct WorkflowStateMachine: ~Copyable {
         switch self.state {
         case .active(let active):
             return active.numberOfActiveHandlers == 0
+        }
+    }
+
+    /// Returns the active handler entries that have the ``HandlerUnfinishedPolicy/warnAndAbandon`` policy.
+    func unfinishedWarnHandlerEntries() -> [ActiveHandlerEntry] {
+        switch self.state {
+        case .active(let active):
+            return active.activeHandlerEntries
+                .filter { $0.unfinishedPolicy == .warnAndAbandon }
         }
     }
 

@@ -81,8 +81,11 @@ public macro Workflow(name: String? = nil) = #externalMacro(module: "TemporalMac
 ///
 /// - Parameter name: The name of the signal. If not provided, defaults to the function name.
 /// - Parameter description: An optional description of the signal's purpose.
+/// - Parameter unfinishedPolicy: The policy for handling unfinished instances of this handler when
+///   the workflow exits. Defaults to ``HandlerUnfinishedPolicy/warnAndAbandon``.
 @attached(peer, names: arbitrary)
-public macro WorkflowSignal(name: String? = nil, description: String? = nil) = #externalMacro(module: "TemporalMacros", type: "WorkflowSignalMacro")
+public macro WorkflowSignal(name: String? = nil, description: String? = nil, unfinishedPolicy: HandlerUnfinishedPolicy = .warnAndAbandon) =
+    #externalMacro(module: "TemporalMacros", type: "WorkflowSignalMacro")
 
 /// Defines a query handler for a workflow.
 ///
@@ -163,8 +166,11 @@ public macro WorkflowQuery(name: String? = nil, description: String? = nil) = #e
 ///
 /// - Parameter name: The name of the update. If not provided, defaults to the function name.
 /// - Parameter description: An optional description of the update's purpose.
+/// - Parameter unfinishedPolicy: The policy for handling unfinished instances of this handler when
+///   the workflow exits. Defaults to ``HandlerUnfinishedPolicy/warnAndAbandon``.
 @attached(peer, names: arbitrary)
-public macro WorkflowUpdate(name: String? = nil, description: String? = nil) = #externalMacro(module: "TemporalMacros", type: "WorkflowUpdateMacro")
+public macro WorkflowUpdate(name: String? = nil, description: String? = nil, unfinishedPolicy: HandlerUnfinishedPolicy = .warnAndAbandon) =
+    #externalMacro(module: "TemporalMacros", type: "WorkflowUpdateMacro")
 
 /// Makes workflow state sendable by ensuring it is modified on the workflow's executor.
 ///
