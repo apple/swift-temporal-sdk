@@ -14,6 +14,7 @@
 
 enum Encodings {
     internal static let encodingKey = "encoding"
+    internal static let messageTypeKey = "messageType"
     internal static let binaryNil = "binary/null"
     internal static let binaryPlain = "binary/plain"
     internal static let jsonProtobuf = "json/protobuf"

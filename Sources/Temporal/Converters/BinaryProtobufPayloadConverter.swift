@@ -29,7 +29,12 @@ public struct BinaryProtobufPayloadConverter: EncodingPayloadConverter {
             throw EncodingError()
         }
 
-        return createPayload(for: (try value.serializedBytes() as [UInt8]))
+        return createPayload(
+            for: (try value.serializedBytes() as [UInt8]),
+            additionalMetadata: [
+                Encodings.messageTypeKey: Data(type(of: value).protoMessageName.utf8)
+            ]
+        )
     }
 
     public func convertPayload<Value>(

@@ -29,7 +29,12 @@ public struct JSONProtobufPayloadConverter: EncodingPayloadConverter {
             throw EncodingError()
         }
 
-        return createPayload(for: Array(try value.jsonString().utf8))
+        return createPayload(
+            for: Array(try value.jsonString().utf8),
+            additionalMetadata: [
+                Encodings.messageTypeKey: Data(type(of: value).protoMessageName.utf8)
+            ]
+        )
     }
 
     public func convertPayload<Value>(

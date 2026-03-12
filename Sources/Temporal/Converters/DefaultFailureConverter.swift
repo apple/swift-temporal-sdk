@@ -48,7 +48,7 @@ public struct DefaultFailureConverter: FailureConverter {
             // This is documented here: https://docs.temporal.io/dataconversion#failure-converter
             let attributes: [String: String] = [
                 "message": temporalFailure.message,
-                "stackTrace": temporalFailure.stackTrace,
+                "stack_trace": temporalFailure.stackTrace,
             ]
 
             // This string matches what the other SDKs do
@@ -82,7 +82,7 @@ public struct DefaultFailureConverter: FailureConverter {
                     temporalFailure.message = message
                 }
 
-                if let stackTrace = decodedAttributes["stackTrace"] {
+                if let stackTrace = decodedAttributes["stack_trace"] {
                     temporalFailure.stackTrace = stackTrace
                 }
 
