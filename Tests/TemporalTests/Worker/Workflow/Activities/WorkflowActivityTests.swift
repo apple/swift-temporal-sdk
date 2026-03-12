@@ -208,6 +208,48 @@ extension TestServerDependentTests {
                 activities: [InfiniteActivity()],
             )
         }
+
+        // MARK: - Dynamic Activity Tests
+
+        struct DynamicActivity: ActivityDefinition {
+            static var isDynamic: Bool { true }
+
+            func run(input: [TemporalRawValue]) async throws -> String {
+                let activityType = ActivityExecutionContext.current!.info.activityType
+                // Decode the first raw argument to demonstrate deserialization works.
+                // Using DefaultPayloadConverter directly since the activity context
+                // does not yet expose a public payload converter (planned in Section 20).
+                let converter = DefaultPayloadConverter()
+                let decodedArg: String =
+                    input.isEmpty
+                    ? "<none>"
+                    : try converter.convertPayload(input[0].payload, as: String.self)
+                return "dynamic:\(activityType):\(decodedArg)"
+            }
+        }
+
+        @Workflow
+        final class DynamicActivityWorkflow {
+            func run(input: String) async throws -> String {
+                try await Workflow.executeActivity(
+                    name: "SomeUnregisteredActivity",
+                    options: .init(startToCloseTimeout: .seconds(10)),
+                    input: input,
+                    outputType: String.self
+                )
+            }
+        }
+
+        @Test
+        func dynamicActivityHandlesUnregisteredWorkflowActivity() async throws {
+            let result = try await executeWorkflow(
+                DynamicActivityWorkflow.self,
+                input: "hello",
+                activities: [DynamicActivity()]
+            )
+
+            #expect(result == "dynamic:SomeUnregisteredActivity:hello")
+        }
     }
 }
 

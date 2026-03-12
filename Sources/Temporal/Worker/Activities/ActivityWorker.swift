@@ -63,9 +63,8 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     private let worker: BridgeWorker
     /// A dictionary of registered activity implementations indexed by their type names.
     ///
-    /// Activities are stored with their registered names as keys. A `nil` key indicates support for dynamic
-    /// activities (not yet implemented).
-    // TODO: Add support for dynamic activities.
+    /// Activities are stored with their registered names as keys. A `nil` key indicates a dynamic
+    /// activity that handles unregistered activity types.
     private let activities: [String?: any ActivityDefinition]
     /// The name of the task queue from which this worker polls for activity tasks.
     private let taskQueue: String
@@ -81,6 +80,12 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
 
     /// The interceptor implementation chain for processing activity inbound calls.
     private let implementation: Implementation
+
+    /// The reserved name prefix for internal/system activity types.
+    ///
+    /// Activity names starting with this prefix are reserved for Temporal internal use.
+    /// Registration of activities with names starting with this prefix will cause an error.
+    private static var reservedNamePrefix: String { "__temporal_" }
 
     /// Creates an activity worker with the specified configuration and dependencies.
     ///
@@ -103,10 +108,21 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
         logger: Logger
     ) throws {
         self.worker = worker
+
+        // Validate reserved name prefix and build the activities dictionary
+        for activity in activities {
+            let name = Self.getName(for: activity)
+            if let name, name.hasPrefix(Self.reservedNamePrefix) {
+                throw TemporalSDKError(
+                    "Activity name \"\(name)\" cannot start with reserved prefix \"\(Self.reservedNamePrefix)\""
+                )
+            }
+        }
+
         self.activities = try Dictionary(
             activities.map { (Self.getName(for: $0), $0) },
             uniquingKeysWith: { first, second in
-                let activityName = Self.getName(for: first) ?? "unknown"
+                let activityName = Self.getName(for: first) ?? "dynamic"
                 logger.info("Duplicate activity registration", metadata: [LoggingKeys.activityName: "\(activityName)"])
                 throw TemporalSDKError("Duplicate activity: \(activityName)")
             }
@@ -187,7 +203,8 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
         case .start(let activityTaskStart):
             logger.debug("Starting activity")
 
-            guard let activity = self.activities[activityTaskStart.activityType] else {
+            // Look up the activity by name, falling back to the dynamic activity (nil key)
+            guard let activity = self.activities[activityTaskStart.activityType] ?? self.activities[nil] else {
                 logger.debug("No activity registered for type")
                 try await self.sendActivityCompletionForUnknownActivity(
                     taskToken: activityTask.taskToken,
@@ -301,6 +318,21 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                                     let input: A.Input
                                     if A.Input.self == Void.self {
                                         input = () as! A.Input
+                                    } else if A.isDynamic, A.Input.self == [TemporalRawValue].self {
+                                        // Dynamic activities receive just the raw payloads.
+                                        // The activity type name is available via
+                                        // ActivityExecutionContext.current.info.activityType.
+                                        var rawArgs = [TemporalRawValue]()
+                                        for payload in activityTaskStart.input {
+                                            if let payloadCodec = self.dataConverter.payloadCodec {
+                                                rawArgs.append(
+                                                    TemporalRawValue(try await payloadCodec.decode(payload: payload))
+                                                )
+                                            } else {
+                                                rawArgs.append(TemporalRawValue(payload))
+                                            }
+                                        }
+                                        input = rawArgs as! A.Input
                                     } else {
                                         input = try await self.dataConverter.convertPayloads(
                                             activityTaskStart.input,
@@ -484,11 +516,17 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
 
     /// Extracts the activity name from an activity definition for registration purposes.
     ///
+    /// For dynamic activities (where ``ActivityDefinition/isDynamic`` returns `true`), this
+    /// method returns `nil` to register the activity under the dynamic key.
+    ///
     /// - Parameter activity: The activity definition to get the name from.
-    /// - Returns: The activity name used for server registration and routing.
+    /// - Returns: The activity name used for server registration and routing, or `nil` for dynamic activities.
     private static func getName<Activity: ActivityDefinition>(
         for activity: Activity
     ) -> String? {
+        if Activity.isDynamic {
+            return nil
+        }
         return Activity.name
     }
 }

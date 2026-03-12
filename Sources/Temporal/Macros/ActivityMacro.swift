@@ -28,9 +28,29 @@
 /// }
 /// ```
 ///
-/// - Parameter name: The name of the activity. If not provided, defaults to the function name.
+/// ## Dynamic Activities
+///
+/// Mark an activity as dynamic to create a catch-all handler for unregistered activity types:
+///
+/// ```swift
+/// struct MyDynamicActivity {
+///     @Activity(dynamic: true)
+///     func handle(input: [TemporalRawValue]) async throws -> TemporalRawValue {
+///         let activityType = ActivityExecutionContext.current!.info.activityType
+///         // Handle based on activity type...
+///     }
+/// }
+/// ```
+///
+/// - Parameters:
+///   - name: The name of the activity. If not provided, defaults to the function name.
+///   - dynamic: Whether this activity is dynamic. A dynamic activity cannot have a custom name.
 @attached(peer)
-public macro Activity(name: String? = nil) = #externalMacro(module: "TemporalMacros", type: "ActivityMacro")
+public macro Activity(name: String? = nil, dynamic: Bool = false) =
+    #externalMacro(
+        module: "TemporalMacros",
+        type: "ActivityMacro"
+    )
 
 /// Generates an extension conforming to ``ActivityContainer`` for a type containing activity functions.
 ///
