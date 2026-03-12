@@ -58,6 +58,22 @@ extension Api.Workflowservice.V1.SignalWithStartWorkflowExecutionRequest {
             self.workflowExecutionTimeout = .init(duration: executionTimeOut)
         }
 
+        if let runTimeout = workflowOptions.runTimeout {
+            self.workflowRunTimeout = .init(duration: runTimeout)
+        }
+
+        if let taskTimeout = workflowOptions.taskTimeout {
+            self.workflowTaskTimeout = .init(duration: taskTimeout)
+        }
+
+        if let startDelay = workflowOptions.startDelay {
+            self.workflowStartDelay = .init(duration: startDelay)
+        }
+
+        if let cronSchedule = workflowOptions.cronSchedule {
+            self.cronSchedule = cronSchedule
+        }
+
         if let retryPolicy = workflowOptions.retryPolicy {
             self.retryPolicy = .init(retryPolicy: retryPolicy)
         }
@@ -74,6 +90,24 @@ extension Api.Workflowservice.V1.SignalWithStartWorkflowExecutionRequest {
 
         if let searchAttributes = workflowOptions.searchAttributes, !searchAttributes.isEmpty {
             self.searchAttributes = .init(searchAttributes)
+        }
+
+        if workflowOptions.staticSummary != nil || workflowOptions.staticDetails != nil {
+            self.userMetadata = .init()
+            if let staticSummary = workflowOptions.staticSummary {
+                self.userMetadata.summary = try await dataConverter.convertValue(staticSummary)
+            }
+            if let staticDetails = workflowOptions.staticDetails {
+                self.userMetadata.details = try await dataConverter.convertValue(staticDetails)
+            }
+        }
+
+        if let priority = workflowOptions.priority {
+            self.priority = .init(priority)
+        }
+
+        if let versioningOverride = workflowOptions.versioningOverride {
+            self.versioningOverride = .init(versioningOverride)
         }
 
         if !headers.isEmpty {
