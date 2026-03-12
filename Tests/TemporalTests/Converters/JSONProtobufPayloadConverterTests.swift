@@ -48,12 +48,35 @@ struct JSONProtobufPayloadConverterTests {
         #expect(
             payload.data == Data([123, 34, 115, 101, 99, 111, 110, 100, 115, 34, 58, 34, 49, 34, 125])
         )
-        #expect(payload.metadata == ["encoding": Data("json/protobuf".utf8)])
+        #expect(
+            payload.metadata
+                == [
+                    "encoding": Data("json/protobuf".utf8),
+                    "messageType": Data("TestMessage".utf8),
+                ]
+        )
 
         let convertedMessage = try payloadConverter.convertPayload(
             payload,
             as: TestMessage.self
         )
         #expect(convertedMessage.seconds == 1)
+    }
+
+    @Test
+    func convertProtoMessageWithMessageTypePresent() async throws {
+        let payloadConverter = JSONProtobufPayloadConverter()
+        let testMessage = TestMessage.with {
+            $0.seconds = 42
+        }
+
+        let payload = try payloadConverter.convertValue(testMessage)
+
+        // Verify messageType metadata is set
+        #expect(payload.metadata["messageType"] == Data("TestMessage".utf8))
+
+        // Verify decoding still works when messageType is present
+        let decoded = try payloadConverter.convertPayload(payload, as: TestMessage.self)
+        #expect(decoded.seconds == 42)
     }
 }

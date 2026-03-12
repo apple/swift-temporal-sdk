@@ -53,7 +53,15 @@ public struct DataConverter: Sendable {
         self.payloadCodec = payloadCodec
     }
 
-    package func convertValues<each Value>(
+    /// Converts a variadic list of optional values into an array of payloads.
+    ///
+    /// Each value is individually converted using the payload converter and optionally
+    /// encoded through the payload codec if one is configured.
+    ///
+    /// - Parameter values: A variadic list of optional values to convert.
+    /// - Returns: An array of payloads, one per input value.
+    /// - Throws: If any value cannot be converted by the payload converter or encoded by the payload codec.
+    public func convertValues<each Value>(
         _ values: repeat (each Value)?
     ) async throws -> [Api.Common.V1.Payload] {
         var payloads = [Api.Common.V1.Payload]()
@@ -63,7 +71,15 @@ public struct DataConverter: Sendable {
         return payloads
     }
 
-    package func convertValue<Value>(
+    /// Converts a single optional value into a payload.
+    ///
+    /// If the value is `Void`, an empty payload is returned. Otherwise, the value is converted
+    /// using the payload converter and optionally encoded through the payload codec.
+    ///
+    /// - Parameter value: The value to convert.
+    /// - Returns: The converted payload.
+    /// - Throws: If the value cannot be converted by the payload converter or encoded by the payload codec.
+    public func convertValue<Value>(
         _ value: Value?
     ) async throws -> Api.Common.V1.Payload {
         if value is Void {
@@ -80,7 +96,19 @@ public struct DataConverter: Sendable {
         return payload
     }
 
-    package func convertPayloads<each Value>(
+    /// Converts an array of payloads into a tuple of typed values.
+    ///
+    /// The number of payloads must match the number of requested value types. Each payload is
+    /// individually decoded, optionally through the payload codec first, and then through the
+    /// payload converter.
+    ///
+    /// - Parameters:
+    ///   - payloads: The array of payloads to convert.
+    ///   - valueTypes: The expected types to decode each payload into.
+    /// - Returns: A tuple of decoded values matching the requested types.
+    /// - Throws: If the number of payloads does not match the number of types, or if any payload
+    ///   cannot be decoded.
+    public func convertPayloads<each Value>(
         _ payloads: [Api.Common.V1.Payload],
         as valueTypes: repeat (each Value).Type
     ) async throws -> (repeat each Value) {
@@ -100,7 +128,19 @@ public struct DataConverter: Sendable {
         return try await (repeat self.convertPayload(payloads.removeFirst()) as each Value)
     }
 
-    package func convertPayload<Value>(
+    /// Converts a single payload into a typed value.
+    ///
+    /// If the requested type is `Void`, the payload is ignored and `Void` is returned.
+    /// Otherwise, the payload is optionally decoded through the payload codec first,
+    /// and then converted using the payload converter.
+    ///
+    /// - Parameters:
+    ///   - payload: The payload to convert.
+    ///   - valueType: The expected type to decode the payload into.
+    /// - Returns: The decoded value.
+    /// - Throws: If the payload cannot be decoded by the payload codec or converted by the
+    ///   payload converter.
+    public func convertPayload<Value>(
         _ payload: Api.Common.V1.Payload,
         as valueType: Value.Type = Value.self
     ) async throws -> Value {
@@ -117,7 +157,15 @@ public struct DataConverter: Sendable {
         return try self.payloadConverter.convertPayload(payload, as: Value.self)
     }
 
-    package func convertError(_ error: any Error) async -> Api.Failure.V1.Failure {
+    /// Converts a Swift error into a Temporal failure proto.
+    ///
+    /// The error is first converted using the failure converter, and then optionally encoded
+    /// through the payload codec. If codec encoding fails, a generic failure with the message
+    /// "Failed to encode failure" is returned.
+    ///
+    /// - Parameter error: The error to convert.
+    /// - Returns: The converted Temporal failure proto.
+    public func convertError(_ error: any Error) async -> Api.Failure.V1.Failure {
         let temporalFailure = self.failureConverter.convertError(
             error,
             payloadConverter: self.payloadConverter
@@ -138,7 +186,15 @@ public struct DataConverter: Sendable {
         return temporalFailure
     }
 
-    package func convertFailure(
+    /// Converts a Temporal failure proto back into a Swift error.
+    ///
+    /// The failure is optionally decoded through the payload codec first, and then converted
+    /// using the failure converter. If codec decoding fails, a ``BasicTemporalFailureError``
+    /// with the message "Failed to decode failure" is returned.
+    ///
+    /// - Parameter temporalFailure: The Temporal failure proto to convert.
+    /// - Returns: The converted Swift error.
+    public func convertFailure(
         _ temporalFailure: Api.Failure.V1.Failure
     ) async -> any Error {
         var temporalFailure = temporalFailure

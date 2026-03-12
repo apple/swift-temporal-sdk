@@ -121,7 +121,7 @@ struct DefaultFailureConverterTests {
         #expect(failure.stackTrace == "")
         let expectedPayload = try jsonPayloadConverter.convertValue([
             "message": "Error description",
-            "stackTrace": "",
+            "stack_trace": "",
         ])
         #expect(failure.encodedAttributes == expectedPayload)
         #expect(failure.failureInfo == .applicationFailureInfo(.with { $0.type = "TestError" }))
@@ -133,7 +133,7 @@ struct DefaultFailureConverterTests {
         let jsonPayloadConverter = JSONPayloadConverter()
         let encodedAttributes = try jsonPayloadConverter.convertValue([
             "message": "Error description",
-            "stackTrace": "Some stack trace",
+            "stack_trace": "Some stack trace",
         ])
 
         let failure = Api.Failure.V1.Failure.with {
@@ -386,5 +386,62 @@ struct DefaultFailureConverterTests {
         #expect(decodedError.stackTrace == "Some stack trace")
         #expect(decodedError.type == .startToClose)
         #expect(decodedError.lastHeartbeatDetails == expectedDetails)
+    }
+
+    @Test
+    func encodeCommonAttributesUsesSnakeCaseKey() async throws {
+        let applicationError = ApplicationError(
+            message: "Test message",
+            stackTrace: "line1\nline2",
+            type: "TestError"
+        )
+        var failureConverter = DefaultFailureConverter()
+        failureConverter.encodeCommonAttributes = true
+        let jsonPayloadConverter = JSONPayloadConverter()
+
+        let failure = failureConverter.convertError(
+            applicationError,
+            payloadConverter: jsonPayloadConverter
+        )
+
+        #expect(failure.message == "Encoded failure")
+        #expect(failure.stackTrace == "")
+
+        // Decode the encoded attributes and verify the key is "stack_trace"
+        let decodedAttributes = try jsonPayloadConverter.convertPayload(
+            failure.encodedAttributes,
+            as: [String: String].self
+        )
+        #expect(decodedAttributes["stack_trace"] == "line1\nline2")
+        #expect(decodedAttributes["message"] == "Test message")
+    }
+
+    @Test
+    func encodeCommonAttributesRoundTrips() async throws {
+        let applicationError = ApplicationError(
+            message: "Round trip message",
+            stackTrace: "frame1\nframe2\nframe3",
+            type: "TestError",
+            isNonRetryable: true
+        )
+        var failureConverter = DefaultFailureConverter()
+        failureConverter.encodeCommonAttributes = true
+        let jsonPayloadConverter = JSONPayloadConverter()
+
+        let failure = failureConverter.convertError(
+            applicationError,
+            payloadConverter: jsonPayloadConverter
+        )
+
+        let error = failureConverter.convertFailure(
+            failure,
+            payloadConverter: jsonPayloadConverter
+        )
+
+        let convertedError = try #require(error as? ApplicationError)
+        #expect(convertedError.message == "Round trip message")
+        #expect(convertedError.stackTrace == "frame1\nframe2\nframe3")
+        #expect(convertedError.type == "TestError")
+        #expect(convertedError.isNonRetryable == true)
     }
 }
