@@ -919,7 +919,7 @@ public struct Workflow: Sendable {
 
     // MARK: - Continue As New
 
-    /// Creates a continue-as-new error to restart the workflow.
+    /// Creates a continue-as-new error to restart the workflow as the same type.
     ///
     /// ## Usage
     ///
@@ -962,6 +962,77 @@ public struct Workflow: Sendable {
         options: ContinueAsNewOptions,
         input: repeat each Input
     ) async throws -> ContinueAsNewError {
-        try await self._context.makeContinueAsNewError(options: options, input: repeat each input)
+        try await self._context.makeContinueAsNewError(
+            workflowName: self.info.workflowName,
+            options: options,
+            input: repeat each input
+        )
+    }
+
+    /// Creates a continue-as-new error to restart as a different workflow type.
+    ///
+    /// This overload allows continuing execution as a different workflow type.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Continue as a different workflow type
+    /// throw try await Workflow.makeContinueAsNewError(
+    ///     workflowType: ProcessingWorkflowV2.self,
+    ///     options: .init(),
+    ///     input: migratedInput
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - workflowType: The workflow type to continue as.
+    ///   - options: The continue-as-new options.
+    ///   - input: The input values for the new workflow execution.
+    /// - Returns: A continue-as-new error.
+    /// - Throws: When the input, headers or memo fails to convert.
+    public static func makeContinueAsNewError<W: WorkflowDefinition, each Input: Sendable>(
+        workflowType: W.Type,
+        options: ContinueAsNewOptions = .init(),
+        input: repeat each Input
+    ) async throws -> ContinueAsNewError {
+        try await self._context.makeContinueAsNewError(
+            workflowName: W.name,
+            options: options,
+            input: repeat each input
+        )
+    }
+
+    /// Creates a continue-as-new error to restart as a different workflow by name.
+    ///
+    /// This overload allows continuing execution as a different workflow identified by its
+    /// string name. This is useful when the workflow type is not available at compile time.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Continue as a different workflow by name
+    /// throw try await Workflow.makeContinueAsNewError(
+    ///     workflowName: "ProcessingWorkflowV2",
+    ///     options: .init(),
+    ///     input: migratedInput
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - workflowName: The name of the workflow to continue as.
+    ///   - options: The continue-as-new options.
+    ///   - input: The input values for the new workflow execution.
+    /// - Returns: A continue-as-new error.
+    /// - Throws: When the input, headers or memo fails to convert.
+    public static func makeContinueAsNewError<each Input: Sendable>(
+        workflowName: String,
+        options: ContinueAsNewOptions = .init(),
+        input: repeat each Input
+    ) async throws -> ContinueAsNewError {
+        try await self._context.makeContinueAsNewError(
+            workflowName: workflowName,
+            options: options,
+            input: repeat each input
+        )
     }
 }
