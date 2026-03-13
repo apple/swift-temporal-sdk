@@ -53,13 +53,14 @@ public struct ContinueAsNewError: TemporalError {
 
     init(
         workflowContext: WorkflowContext,
+        workflowName: String,
         headers: [String: Api.Common.V1.Payload],
         inputs: [Api.Common.V1.Payload],
         options: ContinueAsNewOptions,
         payloadConverter: any PayloadConverter
     ) throws {
         self.stackTrace = ""
-        self.workflowName = workflowContext.info.workflowName
+        self.workflowName = workflowName
         self.inputs = inputs
         self.headers = headers
         self.taskQueue = options.taskQueue ?? workflowContext.info.taskQueue
