@@ -456,5 +456,86 @@ extension TestServerDependentTests {
                 try await handle.delete()
             }
         }
+
+        @Test(.timeLimit(.minutes(1)))
+        func createDuplicateScheduleThrowsAlreadyRunning() async throws {
+            let taskQueue = "tq-\(UUID().uuidString)"
+            let scheduleID = "sc-\(UUID().uuidString)"
+
+            try await scheduleHandle(
+                workflowType: HelloWorldScheduleWorkflow.self,
+                schedule: Schedule(
+                    action: .startWorkflow(
+                        .init(
+                            workflowType: HelloWorldScheduleWorkflow.self,
+                            options: .init(id: UUID().uuidString, taskQueue: taskQueue)
+                        )
+                    ),
+                    specification: .init()
+                ),
+                taskQueue: taskQueue,
+                id: scheduleID
+            ) { scheduleHandle in
+                // Attempt to create another schedule with the same ID
+                await #expect(throws: ScheduleAlreadyRunningError.self) {
+                    try await scheduleHandle.untypedHandle.interceptor.workflowService.createSchedule(
+                        id: scheduleID,
+                        schedule: Schedule(
+                            action: ScheduleAction.startWorkflow(
+                                .init(
+                                    workflowType: HelloWorldScheduleWorkflow.self,
+                                    options: .init(id: UUID().uuidString, taskQueue: taskQueue)
+                                )
+                            ),
+                            specification: .init()
+                        ),
+                        options: nil
+                    )
+                }
+
+                try await scheduleHandle.delete()
+            }
+        }
+
+        @Test(.timeLimit(.minutes(1)))
+        func updateScheduleWithSearchAttributes() async throws {
+            let taskQueue = "tq-\(UUID().uuidString)"
+            let searchAttrKey = SearchAttributeKey<String>.keyword("CustomScheduleKeyword")
+
+            // Ensure custom search attribute is registered
+            try await ensureSearchAttributesPresent(attributes: searchAttrKey)
+
+            try await scheduleHandle(
+                workflowType: HelloWorldScheduleWorkflow.self,
+                schedule: Schedule(
+                    action: .startWorkflow(
+                        .init(
+                            workflowType: HelloWorldScheduleWorkflow.self,
+                            options: .init(id: UUID().uuidString, taskQueue: taskQueue)
+                        )
+                    ),
+                    specification: .init()
+                ),
+                taskQueue: taskQueue
+            ) { scheduleHandle in
+                let searchAttributes = SearchAttributeCollection {
+                    $0[searchAttrKey] = "schedule-test-value"
+                }
+
+                // Update with search attributes
+                try await scheduleHandle.update { description in
+                    .init(
+                        schedule: description.schedule,
+                        searchAttributes: searchAttributes
+                    )
+                }
+
+                // Verify search attributes are persisted
+                let description = try await scheduleHandle.describe()
+                #expect(description.searchAttributes?[searchAttrKey] == "schedule-test-value")
+
+                try await scheduleHandle.delete()
+            }
+        }
     }
 }
