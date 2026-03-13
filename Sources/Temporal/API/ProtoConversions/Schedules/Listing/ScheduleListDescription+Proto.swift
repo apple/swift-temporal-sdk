@@ -18,5 +18,8 @@ extension ScheduleListDescription {
         self.info = .init(proto: proto.info)
         self.schedule = .init(proto: proto.info)
         // TODO: Memo
+        if proto.hasSearchAttributes && !proto.searchAttributes.indexedFields.isEmpty {
+            self.searchAttributes = try? SearchAttributeCollection(proto.searchAttributes)
+        }
     }
 }

@@ -30,5 +30,6 @@ public struct ScheduleListDescription: Sendable {
     /// Arbitrary key-value metadata associated with the schedule.
     public var memo: [String: any Sendable]?
 
-    // TODO: SearchAttributes
+    /// Indexed search attributes associated with the schedule for querying and filtering.
+    public var searchAttributes: SearchAttributeCollection?
 }
