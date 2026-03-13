@@ -40,6 +40,15 @@ public struct ActivityMacro: PeerMacro {
             throw MacroError(message: "Activity macro can not be applied to a member function with multiple parameters")
         }
 
+        let isDynamic = node.boolValueForArgument(named: "dynamic") ?? false
+        let hasCustomName = node.stringValueForArgument(named: "name") != nil
+
+        if isDynamic && hasCustomName {
+            throw MacroError(
+                message: "A dynamic activity cannot have a custom name. Dynamic activities handle all unregistered activity types."
+            )
+        }
+
         return []
     }
 }

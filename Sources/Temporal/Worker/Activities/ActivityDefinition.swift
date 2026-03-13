@@ -57,6 +57,22 @@ public protocol ActivityDefinition: Sendable {
     /// Defaults to the string representation of the conforming type.
     static var name: String { get }
 
+    /// Whether this activity is a dynamic activity that handles unregistered activity types.
+    ///
+    /// Dynamic activities act as catch-all handlers for activity types that are not explicitly registered
+    /// with the worker. When the worker receives a task for an unregistered activity type and a dynamic
+    /// activity is registered, the task is routed to the dynamic activity instead of failing.
+    ///
+    /// Dynamic activities must use `[TemporalRawValue]` as their ``Input`` type to receive
+    /// the raw arguments. The activity type name is available via
+    /// ``ActivityExecutionContext/info``'s ``ActivityExecutionContext/Info-swift.struct/activityType``.
+    ///
+    /// A worker can have at most one dynamic activity registered. Dynamic activities cannot have
+    /// a custom name -- the name is ignored when ``isDynamic`` returns `true`.
+    ///
+    /// Default is `false`.
+    static var isDynamic: Bool { get }
+
     /// Executes the activity with the provided input.
     ///
     /// This method contains the core logic of the activity and will be invoked by the Temporal worker
@@ -71,5 +87,9 @@ public protocol ActivityDefinition: Sendable {
 extension ActivityDefinition {
     public static var name: String {
         String(describing: self)
+    }
+
+    public static var isDynamic: Bool {
+        false
     }
 }

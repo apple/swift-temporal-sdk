@@ -27,4 +27,10 @@ extension AttributeSyntax {
         guard case let .stringSegment(value) = stringLiteral.segments.first else { return nil }
         return value.trimmed.content.text
     }
+    func boolValueForArgument(named name: String) -> Bool? {
+        guard case let .argumentList(arguments) = arguments else { return nil }
+        guard let element = arguments.first(where: { $0.label?.text == name }) else { return nil }
+        guard let boolLiteral = element.expression.as(BooleanLiteralExprSyntax.self) else { return nil }
+        return boolLiteral.literal.tokenKind == .keyword(.true)
+    }
 }

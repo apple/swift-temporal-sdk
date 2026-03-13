@@ -17,7 +17,8 @@ import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
 private struct ActivityInfo {
-    var name: String
+    var name: String?
+    var isDynamic: Bool
     var parentMethodName: String
     var parentTypeName: String
     var isStatic: Bool
@@ -27,9 +28,16 @@ private struct ActivityInfo {
     var structDefinition: DeclSyntax {
         let closureType: String = "@Sendable (\(inputType)) async throws -> \(resultType)"
 
+        let nameDecl: String
+        if isDynamic {
+            nameDecl = "static var isDynamic: Bool { true }"
+        } else {
+            nameDecl = "static var name: String { \"\(name!)\" }"
+        }
+
         return """
             struct \(raw: parentMethodName.capitalizingFirst()): ActivityDefinition {
-                static var name: String { "\(raw: name)" }
+                \(raw: nameDecl)
                 var _run: \(raw: closureType)
                 init(run: @escaping \(raw: closureType)) { self._run = run }
                 func run(input: \(raw: inputType == "" ? "Void" : inputType)) async throws -> \(raw: resultType) {
@@ -76,11 +84,18 @@ public struct ActivityContainerMacro: ExtensionMacro {
             }
 
             let methodName = functionDecl.name.trimmedDescription
-            let activityName = activityAttribute.stringValueForArgument(named: "name") ?? methodName.capitalizingFirst()
+            let isDynamic = activityAttribute.boolValueForArgument(named: "dynamic") ?? false
+            let activityName: String?
+            if isDynamic {
+                activityName = nil
+            } else {
+                activityName = activityAttribute.stringValueForArgument(named: "name") ?? methodName.capitalizingFirst()
+            }
 
             activities.append(
                 ActivityInfo(
                     name: activityName,
+                    isDynamic: isDynamic,
                     parentMethodName: methodName,
                     parentTypeName: type.trimmedDescription,
                     isStatic: functionDecl.modifiers.contains { $0.trimmedDescription == "static" },

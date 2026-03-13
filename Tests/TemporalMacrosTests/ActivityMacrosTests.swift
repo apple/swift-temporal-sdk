@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
@@ -339,5 +340,61 @@ struct ActivityMacrosTests {
 
         #expect(expectedOutput == actualOutput)
         #expect(diagnostics.isEmpty)
+    }
+
+    @Test
+    func dynamicActivity() throws {
+        let (expectedOutput, _) = try parse(
+            """
+            struct Foo {
+                static func handle(input: [TemporalRawValue]) -> TemporalRawValue { fatalError() }
+            }
+
+            extension Foo: ActivityContainer {
+                struct Activities {
+                    struct Handle: ActivityDefinition {
+                        static var isDynamic: Bool { true }
+                        var _run: @Sendable ([TemporalRawValue]) async throws -> TemporalRawValue
+                        init(run: @escaping @Sendable ([TemporalRawValue]) async throws -> TemporalRawValue) { self._run = run }
+                        func run(input: [TemporalRawValue]) async throws -> TemporalRawValue { return try await self._run(input) }
+                    }
+                    var handle: Handle { return .init(run: Foo.handle) }
+                }
+                var activities: Activities { return .init() }
+                var allActivities: [any ActivityDefinition] { return [self.activities.handle] }
+            }
+            """
+        )
+        let (actualOutput, diagnostics) = try parse(
+            """
+            @ActivityContainer
+            struct Foo {
+                @Activity(dynamic: true)
+                static func handle(input: [TemporalRawValue]) -> TemporalRawValue { fatalError() }
+            }
+            """
+        )
+
+        #expect(expectedOutput == actualOutput)
+        #expect(diagnostics.isEmpty)
+    }
+
+    @Test
+    func dynamicActivityWithCustomNameProducesError() throws {
+        let (_, diagnostics) = try parse(
+            """
+            @ActivityContainer
+            struct Foo {
+                @Activity(name: "CustomName", dynamic: true)
+                static func handle(input: [TemporalRawValue]) -> TemporalRawValue { fatalError() }
+            }
+            """
+        )
+
+        #expect(diagnostics.count == 1)
+        #expect(
+            diagnostics.first?.message
+                == "A dynamic activity cannot have a custom name. Dynamic activities handle all unregistered activity types."
+        )
     }
 }

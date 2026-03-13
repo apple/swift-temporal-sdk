@@ -318,6 +318,25 @@ private struct UniqueActivity: ActivityDefinition {
     func run(input: Void) async throws {}
 }
 
+private struct TestDynamicActivity: ActivityDefinition {
+    typealias Input = [TemporalRawValue]
+    typealias Output = String
+
+    static var isDynamic: Bool { true }
+
+    func run(input: [TemporalRawValue]) async throws -> String {
+        let activityType = ActivityExecutionContext.current!.info.activityType
+        return "handled:\(activityType):args=\(input.count)"
+    }
+}
+
+private struct ReservedNameActivity: ActivityDefinition {
+    typealias Input = Void
+    typealias Output = Void
+    static var name: String { "__temporal_reserved" }
+    func run(input: Void) async throws {}
+}
+
 @Suite()
 struct ActivityWorkerTests {
     private let bridgeWorker = MockBridgeWorker()
@@ -946,6 +965,155 @@ struct ActivityWorkerTests {
         // Verify no logs were recorded
         logHandler.entries.withLock { entries in
             #expect(entries.isEmpty)
+        }
+    }
+
+    @Test
+    static func dynamicActivityHandlesUnregisteredType() async throws {
+        let test = ActivityWorkerTests(activities: [TestDynamicActivity()])
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await test.activityWorker.run()
+            }
+
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([1])
+                    $0.start.activityType = "SomeUnregisteredActivity"
+                    $0.start.activityID = "ActivityID1"
+                    $0.start.attempt = 1
+                    $0.start.workflowType = "WorkflowType"
+                    $0.start.workflowExecution = .with {
+                        $0.runID = "RunID"
+                        $0.workflowID = "WorkflowID1"
+                    }
+                    $0.start.input = [
+                        .with {
+                            $0.data = Data(#""hello""#.utf8)
+                            $0.metadata = ["encoding": Data("json/plain".utf8)]
+                        }
+                    ]
+                }
+            )
+
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            let completion = try await activityTaskCompletionIterator.next()
+            #expect(completion!.taskToken == Data([1]))
+            // The dynamic activity returns "handled:<activityType>:args=<count>"
+            let resultString = String(data: completion!.result.completed.result.data, encoding: .utf8)
+            #expect(resultString == #""handled:SomeUnregisteredActivity:args=1""#)
+            group.cancelAll()
+        }
+    }
+
+    @Test
+    static func dynamicActivityReceivesCorrectNameAndArgs() async throws {
+        let test = ActivityWorkerTests(activities: [TestDynamicActivity()])
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await test.activityWorker.run()
+            }
+
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([1])
+                    $0.start.activityType = "CustomType"
+                    $0.start.activityID = "ActivityID1"
+                    $0.start.attempt = 1
+                    $0.start.workflowType = "WorkflowType"
+                    $0.start.workflowExecution = .with {
+                        $0.runID = "RunID"
+                        $0.workflowID = "WorkflowID1"
+                    }
+                    $0.start.input = [
+                        .with {
+                            $0.data = Data(#""arg1""#.utf8)
+                            $0.metadata = ["encoding": Data("json/plain".utf8)]
+                        },
+                        .with {
+                            $0.data = Data(#""arg2""#.utf8)
+                            $0.metadata = ["encoding": Data("json/plain".utf8)]
+                        },
+                    ]
+                }
+            )
+
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            let completion = try await activityTaskCompletionIterator.next()
+            #expect(completion!.taskToken == Data([1]))
+            let resultString = String(data: completion!.result.completed.result.data, encoding: .utf8)
+            #expect(resultString == #""handled:CustomType:args=2""#)
+            group.cancelAll()
+        }
+    }
+
+    @Test
+    static func registeredActivityTakesPrecedenceOverDynamic() async throws {
+        let test = ActivityWorkerTests(activities: [VoidActivity(), TestDynamicActivity()])
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await test.activityWorker.run()
+            }
+
+            // Send a task for the registered VoidActivity
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([1])
+                    $0.start.activityType = "VoidActivity"
+                    $0.start.activityID = "ActivityID1"
+                    $0.start.attempt = 1
+                    $0.start.workflowType = "WorkflowType"
+                    $0.start.workflowExecution = .with {
+                        $0.runID = "RunID"
+                        $0.workflowID = "WorkflowID1"
+                    }
+                }
+            )
+
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            let completion = try await activityTaskCompletionIterator.next()
+            // VoidActivity returns empty result (not the dynamic activity's string)
+            let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
+                $0.taskToken = Data([1])
+                $0.result.completed.result = .init()
+            }
+            #expect(completion == expectedCompletion)
+            group.cancelAll()
+        }
+    }
+
+    @Test
+    func reservedNamePrefixThrowsError() async throws {
+        let bridgeWorker = MockBridgeWorker()
+
+        #expect(throws: (any Error).self) {
+            let _ = try ActivityWorker(
+                worker: bridgeWorker,
+                activities: [ReservedNameActivity()],
+                taskQueue: "test-queue",
+                dataConverter: .default,
+                interceptors: [],
+                logger: .init(label: "TestLogger")
+            )
+        }
+    }
+
+    @Test
+    func duplicateDynamicActivitiesThrowsError() async throws {
+        let bridgeWorker = MockBridgeWorker()
+
+        #expect(throws: (any Error).self) {
+            let _ = try ActivityWorker(
+                worker: bridgeWorker,
+                activities: [TestDynamicActivity(), TestDynamicActivity()],
+                taskQueue: "test-queue",
+                dataConverter: .default,
+                interceptors: [],
+                logger: .init(label: "TestLogger")
+            )
         }
     }
 }
