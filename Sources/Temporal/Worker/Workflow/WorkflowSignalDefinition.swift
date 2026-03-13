@@ -65,6 +65,13 @@ public protocol WorkflowSignalDefinition<Workflow>: Sendable {
     /// users understand the signal's functionality. Defaults to `nil`.
     static var description: String? { get }
 
+    /// The policy for handling unfinished instances of this handler when the workflow exits.
+    ///
+    /// This controls what happens when the workflow completes (successfully, with failure,
+    /// cancellation, or continue-as-new) while this signal handler is still running.
+    /// Defaults to ``HandlerUnfinishedPolicy/warnAndAbandon``.
+    static var unfinishedPolicy: HandlerUnfinishedPolicy { get }
+
     /// Executes the signal handler logic.
     ///
     /// This method is called when a signal is received by the workflow.
@@ -94,5 +101,13 @@ extension WorkflowSignalDefinition {
     /// Instance property providing access to the static description.
     var description: String? {
         Self.description
+    }
+
+    /// Default implementation returning ``HandlerUnfinishedPolicy/warnAndAbandon``.
+    public static var unfinishedPolicy: HandlerUnfinishedPolicy { .warnAndAbandon }
+
+    /// Instance property providing access to the static unfinished policy.
+    var unfinishedPolicy: HandlerUnfinishedPolicy {
+        Self.unfinishedPolicy
     }
 }

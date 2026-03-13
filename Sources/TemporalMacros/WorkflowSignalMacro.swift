@@ -65,11 +65,15 @@ public struct WorkflowSignalMacro: PeerMacro {
 
         var nameDecl: DeclSyntax?
         var descriptionDecl: DeclSyntax?
+        var unfinishedPolicyDecl: DeclSyntax?
         if let name = node.stringLiteralValueForArgument(named: "name") {
             nameDecl = "\(raw: rawAccessModifier)static var name: String { \(name) }"
         }
         if let description = node.stringLiteralValueForArgument(named: "description") {
             descriptionDecl = "\(raw: rawAccessModifier)static var description: String? { \(description) }"
+        }
+        if let policyName = node.memberAccessNameForArgument(named: "unfinishedPolicy") {
+            unfinishedPolicyDecl = "\(raw: rawAccessModifier)static var unfinishedPolicy: HandlerUnfinishedPolicy { .\(raw: policyName) }"
         }
 
         let signalName = functionDecl.name.text.capitalizingFirst()
@@ -78,7 +82,7 @@ public struct WorkflowSignalMacro: PeerMacro {
             \(raw: rawAccessModifier)struct \(raw: signalName): WorkflowSignalDefinition {
                 \(raw: rawAccessModifier)typealias Input = \(input.type)
                 \(raw: rawAccessModifier)typealias Workflow = \(parentClass.name)
-                
+
                 let _run: @Sendable (Workflow, Input) async throws -> Void
                 init(run: @Sendable @escaping (Workflow, Input) async throws -> Void) {
                     self._run = run
@@ -88,6 +92,7 @@ public struct WorkflowSignalMacro: PeerMacro {
                 }
                 \(nameDecl)
                 \(descriptionDecl)
+                \(unfinishedPolicyDecl)
             }
             """,
             """

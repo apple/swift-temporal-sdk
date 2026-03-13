@@ -60,8 +60,6 @@ struct WorkflowMacrosTests {
                     func run(workflow: Workflow, input: Input) async throws {
                         try await self._run(workflow, input)
                     }
-
-
                 }
 
                 static var fooSignal: FooSignal {
@@ -83,8 +81,6 @@ struct WorkflowMacrosTests {
                     func run(workflow: Workflow, input: Input) throws -> Output {
                         try self._run(workflow, input)
                     }
-
-
                 }
 
                 static var fooQuery: FooQuery {
@@ -106,8 +102,6 @@ struct WorkflowMacrosTests {
                     func run(workflow: Workflow, input: Input) async throws -> Output {
                         try await self._run(workflow, input)
                     }
-
-
                 }
 
                 static var fooUpdate: FooUpdate {
@@ -134,7 +128,8 @@ struct WorkflowMacrosTests {
             extension Foo: WorkflowDefinition {
                 \(modifier) static var name: String { "CustomName" }
             }
-            """
+            """,
+            removeWhitespace: true
         )
         let (actualOutput, _) = try parse(
             """
@@ -147,7 +142,8 @@ struct WorkflowMacrosTests {
                 @WorkflowUpdate
                 func fooUpdate(input: String) async throws -> Int {}
             }
-            """
+            """,
+            removeWhitespace: true
         )
         #expect(expectedOutput == actualOutput)
     }
@@ -628,6 +624,113 @@ struct WorkflowMacrosTests {
                 func run(input: Void) async throws {}
             }
             """
+        )
+        #expect(expectedOutput == actualOutput)
+    }
+
+    @Test
+    func signalWithUnfinishedPolicy() throws {
+        let (expectedOutput, _) = try parse(
+            """
+            final class FooWorkflow {
+                func foo(input: String) async throws {}
+
+                struct Foo: WorkflowSignalDefinition {
+                    typealias Input = String
+                    typealias Workflow = FooWorkflow
+
+                    let _run: @Sendable (Workflow, Input) async throws -> Void
+                    init(run: @Sendable @escaping (Workflow, Input) async throws -> Void) {
+                        self._run = run
+                    }
+                    func run(workflow: Workflow, input: Input) async throws {
+                        try await self._run(workflow, input)
+                    }
+
+                    static var unfinishedPolicy: HandlerUnfinishedPolicy { .abandon }
+                }
+
+                static var foo: Foo {
+                    Foo(run: {
+                            try await $0.foo(input: $1)
+                        })
+                }
+
+                static var signals: [any WorkflowSignalDefinition<FooWorkflow>] {
+                    [Self.foo]
+                }
+
+                required init(input: Input) {}
+            }
+
+            extension FooWorkflow: WorkflowDefinition {
+            }
+            """,
+            removeWhitespace: true
+        )
+        let (actualOutput, _) = try parse(
+            """
+            @Workflow
+            final class FooWorkflow {
+                @WorkflowSignal(unfinishedPolicy: .abandon)
+                func foo(input: String) async throws {}
+            }
+            """,
+            removeWhitespace: true
+        )
+        #expect(expectedOutput == actualOutput)
+    }
+
+    @Test
+    func updateWithUnfinishedPolicy() throws {
+        let (expectedOutput, _) = try parse(
+            """
+            final class FooWorkflow {
+                func foo(input: String) async throws -> Int {}
+
+                struct Foo: WorkflowUpdateDefinition {
+                    typealias Input = String
+                    typealias Output = Int
+                    typealias Workflow = FooWorkflow
+
+                    let _run: @Sendable (Workflow, Input) async throws -> Output
+                    init(run: @Sendable @escaping (Workflow, Input) async throws -> Output) {
+                        self._run = run
+                    }
+                    func run(workflow: Workflow, input: Input) async throws -> Output {
+                        try await self._run(workflow, input)
+                    }
+
+                    static var unfinishedPolicy: HandlerUnfinishedPolicy { .abandon }
+                }
+
+                static var foo: Foo {
+                    Foo(run: {
+                            try await $0.foo(input: $1)
+                        })
+                }
+
+                static var updates: [any WorkflowUpdateDefinition<FooWorkflow>] {
+                    [Self.foo]
+                }
+
+                required init(input: Input) {}
+            }
+
+            extension FooWorkflow: WorkflowDefinition {
+            }
+            """,
+            removeWhitespace: true
+        )
+        let (actualOutput, _) = try parse(
+            """
+            @Workflow
+            final class FooWorkflow {
+                @WorkflowUpdate(unfinishedPolicy: .abandon)
+                func foo(input: String) async throws -> Int {}
+            }
+            """,
+            removeWhitespace: true
         )
         #expect(expectedOutput == actualOutput)
     }

@@ -30,4 +30,6 @@ struct LoggingKeys {
     static let activityID = TemporalTracingKeys.activityID
     static let activityName = "temporal.activity.name"
     static let activityAttempt = "temporal.activity.attempt"
+    static let unfinishedSignalHandlers = "temporal.workflow.unfinished.signals"
+    static let unfinishedUpdateHandlers = "temporal.workflow.unfinished.updates"
 }
