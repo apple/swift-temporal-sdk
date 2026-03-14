@@ -89,7 +89,7 @@ dependencies: [
 
 1. **Clone the repository**
    ```bash
-   git clone git@github.com/apple/swift-temporal-sdk.git
+   git clone git@github.com:apple/swift-temporal-sdk.git
    ```
 
 2. **Build the package**
