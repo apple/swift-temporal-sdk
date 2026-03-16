@@ -280,6 +280,22 @@ public struct ActivityExecutionContext: Sendable {
     public var cancellationReason: ActivityCancellationReason? {
         self.lookupCancellationReason()
     }
+
+    /// Detailed cancellation information derived from the cancellation reason.
+    public var cancellationDetails: ActivityCancellationDetails? {
+        switch self.cancellationReason {
+        case .unknown, .goneFromServer, .timeout, .workerShutdown, .heartbeatRecordFailure:
+            return .init(cancelRequested: false, paused: false, reset: false)
+        case .none:
+            return nil
+        case .serverRequest:
+            return .init(cancelRequested: true, paused: false, reset: false)
+        case .paused:
+            return .init(cancelRequested: false, paused: true, reset: false)
+        case .reset:
+            return .init(cancelRequested: false, paused: false, reset: true)
+        }
+    }
 }
 
 extension ActivityExecutionContext {

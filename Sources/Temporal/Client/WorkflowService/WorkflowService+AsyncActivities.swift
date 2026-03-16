@@ -29,15 +29,17 @@ extension TemporalClient.WorkflowService {
     /// - Communicate progress information back to the workflow.
     /// - Detect cancellation requests.
     ///
-    /// If the server has requested that this activity be cancelled, this method throws
-    /// ``AsyncActivityCanceledError``. Call ``AsyncActivityHandle/reportCancellation(options:)``
+    /// If the server has requested that this activity be cancelled, paused, or reset,
+    /// this method throws ``AsyncActivityCanceledError`` with
+    /// ``AsyncActivityCanceledError/details`` indicating which flags were set.
+    /// Call ``AsyncActivityHandle/reportCancellation(options:)``
     /// for proper cancellation reporting.
     ///
     /// - Parameters:
     ///   - activity: The activity reference, either by `workflowID`/`runID`/`activityID` or task token.
     ///   - options: Heartbeat options, including optional `details` and `callOptions`.
     ///   - dataConverter: Optional override for payload conversion.
-    /// - Throws: ``AsyncActivityCanceledError`` if the server requested cancellation,
+    /// - Throws: ``AsyncActivityCanceledError`` if the server requested cancellation, pause, or reset,
     ///           or any error that occurs during the heartbeat call.
     public func heartbeatAsyncActivity(
         activity: AsyncActivityHandle.Reference,
@@ -73,8 +75,14 @@ extension TemporalClient.WorkflowService {
                     },
                     callOptions: options?.callOptions
                 )
-            if response.cancelRequested {
-                throw AsyncActivityCanceledError()
+            if response.cancelRequested || response.activityPaused || response.activityReset {
+                throw AsyncActivityCanceledError(
+                    details: .init(
+                        cancelRequested: response.cancelRequested,
+                        paused: response.activityPaused,
+                        reset: response.activityReset
+                    )
+                )
             }
 
         case .taskToken(let token):
@@ -89,8 +97,14 @@ extension TemporalClient.WorkflowService {
                     },
                     callOptions: options?.callOptions
                 )
-            if response.cancelRequested {
-                throw AsyncActivityCanceledError()
+            if response.cancelRequested || response.activityPaused || response.activityReset {
+                throw AsyncActivityCanceledError(
+                    details: .init(
+                        cancelRequested: response.cancelRequested,
+                        paused: response.activityPaused,
+                        reset: response.activityReset
+                    )
+                )
             }
         }
     }

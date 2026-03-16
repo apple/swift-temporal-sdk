@@ -20,15 +20,16 @@ extension TemporalClient.InterceptedService {
     /// optionally attach progress details. The interceptor may observe, modify, or reject
     /// the call before it reaches the service layer.
     ///
-    /// If the server has requested that this activity be cancelled, the operation throws
-    /// ``AsyncActivityCanceledError``. Call ``AsyncActivityHandle/reportCancellation(options:)``
+    /// If the server has requested that this activity be cancelled, paused, or reset, the
+    /// operation throws ``AsyncActivityCanceledError`` with details indicating which flags
+    /// were set. Call ``AsyncActivityHandle/reportCancellation(options:)``
     /// afterward to acknowledge cancellation.
     ///
     /// - Parameters:
     ///   - activity: The activity reference, either by `workflowID` and `activityID` (and optional `runID`) or by task token.
     ///   - options: Heartbeat options, including optional `details` and `callOptions`.
     ///   - dataConverter: Optional override for payload conversion. If nil, uses the client configuration converter.
-    /// - Throws: ``AsyncActivityCanceledError`` if cancellation was requested, or any error raised by interceptors or service.
+    /// - Throws: ``AsyncActivityCanceledError`` if cancellation, pause, or reset was requested, or any error raised by interceptors or service.
     package func heartbeatAsyncActivity(
         activity: AsyncActivityHandle.Reference,
         options: AsyncActivityHeartbeatOptions?,
