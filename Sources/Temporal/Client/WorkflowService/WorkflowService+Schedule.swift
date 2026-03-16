@@ -15,6 +15,7 @@
 import SwiftProtobuf
 
 public import struct GRPCCore.CallOptions
+import struct GRPCCore.RPCError
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
@@ -35,28 +36,32 @@ extension TemporalClient.WorkflowService {
     ///   - schedule: The ``Schedule`` configuration defining timing, actions, and policies.
     ///   - options: Optional ``ScheduleOptions`` for metadata, initial state, and search attributes.
     /// - Returns: A conflict token used for optimistic concurrency control in subsequent updates.
-    /// - Throws: An error if the operation fails.
+    /// - Throws: ``ScheduleAlreadyRunningError`` if a schedule with the given ID already exists.
     @discardableResult
     public func createSchedule<Input: Sendable>(
         id: String,
         schedule: Schedule<Input>,
         options: ScheduleOptions?
     ) async throws -> Data {
-        let response: Api.Workflowservice.V1.CreateScheduleResponse = try await self.client.unary(
-            method: Api.Workflowservice.V1.WorkflowService.Method.CreateSchedule.descriptor,
-            request: Api.Workflowservice.V1.CreateScheduleRequest(
-                namespace: self.configuration.namespace,
-                identity: self.configuration.identity,
-                requestID: UUID().uuidString,
-                scheduleID: id,
-                schedule: schedule,
-                scheduleOptions: options,
-                dataConverter: self.configuration.dataConverter
-            ),
-            callOptions: options?.callOptions
-        )
+        do {
+            let response: Api.Workflowservice.V1.CreateScheduleResponse = try await self.client.unary(
+                method: Api.Workflowservice.V1.WorkflowService.Method.CreateSchedule.descriptor,
+                request: Api.Workflowservice.V1.CreateScheduleRequest(
+                    namespace: self.configuration.namespace,
+                    identity: self.configuration.identity,
+                    requestID: UUID().uuidString,
+                    scheduleID: id,
+                    schedule: schedule,
+                    scheduleOptions: options,
+                    dataConverter: self.configuration.dataConverter
+                ),
+                callOptions: options?.callOptions
+            )
 
-        return response.conflictToken
+            return response.conflictToken
+        } catch let error as RPCError where error.code == .alreadyExists {
+            throw ScheduleAlreadyRunningError(cause: error)
+        }
     }
 
     /// Retrieves information about an existing workflow schedule.
@@ -206,7 +211,9 @@ extension TemporalClient.WorkflowService {
                 // Set the `conflictToken` once the Temporal behavior is adjusted.
                 //$0.conflictToken = description.conflictToken
 
-                // TODO: SearchAttributes
+                if let searchAttributes = scheduleUpdate.searchAttributes {
+                    $0.searchAttributes = .init(searchAttributes)
+                }
             },
             callOptions: callOptions
         )
