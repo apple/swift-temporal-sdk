@@ -288,6 +288,10 @@ struct WorkflowInstance: Sendable {
                 )
             }
 
+            // Warn about unfinished handlers when the workflow completes and we are
+            // not replaying (to avoid duplicate warnings during replay).
+            self.warnUnfinishedHandlers()
+
             switch workflowResult {
             case .success(let output):
                 self.logger.trace("Workflow finished")
@@ -492,7 +496,11 @@ struct WorkflowInstance: Sendable {
                 return
             }
 
-            await self.runMessageHandler {
+            await self.runMessageHandler(
+                name: signal.name,
+                updateId: nil,
+                unfinishedPolicy: signal.unfinishedPolicy
+            ) {
                 await self.runSignal(
                     signal: signal,
                     workflow: workflow,
@@ -566,7 +574,11 @@ struct WorkflowInstance: Sendable {
         group.addTask(executorPreference: self.executor) {
             let workflow = workflow.wrapped
             if queryWorkflow.queryType == "__temporal_workflow_metadata" {
-                await self.runMessageHandler {
+                await self.runMessageHandler(
+                    name: queryWorkflow.queryType,
+                    updateId: nil,
+                    unfinishedPolicy: .abandon
+                ) {
                     do {
                         let metadata = workflowMetadata(type: Workflow.self, context: workflowContext)
                         // Use the default data converter as this query will be
@@ -607,7 +619,11 @@ struct WorkflowInstance: Sendable {
                 return
             }
 
-            await self.runMessageHandler {
+            await self.runMessageHandler(
+                name: query.name,
+                updateId: nil,
+                unfinishedPolicy: .abandon
+            ) {
                 await self.runQuery(
                     id: queryWorkflow.queryID,
                     query: query,
@@ -763,7 +779,11 @@ struct WorkflowInstance: Sendable {
                 return
             }
 
-            await self.runMessageHandler {
+            await self.runMessageHandler(
+                name: update.name,
+                updateId: updateWorkflow.protocolInstanceID,
+                unfinishedPolicy: update.unfinishedPolicy
+            ) {
                 await self.runUpdate(
                     id: updateWorkflow.protocolInstanceID,
                     runValidator: updateWorkflow.runValidator,
@@ -913,10 +933,70 @@ struct WorkflowInstance: Sendable {
 
     // MARK: Handlers
 
-    private func runMessageHandler(body: () async -> Void) async {
-        self.stateMachine.handlerStarted()
+    /// Logs a warning if there are still running handlers with the ``HandlerUnfinishedPolicy/warnAndAbandon`` policy
+    /// when the workflow's run method completes.
+    private func warnUnfinishedHandlers() {
+        let isReplaying = Self.$isOnWorkflowInstance.withValue(true) {
+            self.stateMachine.isReplaying()
+        }
+        guard !isReplaying else { return }
+
+        let warnEntries = Self.$isOnWorkflowInstance.withValue(true) {
+            self.stateMachine.unfinishedWarnHandlerEntries()
+        }
+        guard !warnEntries.isEmpty else { return }
+
+        // Separate signals (updateId == nil) from updates (updateId != nil)
+        let signalEntries = warnEntries.filter { $0.updateId == nil }
+        let updateEntries = warnEntries.filter { $0.updateId != nil }
+
+        // Build metadata
+        var metadata: Logger.Metadata = [:]
+
+        if !signalEntries.isEmpty {
+            var signalCounts: [String: Int] = [:]
+            for entry in signalEntries {
+                signalCounts[entry.name, default: 0] += 1
+            }
+            let signalParts =
+                signalCounts
+                .sorted(by: { $0.key < $1.key })
+                .map { "{\"name\":\"\($0.key)\",\"count\":\($0.value)}" }
+            metadata[LoggingKeys.unfinishedSignalHandlers] = "[\(signalParts.joined(separator: ","))]"
+        }
+
+        if !updateEntries.isEmpty {
+            let updateParts =
+                updateEntries
+                .sorted(by: { $0.name < $1.name })
+                .map { "{\"name\":\"\($0.name)\",\"id\":\"\($0.updateId ?? "")\"}" }
+            metadata[LoggingKeys.unfinishedUpdateHandlers] = "[\(updateParts.joined(separator: ","))]"
+        }
+
+        let message: Logger.Message =
+            """
+            Workflow finished while signal or update handlers are still running. \
+            This may have interrupted work that a handler was doing, and the client that sent the \
+            update may receive a 'workflow execution already completed' error. \
+            You can wait for all handlers to finish by using \
+            `try await Workflow.condition { Workflow.allHandlersFinished }`. \
+            Alternatively, to suppress this warning for a specific handler, set its unfinished \
+            policy to `.abandon`, for example: \
+            `@WorkflowSignal(unfinishedPolicy: .abandon)`.
+            """
+
+        self.logger.info(message, metadata: metadata)
+    }
+
+    private func runMessageHandler(
+        name: String,
+        updateId: String?,
+        unfinishedPolicy: HandlerUnfinishedPolicy,
+        body: () async -> Void
+    ) async {
+        self.stateMachine.handlerStarted(name: name, updateId: updateId, unfinishedPolicy: unfinishedPolicy)
         await body()
-        self.stateMachine.handlerFinished()
+        self.stateMachine.handlerFinished(name: name, updateId: updateId)
     }
 
     // MARK: Top level error handling
