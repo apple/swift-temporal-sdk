@@ -444,4 +444,54 @@ struct DefaultFailureConverterTests {
         #expect(convertedError.type == "TestError")
         #expect(convertedError.isNonRetryable == true)
     }
+
+    @Test
+    func applicationErrorCategoryRoundTrips() async throws {
+        let applicationError = ApplicationError(
+            message: "Benign error",
+            type: "SomeType",
+            category: .benign
+        )
+
+        let failureConverter = DefaultFailureConverter()
+        let jsonPayloadConverter = JSONPayloadConverter()
+
+        let failure = failureConverter.convertError(
+            applicationError,
+            payloadConverter: jsonPayloadConverter
+        )
+
+        let error = failureConverter.convertFailure(
+            failure,
+            payloadConverter: jsonPayloadConverter
+        )
+
+        let convertedError = try #require(error as? ApplicationError)
+        #expect(convertedError.message == "Benign error")
+        #expect(convertedError.type == "SomeType")
+        #expect(convertedError.category == .benign)
+    }
+
+    @Test
+    func applicationErrorCategoryDefaultsToUnspecified() async throws {
+        let applicationError = ApplicationError(
+            message: "Default category"
+        )
+
+        let failureConverter = DefaultFailureConverter()
+        let jsonPayloadConverter = JSONPayloadConverter()
+
+        let failure = failureConverter.convertError(
+            applicationError,
+            payloadConverter: jsonPayloadConverter
+        )
+
+        let error = failureConverter.convertFailure(
+            failure,
+            payloadConverter: jsonPayloadConverter
+        )
+
+        let convertedError = try #require(error as? ApplicationError)
+        #expect(convertedError.category == .unspecified)
+    }
 }

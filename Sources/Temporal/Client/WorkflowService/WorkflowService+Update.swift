@@ -15,6 +15,7 @@
 import SwiftProtobuf
 
 public import struct GRPCCore.CallOptions
+import struct GRPCCore.RPCError
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
@@ -178,6 +179,12 @@ extension TemporalClient.WorkflowService {
                     request: request,
                     callOptions: callOptions
                 )
+            } catch let rpcError as RPCError
+                where rpcError.code == .deadlineExceeded || rpcError.code == .cancelled
+            {
+                throw WorkflowUpdateRPCTimeoutOrCanceledError(cause: rpcError)
+            } catch is CancellationError {
+                throw WorkflowUpdateRPCTimeoutOrCanceledError()
             } catch {
                 throw error
             }
@@ -287,8 +294,13 @@ extension TemporalClient.WorkflowService {
                         break
                     }
                 }
+            } catch let rpcError as RPCError
+                where rpcError.code == .deadlineExceeded || rpcError.code == .cancelled
+            {
+                throw WorkflowUpdateRPCTimeoutOrCanceledError(cause: rpcError)
+            } catch is CancellationError {
+                throw WorkflowUpdateRPCTimeoutOrCanceledError()
             } catch {
-                // TODO: We need to convert out deadline exceeds and cancels here
                 throw error
             }
         }

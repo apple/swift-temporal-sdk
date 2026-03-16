@@ -41,6 +41,9 @@ public struct ApplicationError: TemporalFailureError {
     /// Delay duration before the next retry attempt.
     public var nextRetryDelay: Duration?
 
+    /// The error category.
+    public var category: Api.Enums.V1.ApplicationErrorCategory
+
     /// Initializes a new application error.
     ///
     /// - Parameters:
@@ -51,6 +54,7 @@ public struct ApplicationError: TemporalFailureError {
     ///   - type: The string type of the error if any. Defaults to `nil`.
     ///   - isNonRetryable: Boolean indicating wehter the error was set as non-retry. Defaults to `false`.
     ///   - nextRetryDelay: Delay duration before the next retry attempt. Defaults to `nil`.
+    ///   - category: The error category. Defaults to `.unspecified`.
     public init(
         message: String,
         cause: (any Error)? = nil,
@@ -58,7 +62,8 @@ public struct ApplicationError: TemporalFailureError {
         details: [Api.Common.V1.Payload] = [],
         type: String? = nil,
         isNonRetryable: Bool = false,
-        nextRetryDelay: Duration? = nil
+        nextRetryDelay: Duration? = nil,
+        category: Api.Enums.V1.ApplicationErrorCategory = .unspecified
     ) {
         self.message = message
         self.cause = cause
@@ -67,5 +72,6 @@ public struct ApplicationError: TemporalFailureError {
         self.type = type
         self.isNonRetryable = isNonRetryable
         self.nextRetryDelay = nextRetryDelay
+        self.category = category
     }
 }
