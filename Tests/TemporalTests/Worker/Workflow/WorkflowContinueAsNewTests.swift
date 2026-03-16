@@ -90,5 +90,58 @@ extension TestServerDependentTests {
             )
             #expect(result.count == interceptor.counter.withLock { $0 })
         }
+
+        // MARK: - Continue as different workflow type
+
+        @Workflow
+        final class ContinueAsDifferentTypedWorkflow {
+            func run(input: String) async throws -> String {
+                throw try await Workflow.makeContinueAsNewError(
+                    workflowType: ContinueAsNewTargetWorkflow.self,
+                    input: input + "-continued"
+                )
+            }
+        }
+
+        @Workflow
+        final class ContinueAsDifferentUntypedWorkflow {
+            func run(input: String) async throws -> String {
+                throw try await Workflow.makeContinueAsNewError(
+                    workflowName: ContinueAsNewTargetWorkflow.name,
+                    input: input + "-continued"
+                )
+            }
+        }
+
+        @Workflow
+        final class ContinueAsNewTargetWorkflow {
+            func run(input: String) async throws -> String {
+                return input + "-done"
+            }
+        }
+
+        @Test
+        func continueAsNewToDifferentWorkflowType() async throws {
+            let result: String = try await workflowHandle(
+                for: ContinueAsDifferentTypedWorkflow.self,
+                input: "hello",
+                moreWorkflows: [ContinueAsNewTargetWorkflow.self]
+            ) { handle in
+                return try await handle.untypedHandle.result(resultTypes: String.self)
+            }
+            #expect(result == "hello-continued-done")
+        }
+
+        @Test
+        func continueAsNewToDifferentWorkflowByName() async throws {
+            let result: String = try await workflowHandle(
+                for: ContinueAsDifferentUntypedWorkflow.self,
+                input: "hello",
+                moreWorkflows: [ContinueAsNewTargetWorkflow.self]
+            ) { handle in
+                return try await handle.untypedHandle.result(resultTypes: String.self)
+            }
+            #expect(result == "hello-continued-done")
+        }
     }
 }

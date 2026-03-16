@@ -331,12 +331,14 @@ package struct WorkflowContext: Sendable {
     // MARK: ContinueAsNew
 
     func makeContinueAsNewError<each Input: Sendable>(
+        workflowName: String,
         options: ContinueAsNewOptions,
         input: repeat each Input
     ) async throws -> ContinueAsNewError {
         try await self.implementation.makeContinueAsNewError(
             context: self,
             input: MakeContinueAsNewErrorInput<repeat each Input>(
+                workflowName: workflowName,
                 options: options,
                 headers: [:],
                 input: (repeat each input)
@@ -447,6 +449,7 @@ extension WorkflowContext.Implementation {
 
             return try ContinueAsNewError(
                 workflowContext: context,
+                workflowName: input.workflowName,
                 headers: input.headers,
                 inputs: inputPayloads,
                 options: input.options,
