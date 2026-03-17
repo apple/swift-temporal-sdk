@@ -63,6 +63,9 @@ extension TestServerDependentTests {
             #expect(info.lastResult == nil)
             #expect(info.parent == nil)
             #expect(info.retryPolicy == nil)
+
+            #expect(!info.firstExecutionRunId.isEmpty)
+            #expect(info.priority == nil)
         }
     }
 }
@@ -146,6 +149,7 @@ extension WorkflowInfo: Codable {
         case runID, continuedRunID, taskQueue, namespace, cronSchedule, headers
         case runTimeout, taskTimeout, executionTimeout
         case lastFailure, lastResult, parent, retryPolicy
+        case firstExecutionRunId, priority, root
     }
     func encode(to encoder: any Swift.Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
@@ -166,6 +170,9 @@ extension WorkflowInfo: Codable {
         try container.encodeIfPresent(parent, forKey: .parent)
         try container.encodeIfPresent(retryPolicy, forKey: .retryPolicy)
         try container.encodeIfPresent(headers, forKey: .headers)
+        try container.encode(firstExecutionRunId, forKey: .firstExecutionRunId)
+        try container.encodeIfPresent(priority, forKey: .priority)
+        try container.encodeIfPresent(root, forKey: .root)
         // NOTE: This currently doesn't encode lastFailure.
     }
 
@@ -180,7 +187,8 @@ extension WorkflowInfo: Codable {
             runID: container.decode(String.self, forKey: .runID),
             taskQueue: container.decode(String.self, forKey: .taskQueue),
             namespace: container.decode(String.self, forKey: .namespace),
-            headers: container.decode([String: Api.Common.V1.Payload].self, forKey: .headers)
+            headers: container.decode([String: Api.Common.V1.Payload].self, forKey: .headers),
+            firstExecutionRunId: container.decodeIfPresent(String.self, forKey: .firstExecutionRunId)
         )
         self.continuedRunID = try container.decodeIfPresent(String.self, forKey: .continuedRunID)
         self.cronSchedule = try container.decodeIfPresent(String.self, forKey: .cronSchedule)
@@ -190,5 +198,45 @@ extension WorkflowInfo: Codable {
         self.lastResult = try container.decodeIfPresent([TemporalRawValue].self, forKey: .lastResult)
         self.parent = try container.decodeIfPresent(Parent.self, forKey: .parent)
         self.retryPolicy = try container.decodeIfPresent(RetryPolicy.self, forKey: .retryPolicy)
+        self.priority = try container.decodeIfPresent(Priority.self, forKey: .priority)
+        self.root = try container.decodeIfPresent(RootInfo.self, forKey: .root)
+    }
+}
+
+extension Priority: Codable {
+    enum CodingKeys: String, CodingKey {
+        case priorityKey, fairnessKey, fairnessWeight
+    }
+    func encode(to encoder: any Swift.Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(priorityKey, forKey: .priorityKey)
+        try container.encodeIfPresent(fairnessKey, forKey: .fairnessKey)
+        try container.encodeIfPresent(fairnessWeight, forKey: .fairnessWeight)
+    }
+    init(from decoder: any Swift.Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self = .init(
+            priorityKey: try container.decodeIfPresent(Int.self, forKey: .priorityKey),
+            fairnessKey: try container.decodeIfPresent(String.self, forKey: .fairnessKey),
+            fairnessWeight: try container.decodeIfPresent(Float.self, forKey: .fairnessWeight)
+        )
+    }
+}
+
+extension RootInfo: Codable {
+    enum CodingKeys: String, CodingKey {
+        case workflowID, runID
+    }
+    func encode(to encoder: any Swift.Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(workflowID, forKey: .workflowID)
+        try container.encode(runID, forKey: .runID)
+    }
+    init(from decoder: any Swift.Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self = try .init(
+            workflowID: container.decode(String.self, forKey: .workflowID),
+            runID: container.decode(String.self, forKey: .runID)
+        )
     }
 }

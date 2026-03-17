@@ -53,12 +53,37 @@ public import struct Foundation.Date
 /// - Important: This type is only valid for use within the scope of a workflow execution.
 public struct Workflow: Sendable {
     @TaskLocal package static var context: WorkflowContext?
+    @TaskLocal package static var _currentUpdateInfo: WorkflowUpdateInfo?
 
     private static var _context: WorkflowContext {
         guard let context = context else {
             fatalError("Workflow context is not available. This API can only be used within a workflow execution.")
         }
         return context
+    }
+
+    /// A boolean value that indicates whether the current code is executing within a workflow context.
+    public static var inWorkflow: Bool {
+        context != nil
+    }
+
+    /// Information about the currently executing update, if any.
+    ///
+    /// Returns the update ID and name when called from within an update handler
+    /// or update validator. Returns `nil` when called outside of an update context
+    /// (e.g., from the main workflow run method, signal handlers, or query handlers).
+    public static var currentUpdateInfo: WorkflowUpdateInfo? {
+        _currentUpdateInfo
+    }
+
+    /// The current worker deployment version for this task.
+    ///
+    /// May be unset if the task was completed by a worker without a deployment version or build id.
+    /// If this worker is the one executing this task for the first time and has a deployment version set,
+    /// then its ID will be used. This value may change over the lifetime of the workflow run, but is
+    /// deterministic and safe to use for branching.
+    public static var currentDeploymentVersion: DeploymentVersion? {
+        self._context.currentDeploymentVersion
     }
 
     /// Information about the current workflow execution.

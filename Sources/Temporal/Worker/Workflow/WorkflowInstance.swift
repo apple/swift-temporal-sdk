@@ -1089,13 +1089,17 @@ extension WorkflowInstance.Implementation {
         input: HandleUpdateInput<Update>
     ) async throws -> Update.Output {
         try await Temporal.Workflow.$context.withValue(context) {
-            try await WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
-                try await intercept((any WorkflowInboundInterceptor).handleUpdate, input: input) { input in
-                    try await WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
-                        try await input.definition.run(
-                            workflow: workflow,
-                            input: input.input
-                        )
+            try await Temporal.Workflow.$_currentUpdateInfo.withValue(
+                WorkflowUpdateInfo(id: input.id, name: input.name)
+            ) {
+                try await WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
+                    try await intercept((any WorkflowInboundInterceptor).handleUpdate, input: input) { input in
+                        try await WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
+                            try await input.definition.run(
+                                workflow: workflow,
+                                input: input.input
+                            )
+                        }
                     }
                 }
             }
@@ -1107,10 +1111,14 @@ extension WorkflowInstance.Implementation {
         input: HandleUpdateInput<Update>
     ) throws {
         try Temporal.Workflow.$context.withValue(context) {
-            try WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
-                try intercept((any WorkflowInboundInterceptor).validateUpdate, input: input) { input in
-                    try WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
-                        try input.definition.validateInput(input.input)
+            try Temporal.Workflow.$_currentUpdateInfo.withValue(
+                WorkflowUpdateInfo(id: input.id, name: input.name)
+            ) {
+                try WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
+                    try intercept((any WorkflowInboundInterceptor).validateUpdate, input: input) { input in
+                        try WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
+                            try input.definition.validateInput(input.input)
+                        }
                     }
                 }
             }

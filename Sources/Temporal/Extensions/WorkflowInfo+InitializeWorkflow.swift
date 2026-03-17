@@ -68,5 +68,21 @@ extension WorkflowInfo {
         if initializeWorkflow.hasRetryPolicy {
             self.retryPolicy = RetryPolicy(retryPolicy: initializeWorkflow.retryPolicy)
         }
+        self.firstExecutionRunId = initializeWorkflow.firstExecutionRunID
+        if initializeWorkflow.hasPriority {
+            let protoPriority = initializeWorkflow.priority
+            self.priority = Priority(
+                priorityKey: protoPriority.priorityKey != 0 ? Int(protoPriority.priorityKey) : nil,
+                fairnessKey: !protoPriority.fairnessKey.isEmpty ? protoPriority.fairnessKey : nil,
+                fairnessWeight: protoPriority.fairnessWeight != 0 ? protoPriority.fairnessWeight : nil
+            )
+        }
+        if initializeWorkflow.hasRootWorkflow {
+            let rootWorkflow = initializeWorkflow.rootWorkflow
+            self.root = RootInfo(
+                workflowID: rootWorkflow.workflowID,
+                runID: rootWorkflow.runID
+            )
+        }
     }
 }

@@ -547,6 +547,10 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         return self.stateMachine.currentHistoryLength()
     }
 
+    func currentDeploymentVersion() -> DeploymentVersion? {
+        return self.stateMachine.currentDeploymentVersion()
+    }
+
     // MARK: Memo
 
     func memo() -> [String: TemporalRawValue] {

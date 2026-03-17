@@ -139,6 +139,25 @@ public struct WorkflowInfo: Sendable {
     /// `nil` indicates no custom retry policy is configured.
     public var retryPolicy: RetryPolicy?
 
+    /// The very first run ID this workflow ever had, following continuation chains.
+    ///
+    /// This value remains the same across all continue-as-new executions
+    /// and retries of the workflow.
+    public var firstExecutionRunId: String
+
+    /// The priority configuration for this workflow execution.
+    ///
+    /// Priority controls relative ordering of task processing when tasks are
+    /// backlogged in a queue. `nil` indicates no priority was set.
+    public var priority: Priority?
+
+    /// Information about the root workflow execution.
+    ///
+    /// The root workflow is the top-level workflow in a chain of child workflows.
+    /// A workflow without a parent is its own root. `nil` if root information
+    /// was not provided.
+    public var root: RootInfo?
+
     /// Creates a new workflow information instance.
     ///
     /// - Parameters:
@@ -151,6 +170,7 @@ public struct WorkflowInfo: Sendable {
     ///   - taskQueue: The task queue name.
     ///   - namespace: The Temporal namespace.
     ///   - headers: Associated headers.
+    ///   - firstExecutionRunId: The first run ID of this workflow, defaults to the provided `runID`.
     public init(
         attempt: Int,
         startTime: Date,
@@ -160,7 +180,8 @@ public struct WorkflowInfo: Sendable {
         runID: String,
         taskQueue: String,
         namespace: String,
-        headers: [String: Api.Common.V1.Payload]
+        headers: [String: Api.Common.V1.Payload],
+        firstExecutionRunId: String? = nil
     ) {
         self.attempt = attempt
         self.startTime = startTime
@@ -171,6 +192,7 @@ public struct WorkflowInfo: Sendable {
         self.taskQueue = taskQueue
         self.namespace = namespace
         self.headers = headers
+        self.firstExecutionRunId = firstExecutionRunId ?? runID
     }
 }
 

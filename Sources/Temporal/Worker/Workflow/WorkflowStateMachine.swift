@@ -136,6 +136,9 @@ struct WorkflowStateMachine: ~Copyable {
             /// The current details of the workflow execution.
             var currentDetails: String?
 
+            /// The current deployment version for this task.
+            var currentDeploymentVersion: DeploymentVersion?
+
             /// The random number generator.
             var randomNumberGenerator: PCGRandomNumberGenerator
         }
@@ -171,6 +174,7 @@ struct WorkflowStateMachine: ~Copyable {
             memo: [:],
             searchAttributes: .init(),
             currentDetails: nil,
+            currentDeploymentVersion: nil,
             randomNumberGenerator: .init(seed: 1)
         )
     )
@@ -266,6 +270,15 @@ struct WorkflowStateMachine: ~Copyable {
             active.continueAsNewSuggested = activation.continueAsNewSuggested
             active.currentHistoryLength = Int(activation.historyLength)
             active.currentHistorySize = Int(activation.historySizeBytes)
+            if activation.hasDeploymentVersionForCurrentTask {
+                let version = activation.deploymentVersionForCurrentTask
+                active.currentDeploymentVersion = DeploymentVersion(
+                    deploymentName: version.deploymentName,
+                    buildId: version.buildID
+                )
+            } else {
+                active.currentDeploymentVersion = nil
+            }
             self = .init(state: .active(active))
         }
     }
@@ -929,6 +942,12 @@ struct WorkflowStateMachine: ~Copyable {
     func currentHistoryLength() -> Int {
         switch state {
         case .active(let active): active.currentHistoryLength
+        }
+    }
+
+    func currentDeploymentVersion() -> DeploymentVersion? {
+        switch state {
+        case .active(let active): active.currentDeploymentVersion
         }
     }
 

@@ -104,6 +104,11 @@ package struct WorkflowContext: Sendable {
         self.stateMachine.currentHistorySize()
     }
 
+    /// The current worker deployment version for this task.
+    var currentDeploymentVersion: DeploymentVersion? {
+        self.stateMachine.currentDeploymentVersion()
+    }
+
     package init(
         stateMachine: WorkflowStateMachineStorage,
         workflowInfo: WorkflowInfo,
