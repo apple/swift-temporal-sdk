@@ -22,8 +22,8 @@ extension AsyncActivityHandle {
     ///
     /// - Parameter options: Optional heartbeat configuration, including progress details
     ///   and gRPC call options.
-    /// - Throws: ``AsyncActivityCanceledError`` if the service has requested that the activity be cancelled.
-    ///           This should be caught by the caller, and ``reportCancellation(options:)`` invoked for proper handling.
+    /// - Throws: ``AsyncActivityCanceledError`` if the service has requested that the activity be cancelled,
+    ///           paused, or reset. The error's ``AsyncActivityCanceledError/details`` indicate which flags were set.
     public func heartbeat(options: AsyncActivityHeartbeatOptions? = nil) async throws {
         try await self.interceptor.heartbeatAsyncActivity(
             .init(

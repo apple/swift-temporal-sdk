@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Error thrown from ``AsyncActivityHandle/heartbeat(options:)`` or ``TemporalClient/WorkflowService-swift.struct/heartbeatAsyncActivity(activity:options:dataConverter:)`` if
-/// workflow has requested that an activity be cancelled.
+/// the server indicates the activity has been cancelled, paused, or reset.
 public struct AsyncActivityCanceledError: TemporalError {
     /// The error's message.
     public var message: String = "Activity cancelled"
@@ -23,4 +23,14 @@ public struct AsyncActivityCanceledError: TemporalError {
 
     /// The stack trace of the current error.
     public var stackTrace: String = ""
+
+    /// Details about why the activity was cancelled.
+    public var details: ActivityCancellationDetails
+
+    /// Creates an ``AsyncActivityCanceledError`` with the given cancellation details.
+    ///
+    /// - Parameter details: The cancellation details describing why the activity was cancelled.
+    public init(details: ActivityCancellationDetails) {
+        self.details = details
+    }
 }
