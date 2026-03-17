@@ -110,7 +110,8 @@ public struct DefaultFailureConverter: FailureConverter {
                 details: application.details.payloads,
                 type: application.type,
                 isNonRetryable: application.nonRetryable,
-                nextRetryDelay: .init(protobufDuration: application.nextRetryDelay)
+                nextRetryDelay: .init(protobufDuration: application.nextRetryDelay),
+                category: application.category
             )
         case .canceledFailureInfo(let cancelled):
             return CanceledError(
@@ -206,6 +207,7 @@ public struct DefaultFailureConverter: FailureConverter {
                     if let nextRetryDelay = applicationError.nextRetryDelay {
                         $0.nextRetryDelay = .init(duration: nextRetryDelay)
                     }
+                    $0.category = applicationError.category
                 }
             )
         case let cancelledError as CanceledError:
