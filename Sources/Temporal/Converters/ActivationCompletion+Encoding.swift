@@ -62,7 +62,10 @@ extension Coresdk.WorkflowCompletion.WorkflowActivationCompletion {
                     try await self.encode(payloads: &continueAsNewWorkflowExecution.arguments, payloadCodec: payloadCodec)
                     try await self.encode(payloadDictionary: &continueAsNewWorkflowExecution.memo, payloadCodec: payloadCodec)
                     try await self.encode(payloadDictionary: &continueAsNewWorkflowExecution.headers, payloadCodec: payloadCodec)
-                    try await self.encode(payloadDictionary: &continueAsNewWorkflowExecution.searchAttributes, payloadCodec: payloadCodec)
+                    try await self.encode(
+                        payloadDictionary: &continueAsNewWorkflowExecution.searchAttributes.indexedFields,
+                        payloadCodec: payloadCodec
+                    )
 
                     self.successful.commands[index].variant = .continueAsNewWorkflowExecution(continueAsNewWorkflowExecution)
 
@@ -70,7 +73,10 @@ extension Coresdk.WorkflowCompletion.WorkflowActivationCompletion {
                     try await self.encode(payloads: &startChildWorkflowExecution.input, payloadCodec: payloadCodec)
                     try await self.encode(payloadDictionary: &startChildWorkflowExecution.memo, payloadCodec: payloadCodec)
                     try await self.encode(payloadDictionary: &startChildWorkflowExecution.headers, payloadCodec: payloadCodec)
-                    try await self.encode(payloadDictionary: &startChildWorkflowExecution.searchAttributes, payloadCodec: payloadCodec)
+                    try await self.encode(
+                        payloadDictionary: &startChildWorkflowExecution.searchAttributes.indexedFields,
+                        payloadCodec: payloadCodec
+                    )
 
                     self.successful.commands[index].variant = .startChildWorkflowExecution(startChildWorkflowExecution)
 
@@ -87,7 +93,10 @@ extension Coresdk.WorkflowCompletion.WorkflowActivationCompletion {
                     self.successful.commands[index].variant = .scheduleLocalActivity(scheduleLocalActivity)
 
                 case .upsertWorkflowSearchAttributes(var upsertWorkflowSearchAttributes):
-                    try await self.encode(payloadDictionary: &upsertWorkflowSearchAttributes.searchAttributes, payloadCodec: payloadCodec)
+                    try await self.encode(
+                        payloadDictionary: &upsertWorkflowSearchAttributes.searchAttributes.indexedFields,
+                        payloadCodec: payloadCodec
+                    )
 
                     self.successful.commands[index].variant = .upsertWorkflowSearchAttributes(upsertWorkflowSearchAttributes)
 

@@ -261,7 +261,7 @@ package struct BridgeClient: ~Copyable, Sendable {
         grpcCallback: TemporalCoreClientGrpcOverrideCallback,
         grpcCallbackUserData: GrpcOverrideContext,
         configuration: TemporalWorker.Configuration,
-        _ body: (UnsafePointer<TemporalCoreClientOptions>) throws -> T
+        _ body: (UnsafePointer<TemporalCoreConnectionOptions>) throws -> T
     ) throws -> T {
         // Pass in user data fro grpc override
         let grpcCallbackUserDataPointer = Unmanaged.passUnretained(grpcCallbackUserData).toOpaque()
@@ -272,7 +272,7 @@ package struct BridgeClient: ~Copyable, Sendable {
                     // has to be a valid URL, otherwise input validation fails
                     try "https://dummy.temporal.com".withByteArrayRef { dummy_target_url in
                         try "".withByteArrayRef { empty_string in
-                            let options = TemporalCoreClientOptions(
+                            let options = TemporalCoreConnectionOptions(
                                 target_url: dummy_target_url,  // Dummy URL as gRPC connection is handled by Swift
                                 client_name: client_name,
                                 client_version: client_version,

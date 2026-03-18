@@ -718,10 +718,6 @@ extension Api.Enums.V1 {
 
     /// Workflow's count of completed plus in-flight updates is too large.
     case tooManyUpdates // = 3
-
-    /// Workflow's Target Worker Deployment Version is different from its
-    /// Current Version and the workflow is versioned.
-    case targetWorkerDeploymentVersionChanged // = 4
     case UNRECOGNIZED(Int)
 
     public init() {
@@ -734,7 +730,6 @@ extension Api.Enums.V1 {
       case 1: self = .historySizeTooLarge
       case 2: self = .tooManyHistoryEvents
       case 3: self = .tooManyUpdates
-      case 4: self = .targetWorkerDeploymentVersionChanged
       default: self = .UNRECOGNIZED(rawValue)
       }
     }
@@ -745,7 +740,6 @@ extension Api.Enums.V1 {
       case .historySizeTooLarge: return 1
       case .tooManyHistoryEvents: return 2
       case .tooManyUpdates: return 3
-      case .targetWorkerDeploymentVersionChanged: return 4
       case .UNRECOGNIZED(let i): return i
       }
     }
@@ -756,7 +750,6 @@ extension Api.Enums.V1 {
       .historySizeTooLarge,
       .tooManyHistoryEvents,
       .tooManyUpdates,
-      .targetWorkerDeploymentVersionChanged,
     ]
 
   }
@@ -813,5 +806,5 @@ extension Api.Enums.V1.ContinueAsNewVersioningBehavior: SwiftProtobuf._ProtoName
 }
 
 extension Api.Enums.V1.SuggestContinueAsNewReason: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0SUGGEST_CONTINUE_AS_NEW_REASON_UNSPECIFIED\0\u{1}SUGGEST_CONTINUE_AS_NEW_REASON_HISTORY_SIZE_TOO_LARGE\0\u{1}SUGGEST_CONTINUE_AS_NEW_REASON_TOO_MANY_HISTORY_EVENTS\0\u{1}SUGGEST_CONTINUE_AS_NEW_REASON_TOO_MANY_UPDATES\0\u{1}SUGGEST_CONTINUE_AS_NEW_REASON_TARGET_WORKER_DEPLOYMENT_VERSION_CHANGED\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0SUGGEST_CONTINUE_AS_NEW_REASON_UNSPECIFIED\0\u{1}SUGGEST_CONTINUE_AS_NEW_REASON_HISTORY_SIZE_TOO_LARGE\0\u{1}SUGGEST_CONTINUE_AS_NEW_REASON_TOO_MANY_HISTORY_EVENTS\0\u{1}SUGGEST_CONTINUE_AS_NEW_REASON_TOO_MANY_UPDATES\0")
 }

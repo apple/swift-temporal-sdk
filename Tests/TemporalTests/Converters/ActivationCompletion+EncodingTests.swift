@@ -110,7 +110,9 @@ struct ActivationCompletionEncodingTests {
                                 $0.arguments = [payload, payload]
                                 $0.memo = ["memo": payload]
                                 $0.headers = ["header1": payload, "header2": payload]
-                                $0.searchAttributes = ["search": payload]
+                                $0.searchAttributes = .with {
+                                    $0.indexedFields = ["search": payload]
+                                }
                             }
                         )
                     },
@@ -120,7 +122,9 @@ struct ActivationCompletionEncodingTests {
                                 $0.input = [payload, payload]
                                 $0.memo = ["memo": payload]
                                 $0.headers = ["header1": payload, "header2": payload]
-                                $0.searchAttributes = ["search": payload]
+                                $0.searchAttributes = .with {
+                                    $0.indexedFields = ["search": payload]
+                                }
                             }
                         )
                     },
@@ -143,7 +147,9 @@ struct ActivationCompletionEncodingTests {
                     .with {
                         $0.variant = .upsertWorkflowSearchAttributes(
                             .with {
-                                $0.searchAttributes = ["search": payload]
+                                $0.searchAttributes = .with {
+                                    $0.indexedFields = ["search": payload]
+                                }
                             }
                         )
                     },
@@ -243,7 +249,9 @@ struct ActivationCompletionEncodingTests {
                                         $0.arguments = [expectedPayload, expectedPayload]
                                         $0.memo = ["memo": expectedPayload]
                                         $0.headers = ["header1": expectedPayload, "header2": expectedPayload]
-                                        $0.searchAttributes = ["search": expectedPayload]
+                                        $0.searchAttributes = .with {
+                                            $0.indexedFields = ["search": expectedPayload]
+                                        }
                                     }
                                 )
                             },
@@ -253,7 +261,9 @@ struct ActivationCompletionEncodingTests {
                                         $0.input = [expectedPayload, expectedPayload]
                                         $0.memo = ["memo": expectedPayload]
                                         $0.headers = ["header1": expectedPayload, "header2": expectedPayload]
-                                        $0.searchAttributes = ["search": expectedPayload]
+                                        $0.searchAttributes = .with {
+                                            $0.indexedFields = ["search": expectedPayload]
+                                        }
                                     }
                                 )
                             },
@@ -276,7 +286,9 @@ struct ActivationCompletionEncodingTests {
                             .with {
                                 $0.variant = .upsertWorkflowSearchAttributes(
                                     .with {
-                                        $0.searchAttributes = ["search": expectedPayload]
+                                        $0.searchAttributes = .with {
+                                            $0.indexedFields = ["search": expectedPayload]
+                                        }
                                     }
                                 )
                             },

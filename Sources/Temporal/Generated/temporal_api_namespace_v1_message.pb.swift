@@ -22,47 +22,68 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 extension Api.Namespace.V1 {
 
 
-  public struct NamespaceInfo: Sendable {
+  public struct NamespaceInfo: @unchecked Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var name: String = String()
+    public var name: String {
+      get {_storage._name}
+      set {_uniqueStorage()._name = newValue}
+    }
 
-    public var state: Api.Enums.V1.NamespaceState = .unspecified
+    public var state: Api.Enums.V1.NamespaceState {
+      get {_storage._state}
+      set {_uniqueStorage()._state = newValue}
+    }
 
-    public var description_p: String = String()
+    public var description_p: String {
+      get {_storage._description_p}
+      set {_uniqueStorage()._description_p = newValue}
+    }
 
-    public var ownerEmail: String = String()
+    public var ownerEmail: String {
+      get {_storage._ownerEmail}
+      set {_uniqueStorage()._ownerEmail = newValue}
+    }
 
     /// A key-value map for any customized purpose.
-    public var data: Dictionary<String,String> = [:]
+    public var data: Dictionary<String,String> {
+      get {_storage._data}
+      set {_uniqueStorage()._data = newValue}
+    }
 
-    public var id: String = String()
+    public var id: String {
+      get {_storage._id}
+      set {_uniqueStorage()._id = newValue}
+    }
 
     /// All capabilities the namespace supports.
     public var capabilities: Api.Namespace.V1.NamespaceInfo.Capabilities {
-      get {_capabilities ?? Api.Namespace.V1.NamespaceInfo.Capabilities()}
-      set {_capabilities = newValue}
+      get {_storage._capabilities ?? Api.Namespace.V1.NamespaceInfo.Capabilities()}
+      set {_uniqueStorage()._capabilities = newValue}
     }
     /// Returns true if `capabilities` has been explicitly set.
-    public var hasCapabilities: Bool {self._capabilities != nil}
+    public var hasCapabilities: Bool {_storage._capabilities != nil}
     /// Clears the value of `capabilities`. Subsequent reads from it will return its default value.
-    public mutating func clearCapabilities() {self._capabilities = nil}
+    public mutating func clearCapabilities() {_uniqueStorage()._capabilities = nil}
 
     /// Namespace configured limits
     public var limits: Api.Namespace.V1.NamespaceInfo.Limits {
-      get {_limits ?? Api.Namespace.V1.NamespaceInfo.Limits()}
-      set {_limits = newValue}
+      get {_storage._limits ?? Api.Namespace.V1.NamespaceInfo.Limits()}
+      set {_uniqueStorage()._limits = newValue}
     }
     /// Returns true if `limits` has been explicitly set.
-    public var hasLimits: Bool {self._limits != nil}
+    public var hasLimits: Bool {_storage._limits != nil}
     /// Clears the value of `limits`. Subsequent reads from it will return its default value.
-    public mutating func clearLimits() {self._limits = nil}
+    public mutating func clearLimits() {_uniqueStorage()._limits = nil}
 
     /// Whether scheduled workflows are supported on this namespace. This is only needed
     /// temporarily while the feature is experimental, so we can give it a high tag.
-    public var supportsSchedules: Bool = false
+    public var supportsSchedules: Bool {
+      get {_storage._supportsSchedules}
+      set {_uniqueStorage()._supportsSchedules = newValue}
+    }
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -93,6 +114,13 @@ extension Api.Namespace.V1 {
       /// True if the namespace supports standalone activities
       public var standaloneActivities: Bool = false
 
+      /// True if the namespace supports server-side completion of outstanding worker polls on shutdown.
+      /// When enabled, the server will complete polls for workers that send WorkerInstanceKey in their
+      /// poll requests and call ShutdownWorker with the same WorkerInstanceKey. The poll will return
+      /// an empty response. When this flag is true, workers should allow polls to return gracefully
+      /// rather than terminating any open polls on shutdown.
+      public var workerPollCompleteOnShutdown: Bool = false
+
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
       public init() {}
@@ -118,8 +146,7 @@ extension Api.Namespace.V1 {
 
     public init() {}
 
-    fileprivate var _capabilities: Api.Namespace.V1.NamespaceInfo.Capabilities? = nil
-    fileprivate var _limits: Api.Namespace.V1.NamespaceInfo.Limits? = nil
+    fileprivate var _storage = _StorageClass.defaultInstance
   }
 }
 extension Api.Namespace.V1 {
@@ -268,71 +295,123 @@ extension Api.Namespace.V1.NamespaceInfo: SwiftProtobuf.Message, SwiftProtobuf._
   public static let protoMessageName: String = _protobuf_package + ".NamespaceInfo"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}state\0\u{1}description\0\u{3}owner_email\0\u{1}data\0\u{1}id\0\u{1}capabilities\0\u{1}limits\0\u{4}\\\u{1}supports_schedules\0")
 
+  fileprivate class _StorageClass {
+    var _name: String = String()
+    var _state: Api.Enums.V1.NamespaceState = .unspecified
+    var _description_p: String = String()
+    var _ownerEmail: String = String()
+    var _data: Dictionary<String,String> = [:]
+    var _id: String = String()
+    var _capabilities: Api.Namespace.V1.NamespaceInfo.Capabilities? = nil
+    var _limits: Api.Namespace.V1.NamespaceInfo.Limits? = nil
+    var _supportsSchedules: Bool = false
+
+      // This property is used as the initial default value for new instances of the type.
+      // The type itself is protecting the reference to its storage via CoW semantics.
+      // This will force a copy to be made of this reference when the first mutation occurs;
+      // hence, it is safe to mark this as `nonisolated(unsafe)`.
+      static nonisolated(unsafe) let defaultInstance = _StorageClass()
+
+    private init() {}
+
+    init(copying source: _StorageClass) {
+      _name = source._name
+      _state = source._state
+      _description_p = source._description_p
+      _ownerEmail = source._ownerEmail
+      _data = source._data
+      _id = source._id
+      _capabilities = source._capabilities
+      _limits = source._limits
+      _supportsSchedules = source._supportsSchedules
+    }
+  }
+
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
+    }
+    return _storage
+  }
+
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.name) }()
-      case 2: try { try decoder.decodeSingularEnumField(value: &self.state) }()
-      case 3: try { try decoder.decodeSingularStringField(value: &self.description_p) }()
-      case 4: try { try decoder.decodeSingularStringField(value: &self.ownerEmail) }()
-      case 5: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: &self.data) }()
-      case 6: try { try decoder.decodeSingularStringField(value: &self.id) }()
-      case 7: try { try decoder.decodeSingularMessageField(value: &self._capabilities) }()
-      case 8: try { try decoder.decodeSingularMessageField(value: &self._limits) }()
-      case 100: try { try decoder.decodeSingularBoolField(value: &self.supportsSchedules) }()
-      default: break
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularStringField(value: &_storage._name) }()
+        case 2: try { try decoder.decodeSingularEnumField(value: &_storage._state) }()
+        case 3: try { try decoder.decodeSingularStringField(value: &_storage._description_p) }()
+        case 4: try { try decoder.decodeSingularStringField(value: &_storage._ownerEmail) }()
+        case 5: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: &_storage._data) }()
+        case 6: try { try decoder.decodeSingularStringField(value: &_storage._id) }()
+        case 7: try { try decoder.decodeSingularMessageField(value: &_storage._capabilities) }()
+        case 8: try { try decoder.decodeSingularMessageField(value: &_storage._limits) }()
+        case 100: try { try decoder.decodeSingularBoolField(value: &_storage._supportsSchedules) }()
+        default: break
+        }
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    if !self.name.isEmpty {
-      try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
-    }
-    if self.state != .unspecified {
-      try visitor.visitSingularEnumField(value: self.state, fieldNumber: 2)
-    }
-    if !self.description_p.isEmpty {
-      try visitor.visitSingularStringField(value: self.description_p, fieldNumber: 3)
-    }
-    if !self.ownerEmail.isEmpty {
-      try visitor.visitSingularStringField(value: self.ownerEmail, fieldNumber: 4)
-    }
-    if !self.data.isEmpty {
-      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: self.data, fieldNumber: 5)
-    }
-    if !self.id.isEmpty {
-      try visitor.visitSingularStringField(value: self.id, fieldNumber: 6)
-    }
-    try { if let v = self._capabilities {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
-    } }()
-    try { if let v = self._limits {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
-    } }()
-    if self.supportsSchedules != false {
-      try visitor.visitSingularBoolField(value: self.supportsSchedules, fieldNumber: 100)
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      if !_storage._name.isEmpty {
+        try visitor.visitSingularStringField(value: _storage._name, fieldNumber: 1)
+      }
+      if _storage._state != .unspecified {
+        try visitor.visitSingularEnumField(value: _storage._state, fieldNumber: 2)
+      }
+      if !_storage._description_p.isEmpty {
+        try visitor.visitSingularStringField(value: _storage._description_p, fieldNumber: 3)
+      }
+      if !_storage._ownerEmail.isEmpty {
+        try visitor.visitSingularStringField(value: _storage._ownerEmail, fieldNumber: 4)
+      }
+      if !_storage._data.isEmpty {
+        try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: _storage._data, fieldNumber: 5)
+      }
+      if !_storage._id.isEmpty {
+        try visitor.visitSingularStringField(value: _storage._id, fieldNumber: 6)
+      }
+      try { if let v = _storage._capabilities {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+      } }()
+      try { if let v = _storage._limits {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
+      } }()
+      if _storage._supportsSchedules != false {
+        try visitor.visitSingularBoolField(value: _storage._supportsSchedules, fieldNumber: 100)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Api.Namespace.V1.NamespaceInfo, rhs: Api.Namespace.V1.NamespaceInfo) -> Bool {
-    if lhs.name != rhs.name {return false}
-    if lhs.state != rhs.state {return false}
-    if lhs.description_p != rhs.description_p {return false}
-    if lhs.ownerEmail != rhs.ownerEmail {return false}
-    if lhs.data != rhs.data {return false}
-    if lhs.id != rhs.id {return false}
-    if lhs._capabilities != rhs._capabilities {return false}
-    if lhs._limits != rhs._limits {return false}
-    if lhs.supportsSchedules != rhs.supportsSchedules {return false}
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._name != rhs_storage._name {return false}
+        if _storage._state != rhs_storage._state {return false}
+        if _storage._description_p != rhs_storage._description_p {return false}
+        if _storage._ownerEmail != rhs_storage._ownerEmail {return false}
+        if _storage._data != rhs_storage._data {return false}
+        if _storage._id != rhs_storage._id {return false}
+        if _storage._capabilities != rhs_storage._capabilities {return false}
+        if _storage._limits != rhs_storage._limits {return false}
+        if _storage._supportsSchedules != rhs_storage._supportsSchedules {return false}
+        return true
+      }
+      if !storagesAreEqual {return false}
+    }
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -340,7 +419,7 @@ extension Api.Namespace.V1.NamespaceInfo: SwiftProtobuf.Message, SwiftProtobuf._
 
 extension Api.Namespace.V1.NamespaceInfo.Capabilities: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Api.Namespace.V1.NamespaceInfo.protoMessageName + ".Capabilities"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}eager_workflow_start\0\u{3}sync_update\0\u{3}async_update\0\u{3}worker_heartbeats\0\u{3}reported_problems_search_attribute\0\u{3}workflow_pause\0\u{3}standalone_activities\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}eager_workflow_start\0\u{3}sync_update\0\u{3}async_update\0\u{3}worker_heartbeats\0\u{3}reported_problems_search_attribute\0\u{3}workflow_pause\0\u{3}standalone_activities\0\u{3}worker_poll_complete_on_shutdown\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -355,6 +434,7 @@ extension Api.Namespace.V1.NamespaceInfo.Capabilities: SwiftProtobuf.Message, Sw
       case 5: try { try decoder.decodeSingularBoolField(value: &self.reportedProblemsSearchAttribute) }()
       case 6: try { try decoder.decodeSingularBoolField(value: &self.workflowPause) }()
       case 7: try { try decoder.decodeSingularBoolField(value: &self.standaloneActivities) }()
+      case 8: try { try decoder.decodeSingularBoolField(value: &self.workerPollCompleteOnShutdown) }()
       default: break
       }
     }
@@ -382,6 +462,9 @@ extension Api.Namespace.V1.NamespaceInfo.Capabilities: SwiftProtobuf.Message, Sw
     if self.standaloneActivities != false {
       try visitor.visitSingularBoolField(value: self.standaloneActivities, fieldNumber: 7)
     }
+    if self.workerPollCompleteOnShutdown != false {
+      try visitor.visitSingularBoolField(value: self.workerPollCompleteOnShutdown, fieldNumber: 8)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -393,6 +476,7 @@ extension Api.Namespace.V1.NamespaceInfo.Capabilities: SwiftProtobuf.Message, Sw
     if lhs.reportedProblemsSearchAttribute != rhs.reportedProblemsSearchAttribute {return false}
     if lhs.workflowPause != rhs.workflowPause {return false}
     if lhs.standaloneActivities != rhs.standaloneActivities {return false}
+    if lhs.workerPollCompleteOnShutdown != rhs.workerPollCompleteOnShutdown {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

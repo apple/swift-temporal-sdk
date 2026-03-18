@@ -317,6 +317,12 @@ extension Api.Worker.V1 {
       set {_uniqueStorage()._plugins = newValue}
     }
 
+    /// Storage drivers in use by this SDK.
+    public var drivers: [Api.Worker.V1.StorageDriverInfo] {
+      get {_storage._drivers}
+      set {_uniqueStorage()._drivers = newValue}
+    }
+
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public init() {}
@@ -327,6 +333,7 @@ extension Api.Worker.V1 {
 extension Api.Worker.V1 {
 
 
+  /// Detailed worker information.
   public struct WorkerInfo: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -351,6 +358,80 @@ extension Api.Worker.V1 {
 extension Api.Worker.V1 {
 
 
+  /// Limited worker information returned in the list response.
+  /// When adding fields here, ensure that it is also added to WorkerInfo (as it carries the full worker information).
+  public struct WorkerListInfo: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// Worker identifier, should be unique for the namespace.
+    /// It is distinct from worker identity, which is not necessarily namespace-unique.
+    public var workerInstanceKey: String = String()
+
+    /// Worker identity, set by the client, may not be unique.
+    /// Usually host_name+(user group name)+process_id, but can be overwritten by the user.
+    public var workerIdentity: String = String()
+
+    /// Task queue this worker is polling for tasks.
+    public var taskQueue: String = String()
+
+    public var deploymentVersion: Api.Deployment.V1.WorkerDeploymentVersion {
+      get {_deploymentVersion ?? Api.Deployment.V1.WorkerDeploymentVersion()}
+      set {_deploymentVersion = newValue}
+    }
+    /// Returns true if `deploymentVersion` has been explicitly set.
+    public var hasDeploymentVersion: Bool {self._deploymentVersion != nil}
+    /// Clears the value of `deploymentVersion`. Subsequent reads from it will return its default value.
+    public mutating func clearDeploymentVersion() {self._deploymentVersion = nil}
+
+    public var sdkName: String = String()
+
+    public var sdkVersion: String = String()
+
+    /// Worker status. Defined by SDK.
+    public var status: Api.Enums.V1.WorkerStatus = .unspecified
+
+    /// Worker start time.
+    /// It can be used to determine worker uptime. (current time - start time)
+    public var startTime: SwiftProtobuf.Google_Protobuf_Timestamp {
+      get {_startTime ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+      set {_startTime = newValue}
+    }
+    /// Returns true if `startTime` has been explicitly set.
+    public var hasStartTime: Bool {self._startTime != nil}
+    /// Clears the value of `startTime`. Subsequent reads from it will return its default value.
+    public mutating func clearStartTime() {self._startTime = nil}
+
+    /// Worker host identifier.
+    public var hostName: String = String()
+
+    /// Worker grouping identifier. A key to group workers that share the same client+namespace+process.
+    /// This will be used to build the worker command nexus task queue name:
+    /// "temporal-sys/worker-commands/{worker_grouping_key}"
+    public var workerGroupingKey: String = String()
+
+    /// Worker process identifier. This id only needs to be unique
+    /// within one host (so using e.g. a unix pid would be appropriate).
+    public var processID: String = String()
+
+    /// Plugins currently in use by this SDK.
+    public var plugins: [Api.Worker.V1.PluginInfo] = []
+
+    /// Storage drivers in use by this SDK.
+    public var drivers: [Api.Worker.V1.StorageDriverInfo] = []
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+
+    fileprivate var _deploymentVersion: Api.Deployment.V1.WorkerDeploymentVersion? = nil
+    fileprivate var _startTime: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
+  }
+}
+extension Api.Worker.V1 {
+
+
   public struct PluginInfo: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -361,6 +442,22 @@ extension Api.Worker.V1 {
 
     /// The version of the plugin, may be empty.
     public var version: String = String()
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+  }
+}
+extension Api.Worker.V1 {
+
+
+  public struct StorageDriverInfo: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// The type of the driver, required.
+    public var type: String = String()
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -528,7 +625,7 @@ extension Api.Worker.V1.WorkerHostInfo: SwiftProtobuf.Message, SwiftProtobuf._Me
 
 extension Api.Worker.V1.WorkerHeartbeat: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".WorkerHeartbeat"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}worker_instance_key\0\u{3}worker_identity\0\u{3}host_info\0\u{3}task_queue\0\u{3}deployment_version\0\u{3}sdk_name\0\u{3}sdk_version\0\u{1}status\0\u{3}start_time\0\u{3}heartbeat_time\0\u{3}elapsed_since_last_heartbeat\0\u{3}workflow_task_slots_info\0\u{3}activity_task_slots_info\0\u{3}nexus_task_slots_info\0\u{3}local_activity_slots_info\0\u{3}workflow_poller_info\0\u{3}workflow_sticky_poller_info\0\u{3}activity_poller_info\0\u{3}nexus_poller_info\0\u{3}total_sticky_cache_hit\0\u{3}total_sticky_cache_miss\0\u{3}current_sticky_cache_size\0\u{1}plugins\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}worker_instance_key\0\u{3}worker_identity\0\u{3}host_info\0\u{3}task_queue\0\u{3}deployment_version\0\u{3}sdk_name\0\u{3}sdk_version\0\u{1}status\0\u{3}start_time\0\u{3}heartbeat_time\0\u{3}elapsed_since_last_heartbeat\0\u{3}workflow_task_slots_info\0\u{3}activity_task_slots_info\0\u{3}nexus_task_slots_info\0\u{3}local_activity_slots_info\0\u{3}workflow_poller_info\0\u{3}workflow_sticky_poller_info\0\u{3}activity_poller_info\0\u{3}nexus_poller_info\0\u{3}total_sticky_cache_hit\0\u{3}total_sticky_cache_miss\0\u{3}current_sticky_cache_size\0\u{1}plugins\0\u{1}drivers\0")
 
   fileprivate class _StorageClass {
     var _workerInstanceKey: String = String()
@@ -554,6 +651,7 @@ extension Api.Worker.V1.WorkerHeartbeat: SwiftProtobuf.Message, SwiftProtobuf._M
     var _totalStickyCacheMiss: Int32 = 0
     var _currentStickyCacheSize: Int32 = 0
     var _plugins: [Api.Worker.V1.PluginInfo] = []
+    var _drivers: [Api.Worker.V1.StorageDriverInfo] = []
 
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
@@ -587,6 +685,7 @@ extension Api.Worker.V1.WorkerHeartbeat: SwiftProtobuf.Message, SwiftProtobuf._M
       _totalStickyCacheMiss = source._totalStickyCacheMiss
       _currentStickyCacheSize = source._currentStickyCacheSize
       _plugins = source._plugins
+      _drivers = source._drivers
     }
   }
 
@@ -628,6 +727,7 @@ extension Api.Worker.V1.WorkerHeartbeat: SwiftProtobuf.Message, SwiftProtobuf._M
         case 21: try { try decoder.decodeSingularInt32Field(value: &_storage._totalStickyCacheMiss) }()
         case 22: try { try decoder.decodeSingularInt32Field(value: &_storage._currentStickyCacheSize) }()
         case 23: try { try decoder.decodeRepeatedMessageField(value: &_storage._plugins) }()
+        case 24: try { try decoder.decodeRepeatedMessageField(value: &_storage._drivers) }()
         default: break
         }
       }
@@ -709,6 +809,9 @@ extension Api.Worker.V1.WorkerHeartbeat: SwiftProtobuf.Message, SwiftProtobuf._M
       if !_storage._plugins.isEmpty {
         try visitor.visitRepeatedMessageField(value: _storage._plugins, fieldNumber: 23)
       }
+      if !_storage._drivers.isEmpty {
+        try visitor.visitRepeatedMessageField(value: _storage._drivers, fieldNumber: 24)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -741,6 +844,7 @@ extension Api.Worker.V1.WorkerHeartbeat: SwiftProtobuf.Message, SwiftProtobuf._M
         if _storage._totalStickyCacheMiss != rhs_storage._totalStickyCacheMiss {return false}
         if _storage._currentStickyCacheSize != rhs_storage._currentStickyCacheSize {return false}
         if _storage._plugins != rhs_storage._plugins {return false}
+        if _storage._drivers != rhs_storage._drivers {return false}
         return true
       }
       if !storagesAreEqual {return false}
@@ -784,6 +888,100 @@ extension Api.Worker.V1.WorkerInfo: SwiftProtobuf.Message, SwiftProtobuf._Messag
   }
 }
 
+extension Api.Worker.V1.WorkerListInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".WorkerListInfo"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}worker_instance_key\0\u{3}worker_identity\0\u{3}task_queue\0\u{3}deployment_version\0\u{3}sdk_name\0\u{3}sdk_version\0\u{1}status\0\u{3}start_time\0\u{3}host_name\0\u{3}worker_grouping_key\0\u{3}process_id\0\u{1}plugins\0\u{1}drivers\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.workerInstanceKey) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.workerIdentity) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.taskQueue) }()
+      case 4: try { try decoder.decodeSingularMessageField(value: &self._deploymentVersion) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self.sdkName) }()
+      case 6: try { try decoder.decodeSingularStringField(value: &self.sdkVersion) }()
+      case 7: try { try decoder.decodeSingularEnumField(value: &self.status) }()
+      case 8: try { try decoder.decodeSingularMessageField(value: &self._startTime) }()
+      case 9: try { try decoder.decodeSingularStringField(value: &self.hostName) }()
+      case 10: try { try decoder.decodeSingularStringField(value: &self.workerGroupingKey) }()
+      case 11: try { try decoder.decodeSingularStringField(value: &self.processID) }()
+      case 12: try { try decoder.decodeRepeatedMessageField(value: &self.plugins) }()
+      case 13: try { try decoder.decodeRepeatedMessageField(value: &self.drivers) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if !self.workerInstanceKey.isEmpty {
+      try visitor.visitSingularStringField(value: self.workerInstanceKey, fieldNumber: 1)
+    }
+    if !self.workerIdentity.isEmpty {
+      try visitor.visitSingularStringField(value: self.workerIdentity, fieldNumber: 2)
+    }
+    if !self.taskQueue.isEmpty {
+      try visitor.visitSingularStringField(value: self.taskQueue, fieldNumber: 3)
+    }
+    try { if let v = self._deploymentVersion {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+    } }()
+    if !self.sdkName.isEmpty {
+      try visitor.visitSingularStringField(value: self.sdkName, fieldNumber: 5)
+    }
+    if !self.sdkVersion.isEmpty {
+      try visitor.visitSingularStringField(value: self.sdkVersion, fieldNumber: 6)
+    }
+    if self.status != .unspecified {
+      try visitor.visitSingularEnumField(value: self.status, fieldNumber: 7)
+    }
+    try { if let v = self._startTime {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
+    } }()
+    if !self.hostName.isEmpty {
+      try visitor.visitSingularStringField(value: self.hostName, fieldNumber: 9)
+    }
+    if !self.workerGroupingKey.isEmpty {
+      try visitor.visitSingularStringField(value: self.workerGroupingKey, fieldNumber: 10)
+    }
+    if !self.processID.isEmpty {
+      try visitor.visitSingularStringField(value: self.processID, fieldNumber: 11)
+    }
+    if !self.plugins.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.plugins, fieldNumber: 12)
+    }
+    if !self.drivers.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.drivers, fieldNumber: 13)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Api.Worker.V1.WorkerListInfo, rhs: Api.Worker.V1.WorkerListInfo) -> Bool {
+    if lhs.workerInstanceKey != rhs.workerInstanceKey {return false}
+    if lhs.workerIdentity != rhs.workerIdentity {return false}
+    if lhs.taskQueue != rhs.taskQueue {return false}
+    if lhs._deploymentVersion != rhs._deploymentVersion {return false}
+    if lhs.sdkName != rhs.sdkName {return false}
+    if lhs.sdkVersion != rhs.sdkVersion {return false}
+    if lhs.status != rhs.status {return false}
+    if lhs._startTime != rhs._startTime {return false}
+    if lhs.hostName != rhs.hostName {return false}
+    if lhs.workerGroupingKey != rhs.workerGroupingKey {return false}
+    if lhs.processID != rhs.processID {return false}
+    if lhs.plugins != rhs.plugins {return false}
+    if lhs.drivers != rhs.drivers {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension Api.Worker.V1.PluginInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PluginInfo"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}version\0")
@@ -814,6 +1012,36 @@ extension Api.Worker.V1.PluginInfo: SwiftProtobuf.Message, SwiftProtobuf._Messag
   public static func ==(lhs: Api.Worker.V1.PluginInfo, rhs: Api.Worker.V1.PluginInfo) -> Bool {
     if lhs.name != rhs.name {return false}
     if lhs.version != rhs.version {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Api.Worker.V1.StorageDriverInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".StorageDriverInfo"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}type\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.type) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.type.isEmpty {
+      try visitor.visitSingularStringField(value: self.type, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Api.Worker.V1.StorageDriverInfo, rhs: Api.Worker.V1.StorageDriverInfo) -> Bool {
+    if lhs.type != rhs.type {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

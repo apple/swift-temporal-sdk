@@ -235,7 +235,8 @@ package final class BridgeReplayer: Sendable {
                             nexus_task_poller_behavior: pollerBehavior,
                             nondeterminism_as_workflow_fail: true,
                             nondeterminism_as_workflow_fail_for_types: .init(),
-                            plugins: .init()
+                            plugins: .init(),
+                            storage_drivers: .init()
                         )
 
                         return try body(&opts)

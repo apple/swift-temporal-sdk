@@ -31,7 +31,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RegisterNamespace".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RegisterNamespace"
+                  method: "RegisterNamespace",
+                  type: .unary
               )
           }
           /// Namespace for "DescribeNamespace" metadata.
@@ -43,7 +44,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DescribeNamespace".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DescribeNamespace"
+                  method: "DescribeNamespace",
+                  type: .unary
               )
           }
           /// Namespace for "ListNamespaces" metadata.
@@ -55,7 +57,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListNamespaces".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListNamespaces"
+                  method: "ListNamespaces",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateNamespace" metadata.
@@ -67,7 +70,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "UpdateNamespace".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "UpdateNamespace"
+                  method: "UpdateNamespace",
+                  type: .unary
               )
           }
           /// Namespace for "DeprecateNamespace" metadata.
@@ -79,7 +83,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DeprecateNamespace".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DeprecateNamespace"
+                  method: "DeprecateNamespace",
+                  type: .unary
               )
           }
           /// Namespace for "StartWorkflowExecution" metadata.
@@ -91,7 +96,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "StartWorkflowExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "StartWorkflowExecution"
+                  method: "StartWorkflowExecution",
+                  type: .unary
               )
           }
           /// Namespace for "ExecuteMultiOperation" metadata.
@@ -103,7 +109,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ExecuteMultiOperation".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ExecuteMultiOperation"
+                  method: "ExecuteMultiOperation",
+                  type: .unary
               )
           }
           /// Namespace for "GetWorkflowExecutionHistory" metadata.
@@ -115,7 +122,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "GetWorkflowExecutionHistory".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "GetWorkflowExecutionHistory"
+                  method: "GetWorkflowExecutionHistory",
+                  type: .unary
               )
           }
           /// Namespace for "GetWorkflowExecutionHistoryReverse" metadata.
@@ -127,7 +135,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "GetWorkflowExecutionHistoryReverse".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "GetWorkflowExecutionHistoryReverse"
+                  method: "GetWorkflowExecutionHistoryReverse",
+                  type: .unary
               )
           }
           /// Namespace for "PollWorkflowTaskQueue" metadata.
@@ -139,7 +148,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "PollWorkflowTaskQueue".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "PollWorkflowTaskQueue"
+                  method: "PollWorkflowTaskQueue",
+                  type: .unary
               )
           }
           /// Namespace for "RespondWorkflowTaskCompleted" metadata.
@@ -151,7 +161,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RespondWorkflowTaskCompleted".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RespondWorkflowTaskCompleted"
+                  method: "RespondWorkflowTaskCompleted",
+                  type: .unary
               )
           }
           /// Namespace for "RespondWorkflowTaskFailed" metadata.
@@ -163,7 +174,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RespondWorkflowTaskFailed".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RespondWorkflowTaskFailed"
+                  method: "RespondWorkflowTaskFailed",
+                  type: .unary
               )
           }
           /// Namespace for "PollActivityTaskQueue" metadata.
@@ -175,7 +187,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "PollActivityTaskQueue".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "PollActivityTaskQueue"
+                  method: "PollActivityTaskQueue",
+                  type: .unary
               )
           }
           /// Namespace for "RecordActivityTaskHeartbeat" metadata.
@@ -187,7 +200,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RecordActivityTaskHeartbeat".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RecordActivityTaskHeartbeat"
+                  method: "RecordActivityTaskHeartbeat",
+                  type: .unary
               )
           }
           /// Namespace for "RecordActivityTaskHeartbeatById" metadata.
@@ -199,7 +213,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RecordActivityTaskHeartbeatById".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RecordActivityTaskHeartbeatById"
+                  method: "RecordActivityTaskHeartbeatById",
+                  type: .unary
               )
           }
           /// Namespace for "RespondActivityTaskCompleted" metadata.
@@ -211,7 +226,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RespondActivityTaskCompleted".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RespondActivityTaskCompleted"
+                  method: "RespondActivityTaskCompleted",
+                  type: .unary
               )
           }
           /// Namespace for "RespondActivityTaskCompletedById" metadata.
@@ -223,7 +239,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RespondActivityTaskCompletedById".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RespondActivityTaskCompletedById"
+                  method: "RespondActivityTaskCompletedById",
+                  type: .unary
               )
           }
           /// Namespace for "RespondActivityTaskFailed" metadata.
@@ -235,7 +252,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RespondActivityTaskFailed".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RespondActivityTaskFailed"
+                  method: "RespondActivityTaskFailed",
+                  type: .unary
               )
           }
           /// Namespace for "RespondActivityTaskFailedById" metadata.
@@ -247,7 +265,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RespondActivityTaskFailedById".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RespondActivityTaskFailedById"
+                  method: "RespondActivityTaskFailedById",
+                  type: .unary
               )
           }
           /// Namespace for "RespondActivityTaskCanceled" metadata.
@@ -259,7 +278,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RespondActivityTaskCanceled".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RespondActivityTaskCanceled"
+                  method: "RespondActivityTaskCanceled",
+                  type: .unary
               )
           }
           /// Namespace for "RespondActivityTaskCanceledById" metadata.
@@ -271,7 +291,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RespondActivityTaskCanceledById".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RespondActivityTaskCanceledById"
+                  method: "RespondActivityTaskCanceledById",
+                  type: .unary
               )
           }
           /// Namespace for "RequestCancelWorkflowExecution" metadata.
@@ -283,7 +304,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RequestCancelWorkflowExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RequestCancelWorkflowExecution"
+                  method: "RequestCancelWorkflowExecution",
+                  type: .unary
               )
           }
           /// Namespace for "SignalWorkflowExecution" metadata.
@@ -295,7 +317,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "SignalWorkflowExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "SignalWorkflowExecution"
+                  method: "SignalWorkflowExecution",
+                  type: .unary
               )
           }
           /// Namespace for "SignalWithStartWorkflowExecution" metadata.
@@ -307,7 +330,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "SignalWithStartWorkflowExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "SignalWithStartWorkflowExecution"
+                  method: "SignalWithStartWorkflowExecution",
+                  type: .unary
               )
           }
           /// Namespace for "ResetWorkflowExecution" metadata.
@@ -319,7 +343,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ResetWorkflowExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ResetWorkflowExecution"
+                  method: "ResetWorkflowExecution",
+                  type: .unary
               )
           }
           /// Namespace for "TerminateWorkflowExecution" metadata.
@@ -331,7 +356,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "TerminateWorkflowExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "TerminateWorkflowExecution"
+                  method: "TerminateWorkflowExecution",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteWorkflowExecution" metadata.
@@ -343,7 +369,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DeleteWorkflowExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DeleteWorkflowExecution"
+                  method: "DeleteWorkflowExecution",
+                  type: .unary
               )
           }
           /// Namespace for "ListOpenWorkflowExecutions" metadata.
@@ -355,7 +382,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListOpenWorkflowExecutions".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListOpenWorkflowExecutions"
+                  method: "ListOpenWorkflowExecutions",
+                  type: .unary
               )
           }
           /// Namespace for "ListClosedWorkflowExecutions" metadata.
@@ -367,7 +395,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListClosedWorkflowExecutions".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListClosedWorkflowExecutions"
+                  method: "ListClosedWorkflowExecutions",
+                  type: .unary
               )
           }
           /// Namespace for "ListWorkflowExecutions" metadata.
@@ -379,7 +408,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListWorkflowExecutions".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListWorkflowExecutions"
+                  method: "ListWorkflowExecutions",
+                  type: .unary
               )
           }
           /// Namespace for "ListArchivedWorkflowExecutions" metadata.
@@ -391,7 +421,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListArchivedWorkflowExecutions".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListArchivedWorkflowExecutions"
+                  method: "ListArchivedWorkflowExecutions",
+                  type: .unary
               )
           }
           /// Namespace for "ScanWorkflowExecutions" metadata.
@@ -403,7 +434,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ScanWorkflowExecutions".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ScanWorkflowExecutions"
+                  method: "ScanWorkflowExecutions",
+                  type: .unary
               )
           }
           /// Namespace for "CountWorkflowExecutions" metadata.
@@ -415,7 +447,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "CountWorkflowExecutions".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "CountWorkflowExecutions"
+                  method: "CountWorkflowExecutions",
+                  type: .unary
               )
           }
           /// Namespace for "GetSearchAttributes" metadata.
@@ -427,7 +460,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "GetSearchAttributes".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "GetSearchAttributes"
+                  method: "GetSearchAttributes",
+                  type: .unary
               )
           }
           /// Namespace for "RespondQueryTaskCompleted" metadata.
@@ -439,7 +473,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RespondQueryTaskCompleted".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RespondQueryTaskCompleted"
+                  method: "RespondQueryTaskCompleted",
+                  type: .unary
               )
           }
           /// Namespace for "ResetStickyTaskQueue" metadata.
@@ -451,7 +486,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ResetStickyTaskQueue".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ResetStickyTaskQueue"
+                  method: "ResetStickyTaskQueue",
+                  type: .unary
               )
           }
           /// Namespace for "ShutdownWorker" metadata.
@@ -463,7 +499,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ShutdownWorker".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ShutdownWorker"
+                  method: "ShutdownWorker",
+                  type: .unary
               )
           }
           /// Namespace for "QueryWorkflow" metadata.
@@ -475,7 +512,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "QueryWorkflow".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "QueryWorkflow"
+                  method: "QueryWorkflow",
+                  type: .unary
               )
           }
           /// Namespace for "DescribeWorkflowExecution" metadata.
@@ -487,7 +525,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DescribeWorkflowExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DescribeWorkflowExecution"
+                  method: "DescribeWorkflowExecution",
+                  type: .unary
               )
           }
           /// Namespace for "DescribeTaskQueue" metadata.
@@ -499,7 +538,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DescribeTaskQueue".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DescribeTaskQueue"
+                  method: "DescribeTaskQueue",
+                  type: .unary
               )
           }
           /// Namespace for "GetClusterInfo" metadata.
@@ -511,7 +551,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "GetClusterInfo".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "GetClusterInfo"
+                  method: "GetClusterInfo",
+                  type: .unary
               )
           }
           /// Namespace for "GetSystemInfo" metadata.
@@ -523,7 +564,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "GetSystemInfo".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "GetSystemInfo"
+                  method: "GetSystemInfo",
+                  type: .unary
               )
           }
           /// Namespace for "ListTaskQueuePartitions" metadata.
@@ -535,7 +577,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListTaskQueuePartitions".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListTaskQueuePartitions"
+                  method: "ListTaskQueuePartitions",
+                  type: .unary
               )
           }
           /// Namespace for "CreateSchedule" metadata.
@@ -547,7 +590,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "CreateSchedule".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "CreateSchedule"
+                  method: "CreateSchedule",
+                  type: .unary
               )
           }
           /// Namespace for "DescribeSchedule" metadata.
@@ -559,7 +603,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DescribeSchedule".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DescribeSchedule"
+                  method: "DescribeSchedule",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateSchedule" metadata.
@@ -571,7 +616,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "UpdateSchedule".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "UpdateSchedule"
+                  method: "UpdateSchedule",
+                  type: .unary
               )
           }
           /// Namespace for "PatchSchedule" metadata.
@@ -583,7 +629,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "PatchSchedule".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "PatchSchedule"
+                  method: "PatchSchedule",
+                  type: .unary
               )
           }
           /// Namespace for "ListScheduleMatchingTimes" metadata.
@@ -595,7 +642,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListScheduleMatchingTimes".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListScheduleMatchingTimes"
+                  method: "ListScheduleMatchingTimes",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteSchedule" metadata.
@@ -607,7 +655,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DeleteSchedule".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DeleteSchedule"
+                  method: "DeleteSchedule",
+                  type: .unary
               )
           }
           /// Namespace for "ListSchedules" metadata.
@@ -619,7 +668,21 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListSchedules".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListSchedules"
+                  method: "ListSchedules",
+                  type: .unary
+              )
+          }
+          /// Namespace for "CountSchedules" metadata.
+          package enum CountSchedules: Sendable {
+              /// Request type for "CountSchedules".
+              package typealias Input = Api.Workflowservice.V1.CountSchedulesRequest
+              /// Response type for "CountSchedules".
+              package typealias Output = Api.Workflowservice.V1.CountSchedulesResponse
+              /// Descriptor for "CountSchedules".
+              package static let descriptor = GRPCCore.MethodDescriptor(
+                  service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
+                  method: "CountSchedules",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateWorkerBuildIdCompatibility" metadata.
@@ -631,7 +694,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "UpdateWorkerBuildIdCompatibility".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "UpdateWorkerBuildIdCompatibility"
+                  method: "UpdateWorkerBuildIdCompatibility",
+                  type: .unary
               )
           }
           /// Namespace for "GetWorkerBuildIdCompatibility" metadata.
@@ -643,7 +707,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "GetWorkerBuildIdCompatibility".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "GetWorkerBuildIdCompatibility"
+                  method: "GetWorkerBuildIdCompatibility",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateWorkerVersioningRules" metadata.
@@ -655,7 +720,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "UpdateWorkerVersioningRules".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "UpdateWorkerVersioningRules"
+                  method: "UpdateWorkerVersioningRules",
+                  type: .unary
               )
           }
           /// Namespace for "GetWorkerVersioningRules" metadata.
@@ -667,7 +733,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "GetWorkerVersioningRules".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "GetWorkerVersioningRules"
+                  method: "GetWorkerVersioningRules",
+                  type: .unary
               )
           }
           /// Namespace for "GetWorkerTaskReachability" metadata.
@@ -679,7 +746,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "GetWorkerTaskReachability".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "GetWorkerTaskReachability"
+                  method: "GetWorkerTaskReachability",
+                  type: .unary
               )
           }
           /// Namespace for "DescribeDeployment" metadata.
@@ -691,7 +759,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DescribeDeployment".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DescribeDeployment"
+                  method: "DescribeDeployment",
+                  type: .unary
               )
           }
           /// Namespace for "DescribeWorkerDeploymentVersion" metadata.
@@ -703,7 +772,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DescribeWorkerDeploymentVersion".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DescribeWorkerDeploymentVersion"
+                  method: "DescribeWorkerDeploymentVersion",
+                  type: .unary
               )
           }
           /// Namespace for "ListDeployments" metadata.
@@ -715,7 +785,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListDeployments".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListDeployments"
+                  method: "ListDeployments",
+                  type: .unary
               )
           }
           /// Namespace for "GetDeploymentReachability" metadata.
@@ -727,7 +798,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "GetDeploymentReachability".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "GetDeploymentReachability"
+                  method: "GetDeploymentReachability",
+                  type: .unary
               )
           }
           /// Namespace for "GetCurrentDeployment" metadata.
@@ -739,7 +811,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "GetCurrentDeployment".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "GetCurrentDeployment"
+                  method: "GetCurrentDeployment",
+                  type: .unary
               )
           }
           /// Namespace for "SetCurrentDeployment" metadata.
@@ -751,7 +824,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "SetCurrentDeployment".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "SetCurrentDeployment"
+                  method: "SetCurrentDeployment",
+                  type: .unary
               )
           }
           /// Namespace for "SetWorkerDeploymentCurrentVersion" metadata.
@@ -763,7 +837,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "SetWorkerDeploymentCurrentVersion".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "SetWorkerDeploymentCurrentVersion"
+                  method: "SetWorkerDeploymentCurrentVersion",
+                  type: .unary
               )
           }
           /// Namespace for "DescribeWorkerDeployment" metadata.
@@ -775,7 +850,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DescribeWorkerDeployment".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DescribeWorkerDeployment"
+                  method: "DescribeWorkerDeployment",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteWorkerDeployment" metadata.
@@ -787,7 +863,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DeleteWorkerDeployment".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DeleteWorkerDeployment"
+                  method: "DeleteWorkerDeployment",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteWorkerDeploymentVersion" metadata.
@@ -799,7 +876,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DeleteWorkerDeploymentVersion".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DeleteWorkerDeploymentVersion"
+                  method: "DeleteWorkerDeploymentVersion",
+                  type: .unary
               )
           }
           /// Namespace for "SetWorkerDeploymentRampingVersion" metadata.
@@ -811,7 +889,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "SetWorkerDeploymentRampingVersion".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "SetWorkerDeploymentRampingVersion"
+                  method: "SetWorkerDeploymentRampingVersion",
+                  type: .unary
               )
           }
           /// Namespace for "ListWorkerDeployments" metadata.
@@ -823,7 +902,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListWorkerDeployments".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListWorkerDeployments"
+                  method: "ListWorkerDeployments",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateWorkerDeploymentVersionMetadata" metadata.
@@ -835,7 +915,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "UpdateWorkerDeploymentVersionMetadata".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "UpdateWorkerDeploymentVersionMetadata"
+                  method: "UpdateWorkerDeploymentVersionMetadata",
+                  type: .unary
               )
           }
           /// Namespace for "SetWorkerDeploymentManager" metadata.
@@ -847,7 +928,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "SetWorkerDeploymentManager".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "SetWorkerDeploymentManager"
+                  method: "SetWorkerDeploymentManager",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateWorkflowExecution" metadata.
@@ -859,7 +941,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "UpdateWorkflowExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "UpdateWorkflowExecution"
+                  method: "UpdateWorkflowExecution",
+                  type: .unary
               )
           }
           /// Namespace for "PollWorkflowExecutionUpdate" metadata.
@@ -871,7 +954,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "PollWorkflowExecutionUpdate".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "PollWorkflowExecutionUpdate"
+                  method: "PollWorkflowExecutionUpdate",
+                  type: .unary
               )
           }
           /// Namespace for "StartBatchOperation" metadata.
@@ -883,7 +967,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "StartBatchOperation".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "StartBatchOperation"
+                  method: "StartBatchOperation",
+                  type: .unary
               )
           }
           /// Namespace for "StopBatchOperation" metadata.
@@ -895,7 +980,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "StopBatchOperation".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "StopBatchOperation"
+                  method: "StopBatchOperation",
+                  type: .unary
               )
           }
           /// Namespace for "DescribeBatchOperation" metadata.
@@ -907,7 +993,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DescribeBatchOperation".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DescribeBatchOperation"
+                  method: "DescribeBatchOperation",
+                  type: .unary
               )
           }
           /// Namespace for "ListBatchOperations" metadata.
@@ -919,7 +1006,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListBatchOperations".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListBatchOperations"
+                  method: "ListBatchOperations",
+                  type: .unary
               )
           }
           /// Namespace for "PollNexusTaskQueue" metadata.
@@ -931,7 +1019,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "PollNexusTaskQueue".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "PollNexusTaskQueue"
+                  method: "PollNexusTaskQueue",
+                  type: .unary
               )
           }
           /// Namespace for "RespondNexusTaskCompleted" metadata.
@@ -943,7 +1032,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RespondNexusTaskCompleted".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RespondNexusTaskCompleted"
+                  method: "RespondNexusTaskCompleted",
+                  type: .unary
               )
           }
           /// Namespace for "RespondNexusTaskFailed" metadata.
@@ -955,7 +1045,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RespondNexusTaskFailed".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RespondNexusTaskFailed"
+                  method: "RespondNexusTaskFailed",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateActivityOptions" metadata.
@@ -967,7 +1058,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "UpdateActivityOptions".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "UpdateActivityOptions"
+                  method: "UpdateActivityOptions",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateWorkflowExecutionOptions" metadata.
@@ -979,7 +1071,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "UpdateWorkflowExecutionOptions".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "UpdateWorkflowExecutionOptions"
+                  method: "UpdateWorkflowExecutionOptions",
+                  type: .unary
               )
           }
           /// Namespace for "PauseActivity" metadata.
@@ -991,7 +1084,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "PauseActivity".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "PauseActivity"
+                  method: "PauseActivity",
+                  type: .unary
               )
           }
           /// Namespace for "UnpauseActivity" metadata.
@@ -1003,7 +1097,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "UnpauseActivity".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "UnpauseActivity"
+                  method: "UnpauseActivity",
+                  type: .unary
               )
           }
           /// Namespace for "ResetActivity" metadata.
@@ -1015,7 +1110,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ResetActivity".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ResetActivity"
+                  method: "ResetActivity",
+                  type: .unary
               )
           }
           /// Namespace for "CreateWorkflowRule" metadata.
@@ -1027,7 +1123,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "CreateWorkflowRule".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "CreateWorkflowRule"
+                  method: "CreateWorkflowRule",
+                  type: .unary
               )
           }
           /// Namespace for "DescribeWorkflowRule" metadata.
@@ -1039,7 +1136,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DescribeWorkflowRule".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DescribeWorkflowRule"
+                  method: "DescribeWorkflowRule",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteWorkflowRule" metadata.
@@ -1051,7 +1149,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DeleteWorkflowRule".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DeleteWorkflowRule"
+                  method: "DeleteWorkflowRule",
+                  type: .unary
               )
           }
           /// Namespace for "ListWorkflowRules" metadata.
@@ -1063,7 +1162,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListWorkflowRules".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListWorkflowRules"
+                  method: "ListWorkflowRules",
+                  type: .unary
               )
           }
           /// Namespace for "TriggerWorkflowRule" metadata.
@@ -1075,7 +1175,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "TriggerWorkflowRule".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "TriggerWorkflowRule"
+                  method: "TriggerWorkflowRule",
+                  type: .unary
               )
           }
           /// Namespace for "RecordWorkerHeartbeat" metadata.
@@ -1087,7 +1188,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RecordWorkerHeartbeat".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RecordWorkerHeartbeat"
+                  method: "RecordWorkerHeartbeat",
+                  type: .unary
               )
           }
           /// Namespace for "ListWorkers" metadata.
@@ -1099,7 +1201,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListWorkers".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListWorkers"
+                  method: "ListWorkers",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateTaskQueueConfig" metadata.
@@ -1111,7 +1214,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "UpdateTaskQueueConfig".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "UpdateTaskQueueConfig"
+                  method: "UpdateTaskQueueConfig",
+                  type: .unary
               )
           }
           /// Namespace for "FetchWorkerConfig" metadata.
@@ -1123,7 +1227,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "FetchWorkerConfig".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "FetchWorkerConfig"
+                  method: "FetchWorkerConfig",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateWorkerConfig" metadata.
@@ -1135,7 +1240,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "UpdateWorkerConfig".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "UpdateWorkerConfig"
+                  method: "UpdateWorkerConfig",
+                  type: .unary
               )
           }
           /// Namespace for "DescribeWorker" metadata.
@@ -1147,7 +1253,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DescribeWorker".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DescribeWorker"
+                  method: "DescribeWorker",
+                  type: .unary
               )
           }
           /// Namespace for "PauseWorkflowExecution" metadata.
@@ -1159,7 +1266,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "PauseWorkflowExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "PauseWorkflowExecution"
+                  method: "PauseWorkflowExecution",
+                  type: .unary
               )
           }
           /// Namespace for "UnpauseWorkflowExecution" metadata.
@@ -1171,7 +1279,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "UnpauseWorkflowExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "UnpauseWorkflowExecution"
+                  method: "UnpauseWorkflowExecution",
+                  type: .unary
               )
           }
           /// Namespace for "StartActivityExecution" metadata.
@@ -1183,7 +1292,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "StartActivityExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "StartActivityExecution"
+                  method: "StartActivityExecution",
+                  type: .unary
               )
           }
           /// Namespace for "DescribeActivityExecution" metadata.
@@ -1195,7 +1305,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DescribeActivityExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DescribeActivityExecution"
+                  method: "DescribeActivityExecution",
+                  type: .unary
               )
           }
           /// Namespace for "PollActivityExecution" metadata.
@@ -1207,7 +1318,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "PollActivityExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "PollActivityExecution"
+                  method: "PollActivityExecution",
+                  type: .unary
               )
           }
           /// Namespace for "ListActivityExecutions" metadata.
@@ -1219,7 +1331,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "ListActivityExecutions".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "ListActivityExecutions"
+                  method: "ListActivityExecutions",
+                  type: .unary
               )
           }
           /// Namespace for "CountActivityExecutions" metadata.
@@ -1231,7 +1344,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "CountActivityExecutions".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "CountActivityExecutions"
+                  method: "CountActivityExecutions",
+                  type: .unary
               )
           }
           /// Namespace for "RequestCancelActivityExecution" metadata.
@@ -1243,7 +1357,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "RequestCancelActivityExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "RequestCancelActivityExecution"
+                  method: "RequestCancelActivityExecution",
+                  type: .unary
               )
           }
           /// Namespace for "TerminateActivityExecution" metadata.
@@ -1255,7 +1370,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "TerminateActivityExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "TerminateActivityExecution"
+                  method: "TerminateActivityExecution",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteActivityExecution" metadata.
@@ -1267,7 +1383,8 @@ extension Api.Workflowservice.V1 {
               /// Descriptor for "DeleteActivityExecution".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.workflowservice.v1.WorkflowService"),
-                  method: "DeleteActivityExecution"
+                  method: "DeleteActivityExecution",
+                  type: .unary
               )
           }
           /// Descriptors for all methods in the "temporal.api.workflowservice.v1.WorkflowService" service.
@@ -1322,6 +1439,7 @@ extension Api.Workflowservice.V1 {
               ListScheduleMatchingTimes.descriptor,
               DeleteSchedule.descriptor,
               ListSchedules.descriptor,
+              CountSchedules.descriptor,
               UpdateWorkerBuildIdCompatibility.descriptor,
               GetWorkerBuildIdCompatibility.descriptor,
               UpdateWorkerVersioningRules.descriptor,
@@ -1577,7 +1695,8 @@ extension Api.Workflowservice.V1.WorkflowService{
         /// > Upon failure, it returns `MultiOperationExecutionFailure` where the status code
         /// > equals the status code of the *first* operation that failed to be started.
         /// > 
-        /// > NOTE: Experimental API.
+        /// > (-- api-linter: core::0127::http-annotation=disabled
+        /// >     aip.dev/not-precedent: To be exposed over HTTP in the future. --)
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Api.Workflowservice.V1.ExecuteMultiOperationRequest` message.
@@ -2749,6 +2868,29 @@ extension Api.Workflowservice.V1.WorkflowService{
             deserializer: some GRPCCore.MessageDeserializer<Api.Workflowservice.V1.ListSchedulesResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<Api.Workflowservice.V1.ListSchedulesResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "CountSchedules" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > CountSchedules is a visibility API to count schedules in a specific namespace.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `Api.Workflowservice.V1.CountSchedulesRequest` message.
+        ///   - serializer: A serializer for `Api.Workflowservice.V1.CountSchedulesRequest` messages.
+        ///   - deserializer: A deserializer for `Api.Workflowservice.V1.CountSchedulesResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func countSchedules<Result>(
+            request: GRPCCore.ClientRequest<Api.Workflowservice.V1.CountSchedulesRequest>,
+            serializer: some GRPCCore.MessageSerializer<Api.Workflowservice.V1.CountSchedulesRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<Api.Workflowservice.V1.CountSchedulesResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<Api.Workflowservice.V1.CountSchedulesResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
 
         /// Call the "UpdateWorkerBuildIdCompatibility" method.
@@ -4455,7 +4597,8 @@ extension Api.Workflowservice.V1.WorkflowService{
         /// > Upon failure, it returns `MultiOperationExecutionFailure` where the status code
         /// > equals the status code of the *first* operation that failed to be started.
         /// > 
-        /// > NOTE: Experimental API.
+        /// > (-- api-linter: core::0127::http-annotation=disabled
+        /// >     aip.dev/not-precedent: To be exposed over HTTP in the future. --)
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Api.Workflowservice.V1.ExecuteMultiOperationRequest` message.
@@ -6106,6 +6249,40 @@ extension Api.Workflowservice.V1.WorkflowService{
             try await self.client.unary(
                 request: request,
                 descriptor: Api.Workflowservice.V1.WorkflowService.Method.ListSchedules.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
+
+        /// Call the "CountSchedules" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > CountSchedules is a visibility API to count schedules in a specific namespace.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `Api.Workflowservice.V1.CountSchedulesRequest` message.
+        ///   - serializer: A serializer for `Api.Workflowservice.V1.CountSchedulesRequest` messages.
+        ///   - deserializer: A deserializer for `Api.Workflowservice.V1.CountSchedulesResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        package func countSchedules<Result>(
+            request: GRPCCore.ClientRequest<Api.Workflowservice.V1.CountSchedulesRequest>,
+            serializer: some GRPCCore.MessageSerializer<Api.Workflowservice.V1.CountSchedulesRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<Api.Workflowservice.V1.CountSchedulesResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<Api.Workflowservice.V1.CountSchedulesResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: Api.Workflowservice.V1.WorkflowService.Method.CountSchedules.descriptor,
                 serializer: serializer,
                 deserializer: deserializer,
                 options: options,
@@ -8355,7 +8532,8 @@ extension Api.Workflowservice.V1.WorkflowService.ClientProtocol {
     /// > Upon failure, it returns `MultiOperationExecutionFailure` where the status code
     /// > equals the status code of the *first* operation that failed to be started.
     /// > 
-    /// > NOTE: Experimental API.
+    /// > (-- api-linter: core::0127::http-annotation=disabled
+    /// >     aip.dev/not-precedent: To be exposed over HTTP in the future. --)
     ///
     /// - Parameters:
     ///   - request: A request containing a single `Api.Workflowservice.V1.ExecuteMultiOperationRequest` message.
@@ -9788,6 +9966,35 @@ extension Api.Workflowservice.V1.WorkflowService.ClientProtocol {
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<Api.Workflowservice.V1.ListSchedulesRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<Api.Workflowservice.V1.ListSchedulesResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "CountSchedules" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > CountSchedules is a visibility API to count schedules in a specific namespace.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `Api.Workflowservice.V1.CountSchedulesRequest` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    package func countSchedules<Result>(
+        request: GRPCCore.ClientRequest<Api.Workflowservice.V1.CountSchedulesRequest>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<Api.Workflowservice.V1.CountSchedulesResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.countSchedules(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<Api.Workflowservice.V1.CountSchedulesRequest>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<Api.Workflowservice.V1.CountSchedulesResponse>(),
             options: options,
             onResponse: handleResponse
         )
@@ -11788,7 +11995,8 @@ extension Api.Workflowservice.V1.WorkflowService.ClientProtocol {
     /// > Upon failure, it returns `MultiOperationExecutionFailure` where the status code
     /// > equals the status code of the *first* operation that failed to be started.
     /// > 
-    /// > NOTE: Experimental API.
+    /// > (-- api-linter: core::0127::http-annotation=disabled
+    /// >     aip.dev/not-precedent: To be exposed over HTTP in the future. --)
     ///
     /// - Parameters:
     ///   - message: request message to send.
@@ -13396,6 +13604,39 @@ extension Api.Workflowservice.V1.WorkflowService.ClientProtocol {
             metadata: metadata
         )
         return try await self.listSchedules(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "CountSchedules" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > CountSchedules is a visibility API to count schedules in a specific namespace.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    package func countSchedules<Result>(
+        _ message: Api.Workflowservice.V1.CountSchedulesRequest,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<Api.Workflowservice.V1.CountSchedulesResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<Api.Workflowservice.V1.CountSchedulesRequest>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.countSchedules(
             request: request,
             options: options,
             onResponse: handleResponse

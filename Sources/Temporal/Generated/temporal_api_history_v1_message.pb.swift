@@ -421,11 +421,56 @@ extension Api.History.V1 {
       set {_uniqueStorage()._eagerExecutionAccepted = newValue}
     }
 
+    /// During a previous run of this workflow, the server may have notified the SDK
+    /// that the Target Worker Deployment Version changed, but the SDK declined to
+    /// upgrade (e.g., by continuing-as-new with PINNED behavior). This field records
+    /// the target version that was declined.
+    ///
+    /// This is a wrapper message to distinguish "never declined" (nil wrapper) from
+    /// "declined an unversioned target" (non-nil wrapper with nil deployment_version).
+    ///
+    /// Used internally by the server during continue-as-new and retry.
+    /// Should not be read or interpreted by SDKs.
+    public var declinedTargetVersionUpgrade: Api.History.V1.DeclinedTargetVersionUpgrade {
+      get {_storage._declinedTargetVersionUpgrade ?? Api.History.V1.DeclinedTargetVersionUpgrade()}
+      set {_uniqueStorage()._declinedTargetVersionUpgrade = newValue}
+    }
+    /// Returns true if `declinedTargetVersionUpgrade` has been explicitly set.
+    public var hasDeclinedTargetVersionUpgrade: Bool {_storage._declinedTargetVersionUpgrade != nil}
+    /// Clears the value of `declinedTargetVersionUpgrade`. Subsequent reads from it will return its default value.
+    public mutating func clearDeclinedTargetVersionUpgrade() {_uniqueStorage()._declinedTargetVersionUpgrade = nil}
+
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public init() {}
 
     fileprivate var _storage = _StorageClass.defaultInstance
+  }
+}
+extension Api.History.V1 {
+
+
+  /// Wrapper for a target deployment version that the SDK declined to upgrade to.
+  /// See declined_target_version_upgrade on WorkflowExecutionStartedEventAttributes.
+  public struct DeclinedTargetVersionUpgrade: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    public var deploymentVersion: Api.Deployment.V1.WorkerDeploymentVersion {
+      get {_deploymentVersion ?? Api.Deployment.V1.WorkerDeploymentVersion()}
+      set {_deploymentVersion = newValue}
+    }
+    /// Returns true if `deploymentVersion` has been explicitly set.
+    public var hasDeploymentVersion: Bool {self._deploymentVersion != nil}
+    /// Clears the value of `deploymentVersion`. Subsequent reads from it will return its default value.
+    public mutating func clearDeploymentVersion() {self._deploymentVersion = nil}
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+
+    fileprivate var _deploymentVersion: Api.Deployment.V1.WorkerDeploymentVersion? = nil
   }
 }
 extension Api.History.V1 {
@@ -741,6 +786,11 @@ extension Api.History.V1 {
     /// The reason(s) that suggest_continue_as_new is true, if it is.
     /// Unset if suggest_continue_as_new is false.
     public var suggestContinueAsNewReasons: [Api.Enums.V1.SuggestContinueAsNewReason] = []
+
+    /// True if Workflow's Target Worker Deployment Version is different from its Pinned Version and
+    /// the workflow is Pinned.
+    /// Experimental.
+    public var targetWorkerDeploymentVersionChanged: Bool = false
 
     /// Total history size in bytes, which the workflow might use to decide when to
     /// continue-as-new regardless of the suggestion. Note that history event count is
@@ -3877,7 +3927,7 @@ fileprivate let _protobuf_package = "temporal.api.history.v1"
 
 extension Api.History.V1.WorkflowExecutionStartedEventAttributes: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".WorkflowExecutionStartedEventAttributes"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}workflow_type\0\u{3}parent_workflow_namespace\0\u{3}parent_workflow_execution\0\u{3}parent_initiated_event_id\0\u{3}task_queue\0\u{1}input\0\u{3}workflow_execution_timeout\0\u{3}workflow_run_timeout\0\u{3}workflow_task_timeout\0\u{3}continued_execution_run_id\0\u{1}initiator\0\u{3}continued_failure\0\u{3}last_completion_result\0\u{3}original_execution_run_id\0\u{1}identity\0\u{3}first_execution_run_id\0\u{3}retry_policy\0\u{1}attempt\0\u{3}workflow_execution_expiration_time\0\u{3}cron_schedule\0\u{3}first_workflow_task_backoff\0\u{1}memo\0\u{3}search_attributes\0\u{3}prev_auto_reset_points\0\u{1}header\0\u{3}parent_initiated_event_version\0\u{3}parent_workflow_namespace_id\0\u{3}workflow_id\0\u{3}source_version_stamp\0\u{3}completion_callbacks\0\u{3}root_workflow_execution\0\u{3}inherited_build_id\0\u{3}versioning_override\0\u{3}parent_pinned_worker_deployment_version\0\u{1}priority\0\u{4}\u{2}inherited_pinned_version\0\u{3}eager_execution_accepted\0\u{3}inherited_auto_upgrade_info\0\u{b}parent_pinned_deployment_version\0\u{c}$\u{1}")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}workflow_type\0\u{3}parent_workflow_namespace\0\u{3}parent_workflow_execution\0\u{3}parent_initiated_event_id\0\u{3}task_queue\0\u{1}input\0\u{3}workflow_execution_timeout\0\u{3}workflow_run_timeout\0\u{3}workflow_task_timeout\0\u{3}continued_execution_run_id\0\u{1}initiator\0\u{3}continued_failure\0\u{3}last_completion_result\0\u{3}original_execution_run_id\0\u{1}identity\0\u{3}first_execution_run_id\0\u{3}retry_policy\0\u{1}attempt\0\u{3}workflow_execution_expiration_time\0\u{3}cron_schedule\0\u{3}first_workflow_task_backoff\0\u{1}memo\0\u{3}search_attributes\0\u{3}prev_auto_reset_points\0\u{1}header\0\u{3}parent_initiated_event_version\0\u{3}parent_workflow_namespace_id\0\u{3}workflow_id\0\u{3}source_version_stamp\0\u{3}completion_callbacks\0\u{3}root_workflow_execution\0\u{3}inherited_build_id\0\u{3}versioning_override\0\u{3}parent_pinned_worker_deployment_version\0\u{1}priority\0\u{4}\u{2}inherited_pinned_version\0\u{3}eager_execution_accepted\0\u{3}inherited_auto_upgrade_info\0\u{3}declined_target_version_upgrade\0\u{b}parent_pinned_deployment_version\0\u{c}$\u{1}")
 
   fileprivate class _StorageClass {
     var _workflowType: Api.Common.V1.WorkflowType? = nil
@@ -3918,6 +3968,7 @@ extension Api.History.V1.WorkflowExecutionStartedEventAttributes: SwiftProtobuf.
     var _inheritedPinnedVersion: Api.Deployment.V1.WorkerDeploymentVersion? = nil
     var _inheritedAutoUpgradeInfo: Api.Deployment.V1.InheritedAutoUpgradeInfo? = nil
     var _eagerExecutionAccepted: Bool = false
+    var _declinedTargetVersionUpgrade: Api.History.V1.DeclinedTargetVersionUpgrade? = nil
 
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
@@ -3966,6 +4017,7 @@ extension Api.History.V1.WorkflowExecutionStartedEventAttributes: SwiftProtobuf.
       _inheritedPinnedVersion = source._inheritedPinnedVersion
       _inheritedAutoUpgradeInfo = source._inheritedAutoUpgradeInfo
       _eagerExecutionAccepted = source._eagerExecutionAccepted
+      _declinedTargetVersionUpgrade = source._declinedTargetVersionUpgrade
     }
   }
 
@@ -4022,6 +4074,7 @@ extension Api.History.V1.WorkflowExecutionStartedEventAttributes: SwiftProtobuf.
         case 37: try { try decoder.decodeSingularMessageField(value: &_storage._inheritedPinnedVersion) }()
         case 38: try { try decoder.decodeSingularBoolField(value: &_storage._eagerExecutionAccepted) }()
         case 39: try { try decoder.decodeSingularMessageField(value: &_storage._inheritedAutoUpgradeInfo) }()
+        case 40: try { try decoder.decodeSingularMessageField(value: &_storage._declinedTargetVersionUpgrade) }()
         default: break
         }
       }
@@ -4148,6 +4201,9 @@ extension Api.History.V1.WorkflowExecutionStartedEventAttributes: SwiftProtobuf.
       try { if let v = _storage._inheritedAutoUpgradeInfo {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 39)
       } }()
+      try { if let v = _storage._declinedTargetVersionUpgrade {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 40)
+      } }()
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -4195,10 +4251,45 @@ extension Api.History.V1.WorkflowExecutionStartedEventAttributes: SwiftProtobuf.
         if _storage._inheritedPinnedVersion != rhs_storage._inheritedPinnedVersion {return false}
         if _storage._inheritedAutoUpgradeInfo != rhs_storage._inheritedAutoUpgradeInfo {return false}
         if _storage._eagerExecutionAccepted != rhs_storage._eagerExecutionAccepted {return false}
+        if _storage._declinedTargetVersionUpgrade != rhs_storage._declinedTargetVersionUpgrade {return false}
         return true
       }
       if !storagesAreEqual {return false}
     }
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Api.History.V1.DeclinedTargetVersionUpgrade: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".DeclinedTargetVersionUpgrade"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}deployment_version\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._deploymentVersion) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._deploymentVersion {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Api.History.V1.DeclinedTargetVersionUpgrade, rhs: Api.History.V1.DeclinedTargetVersionUpgrade) -> Bool {
+    if lhs._deploymentVersion != rhs._deploymentVersion {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -4553,7 +4644,7 @@ extension Api.History.V1.WorkflowTaskScheduledEventAttributes: SwiftProtobuf.Mes
 
 extension Api.History.V1.WorkflowTaskStartedEventAttributes: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".WorkflowTaskStartedEventAttributes"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}scheduled_event_id\0\u{1}identity\0\u{3}request_id\0\u{3}suggest_continue_as_new\0\u{3}history_size_bytes\0\u{3}worker_version\0\u{3}build_id_redirect_counter\0\u{3}suggest_continue_as_new_reasons\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}scheduled_event_id\0\u{1}identity\0\u{3}request_id\0\u{3}suggest_continue_as_new\0\u{3}history_size_bytes\0\u{3}worker_version\0\u{3}build_id_redirect_counter\0\u{3}suggest_continue_as_new_reasons\0\u{3}target_worker_deployment_version_changed\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4569,6 +4660,7 @@ extension Api.History.V1.WorkflowTaskStartedEventAttributes: SwiftProtobuf.Messa
       case 6: try { try decoder.decodeSingularMessageField(value: &self._workerVersion) }()
       case 7: try { try decoder.decodeSingularInt64Field(value: &self.buildIDRedirectCounter) }()
       case 8: try { try decoder.decodeRepeatedEnumField(value: &self.suggestContinueAsNewReasons) }()
+      case 9: try { try decoder.decodeSingularBoolField(value: &self.targetWorkerDeploymentVersionChanged) }()
       default: break
       }
     }
@@ -4603,6 +4695,9 @@ extension Api.History.V1.WorkflowTaskStartedEventAttributes: SwiftProtobuf.Messa
     if !self.suggestContinueAsNewReasons.isEmpty {
       try visitor.visitPackedEnumField(value: self.suggestContinueAsNewReasons, fieldNumber: 8)
     }
+    if self.targetWorkerDeploymentVersionChanged != false {
+      try visitor.visitSingularBoolField(value: self.targetWorkerDeploymentVersionChanged, fieldNumber: 9)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -4612,6 +4707,7 @@ extension Api.History.V1.WorkflowTaskStartedEventAttributes: SwiftProtobuf.Messa
     if lhs.requestID != rhs.requestID {return false}
     if lhs.suggestContinueAsNew != rhs.suggestContinueAsNew {return false}
     if lhs.suggestContinueAsNewReasons != rhs.suggestContinueAsNewReasons {return false}
+    if lhs.targetWorkerDeploymentVersionChanged != rhs.targetWorkerDeploymentVersionChanged {return false}
     if lhs.historySizeBytes != rhs.historySizeBytes {return false}
     if lhs._workerVersion != rhs._workerVersion {return false}
     if lhs.buildIDRedirectCounter != rhs.buildIDRedirectCounter {return false}

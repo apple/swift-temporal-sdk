@@ -1020,7 +1020,7 @@ struct WorkflowStateMachine: ~Copyable {
             active.commands.append(
                 .with {
                     $0.upsertWorkflowSearchAttributes = .with {
-                        $0.searchAttributes = Api.Common.V1.SearchAttributes(searchAttributes).indexedFields
+                        $0.searchAttributes = Api.Common.V1.SearchAttributes(searchAttributes)
                     }
                 }
             )
