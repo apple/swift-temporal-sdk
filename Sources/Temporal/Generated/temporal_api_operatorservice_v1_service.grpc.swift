@@ -31,7 +31,8 @@ extension Api.Operatorservice.V1 {
               /// Descriptor for "AddSearchAttributes".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.operatorservice.v1.OperatorService"),
-                  method: "AddSearchAttributes"
+                  method: "AddSearchAttributes",
+                  type: .unary
               )
           }
           /// Namespace for "RemoveSearchAttributes" metadata.
@@ -43,7 +44,8 @@ extension Api.Operatorservice.V1 {
               /// Descriptor for "RemoveSearchAttributes".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.operatorservice.v1.OperatorService"),
-                  method: "RemoveSearchAttributes"
+                  method: "RemoveSearchAttributes",
+                  type: .unary
               )
           }
           /// Namespace for "ListSearchAttributes" metadata.
@@ -55,7 +57,8 @@ extension Api.Operatorservice.V1 {
               /// Descriptor for "ListSearchAttributes".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.operatorservice.v1.OperatorService"),
-                  method: "ListSearchAttributes"
+                  method: "ListSearchAttributes",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteNamespace" metadata.
@@ -67,7 +70,8 @@ extension Api.Operatorservice.V1 {
               /// Descriptor for "DeleteNamespace".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.operatorservice.v1.OperatorService"),
-                  method: "DeleteNamespace"
+                  method: "DeleteNamespace",
+                  type: .unary
               )
           }
           /// Namespace for "AddOrUpdateRemoteCluster" metadata.
@@ -79,7 +83,8 @@ extension Api.Operatorservice.V1 {
               /// Descriptor for "AddOrUpdateRemoteCluster".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.operatorservice.v1.OperatorService"),
-                  method: "AddOrUpdateRemoteCluster"
+                  method: "AddOrUpdateRemoteCluster",
+                  type: .unary
               )
           }
           /// Namespace for "RemoveRemoteCluster" metadata.
@@ -91,7 +96,8 @@ extension Api.Operatorservice.V1 {
               /// Descriptor for "RemoveRemoteCluster".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.operatorservice.v1.OperatorService"),
-                  method: "RemoveRemoteCluster"
+                  method: "RemoveRemoteCluster",
+                  type: .unary
               )
           }
           /// Namespace for "ListClusters" metadata.
@@ -103,7 +109,8 @@ extension Api.Operatorservice.V1 {
               /// Descriptor for "ListClusters".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.operatorservice.v1.OperatorService"),
-                  method: "ListClusters"
+                  method: "ListClusters",
+                  type: .unary
               )
           }
           /// Namespace for "GetNexusEndpoint" metadata.
@@ -115,7 +122,8 @@ extension Api.Operatorservice.V1 {
               /// Descriptor for "GetNexusEndpoint".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.operatorservice.v1.OperatorService"),
-                  method: "GetNexusEndpoint"
+                  method: "GetNexusEndpoint",
+                  type: .unary
               )
           }
           /// Namespace for "CreateNexusEndpoint" metadata.
@@ -127,7 +135,8 @@ extension Api.Operatorservice.V1 {
               /// Descriptor for "CreateNexusEndpoint".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.operatorservice.v1.OperatorService"),
-                  method: "CreateNexusEndpoint"
+                  method: "CreateNexusEndpoint",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateNexusEndpoint" metadata.
@@ -139,7 +148,8 @@ extension Api.Operatorservice.V1 {
               /// Descriptor for "UpdateNexusEndpoint".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.operatorservice.v1.OperatorService"),
-                  method: "UpdateNexusEndpoint"
+                  method: "UpdateNexusEndpoint",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteNexusEndpoint" metadata.
@@ -151,7 +161,8 @@ extension Api.Operatorservice.V1 {
               /// Descriptor for "DeleteNexusEndpoint".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.operatorservice.v1.OperatorService"),
-                  method: "DeleteNexusEndpoint"
+                  method: "DeleteNexusEndpoint",
+                  type: .unary
               )
           }
           /// Namespace for "ListNexusEndpoints" metadata.
@@ -163,7 +174,8 @@ extension Api.Operatorservice.V1 {
               /// Descriptor for "ListNexusEndpoints".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.operatorservice.v1.OperatorService"),
-                  method: "ListNexusEndpoints"
+                  method: "ListNexusEndpoints",
+                  type: .unary
               )
           }
           /// Descriptors for all methods in the "temporal.api.operatorservice.v1.OperatorService" service.

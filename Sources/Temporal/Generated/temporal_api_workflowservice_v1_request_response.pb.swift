@@ -8,7 +8,11 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
 public import Foundation
+#endif
 public import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -149,60 +153,53 @@ extension Api.Workflowservice.V1 {
 extension Api.Workflowservice.V1 {
 
 
-  public struct DescribeNamespaceResponse: @unchecked Sendable {
+  public struct DescribeNamespaceResponse: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
     public var namespaceInfo: Api.Namespace.V1.NamespaceInfo {
-      get {_storage._namespaceInfo ?? Api.Namespace.V1.NamespaceInfo()}
-      set {_uniqueStorage()._namespaceInfo = newValue}
+      get {_namespaceInfo ?? Api.Namespace.V1.NamespaceInfo()}
+      set {_namespaceInfo = newValue}
     }
     /// Returns true if `namespaceInfo` has been explicitly set.
-    public var hasNamespaceInfo: Bool {_storage._namespaceInfo != nil}
+    public var hasNamespaceInfo: Bool {self._namespaceInfo != nil}
     /// Clears the value of `namespaceInfo`. Subsequent reads from it will return its default value.
-    public mutating func clearNamespaceInfo() {_uniqueStorage()._namespaceInfo = nil}
+    public mutating func clearNamespaceInfo() {self._namespaceInfo = nil}
 
     public var config: Api.Namespace.V1.NamespaceConfig {
-      get {_storage._config ?? Api.Namespace.V1.NamespaceConfig()}
-      set {_uniqueStorage()._config = newValue}
+      get {_config ?? Api.Namespace.V1.NamespaceConfig()}
+      set {_config = newValue}
     }
     /// Returns true if `config` has been explicitly set.
-    public var hasConfig: Bool {_storage._config != nil}
+    public var hasConfig: Bool {self._config != nil}
     /// Clears the value of `config`. Subsequent reads from it will return its default value.
-    public mutating func clearConfig() {_uniqueStorage()._config = nil}
+    public mutating func clearConfig() {self._config = nil}
 
     public var replicationConfig: Api.Replication.V1.NamespaceReplicationConfig {
-      get {_storage._replicationConfig ?? Api.Replication.V1.NamespaceReplicationConfig()}
-      set {_uniqueStorage()._replicationConfig = newValue}
+      get {_replicationConfig ?? Api.Replication.V1.NamespaceReplicationConfig()}
+      set {_replicationConfig = newValue}
     }
     /// Returns true if `replicationConfig` has been explicitly set.
-    public var hasReplicationConfig: Bool {_storage._replicationConfig != nil}
+    public var hasReplicationConfig: Bool {self._replicationConfig != nil}
     /// Clears the value of `replicationConfig`. Subsequent reads from it will return its default value.
-    public mutating func clearReplicationConfig() {_uniqueStorage()._replicationConfig = nil}
+    public mutating func clearReplicationConfig() {self._replicationConfig = nil}
 
-    public var failoverVersion: Int64 {
-      get {_storage._failoverVersion}
-      set {_uniqueStorage()._failoverVersion = newValue}
-    }
+    public var failoverVersion: Int64 = 0
 
-    public var isGlobalNamespace: Bool {
-      get {_storage._isGlobalNamespace}
-      set {_uniqueStorage()._isGlobalNamespace = newValue}
-    }
+    public var isGlobalNamespace: Bool = false
 
     /// Contains the historical state of failover_versions for the cluster, truncated to contain only the last N
     /// states to ensure that the list does not grow unbounded.
-    public var failoverHistory: [Api.Replication.V1.FailoverStatus] {
-      get {_storage._failoverHistory}
-      set {_uniqueStorage()._failoverHistory = newValue}
-    }
+    public var failoverHistory: [Api.Replication.V1.FailoverStatus] = []
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public init() {}
 
-    fileprivate var _storage = _StorageClass.defaultInstance
+    fileprivate var _namespaceInfo: Api.Namespace.V1.NamespaceInfo? = nil
+    fileprivate var _config: Api.Namespace.V1.NamespaceConfig? = nil
+    fileprivate var _replicationConfig: Api.Replication.V1.NamespaceReplicationConfig? = nil
   }
 }
 extension Api.Workflowservice.V1 {
@@ -271,53 +268,49 @@ extension Api.Workflowservice.V1 {
 extension Api.Workflowservice.V1 {
 
 
-  public struct UpdateNamespaceResponse: @unchecked Sendable {
+  public struct UpdateNamespaceResponse: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
     public var namespaceInfo: Api.Namespace.V1.NamespaceInfo {
-      get {_storage._namespaceInfo ?? Api.Namespace.V1.NamespaceInfo()}
-      set {_uniqueStorage()._namespaceInfo = newValue}
+      get {_namespaceInfo ?? Api.Namespace.V1.NamespaceInfo()}
+      set {_namespaceInfo = newValue}
     }
     /// Returns true if `namespaceInfo` has been explicitly set.
-    public var hasNamespaceInfo: Bool {_storage._namespaceInfo != nil}
+    public var hasNamespaceInfo: Bool {self._namespaceInfo != nil}
     /// Clears the value of `namespaceInfo`. Subsequent reads from it will return its default value.
-    public mutating func clearNamespaceInfo() {_uniqueStorage()._namespaceInfo = nil}
+    public mutating func clearNamespaceInfo() {self._namespaceInfo = nil}
 
     public var config: Api.Namespace.V1.NamespaceConfig {
-      get {_storage._config ?? Api.Namespace.V1.NamespaceConfig()}
-      set {_uniqueStorage()._config = newValue}
+      get {_config ?? Api.Namespace.V1.NamespaceConfig()}
+      set {_config = newValue}
     }
     /// Returns true if `config` has been explicitly set.
-    public var hasConfig: Bool {_storage._config != nil}
+    public var hasConfig: Bool {self._config != nil}
     /// Clears the value of `config`. Subsequent reads from it will return its default value.
-    public mutating func clearConfig() {_uniqueStorage()._config = nil}
+    public mutating func clearConfig() {self._config = nil}
 
     public var replicationConfig: Api.Replication.V1.NamespaceReplicationConfig {
-      get {_storage._replicationConfig ?? Api.Replication.V1.NamespaceReplicationConfig()}
-      set {_uniqueStorage()._replicationConfig = newValue}
+      get {_replicationConfig ?? Api.Replication.V1.NamespaceReplicationConfig()}
+      set {_replicationConfig = newValue}
     }
     /// Returns true if `replicationConfig` has been explicitly set.
-    public var hasReplicationConfig: Bool {_storage._replicationConfig != nil}
+    public var hasReplicationConfig: Bool {self._replicationConfig != nil}
     /// Clears the value of `replicationConfig`. Subsequent reads from it will return its default value.
-    public mutating func clearReplicationConfig() {_uniqueStorage()._replicationConfig = nil}
+    public mutating func clearReplicationConfig() {self._replicationConfig = nil}
 
-    public var failoverVersion: Int64 {
-      get {_storage._failoverVersion}
-      set {_uniqueStorage()._failoverVersion = newValue}
-    }
+    public var failoverVersion: Int64 = 0
 
-    public var isGlobalNamespace: Bool {
-      get {_storage._isGlobalNamespace}
-      set {_uniqueStorage()._isGlobalNamespace = newValue}
-    }
+    public var isGlobalNamespace: Bool = false
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public init() {}
 
-    fileprivate var _storage = _StorageClass.defaultInstance
+    fileprivate var _namespaceInfo: Api.Namespace.V1.NamespaceInfo? = nil
+    fileprivate var _config: Api.Namespace.V1.NamespaceConfig? = nil
+    fileprivate var _replicationConfig: Api.Replication.V1.NamespaceReplicationConfig? = nil
   }
 }
 extension Api.Workflowservice.V1 {
@@ -822,6 +815,10 @@ extension Api.Workflowservice.V1 {
 
     /// The identity of the worker/client who is polling this task queue
     public var identity: String = String()
+
+    /// A unique key for this worker instance, used for tracking worker lifecycle.
+    /// This is guaranteed to be unique, whereas identity is not guaranteed to be unique.
+    public var workerInstanceKey: String = String()
 
     /// Deprecated. Use deployment_options instead.
     /// Each worker process should provide an ID unique to the specific set of code it is running
@@ -1364,6 +1361,10 @@ extension Api.Workflowservice.V1 {
     /// The identity of the worker/client
     public var identity: String = String()
 
+    /// A unique key for this worker instance, used for tracking worker lifecycle.
+    /// This is guaranteed to be unique, whereas identity is not guaranteed to be unique.
+    public var workerInstanceKey: String = String()
+
     public var taskQueueMetadata: Api.Taskqueue.V1.TaskQueueMetadata {
       get {_taskQueueMetadata ?? Api.Taskqueue.V1.TaskQueueMetadata()}
       set {_taskQueueMetadata = newValue}
@@ -1421,13 +1422,15 @@ extension Api.Workflowservice.V1 {
       set {_uniqueStorage()._taskToken = newValue}
     }
 
-    /// The namespace the workflow which requested this activity lives in
+    /// The namespace of the activity. If this is a workflow activity then this is the namespace of
+    /// the workflow also. If this is a standalone activity then the name of this field is
+    /// misleading, but retained for compatibility with workflow activities.
     public var workflowNamespace: String {
       get {_storage._workflowNamespace}
       set {_uniqueStorage()._workflowNamespace = newValue}
     }
 
-    /// Type of the requesting workflow
+    /// Type of the requesting workflow (if this is a workflow activity).
     public var workflowType: Api.Common.V1.WorkflowType {
       get {_storage._workflowType ?? Api.Common.V1.WorkflowType()}
       set {_uniqueStorage()._workflowType = newValue}
@@ -1437,7 +1440,7 @@ extension Api.Workflowservice.V1 {
     /// Clears the value of `workflowType`. Subsequent reads from it will return its default value.
     public mutating func clearWorkflowType() {_uniqueStorage()._workflowType = nil}
 
-    /// Execution info of the requesting workflow
+    /// Execution info of the requesting workflow (if this is a workflow activity)
     public var workflowExecution: Api.Common.V1.WorkflowExecution {
       get {_storage._workflowExecution ?? Api.Common.V1.WorkflowExecution()}
       set {_uniqueStorage()._workflowExecution = newValue}
@@ -3239,6 +3242,9 @@ extension Api.Workflowservice.V1 {
 
     public var namespace: String = String()
 
+    /// sticky_task_queue may not always be populated. We want to ensure all workers
+    /// send a shutdown request to update worker state for heartbeating, as well
+    /// as cancel pending poll calls early, instead of waiting for timeouts.
     public var stickyTaskQueue: String = String()
 
     public var identity: String = String()
@@ -3253,6 +3259,20 @@ extension Api.Workflowservice.V1 {
     public var hasWorkerHeartbeat: Bool {self._workerHeartbeat != nil}
     /// Clears the value of `workerHeartbeat`. Subsequent reads from it will return its default value.
     public mutating func clearWorkerHeartbeat() {self._workerHeartbeat = nil}
+
+    /// Technically this is also sent in the WorkerHeartbeat, but
+    /// since worker heartbeating can be turned off, this needs
+    /// to be a separate, top-level field.
+    public var workerInstanceKey: String = String()
+
+    /// Task queue name the worker is polling on. This allows server to cancel
+    /// all outstanding poll RPC calls from SDK. This avoids a race condition that
+    /// can lead to tasks being lost.
+    public var taskQueue: String = String()
+
+    /// Task queue types that help server cancel outstanding poll RPC
+    /// calls from SDK. This avoids a race condition that can lead to tasks being lost.
+    public var taskQueueTypes: [Api.Enums.V1.TaskQueueType] = []
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -4297,6 +4317,62 @@ extension Api.Workflowservice.V1 {
     public var nextPageToken: Data = Data()
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+  }
+}
+extension Api.Workflowservice.V1 {
+
+
+  public struct CountSchedulesRequest: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    public var namespace: String = String()
+
+    /// Visibility query, see https://docs.temporal.io/list-filter for the syntax.
+    public var query: String = String()
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+  }
+}
+extension Api.Workflowservice.V1 {
+
+
+  public struct CountSchedulesResponse: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// If `query` is not grouping by any field, the count is an approximate number
+    /// of schedules that match the query.
+    /// If `query` is grouping by a field, the count is simply the sum of the counts
+    /// of the groups returned in the response. This number can be smaller than the
+    /// total number of schedules matching the query.
+    public var count: Int64 = 0
+
+    /// Contains the groups if the request is grouping by a field.
+    /// The list might not be complete, and the counts of each group is approximate.
+    public var groups: [Api.Workflowservice.V1.CountSchedulesResponse.AggregationGroup] = []
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public struct AggregationGroup: Sendable {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      public var groupValues: [Api.Common.V1.Payload] = []
+
+      public var count: Int64 = 0
+
+      public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      public init() {}
+    }
 
     public init() {}
   }
@@ -5444,6 +5520,10 @@ extension Api.Workflowservice.V1 {
     /// The identity of the client who initiated this request.
     public var identity: String = String()
 
+    /// A unique key for this worker instance, used for tracking worker lifecycle.
+    /// This is guaranteed to be unique, whereas identity is not guaranteed to be unique.
+    public var workerInstanceKey: String = String()
+
     public var taskQueue: Api.Taskqueue.V1.TaskQueue {
       get {_taskQueue ?? Api.Taskqueue.V1.TaskQueue()}
       set {_taskQueue = newValue}
@@ -5590,7 +5670,9 @@ extension Api.Workflowservice.V1 {
     /// A unique identifier for this task.
     public var taskToken: Data = Data()
 
-    /// The error the handler failed with.
+    /// Deprecated. Use the failure field instead.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     public var error: Api.Nexus.V1.HandlerError {
       get {_error ?? Api.Nexus.V1.HandlerError()}
       set {_error = newValue}
@@ -5600,11 +5682,22 @@ extension Api.Workflowservice.V1 {
     /// Clears the value of `error`. Subsequent reads from it will return its default value.
     public mutating func clearError() {self._error = nil}
 
+    /// The error the handler failed with. Must contain a NexusHandlerFailureInfo object.
+    public var failure: Api.Failure.V1.Failure {
+      get {_failure ?? Api.Failure.V1.Failure()}
+      set {_failure = newValue}
+    }
+    /// Returns true if `failure` has been explicitly set.
+    public var hasFailure: Bool {self._failure != nil}
+    /// Clears the value of `failure`. Subsequent reads from it will return its default value.
+    public mutating func clearFailure() {self._failure = nil}
+
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public init() {}
 
     fileprivate var _error: Api.Nexus.V1.HandlerError? = nil
+    fileprivate var _failure: Api.Failure.V1.Failure? = nil
   }
 }
 extension Api.Workflowservice.V1 {
@@ -7530,8 +7623,8 @@ extension Api.Workflowservice.V1 {
 
     public var nextPageToken: Data = Data()
 
-    /// `query` in ListWorkers is used to filter workers based on worker status info.
-    /// The following worker status attributes are expected are supported as part of the query:
+    /// `query` in ListWorkers is used to filter workers based on worker attributes.
+    /// Supported attributes:
     ///* WorkerInstanceKey
     ///* WorkerIdentity
     ///* HostName
@@ -7541,9 +7634,7 @@ extension Api.Workflowservice.V1 {
     ///* SdkName
     ///* SdkVersion
     ///* StartTime
-    ///* LastHeartbeatTime
     ///* Status
-    /// Currently metrics are not supported as a part of ListWorkers query.
     public var query: String = String()
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -7559,7 +7650,14 @@ extension Api.Workflowservice.V1 {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
+    /// Deprecated: Use workers instead. This field returns full WorkerInfo which
+    /// includes expensive runtime metrics. We will stop populating this field in the future.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     public var workersInfo: [Api.Worker.V1.WorkerInfo] = []
+
+    /// Limited worker information.
+    public var workers: [Api.Worker.V1.WorkerListInfo] = []
 
     /// Next page token
     public var nextPageToken: Data = Data()
@@ -8752,102 +8850,56 @@ extension Api.Workflowservice.V1.DescribeNamespaceResponse: SwiftProtobuf.Messag
   public static let protoMessageName: String = _protobuf_package + ".DescribeNamespaceResponse"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}namespace_info\0\u{1}config\0\u{3}replication_config\0\u{3}failover_version\0\u{3}is_global_namespace\0\u{3}failover_history\0")
 
-  fileprivate class _StorageClass {
-    var _namespaceInfo: Api.Namespace.V1.NamespaceInfo? = nil
-    var _config: Api.Namespace.V1.NamespaceConfig? = nil
-    var _replicationConfig: Api.Replication.V1.NamespaceReplicationConfig? = nil
-    var _failoverVersion: Int64 = 0
-    var _isGlobalNamespace: Bool = false
-    var _failoverHistory: [Api.Replication.V1.FailoverStatus] = []
-
-      // This property is used as the initial default value for new instances of the type.
-      // The type itself is protecting the reference to its storage via CoW semantics.
-      // This will force a copy to be made of this reference when the first mutation occurs;
-      // hence, it is safe to mark this as `nonisolated(unsafe)`.
-      static nonisolated(unsafe) let defaultInstance = _StorageClass()
-
-    private init() {}
-
-    init(copying source: _StorageClass) {
-      _namespaceInfo = source._namespaceInfo
-      _config = source._config
-      _replicationConfig = source._replicationConfig
-      _failoverVersion = source._failoverVersion
-      _isGlobalNamespace = source._isGlobalNamespace
-      _failoverHistory = source._failoverHistory
-    }
-  }
-
-  fileprivate mutating func _uniqueStorage() -> _StorageClass {
-    if !isKnownUniquelyReferenced(&_storage) {
-      _storage = _StorageClass(copying: _storage)
-    }
-    return _storage
-  }
-
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    _ = _uniqueStorage()
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      while let fieldNumber = try decoder.nextFieldNumber() {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every case branch when no optimizations are
-        // enabled. https://github.com/apple/swift-protobuf/issues/1034
-        switch fieldNumber {
-        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._namespaceInfo) }()
-        case 2: try { try decoder.decodeSingularMessageField(value: &_storage._config) }()
-        case 3: try { try decoder.decodeSingularMessageField(value: &_storage._replicationConfig) }()
-        case 4: try { try decoder.decodeSingularInt64Field(value: &_storage._failoverVersion) }()
-        case 5: try { try decoder.decodeSingularBoolField(value: &_storage._isGlobalNamespace) }()
-        case 6: try { try decoder.decodeRepeatedMessageField(value: &_storage._failoverHistory) }()
-        default: break
-        }
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._namespaceInfo) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._config) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._replicationConfig) }()
+      case 4: try { try decoder.decodeSingularInt64Field(value: &self.failoverVersion) }()
+      case 5: try { try decoder.decodeSingularBoolField(value: &self.isGlobalNamespace) }()
+      case 6: try { try decoder.decodeRepeatedMessageField(value: &self.failoverHistory) }()
+      default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every if/case branch local when no optimizations
-      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-      // https://github.com/apple/swift-protobuf/issues/1182
-      try { if let v = _storage._namespaceInfo {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-      } }()
-      try { if let v = _storage._config {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-      } }()
-      try { if let v = _storage._replicationConfig {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-      } }()
-      if _storage._failoverVersion != 0 {
-        try visitor.visitSingularInt64Field(value: _storage._failoverVersion, fieldNumber: 4)
-      }
-      if _storage._isGlobalNamespace != false {
-        try visitor.visitSingularBoolField(value: _storage._isGlobalNamespace, fieldNumber: 5)
-      }
-      if !_storage._failoverHistory.isEmpty {
-        try visitor.visitRepeatedMessageField(value: _storage._failoverHistory, fieldNumber: 6)
-      }
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._namespaceInfo {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._config {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._replicationConfig {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
+    if self.failoverVersion != 0 {
+      try visitor.visitSingularInt64Field(value: self.failoverVersion, fieldNumber: 4)
+    }
+    if self.isGlobalNamespace != false {
+      try visitor.visitSingularBoolField(value: self.isGlobalNamespace, fieldNumber: 5)
+    }
+    if !self.failoverHistory.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.failoverHistory, fieldNumber: 6)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Api.Workflowservice.V1.DescribeNamespaceResponse, rhs: Api.Workflowservice.V1.DescribeNamespaceResponse) -> Bool {
-    if lhs._storage !== rhs._storage {
-      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
-        let _storage = _args.0
-        let rhs_storage = _args.1
-        if _storage._namespaceInfo != rhs_storage._namespaceInfo {return false}
-        if _storage._config != rhs_storage._config {return false}
-        if _storage._replicationConfig != rhs_storage._replicationConfig {return false}
-        if _storage._failoverVersion != rhs_storage._failoverVersion {return false}
-        if _storage._isGlobalNamespace != rhs_storage._isGlobalNamespace {return false}
-        if _storage._failoverHistory != rhs_storage._failoverHistory {return false}
-        return true
-      }
-      if !storagesAreEqual {return false}
-    }
+    if lhs._namespaceInfo != rhs._namespaceInfo {return false}
+    if lhs._config != rhs._config {return false}
+    if lhs._replicationConfig != rhs._replicationConfig {return false}
+    if lhs.failoverVersion != rhs.failoverVersion {return false}
+    if lhs.isGlobalNamespace != rhs.isGlobalNamespace {return false}
+    if lhs.failoverHistory != rhs.failoverHistory {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -8969,95 +9021,51 @@ extension Api.Workflowservice.V1.UpdateNamespaceResponse: SwiftProtobuf.Message,
   public static let protoMessageName: String = _protobuf_package + ".UpdateNamespaceResponse"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}namespace_info\0\u{1}config\0\u{3}replication_config\0\u{3}failover_version\0\u{3}is_global_namespace\0")
 
-  fileprivate class _StorageClass {
-    var _namespaceInfo: Api.Namespace.V1.NamespaceInfo? = nil
-    var _config: Api.Namespace.V1.NamespaceConfig? = nil
-    var _replicationConfig: Api.Replication.V1.NamespaceReplicationConfig? = nil
-    var _failoverVersion: Int64 = 0
-    var _isGlobalNamespace: Bool = false
-
-      // This property is used as the initial default value for new instances of the type.
-      // The type itself is protecting the reference to its storage via CoW semantics.
-      // This will force a copy to be made of this reference when the first mutation occurs;
-      // hence, it is safe to mark this as `nonisolated(unsafe)`.
-      static nonisolated(unsafe) let defaultInstance = _StorageClass()
-
-    private init() {}
-
-    init(copying source: _StorageClass) {
-      _namespaceInfo = source._namespaceInfo
-      _config = source._config
-      _replicationConfig = source._replicationConfig
-      _failoverVersion = source._failoverVersion
-      _isGlobalNamespace = source._isGlobalNamespace
-    }
-  }
-
-  fileprivate mutating func _uniqueStorage() -> _StorageClass {
-    if !isKnownUniquelyReferenced(&_storage) {
-      _storage = _StorageClass(copying: _storage)
-    }
-    return _storage
-  }
-
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    _ = _uniqueStorage()
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      while let fieldNumber = try decoder.nextFieldNumber() {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every case branch when no optimizations are
-        // enabled. https://github.com/apple/swift-protobuf/issues/1034
-        switch fieldNumber {
-        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._namespaceInfo) }()
-        case 2: try { try decoder.decodeSingularMessageField(value: &_storage._config) }()
-        case 3: try { try decoder.decodeSingularMessageField(value: &_storage._replicationConfig) }()
-        case 4: try { try decoder.decodeSingularInt64Field(value: &_storage._failoverVersion) }()
-        case 5: try { try decoder.decodeSingularBoolField(value: &_storage._isGlobalNamespace) }()
-        default: break
-        }
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._namespaceInfo) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._config) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._replicationConfig) }()
+      case 4: try { try decoder.decodeSingularInt64Field(value: &self.failoverVersion) }()
+      case 5: try { try decoder.decodeSingularBoolField(value: &self.isGlobalNamespace) }()
+      default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every if/case branch local when no optimizations
-      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-      // https://github.com/apple/swift-protobuf/issues/1182
-      try { if let v = _storage._namespaceInfo {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-      } }()
-      try { if let v = _storage._config {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-      } }()
-      try { if let v = _storage._replicationConfig {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-      } }()
-      if _storage._failoverVersion != 0 {
-        try visitor.visitSingularInt64Field(value: _storage._failoverVersion, fieldNumber: 4)
-      }
-      if _storage._isGlobalNamespace != false {
-        try visitor.visitSingularBoolField(value: _storage._isGlobalNamespace, fieldNumber: 5)
-      }
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._namespaceInfo {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._config {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._replicationConfig {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
+    if self.failoverVersion != 0 {
+      try visitor.visitSingularInt64Field(value: self.failoverVersion, fieldNumber: 4)
+    }
+    if self.isGlobalNamespace != false {
+      try visitor.visitSingularBoolField(value: self.isGlobalNamespace, fieldNumber: 5)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Api.Workflowservice.V1.UpdateNamespaceResponse, rhs: Api.Workflowservice.V1.UpdateNamespaceResponse) -> Bool {
-    if lhs._storage !== rhs._storage {
-      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
-        let _storage = _args.0
-        let rhs_storage = _args.1
-        if _storage._namespaceInfo != rhs_storage._namespaceInfo {return false}
-        if _storage._config != rhs_storage._config {return false}
-        if _storage._replicationConfig != rhs_storage._replicationConfig {return false}
-        if _storage._failoverVersion != rhs_storage._failoverVersion {return false}
-        if _storage._isGlobalNamespace != rhs_storage._isGlobalNamespace {return false}
-        return true
-      }
-      if !storagesAreEqual {return false}
-    }
+    if lhs._namespaceInfo != rhs._namespaceInfo {return false}
+    if lhs._config != rhs._config {return false}
+    if lhs._replicationConfig != rhs._replicationConfig {return false}
+    if lhs.failoverVersion != rhs.failoverVersion {return false}
+    if lhs.isGlobalNamespace != rhs.isGlobalNamespace {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -9633,7 +9641,7 @@ extension Api.Workflowservice.V1.GetWorkflowExecutionHistoryReverseResponse: Swi
 
 extension Api.Workflowservice.V1.PollWorkflowTaskQueueRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PollWorkflowTaskQueueRequest"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}namespace\0\u{3}task_queue\0\u{1}identity\0\u{3}binary_checksum\0\u{3}worker_version_capabilities\0\u{3}deployment_options\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}namespace\0\u{3}task_queue\0\u{1}identity\0\u{3}binary_checksum\0\u{3}worker_version_capabilities\0\u{3}deployment_options\0\u{4}\u{2}worker_instance_key\0\u{b}worker_heartbeat\0\u{c}\u{7}\u{1}")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -9647,6 +9655,7 @@ extension Api.Workflowservice.V1.PollWorkflowTaskQueueRequest: SwiftProtobuf.Mes
       case 4: try { try decoder.decodeSingularStringField(value: &self.binaryChecksum) }()
       case 5: try { try decoder.decodeSingularMessageField(value: &self._workerVersionCapabilities) }()
       case 6: try { try decoder.decodeSingularMessageField(value: &self._deploymentOptions) }()
+      case 8: try { try decoder.decodeSingularStringField(value: &self.workerInstanceKey) }()
       default: break
       }
     }
@@ -9675,6 +9684,9 @@ extension Api.Workflowservice.V1.PollWorkflowTaskQueueRequest: SwiftProtobuf.Mes
     try { if let v = self._deploymentOptions {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
     } }()
+    if !self.workerInstanceKey.isEmpty {
+      try visitor.visitSingularStringField(value: self.workerInstanceKey, fieldNumber: 8)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -9682,6 +9694,7 @@ extension Api.Workflowservice.V1.PollWorkflowTaskQueueRequest: SwiftProtobuf.Mes
     if lhs.namespace != rhs.namespace {return false}
     if lhs._taskQueue != rhs._taskQueue {return false}
     if lhs.identity != rhs.identity {return false}
+    if lhs.workerInstanceKey != rhs.workerInstanceKey {return false}
     if lhs.binaryChecksum != rhs.binaryChecksum {return false}
     if lhs._workerVersionCapabilities != rhs._workerVersionCapabilities {return false}
     if lhs._deploymentOptions != rhs._deploymentOptions {return false}
@@ -10221,7 +10234,7 @@ extension Api.Workflowservice.V1.RespondWorkflowTaskFailedResponse: SwiftProtobu
 
 extension Api.Workflowservice.V1.PollActivityTaskQueueRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PollActivityTaskQueueRequest"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}namespace\0\u{3}task_queue\0\u{1}identity\0\u{3}task_queue_metadata\0\u{3}worker_version_capabilities\0\u{3}deployment_options\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}namespace\0\u{3}task_queue\0\u{1}identity\0\u{3}task_queue_metadata\0\u{3}worker_version_capabilities\0\u{3}deployment_options\0\u{4}\u{2}worker_instance_key\0\u{b}worker_heartbeat\0\u{c}\u{7}\u{1}")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -10235,6 +10248,7 @@ extension Api.Workflowservice.V1.PollActivityTaskQueueRequest: SwiftProtobuf.Mes
       case 4: try { try decoder.decodeSingularMessageField(value: &self._taskQueueMetadata) }()
       case 5: try { try decoder.decodeSingularMessageField(value: &self._workerVersionCapabilities) }()
       case 6: try { try decoder.decodeSingularMessageField(value: &self._deploymentOptions) }()
+      case 8: try { try decoder.decodeSingularStringField(value: &self.workerInstanceKey) }()
       default: break
       }
     }
@@ -10263,6 +10277,9 @@ extension Api.Workflowservice.V1.PollActivityTaskQueueRequest: SwiftProtobuf.Mes
     try { if let v = self._deploymentOptions {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
     } }()
+    if !self.workerInstanceKey.isEmpty {
+      try visitor.visitSingularStringField(value: self.workerInstanceKey, fieldNumber: 8)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -10270,6 +10287,7 @@ extension Api.Workflowservice.V1.PollActivityTaskQueueRequest: SwiftProtobuf.Mes
     if lhs.namespace != rhs.namespace {return false}
     if lhs._taskQueue != rhs._taskQueue {return false}
     if lhs.identity != rhs.identity {return false}
+    if lhs.workerInstanceKey != rhs.workerInstanceKey {return false}
     if lhs._taskQueueMetadata != rhs._taskQueueMetadata {return false}
     if lhs._workerVersionCapabilities != rhs._workerVersionCapabilities {return false}
     if lhs._deploymentOptions != rhs._deploymentOptions {return false}
@@ -12681,7 +12699,7 @@ extension Api.Workflowservice.V1.ResetStickyTaskQueueResponse: SwiftProtobuf.Mes
 
 extension Api.Workflowservice.V1.ShutdownWorkerRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ShutdownWorkerRequest"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}namespace\0\u{3}sticky_task_queue\0\u{1}identity\0\u{1}reason\0\u{3}worker_heartbeat\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}namespace\0\u{3}sticky_task_queue\0\u{1}identity\0\u{1}reason\0\u{3}worker_heartbeat\0\u{3}worker_instance_key\0\u{3}task_queue\0\u{3}task_queue_types\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -12694,6 +12712,9 @@ extension Api.Workflowservice.V1.ShutdownWorkerRequest: SwiftProtobuf.Message, S
       case 3: try { try decoder.decodeSingularStringField(value: &self.identity) }()
       case 4: try { try decoder.decodeSingularStringField(value: &self.reason) }()
       case 5: try { try decoder.decodeSingularMessageField(value: &self._workerHeartbeat) }()
+      case 6: try { try decoder.decodeSingularStringField(value: &self.workerInstanceKey) }()
+      case 7: try { try decoder.decodeSingularStringField(value: &self.taskQueue) }()
+      case 8: try { try decoder.decodeRepeatedEnumField(value: &self.taskQueueTypes) }()
       default: break
       }
     }
@@ -12719,6 +12740,15 @@ extension Api.Workflowservice.V1.ShutdownWorkerRequest: SwiftProtobuf.Message, S
     try { if let v = self._workerHeartbeat {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
     } }()
+    if !self.workerInstanceKey.isEmpty {
+      try visitor.visitSingularStringField(value: self.workerInstanceKey, fieldNumber: 6)
+    }
+    if !self.taskQueue.isEmpty {
+      try visitor.visitSingularStringField(value: self.taskQueue, fieldNumber: 7)
+    }
+    if !self.taskQueueTypes.isEmpty {
+      try visitor.visitPackedEnumField(value: self.taskQueueTypes, fieldNumber: 8)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -12728,6 +12758,9 @@ extension Api.Workflowservice.V1.ShutdownWorkerRequest: SwiftProtobuf.Message, S
     if lhs.identity != rhs.identity {return false}
     if lhs.reason != rhs.reason {return false}
     if lhs._workerHeartbeat != rhs._workerHeartbeat {return false}
+    if lhs.workerInstanceKey != rhs.workerInstanceKey {return false}
+    if lhs.taskQueue != rhs.taskQueue {return false}
+    if lhs.taskQueueTypes != rhs.taskQueueTypes {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -14201,6 +14234,111 @@ extension Api.Workflowservice.V1.ListSchedulesResponse: SwiftProtobuf.Message, S
   public static func ==(lhs: Api.Workflowservice.V1.ListSchedulesResponse, rhs: Api.Workflowservice.V1.ListSchedulesResponse) -> Bool {
     if lhs.schedules != rhs.schedules {return false}
     if lhs.nextPageToken != rhs.nextPageToken {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Api.Workflowservice.V1.CountSchedulesRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".CountSchedulesRequest"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}namespace\0\u{1}query\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.namespace) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.query) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.namespace.isEmpty {
+      try visitor.visitSingularStringField(value: self.namespace, fieldNumber: 1)
+    }
+    if !self.query.isEmpty {
+      try visitor.visitSingularStringField(value: self.query, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Api.Workflowservice.V1.CountSchedulesRequest, rhs: Api.Workflowservice.V1.CountSchedulesRequest) -> Bool {
+    if lhs.namespace != rhs.namespace {return false}
+    if lhs.query != rhs.query {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Api.Workflowservice.V1.CountSchedulesResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".CountSchedulesResponse"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}count\0\u{1}groups\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.count) }()
+      case 2: try { try decoder.decodeRepeatedMessageField(value: &self.groups) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.count != 0 {
+      try visitor.visitSingularInt64Field(value: self.count, fieldNumber: 1)
+    }
+    if !self.groups.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.groups, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Api.Workflowservice.V1.CountSchedulesResponse, rhs: Api.Workflowservice.V1.CountSchedulesResponse) -> Bool {
+    if lhs.count != rhs.count {return false}
+    if lhs.groups != rhs.groups {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Api.Workflowservice.V1.CountSchedulesResponse.AggregationGroup: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = Api.Workflowservice.V1.CountSchedulesResponse.protoMessageName + ".AggregationGroup"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}group_values\0\u{1}count\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.groupValues) }()
+      case 2: try { try decoder.decodeSingularInt64Field(value: &self.count) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.groupValues.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.groupValues, fieldNumber: 1)
+    }
+    if self.count != 0 {
+      try visitor.visitSingularInt64Field(value: self.count, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Api.Workflowservice.V1.CountSchedulesResponse.AggregationGroup, rhs: Api.Workflowservice.V1.CountSchedulesResponse.AggregationGroup) -> Bool {
+    if lhs.groupValues != rhs.groupValues {return false}
+    if lhs.count != rhs.count {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -15820,7 +15958,7 @@ extension Api.Workflowservice.V1.PollWorkflowExecutionUpdateResponse: SwiftProto
 
 extension Api.Workflowservice.V1.PollNexusTaskQueueRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PollNexusTaskQueueRequest"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}namespace\0\u{1}identity\0\u{3}task_queue\0\u{3}worker_version_capabilities\0\u{4}\u{2}deployment_options\0\u{3}worker_heartbeat\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}namespace\0\u{1}identity\0\u{3}task_queue\0\u{3}worker_version_capabilities\0\u{4}\u{2}deployment_options\0\u{3}worker_heartbeat\0\u{3}worker_instance_key\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -15834,6 +15972,7 @@ extension Api.Workflowservice.V1.PollNexusTaskQueueRequest: SwiftProtobuf.Messag
       case 4: try { try decoder.decodeSingularMessageField(value: &self._workerVersionCapabilities) }()
       case 6: try { try decoder.decodeSingularMessageField(value: &self._deploymentOptions) }()
       case 7: try { try decoder.decodeRepeatedMessageField(value: &self.workerHeartbeat) }()
+      case 8: try { try decoder.decodeSingularStringField(value: &self.workerInstanceKey) }()
       default: break
       }
     }
@@ -15862,12 +16001,16 @@ extension Api.Workflowservice.V1.PollNexusTaskQueueRequest: SwiftProtobuf.Messag
     if !self.workerHeartbeat.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.workerHeartbeat, fieldNumber: 7)
     }
+    if !self.workerInstanceKey.isEmpty {
+      try visitor.visitSingularStringField(value: self.workerInstanceKey, fieldNumber: 8)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Api.Workflowservice.V1.PollNexusTaskQueueRequest, rhs: Api.Workflowservice.V1.PollNexusTaskQueueRequest) -> Bool {
     if lhs.namespace != rhs.namespace {return false}
     if lhs.identity != rhs.identity {return false}
+    if lhs.workerInstanceKey != rhs.workerInstanceKey {return false}
     if lhs._taskQueue != rhs._taskQueue {return false}
     if lhs._workerVersionCapabilities != rhs._workerVersionCapabilities {return false}
     if lhs._deploymentOptions != rhs._deploymentOptions {return false}
@@ -15991,7 +16134,7 @@ extension Api.Workflowservice.V1.RespondNexusTaskCompletedResponse: SwiftProtobu
 
 extension Api.Workflowservice.V1.RespondNexusTaskFailedRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".RespondNexusTaskFailedRequest"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}namespace\0\u{1}identity\0\u{3}task_token\0\u{1}error\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}namespace\0\u{1}identity\0\u{3}task_token\0\u{1}error\0\u{1}failure\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -16003,6 +16146,7 @@ extension Api.Workflowservice.V1.RespondNexusTaskFailedRequest: SwiftProtobuf.Me
       case 2: try { try decoder.decodeSingularStringField(value: &self.identity) }()
       case 3: try { try decoder.decodeSingularBytesField(value: &self.taskToken) }()
       case 4: try { try decoder.decodeSingularMessageField(value: &self._error) }()
+      case 5: try { try decoder.decodeSingularMessageField(value: &self._failure) }()
       default: break
       }
     }
@@ -16025,6 +16169,9 @@ extension Api.Workflowservice.V1.RespondNexusTaskFailedRequest: SwiftProtobuf.Me
     try { if let v = self._error {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
     } }()
+    try { if let v = self._failure {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -16033,6 +16180,7 @@ extension Api.Workflowservice.V1.RespondNexusTaskFailedRequest: SwiftProtobuf.Me
     if lhs.identity != rhs.identity {return false}
     if lhs.taskToken != rhs.taskToken {return false}
     if lhs._error != rhs._error {return false}
+    if lhs._failure != rhs._failure {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -18665,7 +18813,7 @@ extension Api.Workflowservice.V1.ListWorkersRequest: SwiftProtobuf.Message, Swif
 
 extension Api.Workflowservice.V1.ListWorkersResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ListWorkersResponse"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}workers_info\0\u{3}next_page_token\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}workers_info\0\u{3}next_page_token\0\u{1}workers\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -18675,6 +18823,7 @@ extension Api.Workflowservice.V1.ListWorkersResponse: SwiftProtobuf.Message, Swi
       switch fieldNumber {
       case 1: try { try decoder.decodeRepeatedMessageField(value: &self.workersInfo) }()
       case 2: try { try decoder.decodeSingularBytesField(value: &self.nextPageToken) }()
+      case 3: try { try decoder.decodeRepeatedMessageField(value: &self.workers) }()
       default: break
       }
     }
@@ -18687,11 +18836,15 @@ extension Api.Workflowservice.V1.ListWorkersResponse: SwiftProtobuf.Message, Swi
     if !self.nextPageToken.isEmpty {
       try visitor.visitSingularBytesField(value: self.nextPageToken, fieldNumber: 2)
     }
+    if !self.workers.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.workers, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Api.Workflowservice.V1.ListWorkersResponse, rhs: Api.Workflowservice.V1.ListWorkersResponse) -> Bool {
     if lhs.workersInfo != rhs.workersInfo {return false}
+    if lhs.workers != rhs.workers {return false}
     if lhs.nextPageToken != rhs.nextPageToken {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

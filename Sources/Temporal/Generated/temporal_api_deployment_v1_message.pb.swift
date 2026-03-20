@@ -29,7 +29,7 @@ extension Api.Deployment.V1 {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    /// Required. Worker Deployment name.
+    /// Required when `worker_versioning_mode==VERSIONED`.
     public var deploymentName: String = String()
 
     /// The Build ID of the worker. Required when `worker_versioning_mode==VERSIONED`, in which case,

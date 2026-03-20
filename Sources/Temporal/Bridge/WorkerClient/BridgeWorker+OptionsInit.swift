@@ -71,7 +71,8 @@ extension BridgeWorker {
                                             nexus_task_poller_behavior: nexusTaskPollerBehaviorRef,
                                             nondeterminism_as_workflow_fail: nondeterminismAsWorkflowFail,
                                             nondeterminism_as_workflow_fail_for_types: nondetArray,
-                                            plugins: .init()
+                                            plugins: .init(),
+                                            storage_drivers: .init()
                                         )
 
                                         return try body(&opts)

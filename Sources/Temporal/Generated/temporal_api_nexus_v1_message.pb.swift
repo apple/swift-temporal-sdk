@@ -8,7 +8,11 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
 public import Foundation
+#endif
 public import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -25,21 +29,46 @@ extension Api.Nexus.V1 {
 
   /// A general purpose failure message.
   /// See: https://github.com/nexus-rpc/api/blob/main/SPEC.md#failure
-  public struct Failure: Sendable {
+  public struct Failure: @unchecked Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var message: String = String()
+    public var message: String {
+      get {_storage._message}
+      set {_uniqueStorage()._message = newValue}
+    }
 
-    public var metadata: Dictionary<String,String> = [:]
+    public var stackTrace: String {
+      get {_storage._stackTrace}
+      set {_uniqueStorage()._stackTrace = newValue}
+    }
+
+    public var metadata: Dictionary<String,String> {
+      get {_storage._metadata}
+      set {_uniqueStorage()._metadata = newValue}
+    }
 
     /// UTF-8 encoded JSON serializable details.
-    public var details: Data = Data()
+    public var details: Data {
+      get {_storage._details}
+      set {_uniqueStorage()._details = newValue}
+    }
+
+    public var cause: Api.Nexus.V1.Failure {
+      get {_storage._cause ?? Api.Nexus.V1.Failure()}
+      set {_uniqueStorage()._cause = newValue}
+    }
+    /// Returns true if `cause` has been explicitly set.
+    public var hasCause: Bool {_storage._cause != nil}
+    /// Clears the value of `cause`. Subsequent reads from it will return its default value.
+    public mutating func clearCause() {_uniqueStorage()._cause = nil}
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public init() {}
+
+    fileprivate var _storage = _StorageClass.defaultInstance
   }
 }
 extension Api.Nexus.V1 {
@@ -216,6 +245,15 @@ extension Api.Nexus.V1 {
     /// Clears the value of `scheduledTime`. Subsequent reads from it will return its default value.
     public mutating func clearScheduledTime() {self._scheduledTime = nil}
 
+    public var capabilities: Api.Nexus.V1.Request.Capabilities {
+      get {_capabilities ?? Api.Nexus.V1.Request.Capabilities()}
+      set {_capabilities = newValue}
+    }
+    /// Returns true if `capabilities` has been explicitly set.
+    public var hasCapabilities: Bool {self._capabilities != nil}
+    /// Clears the value of `capabilities`. Subsequent reads from it will return its default value.
+    public mutating func clearCapabilities() {self._capabilities = nil}
+
     public var variant: Api.Nexus.V1.Request.OneOf_Variant? = nil
 
     public var startOperation: Api.Nexus.V1.StartOperationRequest {
@@ -246,9 +284,24 @@ extension Api.Nexus.V1 {
 
     }
 
+    public struct Capabilities: Sendable {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      /// If set, handlers may use temporal.api.failure.v1.Failure instances to return failures to the server.
+      /// This also allows handler and operation errors to have their own messages and stack traces.
+      public var temporalFailureResponses: Bool = false
+
+      public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      public init() {}
+    }
+
     public init() {}
 
     fileprivate var _scheduledTime: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
+    fileprivate var _capabilities: Api.Nexus.V1.Request.Capabilities? = nil
   }
 }
 extension Api.Nexus.V1 {
@@ -279,6 +332,9 @@ extension Api.Nexus.V1 {
     }
 
     /// The operation completed unsuccessfully (failed or canceled).
+    /// Deprecated. Use the failure variant instead.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     public var operationError: Api.Nexus.V1.UnsuccessfulOperationError {
       get {
         if case .operationError(let v)? = variant {return v}
@@ -287,13 +343,29 @@ extension Api.Nexus.V1 {
       set {variant = .operationError(newValue)}
     }
 
+    /// The operation completed unsuccessfully (failed or canceled).
+    /// Failure object must contain an ApplicationFailureInfo or CanceledFailureInfo object.
+    public var failure: Api.Failure.V1.Failure {
+      get {
+        if case .failure(let v)? = variant {return v}
+        return Api.Failure.V1.Failure()
+      }
+      set {variant = .failure(newValue)}
+    }
+
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public enum OneOf_Variant: Equatable, Sendable {
       case syncSuccess(Api.Nexus.V1.StartOperationResponse.Sync)
       case asyncSuccess(Api.Nexus.V1.StartOperationResponse.Async)
       /// The operation completed unsuccessfully (failed or canceled).
+      /// Deprecated. Use the failure variant instead.
+      ///
+      /// NOTE: This field was marked as deprecated in the .proto file.
       case operationError(Api.Nexus.V1.UnsuccessfulOperationError)
+      /// The operation completed unsuccessfully (failed or canceled).
+      /// Failure object must contain an ApplicationFailureInfo or CanceledFailureInfo object.
+      case failure(Api.Failure.V1.Failure)
 
     }
 
@@ -584,39 +656,97 @@ fileprivate let _protobuf_package = "temporal.api.nexus.v1"
 
 extension Api.Nexus.V1.Failure: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Failure"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}message\0\u{1}metadata\0\u{1}details\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}message\0\u{1}metadata\0\u{1}details\0\u{3}stack_trace\0\u{1}cause\0")
+
+  fileprivate class _StorageClass {
+    var _message: String = String()
+    var _stackTrace: String = String()
+    var _metadata: Dictionary<String,String> = [:]
+    var _details: Data = Data()
+    var _cause: Api.Nexus.V1.Failure? = nil
+
+      // This property is used as the initial default value for new instances of the type.
+      // The type itself is protecting the reference to its storage via CoW semantics.
+      // This will force a copy to be made of this reference when the first mutation occurs;
+      // hence, it is safe to mark this as `nonisolated(unsafe)`.
+      static nonisolated(unsafe) let defaultInstance = _StorageClass()
+
+    private init() {}
+
+    init(copying source: _StorageClass) {
+      _message = source._message
+      _stackTrace = source._stackTrace
+      _metadata = source._metadata
+      _details = source._details
+      _cause = source._cause
+    }
+  }
+
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
+    }
+    return _storage
+  }
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.message) }()
-      case 2: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: &self.metadata) }()
-      case 3: try { try decoder.decodeSingularBytesField(value: &self.details) }()
-      default: break
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularStringField(value: &_storage._message) }()
+        case 2: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: &_storage._metadata) }()
+        case 3: try { try decoder.decodeSingularBytesField(value: &_storage._details) }()
+        case 4: try { try decoder.decodeSingularStringField(value: &_storage._stackTrace) }()
+        case 5: try { try decoder.decodeSingularMessageField(value: &_storage._cause) }()
+        default: break
+        }
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.message.isEmpty {
-      try visitor.visitSingularStringField(value: self.message, fieldNumber: 1)
-    }
-    if !self.metadata.isEmpty {
-      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: self.metadata, fieldNumber: 2)
-    }
-    if !self.details.isEmpty {
-      try visitor.visitSingularBytesField(value: self.details, fieldNumber: 3)
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      if !_storage._message.isEmpty {
+        try visitor.visitSingularStringField(value: _storage._message, fieldNumber: 1)
+      }
+      if !_storage._metadata.isEmpty {
+        try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: _storage._metadata, fieldNumber: 2)
+      }
+      if !_storage._details.isEmpty {
+        try visitor.visitSingularBytesField(value: _storage._details, fieldNumber: 3)
+      }
+      if !_storage._stackTrace.isEmpty {
+        try visitor.visitSingularStringField(value: _storage._stackTrace, fieldNumber: 4)
+      }
+      try { if let v = _storage._cause {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+      } }()
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Api.Nexus.V1.Failure, rhs: Api.Nexus.V1.Failure) -> Bool {
-    if lhs.message != rhs.message {return false}
-    if lhs.metadata != rhs.metadata {return false}
-    if lhs.details != rhs.details {return false}
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._message != rhs_storage._message {return false}
+        if _storage._stackTrace != rhs_storage._stackTrace {return false}
+        if _storage._metadata != rhs_storage._metadata {return false}
+        if _storage._details != rhs_storage._details {return false}
+        if _storage._cause != rhs_storage._cause {return false}
+        return true
+      }
+      if !storagesAreEqual {return false}
+    }
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -851,7 +981,7 @@ extension Api.Nexus.V1.CancelOperationRequest: SwiftProtobuf.Message, SwiftProto
 
 extension Api.Nexus.V1.Request: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Request"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}scheduled_time\0\u{3}start_operation\0\u{3}cancel_operation\0\u{2}\u{6}endpoint\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}scheduled_time\0\u{3}start_operation\0\u{3}cancel_operation\0\u{2}\u{6}endpoint\0\u{2}Z\u{1}capabilities\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -888,6 +1018,7 @@ extension Api.Nexus.V1.Request: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
         }
       }()
       case 10: try { try decoder.decodeSingularStringField(value: &self.endpoint) }()
+      case 100: try { try decoder.decodeSingularMessageField(value: &self._capabilities) }()
       default: break
       }
     }
@@ -918,12 +1049,16 @@ extension Api.Nexus.V1.Request: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     if !self.endpoint.isEmpty {
       try visitor.visitSingularStringField(value: self.endpoint, fieldNumber: 10)
     }
+    try { if let v = self._capabilities {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 100)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Api.Nexus.V1.Request, rhs: Api.Nexus.V1.Request) -> Bool {
     if lhs.header != rhs.header {return false}
     if lhs._scheduledTime != rhs._scheduledTime {return false}
+    if lhs._capabilities != rhs._capabilities {return false}
     if lhs.variant != rhs.variant {return false}
     if lhs.endpoint != rhs.endpoint {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -931,9 +1066,39 @@ extension Api.Nexus.V1.Request: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
+extension Api.Nexus.V1.Request.Capabilities: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = Api.Nexus.V1.Request.protoMessageName + ".Capabilities"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}temporal_failure_responses\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBoolField(value: &self.temporalFailureResponses) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.temporalFailureResponses != false {
+      try visitor.visitSingularBoolField(value: self.temporalFailureResponses, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Api.Nexus.V1.Request.Capabilities, rhs: Api.Nexus.V1.Request.Capabilities) -> Bool {
+    if lhs.temporalFailureResponses != rhs.temporalFailureResponses {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension Api.Nexus.V1.StartOperationResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".StartOperationResponse"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}sync_success\0\u{3}async_success\0\u{3}operation_error\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}sync_success\0\u{3}async_success\0\u{3}operation_error\0\u{1}failure\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -980,6 +1145,19 @@ extension Api.Nexus.V1.StartOperationResponse: SwiftProtobuf.Message, SwiftProto
           self.variant = .operationError(v)
         }
       }()
+      case 4: try {
+        var v: Api.Failure.V1.Failure?
+        var hadOneofValue = false
+        if let current = self.variant {
+          hadOneofValue = true
+          if case .failure(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.variant = .failure(v)
+        }
+      }()
       default: break
       }
     }
@@ -1002,6 +1180,10 @@ extension Api.Nexus.V1.StartOperationResponse: SwiftProtobuf.Message, SwiftProto
     case .operationError?: try {
       guard case .operationError(let v)? = self.variant else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    }()
+    case .failure?: try {
+      guard case .failure(let v)? = self.variant else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
     }()
     case nil: break
     }

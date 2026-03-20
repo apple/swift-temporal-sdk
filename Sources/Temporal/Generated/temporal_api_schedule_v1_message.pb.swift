@@ -13,7 +13,11 @@
 // (-- api-linter: core::0203::input-only=disabled
 //     aip.dev/not-precedent: field_behavior annotation not available in our gogo fork --)
 
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
 public import Foundation
+#endif
 public import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file

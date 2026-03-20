@@ -12,10 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+public import GRPCCore
 import SwiftProtobuf
-
-public import struct GRPCCore.CallOptions
-import struct GRPCCore.RPCError
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials

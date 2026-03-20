@@ -54,7 +54,8 @@ extension Api.Testservice.V1 {
               /// Descriptor for "LockTimeSkipping".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.testservice.v1.TestService"),
-                  method: "LockTimeSkipping"
+                  method: "LockTimeSkipping",
+                  type: .unary
               )
           }
           /// Namespace for "UnlockTimeSkipping" metadata.
@@ -66,7 +67,8 @@ extension Api.Testservice.V1 {
               /// Descriptor for "UnlockTimeSkipping".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.testservice.v1.TestService"),
-                  method: "UnlockTimeSkipping"
+                  method: "UnlockTimeSkipping",
+                  type: .unary
               )
           }
           /// Namespace for "Sleep" metadata.
@@ -78,7 +80,8 @@ extension Api.Testservice.V1 {
               /// Descriptor for "Sleep".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.testservice.v1.TestService"),
-                  method: "Sleep"
+                  method: "Sleep",
+                  type: .unary
               )
           }
           /// Namespace for "SleepUntil" metadata.
@@ -90,7 +93,8 @@ extension Api.Testservice.V1 {
               /// Descriptor for "SleepUntil".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.testservice.v1.TestService"),
-                  method: "SleepUntil"
+                  method: "SleepUntil",
+                  type: .unary
               )
           }
           /// Namespace for "UnlockTimeSkippingWithSleep" metadata.
@@ -102,7 +106,8 @@ extension Api.Testservice.V1 {
               /// Descriptor for "UnlockTimeSkippingWithSleep".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.testservice.v1.TestService"),
-                  method: "UnlockTimeSkippingWithSleep"
+                  method: "UnlockTimeSkippingWithSleep",
+                  type: .unary
               )
           }
           /// Namespace for "GetCurrentTime" metadata.
@@ -114,7 +119,8 @@ extension Api.Testservice.V1 {
               /// Descriptor for "GetCurrentTime".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.testservice.v1.TestService"),
-                  method: "GetCurrentTime"
+                  method: "GetCurrentTime",
+                  type: .unary
               )
           }
           /// Descriptors for all methods in the "temporal.api.testservice.v1.TestService" service.

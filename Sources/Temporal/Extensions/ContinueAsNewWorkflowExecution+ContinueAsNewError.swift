@@ -33,7 +33,7 @@ extension Coresdk.WorkflowCommands.ContinueAsNewWorkflowExecution {
         }
 
         if let searchAttributes = continueAsNewError.searchAttributes, !searchAttributes.isEmpty {
-            self.searchAttributes = Api.Common.V1.SearchAttributes(searchAttributes).indexedFields
+            self.searchAttributes = Api.Common.V1.SearchAttributes(searchAttributes)
         }
 
         if !continueAsNewError.headers.isEmpty {

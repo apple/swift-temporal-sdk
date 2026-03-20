@@ -130,6 +130,11 @@ extension Coresdk.WorkflowActivation {
     /// of the previous run.
     package var suggestContinueAsNewReasons: [Api.Enums.V1.SuggestContinueAsNewReason] = []
 
+    /// True if Workflow's Target Worker Deployment Version is different from its Pinned Version and
+    /// the workflow is Pinned.
+    /// Experimental.
+    package var targetWorkerDeploymentVersionChanged: Bool = false
+
     package var unknownFields = SwiftProtobuf.UnknownStorage()
 
     package init() {}
@@ -1191,7 +1196,7 @@ fileprivate let _protobuf_package = "coresdk.workflow_activation"
 
 extension Coresdk.WorkflowActivation.WorkflowActivation: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   package static let protoMessageName: String = _protobuf_package + ".WorkflowActivation"
-  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}run_id\0\u{1}timestamp\0\u{3}is_replaying\0\u{3}history_length\0\u{1}jobs\0\u{3}available_internal_flags\0\u{3}history_size_bytes\0\u{3}continue_as_new_suggested\0\u{3}deployment_version_for_current_task\0\u{3}last_sdk_version\0\u{3}suggest_continue_as_new_reasons\0")
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}run_id\0\u{1}timestamp\0\u{3}is_replaying\0\u{3}history_length\0\u{1}jobs\0\u{3}available_internal_flags\0\u{3}history_size_bytes\0\u{3}continue_as_new_suggested\0\u{3}deployment_version_for_current_task\0\u{3}last_sdk_version\0\u{3}suggest_continue_as_new_reasons\0\u{3}target_worker_deployment_version_changed\0")
 
   package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1210,6 +1215,7 @@ extension Coresdk.WorkflowActivation.WorkflowActivation: SwiftProtobuf.Message, 
       case 9: try { try decoder.decodeSingularMessageField(value: &self._deploymentVersionForCurrentTask) }()
       case 10: try { try decoder.decodeSingularStringField(value: &self.lastSdkVersion) }()
       case 11: try { try decoder.decodeRepeatedEnumField(value: &self.suggestContinueAsNewReasons) }()
+      case 12: try { try decoder.decodeSingularBoolField(value: &self.targetWorkerDeploymentVersionChanged) }()
       default: break
       }
     }
@@ -1253,6 +1259,9 @@ extension Coresdk.WorkflowActivation.WorkflowActivation: SwiftProtobuf.Message, 
     if !self.suggestContinueAsNewReasons.isEmpty {
       try visitor.visitPackedEnumField(value: self.suggestContinueAsNewReasons, fieldNumber: 11)
     }
+    if self.targetWorkerDeploymentVersionChanged != false {
+      try visitor.visitSingularBoolField(value: self.targetWorkerDeploymentVersionChanged, fieldNumber: 12)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -1268,6 +1277,7 @@ extension Coresdk.WorkflowActivation.WorkflowActivation: SwiftProtobuf.Message, 
     if lhs._deploymentVersionForCurrentTask != rhs._deploymentVersionForCurrentTask {return false}
     if lhs.lastSdkVersion != rhs.lastSdkVersion {return false}
     if lhs.suggestContinueAsNewReasons != rhs.suggestContinueAsNewReasons {return false}
+    if lhs.targetWorkerDeploymentVersionChanged != rhs.targetWorkerDeploymentVersionChanged {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

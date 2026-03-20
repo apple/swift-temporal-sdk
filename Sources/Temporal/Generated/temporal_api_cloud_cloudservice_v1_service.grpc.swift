@@ -31,7 +31,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetUsers".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetUsers"
+                  method: "GetUsers",
+                  type: .unary
               )
           }
           /// Namespace for "GetUser" metadata.
@@ -43,7 +44,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetUser".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetUser"
+                  method: "GetUser",
+                  type: .unary
               )
           }
           /// Namespace for "CreateUser" metadata.
@@ -55,7 +57,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "CreateUser".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "CreateUser"
+                  method: "CreateUser",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateUser" metadata.
@@ -67,7 +70,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "UpdateUser".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "UpdateUser"
+                  method: "UpdateUser",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteUser" metadata.
@@ -79,7 +83,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "DeleteUser".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "DeleteUser"
+                  method: "DeleteUser",
+                  type: .unary
               )
           }
           /// Namespace for "SetUserNamespaceAccess" metadata.
@@ -91,7 +96,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "SetUserNamespaceAccess".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "SetUserNamespaceAccess"
+                  method: "SetUserNamespaceAccess",
+                  type: .unary
               )
           }
           /// Namespace for "GetAsyncOperation" metadata.
@@ -103,7 +109,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetAsyncOperation".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetAsyncOperation"
+                  method: "GetAsyncOperation",
+                  type: .unary
               )
           }
           /// Namespace for "CreateNamespace" metadata.
@@ -115,7 +122,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "CreateNamespace".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "CreateNamespace"
+                  method: "CreateNamespace",
+                  type: .unary
               )
           }
           /// Namespace for "GetNamespaces" metadata.
@@ -127,7 +135,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetNamespaces".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetNamespaces"
+                  method: "GetNamespaces",
+                  type: .unary
               )
           }
           /// Namespace for "GetNamespace" metadata.
@@ -139,7 +148,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetNamespace".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetNamespace"
+                  method: "GetNamespace",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateNamespace" metadata.
@@ -151,7 +161,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "UpdateNamespace".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "UpdateNamespace"
+                  method: "UpdateNamespace",
+                  type: .unary
               )
           }
           /// Namespace for "RenameCustomSearchAttribute" metadata.
@@ -163,7 +174,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "RenameCustomSearchAttribute".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "RenameCustomSearchAttribute"
+                  method: "RenameCustomSearchAttribute",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteNamespace" metadata.
@@ -175,7 +187,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "DeleteNamespace".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "DeleteNamespace"
+                  method: "DeleteNamespace",
+                  type: .unary
               )
           }
           /// Namespace for "FailoverNamespaceRegion" metadata.
@@ -187,7 +200,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "FailoverNamespaceRegion".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "FailoverNamespaceRegion"
+                  method: "FailoverNamespaceRegion",
+                  type: .unary
               )
           }
           /// Namespace for "AddNamespaceRegion" metadata.
@@ -199,7 +213,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "AddNamespaceRegion".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "AddNamespaceRegion"
+                  method: "AddNamespaceRegion",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteNamespaceRegion" metadata.
@@ -211,7 +226,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "DeleteNamespaceRegion".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "DeleteNamespaceRegion"
+                  method: "DeleteNamespaceRegion",
+                  type: .unary
               )
           }
           /// Namespace for "GetRegions" metadata.
@@ -223,7 +239,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetRegions".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetRegions"
+                  method: "GetRegions",
+                  type: .unary
               )
           }
           /// Namespace for "GetRegion" metadata.
@@ -235,7 +252,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetRegion".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetRegion"
+                  method: "GetRegion",
+                  type: .unary
               )
           }
           /// Namespace for "GetApiKeys" metadata.
@@ -247,7 +265,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetApiKeys".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetApiKeys"
+                  method: "GetApiKeys",
+                  type: .unary
               )
           }
           /// Namespace for "GetApiKey" metadata.
@@ -259,7 +278,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetApiKey".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetApiKey"
+                  method: "GetApiKey",
+                  type: .unary
               )
           }
           /// Namespace for "CreateApiKey" metadata.
@@ -271,7 +291,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "CreateApiKey".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "CreateApiKey"
+                  method: "CreateApiKey",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateApiKey" metadata.
@@ -283,7 +304,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "UpdateApiKey".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "UpdateApiKey"
+                  method: "UpdateApiKey",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteApiKey" metadata.
@@ -295,7 +317,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "DeleteApiKey".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "DeleteApiKey"
+                  method: "DeleteApiKey",
+                  type: .unary
               )
           }
           /// Namespace for "GetNexusEndpoints" metadata.
@@ -307,7 +330,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetNexusEndpoints".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetNexusEndpoints"
+                  method: "GetNexusEndpoints",
+                  type: .unary
               )
           }
           /// Namespace for "GetNexusEndpoint" metadata.
@@ -319,7 +343,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetNexusEndpoint".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetNexusEndpoint"
+                  method: "GetNexusEndpoint",
+                  type: .unary
               )
           }
           /// Namespace for "CreateNexusEndpoint" metadata.
@@ -331,7 +356,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "CreateNexusEndpoint".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "CreateNexusEndpoint"
+                  method: "CreateNexusEndpoint",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateNexusEndpoint" metadata.
@@ -343,7 +369,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "UpdateNexusEndpoint".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "UpdateNexusEndpoint"
+                  method: "UpdateNexusEndpoint",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteNexusEndpoint" metadata.
@@ -355,7 +382,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "DeleteNexusEndpoint".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "DeleteNexusEndpoint"
+                  method: "DeleteNexusEndpoint",
+                  type: .unary
               )
           }
           /// Namespace for "GetUserGroups" metadata.
@@ -367,7 +395,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetUserGroups".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetUserGroups"
+                  method: "GetUserGroups",
+                  type: .unary
               )
           }
           /// Namespace for "GetUserGroup" metadata.
@@ -379,7 +408,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetUserGroup".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetUserGroup"
+                  method: "GetUserGroup",
+                  type: .unary
               )
           }
           /// Namespace for "CreateUserGroup" metadata.
@@ -391,7 +421,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "CreateUserGroup".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "CreateUserGroup"
+                  method: "CreateUserGroup",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateUserGroup" metadata.
@@ -403,7 +434,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "UpdateUserGroup".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "UpdateUserGroup"
+                  method: "UpdateUserGroup",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteUserGroup" metadata.
@@ -415,7 +447,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "DeleteUserGroup".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "DeleteUserGroup"
+                  method: "DeleteUserGroup",
+                  type: .unary
               )
           }
           /// Namespace for "SetUserGroupNamespaceAccess" metadata.
@@ -427,7 +460,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "SetUserGroupNamespaceAccess".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "SetUserGroupNamespaceAccess"
+                  method: "SetUserGroupNamespaceAccess",
+                  type: .unary
               )
           }
           /// Namespace for "AddUserGroupMember" metadata.
@@ -439,7 +473,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "AddUserGroupMember".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "AddUserGroupMember"
+                  method: "AddUserGroupMember",
+                  type: .unary
               )
           }
           /// Namespace for "RemoveUserGroupMember" metadata.
@@ -451,7 +486,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "RemoveUserGroupMember".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "RemoveUserGroupMember"
+                  method: "RemoveUserGroupMember",
+                  type: .unary
               )
           }
           /// Namespace for "GetUserGroupMembers" metadata.
@@ -463,7 +499,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetUserGroupMembers".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetUserGroupMembers"
+                  method: "GetUserGroupMembers",
+                  type: .unary
               )
           }
           /// Namespace for "CreateServiceAccount" metadata.
@@ -475,7 +512,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "CreateServiceAccount".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "CreateServiceAccount"
+                  method: "CreateServiceAccount",
+                  type: .unary
               )
           }
           /// Namespace for "GetServiceAccount" metadata.
@@ -487,7 +525,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetServiceAccount".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetServiceAccount"
+                  method: "GetServiceAccount",
+                  type: .unary
               )
           }
           /// Namespace for "GetServiceAccounts" metadata.
@@ -499,7 +538,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetServiceAccounts".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetServiceAccounts"
+                  method: "GetServiceAccounts",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateServiceAccount" metadata.
@@ -511,7 +551,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "UpdateServiceAccount".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "UpdateServiceAccount"
+                  method: "UpdateServiceAccount",
+                  type: .unary
               )
           }
           /// Namespace for "SetServiceAccountNamespaceAccess" metadata.
@@ -523,7 +564,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "SetServiceAccountNamespaceAccess".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "SetServiceAccountNamespaceAccess"
+                  method: "SetServiceAccountNamespaceAccess",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteServiceAccount" metadata.
@@ -535,7 +577,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "DeleteServiceAccount".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "DeleteServiceAccount"
+                  method: "DeleteServiceAccount",
+                  type: .unary
               )
           }
           /// Namespace for "GetUsage" metadata.
@@ -547,7 +590,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetUsage".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetUsage"
+                  method: "GetUsage",
+                  type: .unary
               )
           }
           /// Namespace for "GetAccount" metadata.
@@ -559,7 +603,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetAccount".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetAccount"
+                  method: "GetAccount",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateAccount" metadata.
@@ -571,7 +616,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "UpdateAccount".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "UpdateAccount"
+                  method: "UpdateAccount",
+                  type: .unary
               )
           }
           /// Namespace for "CreateNamespaceExportSink" metadata.
@@ -583,7 +629,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "CreateNamespaceExportSink".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "CreateNamespaceExportSink"
+                  method: "CreateNamespaceExportSink",
+                  type: .unary
               )
           }
           /// Namespace for "GetNamespaceExportSink" metadata.
@@ -595,7 +642,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetNamespaceExportSink".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetNamespaceExportSink"
+                  method: "GetNamespaceExportSink",
+                  type: .unary
               )
           }
           /// Namespace for "GetNamespaceExportSinks" metadata.
@@ -607,7 +655,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetNamespaceExportSinks".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetNamespaceExportSinks"
+                  method: "GetNamespaceExportSinks",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateNamespaceExportSink" metadata.
@@ -619,7 +668,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "UpdateNamespaceExportSink".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "UpdateNamespaceExportSink"
+                  method: "UpdateNamespaceExportSink",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteNamespaceExportSink" metadata.
@@ -631,7 +681,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "DeleteNamespaceExportSink".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "DeleteNamespaceExportSink"
+                  method: "DeleteNamespaceExportSink",
+                  type: .unary
               )
           }
           /// Namespace for "ValidateNamespaceExportSink" metadata.
@@ -643,7 +694,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "ValidateNamespaceExportSink".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "ValidateNamespaceExportSink"
+                  method: "ValidateNamespaceExportSink",
+                  type: .unary
               )
           }
           /// Namespace for "UpdateNamespaceTags" metadata.
@@ -655,7 +707,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "UpdateNamespaceTags".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "UpdateNamespaceTags"
+                  method: "UpdateNamespaceTags",
+                  type: .unary
               )
           }
           /// Namespace for "CreateConnectivityRule" metadata.
@@ -667,7 +720,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "CreateConnectivityRule".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "CreateConnectivityRule"
+                  method: "CreateConnectivityRule",
+                  type: .unary
               )
           }
           /// Namespace for "GetConnectivityRule" metadata.
@@ -679,7 +733,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetConnectivityRule".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetConnectivityRule"
+                  method: "GetConnectivityRule",
+                  type: .unary
               )
           }
           /// Namespace for "GetConnectivityRules" metadata.
@@ -691,7 +746,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "GetConnectivityRules".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "GetConnectivityRules"
+                  method: "GetConnectivityRules",
+                  type: .unary
               )
           }
           /// Namespace for "DeleteConnectivityRule" metadata.
@@ -703,7 +759,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "DeleteConnectivityRule".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "DeleteConnectivityRule"
+                  method: "DeleteConnectivityRule",
+                  type: .unary
               )
           }
           /// Namespace for "ValidateAccountAuditLogSink" metadata.
@@ -715,7 +772,8 @@ extension Api.Cloud.Cloudservice.V1 {
               /// Descriptor for "ValidateAccountAuditLogSink".
               package static let descriptor = GRPCCore.MethodDescriptor(
                   service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "temporal.api.cloud.cloudservice.v1.CloudService"),
-                  method: "ValidateAccountAuditLogSink"
+                  method: "ValidateAccountAuditLogSink",
+                  type: .unary
               )
           }
           /// Descriptors for all methods in the "temporal.api.cloud.cloudservice.v1.CloudService" service.

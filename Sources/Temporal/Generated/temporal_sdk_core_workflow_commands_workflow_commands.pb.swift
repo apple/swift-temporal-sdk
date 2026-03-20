@@ -821,10 +821,14 @@ extension Coresdk.WorkflowCommands {
 
     /// If set, the new workflow will have these search attributes. If unset, re-uses the current
     /// workflow's search attributes.
-    package var searchAttributes: Dictionary<String,Api.Common.V1.Payload> {
-      get {_storage._searchAttributes}
+    package var searchAttributes: Api.Common.V1.SearchAttributes {
+      get {_storage._searchAttributes ?? Api.Common.V1.SearchAttributes()}
       set {_uniqueStorage()._searchAttributes = newValue}
     }
+    /// Returns true if `searchAttributes` has been explicitly set.
+    package var hasSearchAttributes: Bool {_storage._searchAttributes != nil}
+    /// Clears the value of `searchAttributes`. Subsequent reads from it will return its default value.
+    package mutating func clearSearchAttributes() {_uniqueStorage()._searchAttributes = nil}
 
     /// If set, the new workflow will have this retry policy. If unset, re-uses the current
     /// workflow's retry policy.
@@ -1006,10 +1010,14 @@ extension Coresdk.WorkflowCommands {
     }
 
     /// Search attributes
-    package var searchAttributes: Dictionary<String,Api.Common.V1.Payload> {
-      get {_storage._searchAttributes}
+    package var searchAttributes: Api.Common.V1.SearchAttributes {
+      get {_storage._searchAttributes ?? Api.Common.V1.SearchAttributes()}
       set {_uniqueStorage()._searchAttributes = newValue}
     }
+    /// Returns true if `searchAttributes` has been explicitly set.
+    package var hasSearchAttributes: Bool {_storage._searchAttributes != nil}
+    /// Clears the value of `searchAttributes`. Subsequent reads from it will return its default value.
+    package mutating func clearSearchAttributes() {_uniqueStorage()._searchAttributes = nil}
 
     /// Defines behaviour of the underlying workflow when child workflow cancellation has been requested.
     package var cancellationType: Coresdk.ChildWorkflow.ChildWorkflowCancellationType {
@@ -1174,13 +1182,22 @@ extension Coresdk.WorkflowCommands {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    /// SearchAttributes fields - equivalent to indexed_fields on api. Key = search index, Value =
-    /// value?
-    package var searchAttributes: Dictionary<String,Api.Common.V1.Payload> = [:]
+    /// SearchAttributes to upsert. The indexed_fields map will be merged with existing search
+    /// attributes, with these values taking precedence.
+    package var searchAttributes: Api.Common.V1.SearchAttributes {
+      get {_searchAttributes ?? Api.Common.V1.SearchAttributes()}
+      set {_searchAttributes = newValue}
+    }
+    /// Returns true if `searchAttributes` has been explicitly set.
+    package var hasSearchAttributes: Bool {self._searchAttributes != nil}
+    /// Clears the value of `searchAttributes`. Subsequent reads from it will return its default value.
+    package mutating func clearSearchAttributes() {self._searchAttributes = nil}
 
     package var unknownFields = SwiftProtobuf.UnknownStorage()
 
     package init() {}
+
+    fileprivate var _searchAttributes: Api.Common.V1.SearchAttributes? = nil
   }
 }
 extension Coresdk.WorkflowCommands {
@@ -2489,7 +2506,7 @@ extension Coresdk.WorkflowCommands.ContinueAsNewWorkflowExecution: SwiftProtobuf
     var _workflowTaskTimeout: SwiftProtobuf.Google_Protobuf_Duration? = nil
     var _memo: Dictionary<String,Api.Common.V1.Payload> = [:]
     var _headers: Dictionary<String,Api.Common.V1.Payload> = [:]
-    var _searchAttributes: Dictionary<String,Api.Common.V1.Payload> = [:]
+    var _searchAttributes: Api.Common.V1.SearchAttributes? = nil
     var _retryPolicy: Api.Common.V1.RetryPolicy? = nil
     var _versioningIntent: Coresdk.Common.VersioningIntent = .unspecified
     var _initialVersioningBehavior: Api.Enums.V1.ContinueAsNewVersioningBehavior = .unspecified
@@ -2539,7 +2556,7 @@ extension Coresdk.WorkflowCommands.ContinueAsNewWorkflowExecution: SwiftProtobuf
         case 5: try { try decoder.decodeSingularMessageField(value: &_storage._workflowTaskTimeout) }()
         case 6: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Api.Common.V1.Payload>.self, value: &_storage._memo) }()
         case 7: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Api.Common.V1.Payload>.self, value: &_storage._headers) }()
-        case 8: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Api.Common.V1.Payload>.self, value: &_storage._searchAttributes) }()
+        case 8: try { try decoder.decodeSingularMessageField(value: &_storage._searchAttributes) }()
         case 9: try { try decoder.decodeSingularMessageField(value: &_storage._retryPolicy) }()
         case 10: try { try decoder.decodeSingularEnumField(value: &_storage._versioningIntent) }()
         case 11: try { try decoder.decodeSingularEnumField(value: &_storage._initialVersioningBehavior) }()
@@ -2576,9 +2593,9 @@ extension Coresdk.WorkflowCommands.ContinueAsNewWorkflowExecution: SwiftProtobuf
       if !_storage._headers.isEmpty {
         try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Api.Common.V1.Payload>.self, value: _storage._headers, fieldNumber: 7)
       }
-      if !_storage._searchAttributes.isEmpty {
-        try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Api.Common.V1.Payload>.self, value: _storage._searchAttributes, fieldNumber: 8)
-      }
+      try { if let v = _storage._searchAttributes {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
+      } }()
       try { if let v = _storage._retryPolicy {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
       } }()
@@ -2691,7 +2708,7 @@ extension Coresdk.WorkflowCommands.StartChildWorkflowExecution: SwiftProtobuf.Me
     var _cronSchedule: String = String()
     var _headers: Dictionary<String,Api.Common.V1.Payload> = [:]
     var _memo: Dictionary<String,Api.Common.V1.Payload> = [:]
-    var _searchAttributes: Dictionary<String,Api.Common.V1.Payload> = [:]
+    var _searchAttributes: Api.Common.V1.SearchAttributes? = nil
     var _cancellationType: Coresdk.ChildWorkflow.ChildWorkflowCancellationType = .abandon
     var _versioningIntent: Coresdk.Common.VersioningIntent = .unspecified
     var _priority: Api.Common.V1.Priority? = nil
@@ -2757,7 +2774,7 @@ extension Coresdk.WorkflowCommands.StartChildWorkflowExecution: SwiftProtobuf.Me
         case 14: try { try decoder.decodeSingularStringField(value: &_storage._cronSchedule) }()
         case 15: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Api.Common.V1.Payload>.self, value: &_storage._headers) }()
         case 16: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Api.Common.V1.Payload>.self, value: &_storage._memo) }()
-        case 17: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Api.Common.V1.Payload>.self, value: &_storage._searchAttributes) }()
+        case 17: try { try decoder.decodeSingularMessageField(value: &_storage._searchAttributes) }()
         case 18: try { try decoder.decodeSingularEnumField(value: &_storage._cancellationType) }()
         case 19: try { try decoder.decodeSingularEnumField(value: &_storage._versioningIntent) }()
         case 20: try { try decoder.decodeSingularMessageField(value: &_storage._priority) }()
@@ -2818,9 +2835,9 @@ extension Coresdk.WorkflowCommands.StartChildWorkflowExecution: SwiftProtobuf.Me
       if !_storage._memo.isEmpty {
         try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Api.Common.V1.Payload>.self, value: _storage._memo, fieldNumber: 16)
       }
-      if !_storage._searchAttributes.isEmpty {
-        try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Api.Common.V1.Payload>.self, value: _storage._searchAttributes, fieldNumber: 17)
-      }
+      try { if let v = _storage._searchAttributes {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 17)
+      } }()
       if _storage._cancellationType != .abandon {
         try visitor.visitSingularEnumField(value: _storage._cancellationType, fieldNumber: 18)
       }
@@ -3068,21 +3085,25 @@ extension Coresdk.WorkflowCommands.UpsertWorkflowSearchAttributes: SwiftProtobuf
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Api.Common.V1.Payload>.self, value: &self.searchAttributes) }()
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._searchAttributes) }()
       default: break
       }
     }
   }
 
   package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.searchAttributes.isEmpty {
-      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Api.Common.V1.Payload>.self, value: self.searchAttributes, fieldNumber: 1)
-    }
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._searchAttributes {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   package static func ==(lhs: Coresdk.WorkflowCommands.UpsertWorkflowSearchAttributes, rhs: Coresdk.WorkflowCommands.UpsertWorkflowSearchAttributes) -> Bool {
-    if lhs.searchAttributes != rhs.searchAttributes {return false}
+    if lhs._searchAttributes != rhs._searchAttributes {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

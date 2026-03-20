@@ -44,7 +44,7 @@ extension Coresdk.WorkflowCommands.StartChildWorkflowExecution {
         let searchAttributes = childWorkflowOptions.searchAttributes ?? .init()
         let mergedAttributes = parentSearchAttributes.merging(searchAttributes) { $1 }
         if !mergedAttributes.isEmpty {
-            self.searchAttributes = Api.Common.V1.SearchAttributes(mergedAttributes).indexedFields
+            self.searchAttributes = Api.Common.V1.SearchAttributes(mergedAttributes)
         }
 
         self.headers = headers

@@ -244,6 +244,7 @@ extension Api.Failure.V1 {
 extension Api.Failure.V1 {
 
 
+  /// Representation of the Temporal SDK NexusOperationError object that is returned to workflow callers.
   public struct NexusOperationFailureInfo: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for

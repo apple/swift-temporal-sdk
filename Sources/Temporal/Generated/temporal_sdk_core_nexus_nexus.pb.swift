@@ -8,7 +8,11 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+#if canImport(FoundationEssentials)
+package import FoundationEssentials
+#else
 package import Foundation
+#endif
 package import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -197,7 +201,9 @@ extension Coresdk.Nexus {
       set {status = .completed(newValue)}
     }
 
-    /// The handler could not complete the request for some reason.
+    /// The handler could not complete the request for some reason. Deprecated, use failure.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
     package var error: Api.Nexus.V1.HandlerError {
       get {
         if case .error(let v)? = status {return v}
@@ -218,19 +224,32 @@ extension Coresdk.Nexus {
       set {status = .ackCancel(newValue)}
     }
 
+    /// The handler could not complete the request for some reason.
+    package var failure: Api.Failure.V1.Failure {
+      get {
+        if case .failure(let v)? = status {return v}
+        return Api.Failure.V1.Failure()
+      }
+      set {status = .failure(newValue)}
+    }
+
     package var unknownFields = SwiftProtobuf.UnknownStorage()
 
     package enum OneOf_Status: Equatable, Sendable {
       /// The handler completed (successfully or not). Note that the response kind must match the
       /// request kind (start or cancel).
       case completed(Api.Nexus.V1.Response)
-      /// The handler could not complete the request for some reason.
+      /// The handler could not complete the request for some reason. Deprecated, use failure.
+      ///
+      /// NOTE: This field was marked as deprecated in the .proto file.
       case error(Api.Nexus.V1.HandlerError)
       /// The lang SDK acknowledges that it is responding to a `CancelNexusTask` and thus the
       /// response is irrelevant. This is not the only way to respond to a cancel, the other
       /// variants can still be used, but this variant should be used when the handler was aborted
       /// by cancellation.
       case ackCancel(Bool)
+      /// The handler could not complete the request for some reason.
+      case failure(Api.Failure.V1.Failure)
 
     }
 
@@ -450,7 +469,7 @@ extension Coresdk.Nexus.NexusOperationResult: SwiftProtobuf.Message, SwiftProtob
 
 extension Coresdk.Nexus.NexusTaskCompletion: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   package static let protoMessageName: String = _protobuf_package + ".NexusTaskCompletion"
-  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}task_token\0\u{1}completed\0\u{1}error\0\u{3}ack_cancel\0")
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}task_token\0\u{1}completed\0\u{1}error\0\u{3}ack_cancel\0\u{1}failure\0")
 
   package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -493,6 +512,19 @@ extension Coresdk.Nexus.NexusTaskCompletion: SwiftProtobuf.Message, SwiftProtobu
           self.status = .ackCancel(v)
         }
       }()
+      case 5: try {
+        var v: Api.Failure.V1.Failure?
+        var hadOneofValue = false
+        if let current = self.status {
+          hadOneofValue = true
+          if case .failure(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.status = .failure(v)
+        }
+      }()
       default: break
       }
     }
@@ -518,6 +550,10 @@ extension Coresdk.Nexus.NexusTaskCompletion: SwiftProtobuf.Message, SwiftProtobu
     case .ackCancel?: try {
       guard case .ackCancel(let v)? = self.status else { preconditionFailure() }
       try visitor.visitSingularBoolField(value: v, fieldNumber: 4)
+    }()
+    case .failure?: try {
+      guard case .failure(let v)? = self.status else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
     }()
     case nil: break
     }
