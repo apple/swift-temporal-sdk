@@ -20,3 +20,13 @@ extension Api.Common.V1.Priority {
         self.fairnessWeight = priority.fairnessWeight ?? 0
     }
 }
+
+extension Priority {
+    package init(proto: Api.Common.V1.Priority) {
+        self.init(
+            priorityKey: proto.priorityKey != 0 ? Int(proto.priorityKey) : nil,
+            fairnessKey: proto.fairnessKey.isEmpty ? nil : proto.fairnessKey,
+            fairnessWeight: proto.fairnessWeight != 0 ? proto.fairnessWeight : nil
+        )
+    }
+}
