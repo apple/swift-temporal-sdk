@@ -59,17 +59,20 @@ struct ActivityMacrosTests {
         #expect(diagnostics.isEmpty)
     }
 
-    @Test(arguments: ["public", "package", "fileprivate", "internal"])
+    @Test(arguments: ["public", "package", "fileprivate", "internal", "private"])
     func accessModifier(modifier: String) throws {
+        let declarationModifier = modifier == "private" ? "fileprivate" : modifier  // private is not allowed for @ActivityContainer
+        let activityModifier = modifier
+
         let (expectedOutput, _) = try parse(
             """
-            \(modifier) struct Foo {
+            \(declarationModifier) struct Foo {
                 func bar(input: Int) -> Int { return input }
-                \(modifier) func bar2(input: Int) -> Int { return input }
+                \(activityModifier) func bar2(input: Int) -> Int { return input }
             }
 
             extension Foo: ActivityContainer {
-                struct Activities {
+                \(declarationModifier) struct Activities {
                     let container: Foo
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
@@ -78,28 +81,28 @@ struct ActivityMacrosTests {
                         func run(input: Int) async throws -> Int { return try await self._run(input) }
                     }
                     var bar: Bar { return .init(run: self.container.bar) }
-                    struct Bar2: ActivityDefinition {
-                        static var name: String { "Bar2" }
+                    \(activityModifier) struct Bar2: ActivityDefinition {
+                        \(activityModifier) static var name: String { "Bar2" }
                         var _run: @Sendable (Int) async throws -> Int
                         init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
-                        func run(input: Int) async throws -> Int { return try await self._run(input) }
+                        \(activityModifier) func run(input: Int) async throws -> Int { return try await self._run(input) }
                     }
-                    var bar2: Bar2 { return .init(run: self.container.bar2) }
+                    \(activityModifier) var bar2: Bar2 { return .init(run: self.container.bar2) }
                 }
-                var activities: Activities { return .init(container: self) }
-                \(modifier) var allActivities: [any ActivityDefinition] { return [self.activities.bar, self.activities.bar2] }
+                \(declarationModifier) var activities: Activities { return .init(container: self) }
+                \(declarationModifier) var allActivities: [any ActivityDefinition] { return [self.activities.bar, self.activities.bar2] }
             }
             """
         )
         let (actualOutput, diagnostics) = try parse(
             """
             @ActivityContainer
-            \(modifier) struct Foo {
+            \(declarationModifier) struct Foo {
                 @Activity
                 func bar(input: Int) -> Int {  return input }
 
                 @Activity
-                \(modifier) func bar2(input: Int) -> Int { return input }
+                \(activityModifier) func bar2(input: Int) -> Int { return input }
             }
             """
         )
@@ -123,7 +126,7 @@ struct ActivityMacrosTests {
             }
 
             extension Foo: ActivityContainer {
-                struct Activities {
+                \(rawResultingModifier)struct Activities {
                     let container: Foo
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
@@ -133,7 +136,7 @@ struct ActivityMacrosTests {
                     }
                     var bar: Bar { return .init(run: self.container.bar) }
                 }
-                var activities: Activities { return .init(container: self) }
+                \(rawResultingModifier)var activities: Activities { return .init(container: self) }
                 \(rawResultingModifier)var allActivities: [any ActivityDefinition] { return [self.activities.bar] }
             }
             """

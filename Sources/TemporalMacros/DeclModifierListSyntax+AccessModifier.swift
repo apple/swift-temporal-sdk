@@ -15,19 +15,25 @@
 import SwiftSyntax
 
 extension DeclModifierListSyntax {
-    func accessModifierPrefix(supportedModifiers: Set<Keyword>) -> String {
-        let modifier = compactMap { (modifier: DeclModifierSyntax) -> TokenSyntax? in
-            guard case let .keyword(keyword) = modifier.name.tokenKind else {
-                return nil
+    func accessModifierPrefix(supportedModifiers: Set<Keyword>) -> DeclModifierListSyntax {
+        let modifier =
+            self
+            .compactMap { modifier -> DeclModifierSyntax? in
+                guard case let .keyword(keyword) = modifier.name.tokenKind else {
+                    return nil
+                }
+                guard supportedModifiers.contains(keyword) else {
+                    return nil
+                }
+                // we create a fresh syntax node as the existing one might, e.g., contain leading whitespace trivia
+                return DeclModifierSyntax(
+                    name: .keyword(keyword),
+                    trailingTrivia: .space
+                )
             }
+            .first
 
-            guard supportedModifiers.contains(keyword) else {
-                return nil
-            }
-            return .keyword(keyword)
-        }.first
-
-        return modifier.map { $0.text + " " } ?? ""
+        return modifier.map { [$0] } ?? []
     }
 }
 

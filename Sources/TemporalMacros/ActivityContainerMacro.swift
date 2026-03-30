@@ -21,6 +21,7 @@ private struct ActivityInfo {
     var isDynamic: Bool
     var parentMethodName: String
     var parentTypeName: String
+    var accessModifier: DeclModifierListSyntax
     var isStatic: Bool
     var inputType: String
     var resultType: String
@@ -36,11 +37,11 @@ private struct ActivityInfo {
         }
 
         return """
-            struct \(raw: parentMethodName.capitalizingFirst()): ActivityDefinition {
-                \(raw: nameDecl)
+            \(accessModifier)struct \(raw: parentMethodName.capitalizingFirst()): ActivityDefinition {
+                \(accessModifier)\(raw: nameDecl)
                 var _run: \(raw: closureType)
                 init(run: @escaping \(raw: closureType)) { self._run = run }
-                func run(input: \(raw: inputType == "" ? "Void" : inputType)) async throws -> \(raw: resultType) {
+                \(accessModifier)func run(input: \(raw: inputType == "" ? "Void" : inputType)) async throws -> \(raw: resultType) {
                     return try await self._run(\(raw: inputType == "" ? "" : "input"))
                 }
             }
@@ -49,7 +50,7 @@ private struct ActivityInfo {
 
     var varDefinition: DeclSyntax {
         return """
-            var \(raw: parentMethodName): \(raw: parentMethodName.capitalizingFirst()) {
+            \(accessModifier)var \(raw: parentMethodName): \(raw: parentMethodName.capitalizingFirst()) {
                 return .init(run: \(raw: isStatic ? parentTypeName : "self.container").\(raw: parentMethodName))
             }
             """
@@ -74,6 +75,8 @@ public struct ActivityContainerMacro: ExtensionMacro {
 
         var activities: [ActivityInfo] = []
 
+        let declarationAccessModifier = declaration.modifiers.accessModifierPrefix(supportedModifiers: .workflowDefinitionAccessModifiers)
+
         for member in declaration.memberBlock.members {
             guard let functionDecl = member.decl.as(FunctionDeclSyntax.self),
                 let activityAttribute = functionDecl.attributes.first(where: {
@@ -83,6 +86,7 @@ public struct ActivityContainerMacro: ExtensionMacro {
                 continue
             }
 
+            let activityAccessModifiers = functionDecl.modifiers.accessModifierPrefix(supportedModifiers: .allAccessModifiers)
             let methodName = functionDecl.name.trimmedDescription
             let isDynamic = activityAttribute.boolValueForArgument(named: "dynamic") ?? false
             let activityName: String?
@@ -98,6 +102,7 @@ public struct ActivityContainerMacro: ExtensionMacro {
                     isDynamic: isDynamic,
                     parentMethodName: methodName,
                     parentTypeName: type.trimmedDescription,
+                    accessModifier: activityAccessModifiers,
                     isStatic: functionDecl.modifiers.contains { $0.trimmedDescription == "static" },
                     inputType: functionDecl.signature.parameterClause.parameters.first?.type.trimmedDescription ?? "",
                     resultType: functionDecl.signature.returnClause?.type.trimmedDescription ?? "Void"
@@ -105,10 +110,11 @@ public struct ActivityContainerMacro: ExtensionMacro {
             )
         }
 
-        let rawAccessModifier = declaration.modifiers.accessModifierPrefix(supportedModifiers: .workflowDefinitionAccessModifiers)
-
         let allStatic = activities.allSatisfy { $0.isStatic }
-        let activitiesStruct: StructDeclSyntax = StructDeclSyntax(name: "Activities") {
+        let activitiesStruct: StructDeclSyntax = StructDeclSyntax(
+            modifiers: declarationAccessModifier,
+            name: "Activities"
+        ) {
             if !allStatic {
                 DeclSyntax("let container: \(type)")
             }
@@ -124,8 +130,8 @@ public struct ActivityContainerMacro: ExtensionMacro {
                 """
                 extension \(type): ActivityContainer {
                     \(activitiesStruct.formatted())
-                    var activities: Activities { return .init(\(raw: allStatic ? "" : "container: self")) }
-                    \(raw: rawAccessModifier)var allActivities: [any ActivityDefinition] { return [\(raw: activities.map { "self.activities.\($0.parentMethodName)" }.joined(separator: ", "))] }
+                    \(declarationAccessModifier)var activities: Activities { return .init(\(raw: allStatic ? "" : "container: self")) }
+                    \(declarationAccessModifier)var allActivities: [any ActivityDefinition] { return [\(raw: activities.map { "self.activities.\($0.parentMethodName)" }.joined(separator: ", "))] }
                 }
                 """
             )
