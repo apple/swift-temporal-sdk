@@ -36,14 +36,14 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
         guard let workflowName = node.stringLiteralValueForArgument(named: "name") else {
             return [try .init("extension \(type): WorkflowDefinition {}")]
         }
-        let rawAccessModifier = declaration.modifiers.accessModifierPrefix(supportedModifiers: .workflowDefinitionAccessModifiers)
+        let accessModifier = declaration.modifiers.accessModifierPrefix(supportedModifiers: .workflowDefinitionAccessModifiers)
 
         // The first argument to our @Workflow macro is the custom name
         return [
             try .init(
                 """
                 extension \(type): WorkflowDefinition {
-                    \(raw: rawAccessModifier)static var name: String { \(workflowName) }
+                    \(accessModifier)static var name: String { \(workflowName) }
                 }
                 """
             )
@@ -88,13 +88,13 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
             }
         }
 
-        let rawAccessModifier = declaration.modifiers.accessModifierPrefix(supportedModifiers: .workflowDefinitionAccessModifiers)
+        let accessModifier = declaration.modifiers.accessModifierPrefix(supportedModifiers: .workflowDefinitionAccessModifiers)
 
         var messageHandlerDecls = [DeclSyntax]()
         if !signalNames.isEmpty {
             messageHandlerDecls.append(
                 """
-                \(raw: rawAccessModifier)static var signals: [any WorkflowSignalDefinition<\(raw: classDecl.name.text)>] {
+                \(accessModifier)static var signals: [any WorkflowSignalDefinition<\(raw: classDecl.name.text)>] {
                     [\(raw: signalNames.lazy.map { "Self.\($0)" }.joined(separator: ", "))]
                 }
                 """
@@ -103,7 +103,7 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
         if !queryNames.isEmpty {
             messageHandlerDecls.append(
                 """
-                \(raw: rawAccessModifier)static var queries: [any WorkflowQueryDefinition<\(raw: classDecl.name.text)>] {
+                \(accessModifier)static var queries: [any WorkflowQueryDefinition<\(raw: classDecl.name.text)>] {
                     [\(raw: queryNames.lazy.map { "Self.\($0)" }.joined(separator: ", "))]
                 }
                 """
@@ -112,14 +112,14 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
         if !updateNames.isEmpty {
             messageHandlerDecls.append(
                 """
-                \(raw: rawAccessModifier)static var updates: [any WorkflowUpdateDefinition<\(raw: classDecl.name.text)>] {
+                \(accessModifier)static var updates: [any WorkflowUpdateDefinition<\(raw: classDecl.name.text)>] {
                     [\(raw: updateNames.lazy.map { "Self.\($0)" }.joined(separator: ", "))]
                 }
                 """
             )
         }
 
-        var emptyInitDecl: DeclSyntax?
+        var emptyInitDecl: InitializerDeclSyntax?
 
         // Check if an initializer with a single "input:" parameter (from `WorkflowDefinition` protocol) is already provided
         let hasMatchingInitializer = declaration.memberBlock.members.contains {
@@ -138,14 +138,21 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
         }
 
         if !hasMatchingInitializer {
-            emptyInitDecl = DeclSyntax(
-                stringLiteral: """
-                    \(rawAccessModifier)required init(input: Input) {}
-                    """
+            emptyInitDecl = InitializerDeclSyntax(
+                modifiers: (accessModifier) + [
+                    .init(name: .keyword(.required))
+                ],
+                signature: .init(
+                    parameterClause: .init(parameters: [
+                        FunctionParameterSyntax(firstName: .identifier("input"), type: IdentifierTypeSyntax(name: .identifier("Input")))
+                        // .init(firstName: "input", type: "Input")
+                    ])
+                ),
+                bodyBuilder: {}
             )
         }
 
-        return messageHandlerDecls + (emptyInitDecl.map { [$0] } ?? [])
+        return messageHandlerDecls + (DeclSyntax(emptyInitDecl).map { [$0] } ?? [])
     }
 
     public static func expansion(
