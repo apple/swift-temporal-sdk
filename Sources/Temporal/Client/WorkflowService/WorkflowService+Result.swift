@@ -118,6 +118,57 @@ extension TemporalClient.WorkflowService {
         return events
     }
 
+    /// Returns a lazy async sequence of workflow execution history events with internal pagination.
+    ///
+    /// Unlike ``fetchWorkflowHistoryEvents(id:runID:waitNewEvent:eventFilterType:skipArchival:callOptions:)``
+    /// which eagerly fetches all events into an array, this method returns an `AsyncSequence` that
+    /// lazily streams events page by page. This is more memory-efficient for workflows with large
+    /// histories.
+    ///
+    /// - Parameters:
+    ///   - id: The unique identifier of the workflow whose history to retrieve.
+    ///   - runID: The specific run ID to get history for. If nil, retrieves history for the latest run.
+    ///   - waitNewEvent: Whether to use long-polling to wait for new events.
+    ///   - eventFilterType: The type of events to filter during retrieval.
+    ///   - skipArchival: Whether to skip archived history events for faster retrieval.
+    ///   - callOptions: Custom call options including timeout settings for the RPC operation.
+    /// - Returns: An `AsyncSequence` of ``Api/History/V1/HistoryEvent`` objects in chronological order.
+    public func fetchWorkflowHistoryEventStream(
+        id: String,
+        runID: String? = nil,
+        waitNewEvent: Bool? = nil,
+        eventFilterType: Api.Enums.V1.HistoryEventFilterType? = nil,
+        skipArchival: Bool? = nil,
+        callOptions: CallOptions? = nil
+    ) -> some AsyncSequence<Api.History.V1.HistoryEvent, any Error> & Sendable {
+        withFlattenedPagination { pageToken in
+            let response: Api.Workflowservice.V1.GetWorkflowExecutionHistoryResponse = try await self.client.unary(
+                method: Api.Workflowservice.V1.WorkflowService.Method.GetWorkflowExecutionHistory.descriptor,
+                request: Api.Workflowservice.V1.GetWorkflowExecutionHistoryRequest.with {
+                    $0.namespace = self.configuration.namespace
+                    $0.execution = .with {
+                        $0.workflowID = id
+                        if let runID {
+                            $0.runID = runID
+                        }
+                    }
+                    if let waitNewEvent {
+                        $0.waitNewEvent = waitNewEvent
+                    }
+                    if let eventFilterType {
+                        $0.historyEventFilterType = eventFilterType
+                    }
+                    if let skipArchival {
+                        $0.skipArchival = skipArchival
+                    }
+                    $0.nextPageToken = pageToken
+                },
+                callOptions: callOptions ?? .userPollRetryOptions
+            )
+            return (elements: response.history.events, pageToken: response.nextPageToken)
+        }
+    }
+
     // Fetch workflow result helper that abstracts the RPC call (RPC either intercepted or not)
     func result<Output: Sendable>(
         historyRunID: String? = nil,

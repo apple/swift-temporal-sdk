@@ -89,6 +89,33 @@ extension WorkflowHandle {
         try await self.untypedHandle.fetchHistory(callOptions: callOptions)
     }
 
+    /// Returns a lazy async sequence of workflow execution history events with internal pagination.
+    ///
+    /// Unlike ``fetchHistoryEvents(waitNewEvent:eventFilterType:skipArchival:callOptions:)`` which
+    /// eagerly fetches all events into an array, this method returns an `AsyncSequence` that lazily
+    /// streams events with internal pagination. This is more memory-efficient for workflows with
+    /// large histories.
+    ///
+    /// - Parameters:
+    ///   - waitNewEvent: Whether to wait for new events if none are immediately available.
+    ///   - eventFilterType: The type of events to include in the response.
+    ///   - skipArchival: Whether to skip archived history events for performance.
+    ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
+    /// - Returns: An `AsyncSequence` of history events representing the workflow's execution timeline.
+    public func fetchHistoryEventStream(
+        waitNewEvent: Bool = false,
+        eventFilterType: Api.Enums.V1.HistoryEventFilterType = .allEvent,
+        skipArchival: Bool = false,
+        callOptions: CallOptions? = nil
+    ) -> some AsyncSequence<Api.History.V1.HistoryEvent, any Error> & Sendable {
+        self.untypedHandle.fetchHistoryEventStream(
+            waitNewEvent: waitNewEvent,
+            eventFilterType: eventFilterType,
+            skipArchival: skipArchival,
+            callOptions: callOptions
+        )
+    }
+
     // MARK: Signals
 
     /// Sends a signal to the workflow execution with typed input data.
@@ -265,6 +292,25 @@ extension WorkflowHandle {
             resultTypes: Update.Output.self,
             callOptions: callOptions
         )
+    }
+
+    // MARK: Update Handle
+
+    /// Returns a handle for a previously started update operation.
+    ///
+    /// This method creates a ``WorkflowUpdateHandle`` for an update that was previously
+    /// started on this workflow. Use this to poll the result of an update when you only have
+    /// the update ID (for example, from a previous session or external system).
+    ///
+    /// - Parameters:
+    ///   - updateType: The update type.
+    ///   - id: The unique identifier of the update operation.
+    /// - Returns: A ``WorkflowUpdateHandle`` for managing and retrieving the update result.
+    public func getUpdateHandle<WorkflowUpdate: WorkflowUpdateDefinition>(
+        updateType: WorkflowUpdate.Type = WorkflowUpdate.self,
+        id: String
+    ) -> WorkflowUpdateHandle<WorkflowUpdate> {
+        WorkflowUpdateHandle(untypedHandle: self.untypedHandle.getUpdateHandle(id: id))
     }
 
     // MARK: Cancel

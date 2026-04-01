@@ -114,6 +114,15 @@ extension TemporalClient.WorkflowService {
         )
     }
 
+    /// The result of starting a workflow update, containing the update ID and any known outcome.
+    package struct StartUpdateResult: Sendable {
+        /// The unique identifier for this update operation.
+        package let updateID: String
+
+        /// The outcome payloads if the update completed during the start call.
+        package let outcomePayloads: [Api.Common.V1.Payload]?
+    }
+
     // MARK: - Start Workflow Update
 
     /// Initiates a workflow update by name without waiting for completion.
@@ -146,6 +155,37 @@ extension TemporalClient.WorkflowService {
         input: repeat each Input,
         callOptions: CallOptions? = nil
     ) async throws -> String {
+        let result = try await self.startWorkflowUpdateWithOutcome(
+            workflowID: workflowID,
+            runID: runID,
+            firstExecutionRunID: firstExecutionRunID,
+            updateID: updateID,
+            updateName: updateName,
+            waitForStage: waitForStage,
+            headers: headers,
+            input: repeat each input,
+            callOptions: callOptions
+        )
+        return result.updateID
+    }
+
+    /// Initiates a workflow update by name and returns the update ID along with any known outcome.
+    ///
+    /// This is an internal variant that also captures the outcome payloads from the response
+    /// when the update completes during the start call (e.g., when ``waitForStage`` is
+    /// ``WorkflowUpdateStage/completed``). The captured outcome can be used to avoid
+    /// redundant RPCs when retrieving the update result.
+    package func startWorkflowUpdateWithOutcome<each Input: Sendable>(
+        workflowID: String,
+        runID: String? = nil,
+        firstExecutionRunID: String? = nil,
+        updateID: String = UUID().uuidString,
+        updateName: String,
+        waitForStage: WorkflowUpdateStage,
+        headers: [String: Api.Common.V1.Payload] = [:],
+        input: repeat each Input,
+        callOptions: CallOptions? = nil
+    ) async throws -> StartUpdateResult {
         let dataConverter = configuration.dataConverter
         let inputPayloads = try await dataConverter.convertValues(repeat each input)
 
@@ -188,7 +228,12 @@ extension TemporalClient.WorkflowService {
             }
         } while response.stage.rawValue < Api.Enums.V1.UpdateWorkflowExecutionLifecycleStage(waitForStage).rawValue
 
-        return updateID
+        var outcomePayloads: [Api.Common.V1.Payload]?
+        if response.hasOutcome, case .success(let success) = response.outcome.value {
+            outcomePayloads = success.payloads
+        }
+
+        return StartUpdateResult(updateID: updateID, outcomePayloads: outcomePayloads)
     }
 
     /// Initiates a strongly-typed workflow update without waiting for completion.
