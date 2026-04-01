@@ -111,6 +111,12 @@ public struct ActivityExecutionContext: Sendable {
         /// The workflow type name that scheduled this activity.
         public var workflowType: String
 
+        /// The priority assigned to this activity execution.
+        public var priority: Priority?
+
+        /// The retry policy configured for this activity execution.
+        public var retryPolicy: RetryPolicy?
+
         /// The heartbeat details from the previous activity attempt.
         ///
         /// These details are preserved across activity retries and can be used
@@ -118,7 +124,7 @@ public struct ActivityExecutionContext: Sendable {
         private var heartbeatDetails: [Api.Common.V1.Payload]
 
         /// The data converter used for payload serialization.
-        private var dataConverter: DataConverter
+        internal var dataConverter: DataConverter
 
         /// Creates a new activity information instance.
         ///
@@ -139,6 +145,8 @@ public struct ActivityExecutionContext: Sendable {
         ///   - workflowNamespace: The namespace for execution.
         ///   - workflowRunID: The workflow run ID.
         ///   - workflowType: The workflow type name.
+        ///   - priority: The priority assigned to this activity.
+        ///   - retryPolicy: The retry policy configured for this activity.
         ///   - heartbeatDetails: Previous heartbeat details.
         ///   - dataConverter: Data converter for serialization.
         package init(
@@ -158,6 +166,8 @@ public struct ActivityExecutionContext: Sendable {
             workflowNamespace: String,
             workflowRunID: String,
             workflowType: String,
+            priority: Priority?,
+            retryPolicy: RetryPolicy?,
             heartbeatDetails: [Api.Common.V1.Payload],
             dataConverter: DataConverter
         ) {
@@ -177,6 +187,8 @@ public struct ActivityExecutionContext: Sendable {
             self.workflowNamespace = workflowNamespace
             self.workflowRunID = workflowRunID
             self.workflowType = workflowType
+            self.priority = priority
+            self.retryPolicy = retryPolicy
             self.heartbeatDetails = heartbeatDetails
             self.dataConverter = dataConverter
         }
@@ -221,6 +233,14 @@ public struct ActivityExecutionContext: Sendable {
 
     /// The metadata and configuration information for this activity execution.
     public let info: Info
+
+    /// The payload converter used by the current activity execution.
+    ///
+    /// This exposes the payload converter from the data converter configured on the worker,
+    /// enabling dynamic activities to decode raw ``TemporalRawValue`` payloads into typed values.
+    public var payloadConverter: any PayloadConverter {
+        self.info.dataConverter.payloadConverter
+    }
 
     /// The logger associated with the current activity execution.
     public let logger: Logger
@@ -313,6 +333,8 @@ extension ActivityExecutionContext {
         let scheduleToCloseTimeout =
             activityTaskStart.hasScheduleToCloseTimeout ? Duration(protobufDuration: activityTaskStart.scheduleToCloseTimeout) : nil
         let startToCloseTimeout = activityTaskStart.hasStartToCloseTimeout ? Duration(protobufDuration: activityTaskStart.startToCloseTimeout) : nil
+        let priority = activityTaskStart.hasPriority ? Priority(proto: activityTaskStart.priority) : nil
+        let retryPolicy = activityTaskStart.hasRetryPolicy ? RetryPolicy(retryPolicy: activityTaskStart.retryPolicy) : nil
 
         let info = Info(
             activityID: activityTaskStart.activityID,
@@ -331,6 +353,8 @@ extension ActivityExecutionContext {
             workflowNamespace: activityTaskStart.workflowNamespace,
             workflowRunID: activityTaskStart.workflowExecution.runID,
             workflowType: activityTaskStart.workflowType,
+            priority: priority,
+            retryPolicy: retryPolicy,
             heartbeatDetails: activityTaskStart.heartbeatDetails,
             dataConverter: dataConverter
         )

@@ -138,6 +138,8 @@ extension ActivityExecutionContext.Info {
     ///   - workflowNamespace: The namespace for execution.
     ///   - workflowRunID: The workflow run ID.
     ///   - workflowType: The workflow type name.
+    ///   - priority: The priority assigned to this activity.
+    ///   - retryPolicy: The retry policy configured for this activity.
     ///   - heartbeatDetails: Previous heartbeat details.
     ///   - dataConverter: Data converter for serialization.
     public init<each Value>(
@@ -157,6 +159,8 @@ extension ActivityExecutionContext.Info {
         workflowNamespace: String = "default",
         workflowRunID: String = UUID().uuidString,
         workflowType: String = "TestWorkflow",
+        priority: Priority? = nil,
+        retryPolicy: RetryPolicy? = nil,
         heartbeatDetails: repeat (each Value)?,
         dataConverter: DataConverter = .default
     ) async throws {
@@ -179,6 +183,8 @@ extension ActivityExecutionContext.Info {
             workflowNamespace: workflowNamespace,
             workflowRunID: workflowRunID,
             workflowType: workflowType,
+            priority: priority,
+            retryPolicy: retryPolicy,
             heartbeatDetails: heartbeatDetailsPayloads,
             dataConverter: dataConverter
         )

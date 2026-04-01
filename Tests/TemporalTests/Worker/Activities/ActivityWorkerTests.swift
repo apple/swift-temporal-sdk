@@ -140,6 +140,8 @@ private struct ExecutionContextActivity: ActivityDefinition {
         let workflowNamespace: String
         let workflowRunId: String
         let workflowType: String
+        let priorityKey: Int?
+        let retryPolicyMaxAttempts: Int?
 
         init(
             activityID: String,
@@ -157,7 +159,9 @@ private struct ExecutionContextActivity: ActivityDefinition {
             workflowID: String,
             workflowNamespace: String,
             workflowRunId: String,
-            workflowType: String
+            workflowType: String,
+            priorityKey: Int? = nil,
+            retryPolicyMaxAttempts: Int? = nil
         ) {
             self.activityID = activityID
             self.activityType = activityType
@@ -175,6 +179,8 @@ private struct ExecutionContextActivity: ActivityDefinition {
             self.workflowNamespace = workflowNamespace
             self.workflowRunId = workflowRunId
             self.workflowType = workflowType
+            self.priorityKey = priorityKey
+            self.retryPolicyMaxAttempts = retryPolicyMaxAttempts
         }
 
         init(activityExecutionContext: ActivityExecutionContext) {
@@ -194,6 +200,8 @@ private struct ExecutionContextActivity: ActivityDefinition {
             self.workflowNamespace = activityExecutionContext.info.workflowNamespace
             self.workflowRunId = activityExecutionContext.info.workflowRunID
             self.workflowType = activityExecutionContext.info.workflowType
+            self.priorityKey = activityExecutionContext.info.priority?.priorityKey
+            self.retryPolicyMaxAttempts = activityExecutionContext.info.retryPolicy?.maximumAttempts
         }
     }
     typealias Input = Void
@@ -335,6 +343,32 @@ private struct ReservedNameActivity: ActivityDefinition {
     typealias Output = Void
     static var name: String { "__temporal_reserved" }
     func run(input: Void) async throws {}
+}
+
+private struct PayloadConverterActivity: ActivityDefinition {
+    typealias Input = Void
+    typealias Output = String
+
+    static let name: String? = "PayloadConverterActivity"
+
+    func run(input: Void) async throws -> String {
+        let context = ActivityExecutionContext.current!
+        let converter = context.payloadConverter
+        // Verify we can use the converter to round-trip a value
+        let payload = try converter.convertValue("test-value")
+        return try converter.convertPayload(payload, as: String.self)
+    }
+}
+
+private struct CancellationDetailsActivity: ActivityDefinition {
+    typealias Input = Void
+    typealias Output = Void
+
+    static let name: String? = "CancellationDetailsActivity"
+
+    func run(input: Void) async throws {
+        try await Task.sleep(for: .seconds(10_000_000))
+    }
 }
 
 @Suite()
@@ -677,6 +711,12 @@ struct ActivityWorkerTests {
                         $0.runID = "RunID"
                         $0.workflowID = "WorkflowID1"
                     }
+                    $0.start.priority = .with {
+                        $0.priorityKey = 2
+                    }
+                    $0.start.retryPolicy = .with {
+                        $0.maximumAttempts = 5
+                    }
                     $0.start.input = [
                         .with {
                             $0.data = Data([1, 2, 3])
@@ -704,7 +744,9 @@ struct ActivityWorkerTests {
                 workflowID: "WorkflowID1",
                 workflowNamespace: "WorkflowNamespace",
                 workflowRunId: "RunID",
-                workflowType: "WorkflowType"
+                workflowType: "WorkflowType",
+                priorityKey: 2,
+                retryPolicyMaxAttempts: 5
             )
             #expect(completion!.result.completed.result.metadata == ["encoding": Data("json/plain".utf8)])
             let jsonDecoder = JSONDecoder()
@@ -1114,6 +1156,134 @@ struct ActivityWorkerTests {
                 interceptors: [],
                 logger: .init(label: "TestLogger")
             )
+        }
+    }
+
+    @Test
+    static func payloadConverterExposedOnContext() async throws {
+        let test = ActivityWorkerTests(activities: [PayloadConverterActivity()])
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await test.activityWorker.run()
+            }
+
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([1])
+                    $0.start.activityType = "PayloadConverterActivity"
+                    $0.start.activityID = "ActivityID1"
+                    $0.start.attempt = 1
+                    $0.start.workflowType = "WorkflowType"
+                    $0.start.workflowExecution = .with {
+                        $0.runID = "RunID"
+                        $0.workflowID = "WorkflowID1"
+                    }
+                }
+            )
+
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            let completion = try await activityTaskCompletionIterator.next()
+            #expect(completion!.taskToken == Data([1]))
+            // The activity uses payloadConverter to round-trip "test-value"
+            let resultString = String(data: completion!.result.completed.result.data, encoding: .utf8)
+            #expect(resultString == #""test-value""#)
+            group.cancelAll()
+        }
+    }
+
+    @Test
+    static func cancellationDetailsFromServerRequest() async throws {
+        let test = ActivityWorkerTests(activities: [CancellationDetailsActivity()])
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await test.activityWorker.run()
+            }
+
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([1])
+                    $0.start.activityType = "CancellationDetailsActivity"
+                    $0.start.activityID = "ActivityID1"
+                    $0.start.attempt = 1
+                    $0.start.workflowType = "WorkflowType"
+                    $0.start.workflowExecution = .with {
+                        $0.runID = "RunID"
+                        $0.workflowID = "WorkflowID1"
+                    }
+                }
+            )
+
+            // Cancel with server request reason
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([1])
+                    $0.cancel.reason = .cancelled
+                }
+            )
+
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            let completion = try await activityTaskCompletionIterator.next()
+            #expect(completion!.taskToken == Data([1]))
+            // Activity should have been cancelled
+            #expect(completion!.result.cancelled.hasFailure == true)
+            group.cancelAll()
+        }
+    }
+
+    @Test
+    static func priorityAndRetryPolicyNilWhenNotSet() async throws {
+        let test = ActivityWorkerTests(activities: [ExecutionContextActivity()])
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await test.activityWorker.run()
+            }
+
+            let currentAttemptScheduledTime = Date(timeIntervalSince1970: 1_737_302_400)
+            let scheduledTime = Date(timeIntervalSince1970: 1_737_298_800)
+            let startedTime = Date(timeIntervalSince1970: 1_737_300_600)
+
+            // Send an activity task without priority or retryPolicy
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([2])
+                    $0.start.activityType = "ExecutionContextActivity"
+                    $0.start.activityID = "ActivityID2"
+                    $0.start.attempt = 1
+                    $0.start.currentAttemptScheduledTime = .init(date: currentAttemptScheduledTime)
+                    $0.start.isLocal = false
+                    $0.start.scheduledTime = .init(date: scheduledTime)
+                    $0.start.startedTime = .init(date: startedTime)
+                    $0.start.workflowType = "WorkflowType"
+                    $0.start.workflowNamespace = "WorkflowNamespace"
+                    $0.start.workflowExecution = .with {
+                        $0.runID = "RunID"
+                        $0.workflowID = "WorkflowID2"
+                    }
+                    $0.start.input = [
+                        .with {
+                            $0.data = Data([1, 2, 3])
+                            $0.metadata = ["encoding": Data("binary/plain".utf8)]
+                        }
+                    ]
+                }
+            )
+
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            let completion = try await activityTaskCompletionIterator.next()
+            #expect(completion!.taskToken == Data([2]))
+            let jsonDecoder = JSONDecoder()
+            jsonDecoder.dateDecodingStrategy = .iso8601
+            let decodedExecutionContext = try jsonDecoder.decode(
+                ExecutionContextActivity.ExecutionContext.self,
+                from: completion!.result.completed.result.data
+            )
+            // priority and retryPolicy should be nil when not set on the proto
+            #expect(decodedExecutionContext.priorityKey == nil)
+            #expect(decodedExecutionContext.retryPolicyMaxAttempts == nil)
+            group.cancelAll()
         }
     }
 }
