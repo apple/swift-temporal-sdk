@@ -122,11 +122,11 @@ extension TestServerDependentTests {
                 }
             }
 
-            func makeWorkflowInboundInterceptor() -> Inbound? {
+            var workflowInboundInterceptor: Inbound? {
                 Inbound(interceptor: self)
             }
 
-            func makeClientOutboundInterceptor() -> Outbound? {
+            var clientOutboundInterceptor: Outbound? {
                 Outbound()
             }
         }

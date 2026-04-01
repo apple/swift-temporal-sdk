@@ -71,15 +71,15 @@ public struct TemporalWorkerTracingInterceptor: WorkerInterceptor {
         self.tracingHeaderKey = tracingHeaderKey
     }
 
-    public func makeWorkflowInboundInterceptor() -> WorkflowInbound? {
+    public var workflowInboundInterceptor: WorkflowInbound? {
         Self.WorkflowInbound(tracer: self.tracer, tracingHeaderKey: self.tracingHeaderKey)
     }
 
-    public func makeWorkflowOutboundInterceptor() -> WorkflowOutbound? {
+    public var workflowOutboundInterceptor: WorkflowOutbound? {
         Self.WorkflowOutbound(tracer: self.tracer, tracingHeaderKey: self.tracingHeaderKey)
     }
 
-    public func makeActivityInboundInterceptor() -> ActivityInbound? {
+    public var activityInboundInterceptor: ActivityInbound? {
         Self.ActivityInbound(tracer: self.tracer, tracingHeaderKey: self.tracingHeaderKey)
     }
 

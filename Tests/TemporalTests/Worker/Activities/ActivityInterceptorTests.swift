@@ -71,7 +71,7 @@ extension TestServerDependentTests {
                 }
             }
 
-            func makeActivityInboundInterceptor() -> Inbound? {
+            var activityInboundInterceptor: Inbound? {
                 return Inbound(interceptor: self)
             }
         }
@@ -116,7 +116,7 @@ extension TestServerDependentTests {
                     }
                 }
 
-                func makeActivityInboundInterceptor() -> Inbound? {
+                var activityInboundInterceptor: Inbound? {
                     return Inbound(interceptor: self.firstInterceptor)
                 }
             }
@@ -165,7 +165,7 @@ extension TestServerDependentTests {
                 }
             }
 
-            func makeActivityOutboundInterceptor() -> Outbound? {
+            var activityOutboundInterceptor: Outbound? {
                 return Outbound(interceptor: self)
             }
         }
@@ -208,7 +208,7 @@ extension TestServerDependentTests {
                     }
                 }
 
-                func makeActivityOutboundInterceptor() -> Outbound? {
+                var activityOutboundInterceptor: Outbound? {
                     return Outbound(interceptor: self.firstInterceptor)
                 }
             }

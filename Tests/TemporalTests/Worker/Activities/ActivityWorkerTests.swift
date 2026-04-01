@@ -299,7 +299,7 @@ private final class ActivityHeaderToInputInterceptor: WorkerInterceptor {
             return try await next(input)
         }
     }
-    func makeActivityInboundInterceptor() -> Inbound? {
+    var activityInboundInterceptor: Inbound? {
         Inbound()
     }
 }

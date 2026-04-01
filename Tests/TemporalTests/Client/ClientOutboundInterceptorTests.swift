@@ -110,7 +110,7 @@ extension TestServerDependentTests {
                 }
             }
 
-            func makeClientOutboundInterceptor() -> Outbound? {
+            var clientOutboundInterceptor: Outbound? {
                 Outbound(ticker: ticker, interceptor: self)
             }
         }
@@ -164,7 +164,7 @@ extension TestServerDependentTests {
                     }
                 }
 
-                func makeClientOutboundInterceptor() -> Outbound? {
+                var clientOutboundInterceptor: Outbound? {
                     Outbound(interceptor: self, otherInterceptor: otherInterceptor)
                 }
             }

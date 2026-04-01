@@ -113,7 +113,7 @@ extension TestServerDependentTests {
                     }
                 }
 
-                func makeWorkflowOutboundInterceptor() -> Outbound? {
+                var workflowOutboundInterceptor: Outbound? {
                     return Outbound(interceptor: self)
                 }
             }

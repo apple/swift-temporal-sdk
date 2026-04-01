@@ -132,7 +132,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
         self.logger = logger
         self.state = .init(.init(runningActivities: [:]))
         self.interceptors = interceptors
-        self.implementation = .init(interceptors: interceptors.compactMap { $0.makeActivityInboundInterceptor() })
+        self.implementation = .init(interceptors: interceptors.compactMap { $0.activityInboundInterceptor })
     }
 
     package convenience init(
@@ -293,7 +293,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                             taskToken: taskToken,
                             dataConverter: self.dataConverter,
                             logger: logger,
-                            outboundInterceptors: self.interceptors.compactMap { $0.makeActivityOutboundInterceptor() },
+                            outboundInterceptors: self.interceptors.compactMap { $0.activityOutboundInterceptor },
                             heartbeatContinuation: heartbeatContinuation,
                             lookupCancellationReason: { runningActivity.cancellationReason }
                         )

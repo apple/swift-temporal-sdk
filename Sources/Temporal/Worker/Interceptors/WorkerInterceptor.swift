@@ -12,69 +12,45 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Factory protocol for creating interceptors that process workflows and activities within worker execution contexts.
+/// Protocol for a worker interceptor that process workflows and activities within worker execution contexts.
 public protocol WorkerInterceptor: Sendable {
-    /// The type of workflow inbound interceptor this factory creates for processing incoming workflow requests.
+    /// The type of workflow inbound interceptor for processing incoming workflow requests.
     associatedtype WorkflowInboundInterceptorType: WorkflowInboundInterceptor = ForwardingWorkflowInboundInterceptor
 
-    /// The type of workflow outbound interceptor this factory creates for processing outgoing workflow requests.
+    /// The type of workflow outbound interceptor for processing outgoing workflow requests.
     associatedtype WorkflowOutboundInterceptorType: WorkflowOutboundInterceptor = ForwardingWorkflowOutboundInterceptor
 
-    /// The type of activity inbound interceptor this factory creates for processing incoming activity requests.
+    /// The type of activity inbound interceptor for processing incoming activity requests.
     associatedtype ActivityInboundInterceptorType: ActivityInboundInterceptor = ForwardingActivityInboundInterceptor
 
-    /// The type of activity outbound interceptor this factory creates for processing outgoing activity requests.
+    /// The type of activity outbound interceptor for processing outgoing activity requests.
     associatedtype ActivityOutboundInterceptorType: ActivityOutboundInterceptor = ForwardingActivityOutboundInterceptor
 
-    /// Creates a workflow inbound interceptor for processing incoming workflow requests.
-    ///
-    /// - Returns: A workflow inbound interceptor instance, or `nil` if no interception is needed.
-    func makeWorkflowInboundInterceptor() -> WorkflowInboundInterceptorType?
+    /// The workflow inbound interceptor for processing incoming workflow requests, or `nil` if no interception is needed.
+    var workflowInboundInterceptor: WorkflowInboundInterceptorType? { get }
 
-    /// Creates a workflow outbound interceptor for processing outgoing workflow requests.
-    ///
-    /// - Returns: A workflow outbound interceptor instance, or `nil` if no interception is needed.
-    func makeWorkflowOutboundInterceptor() -> WorkflowOutboundInterceptorType?
+    /// The workflow outbound interceptor for processing outgoing workflow requests, or `nil` if no interception is needed.
+    var workflowOutboundInterceptor: WorkflowOutboundInterceptorType? { get }
 
-    /// Creates an activity inbound interceptor for processing incoming activity requests.
-    ///
-    /// - Returns: An activity inbound interceptor instance, or `nil` if no interception is needed.
-    func makeActivityInboundInterceptor() -> ActivityInboundInterceptorType?
+    /// The activity inbound interceptor for processing incoming activity requests, or `nil` if no interception is needed.
+    var activityInboundInterceptor: ActivityInboundInterceptorType? { get }
 
-    /// Creates an activity outbound interceptor for processing outgoing activity requests.
-    ///
-    /// - Returns: An activity outbound interceptor instance, or `nil` if no interception is needed.
-    func makeActivityOutboundInterceptor() -> ActivityOutboundInterceptorType?
+    /// The activity outbound interceptor for processing outgoing activity requests, or `nil` if no interception is needed.
+    var activityOutboundInterceptor: ActivityOutboundInterceptorType? { get }
 }
 
 extension WorkerInterceptor {
     /// Default implementation that returns no workflow inbound interceptor.
-    ///
-    /// - Returns: `nil` to indicate no interception is performed.
-    public func makeWorkflowInboundInterceptor() -> WorkflowInboundInterceptorType? {
-        return nil
-    }
+    public var workflowInboundInterceptor: WorkflowInboundInterceptorType? { nil }
 
     /// Default implementation that returns no workflow outbound interceptor.
-    ///
-    /// - Returns: `nil` to indicate no interception is performed.
-    public func makeWorkflowOutboundInterceptor() -> WorkflowOutboundInterceptorType? {
-        return nil
-    }
+    public var workflowOutboundInterceptor: WorkflowOutboundInterceptorType? { nil }
 
     /// Default implementation that returns no activity inbound interceptor.
-    ///
-    /// - Returns: `nil` to indicate no interception is performed.
-    public func makeActivityInboundInterceptor() -> ActivityInboundInterceptorType? {
-        return nil
-    }
+    public var activityInboundInterceptor: ActivityInboundInterceptorType? { nil }
 
     /// Default implementation that returns no activity outbound interceptor.
-    ///
-    /// - Returns: `nil` to indicate no interception is performed.
-    public func makeActivityOutboundInterceptor() -> ActivityOutboundInterceptorType? {
-        return nil
-    }
+    public var activityOutboundInterceptor: ActivityOutboundInterceptorType? { nil }
 }
 
 /// Default workflow inbound interceptor that forwards all requests without modification.
