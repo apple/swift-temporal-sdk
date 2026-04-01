@@ -93,7 +93,7 @@ extension Api.Cloud.Operation.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum State: SwiftProtobuf.Enum, Swift.CaseIterable {
+    @nonexhaustive public enum State: SwiftProtobuf.Enum, Swift.CaseIterable {
       public typealias RawValue = Int
       case unspecified // = 0
 

@@ -392,7 +392,7 @@ extension Api.Common.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Which workflow task to reset to.
-    public enum OneOf_Target: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Target: Equatable, Sendable {
       /// Resets to the first workflow task completed or started event.
       case firstWorkflowTask(SwiftProtobuf.Google_Protobuf_Empty)
       /// Resets to the last workflow task completed or started event.
@@ -446,7 +446,7 @@ extension Api.Common.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Variant: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Variant: Equatable, Sendable {
       case nexus(Api.Common.V1.Callback.Nexus)
       case `internal`(Api.Common.V1.Callback.Internal)
 
@@ -520,7 +520,7 @@ extension Api.Common.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Variant: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Variant: Equatable, Sendable {
       case workflowEvent(Api.Common.V1.Link.WorkflowEvent)
       case batchJob(Api.Common.V1.Link.BatchJob)
 
@@ -561,7 +561,7 @@ extension Api.Common.V1 {
 
       /// Additional information about the workflow event.
       /// Eg: the caller workflow can send the history event details that made the Nexus call.
-      public enum OneOf_Reference: Equatable, Sendable {
+      @nonexhaustive public enum OneOf_Reference: Equatable, Sendable {
         case eventRef(Api.Common.V1.Link.WorkflowEvent.EventReference)
         case requestIDRef(Api.Common.V1.Link.WorkflowEvent.RequestIdReference)
 
@@ -752,7 +752,7 @@ extension Api.Common.V1 {
     /// string query = 5;
     /// string task_queue = 6;
     /// ...
-    public enum OneOf_Selector: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Selector: Equatable, Sendable {
       /// Worker instance key to which the command should be sent.
       case workerInstanceKey(String)
 

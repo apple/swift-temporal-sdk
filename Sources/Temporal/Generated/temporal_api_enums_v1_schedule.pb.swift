@@ -24,7 +24,7 @@ extension Api.Enums.V1 {
 
   /// ScheduleOverlapPolicy controls what happens when a workflow would be started
   /// by a schedule, and is already running.
-  public enum ScheduleOverlapPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ScheduleOverlapPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 

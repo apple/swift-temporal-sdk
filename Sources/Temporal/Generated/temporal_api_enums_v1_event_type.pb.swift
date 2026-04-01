@@ -23,7 +23,7 @@ extension Api.Enums.V1 {
 
 
   /// Whenever this list of events is changed do change the function shouldBufferEvent in mutableStateBuilder.go to make sure to do the correct event ordering
-  public enum EventType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum EventType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Place holder and should never appear in a Workflow execution history

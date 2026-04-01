@@ -25,7 +25,7 @@ extension Api.Enums.V1 {
   /// NexusHandlerErrorRetryBehavior allows nexus handlers to explicity set the retry behavior of a HandlerError. If not
   /// specified, retry behavior is determined from the error type. For example internal errors are not retryable by default
   /// unless specified otherwise.
-  public enum NexusHandlerErrorRetryBehavior: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum NexusHandlerErrorRetryBehavior: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 

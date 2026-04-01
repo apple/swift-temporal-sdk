@@ -406,7 +406,7 @@ extension Api.Schedule.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Action: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Action: Equatable, Sendable {
       /// All fields of NewWorkflowExecutionInfo are valid except for:
       /// - workflow_id_reuse_policy
       /// - cron_schedule

@@ -24,7 +24,7 @@ extension Api.Enums.V1 {
 
   /// Workflow tasks can fail for various reasons. Note that some of these reasons can only originate
   /// from the server, and some of them can only originate from the SDK/worker.
-  public enum WorkflowTaskFailedCause: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum WorkflowTaskFailedCause: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -251,7 +251,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum StartChildWorkflowExecutionFailedCause: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum StartChildWorkflowExecutionFailedCause: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case workflowAlreadyExists // = 1
@@ -292,7 +292,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum CancelExternalWorkflowExecutionFailedCause: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum CancelExternalWorkflowExecutionFailedCause: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case externalWorkflowExecutionNotFound // = 1
@@ -333,7 +333,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum SignalExternalWorkflowExecutionFailedCause: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum SignalExternalWorkflowExecutionFailedCause: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case externalWorkflowExecutionNotFound // = 1
@@ -380,7 +380,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum ResourceExhaustedCause: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ResourceExhaustedCause: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -473,7 +473,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum ResourceExhaustedScope: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ResourceExhaustedScope: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 

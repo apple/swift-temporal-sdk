@@ -312,7 +312,7 @@ extension Api.Batch.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// The activity to unpause. If match_all is set to true, all activities will be unpaused.
-    public enum OneOf_Activity: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Activity: Equatable, Sendable {
       case type(String)
       case matchAll(Bool)
 
@@ -357,7 +357,7 @@ extension Api.Batch.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Rule: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Rule: Equatable, Sendable {
       /// ID of existing rule.
       case id(String)
       /// Rule specification to be applied to the workflow without creating a new rule.
@@ -428,7 +428,7 @@ extension Api.Batch.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// The activities to reset. If match_all is set to true, all activities will be reset.
-    public enum OneOf_Activity: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Activity: Equatable, Sendable {
       case type(String)
       case matchAll(Bool)
 
@@ -501,7 +501,7 @@ extension Api.Batch.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// The activity to update. If match_all is set to true, all activities will be updated.
-    public enum OneOf_Activity: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Activity: Equatable, Sendable {
       case type(String)
       case matchAll(Bool)
 

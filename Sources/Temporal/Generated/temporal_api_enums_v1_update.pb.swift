@@ -31,7 +31,7 @@ extension Api.Enums.V1 {
   /// completion.
   /// If specified stage wasn't reached before server timeout, server returns
   /// actual stage reached.
-  public enum UpdateWorkflowExecutionLifecycleStage: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum UpdateWorkflowExecutionLifecycleStage: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// An unspecified value for this enum.
@@ -91,7 +91,7 @@ extension Api.Enums.V1 {
 
   /// Records why a WorkflowExecutionUpdateAdmittedEvent was written to history.
   /// Note that not all admitted Updates result in this event.
-  public enum UpdateAdmittedEventOrigin: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum UpdateAdmittedEventOrigin: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 

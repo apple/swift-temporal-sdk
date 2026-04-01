@@ -26,6 +26,7 @@ build-protos: $(PROTOC_GEN_SWIFT) $(PROTOC_GEN_GRPC_SWIFT) ./dependencies/sdk-co
 		--swift_opt=FileNaming=PathToUnderscores \
 		--swift_opt=Visibility=Public \
 		--swift_opt=UseAccessLevelOnImports=true \
+		--swift_opt=EnumGeneration=Nonexhaustive \
 		-I ./dependencies/sdk-core/crates/common/protos/api_cloud_upstream \
 		-I ./dependencies/sdk-core/crates/common/protos/api_upstream \
 		-I ./dependencies/sdk-core/crates/common/protos/google \

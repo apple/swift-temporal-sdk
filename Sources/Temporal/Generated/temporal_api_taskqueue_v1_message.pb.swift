@@ -594,7 +594,7 @@ extension Api.Taskqueue.V1 {
     /// tasks according to the provided percentage.
     /// This option can be used only on "terminal" Build IDs (the ones not used
     /// as source in any redirect rules).
-    public enum OneOf_Ramp: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Ramp: Equatable, Sendable {
       /// This ramp is useful for gradual Blue/Green deployments (and similar)
       /// where you want to send a certain portion of the traffic to the target
       /// Build ID.

@@ -3837,7 +3837,7 @@ extension Api.History.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// The event details. The type must match that in `event_type`.
-    public enum OneOf_Attributes: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Attributes: Equatable, Sendable {
       case workflowExecutionStartedEventAttributes(Api.History.V1.WorkflowExecutionStartedEventAttributes)
       case workflowExecutionCompletedEventAttributes(Api.History.V1.WorkflowExecutionCompletedEventAttributes)
       case workflowExecutionFailedEventAttributes(Api.History.V1.WorkflowExecutionFailedEventAttributes)

@@ -22,7 +22,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 extension Api.Enums.V1 {
 
 
-  public enum TaskQueueKind: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum TaskQueueKind: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Tasks from any non workflow task may be unspecified.
@@ -84,7 +84,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum TaskQueueType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum TaskQueueType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -138,7 +138,7 @@ extension Api.Enums.V1 {
   /// Specifies which category of tasks may reach a worker on a versioned task queue.
   /// Used both in a reachability query and its response.
   /// Deprecated.
-  public enum TaskReachability: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum TaskReachability: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -210,7 +210,7 @@ extension Api.Enums.V1 {
   /// assignment rules of their Task Queue. Same goes for Child Workflows or Continue-As-New Workflows
   /// who inherit the parent/previous workflow's Build ID but not its Task Queue. In those cases, make
   /// sure to query reachability for the parent/previous workflow's Task Queue as well.
-  public enum BuildIdTaskReachability: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum BuildIdTaskReachability: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Task reachability is not reported
@@ -267,7 +267,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum DescribeTaskQueueMode: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum DescribeTaskQueueMode: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Unspecified means legacy behavior.
@@ -309,7 +309,7 @@ extension Api.Enums.V1 {
 
 
   /// Source for the effective rate limit.
-  public enum RateLimitSource: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum RateLimitSource: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -362,7 +362,7 @@ extension Api.Enums.V1 {
 
   /// Indicates whether a change to the Routing Config has been
   /// propagated to all relevant Task Queues and their partitions.
-  public enum RoutingConfigUpdateState: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum RoutingConfigUpdateState: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 

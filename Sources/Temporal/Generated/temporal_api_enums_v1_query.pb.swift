@@ -22,7 +22,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 extension Api.Enums.V1 {
 
 
-  public enum QueryResultType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum QueryResultType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case answered // = 1
@@ -63,7 +63,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum QueryRejectCondition: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum QueryRejectCondition: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 

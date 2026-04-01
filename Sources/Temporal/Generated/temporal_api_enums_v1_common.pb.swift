@@ -22,7 +22,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 extension Api.Enums.V1 {
 
 
-  public enum EncodingType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum EncodingType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case proto3 // = 1
@@ -63,7 +63,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum IndexedValueType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum IndexedValueType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case text // = 1
@@ -124,7 +124,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum Severity: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum Severity: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case high // = 1
@@ -170,7 +170,7 @@ extension Api.Enums.V1 {
 
 
   /// State of a callback.
-  public enum CallbackState: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum CallbackState: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Default value, unspecified state.
@@ -242,7 +242,7 @@ extension Api.Enums.V1 {
 
 
   /// State of a pending Nexus operation.
-  public enum PendingNexusOperationState: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum PendingNexusOperationState: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Default value, unspecified state.
@@ -302,7 +302,7 @@ extension Api.Enums.V1 {
 
 
   /// State of a Nexus operation cancellation.
-  public enum NexusOperationCancellationState: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum NexusOperationCancellationState: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Default value, unspecified state.
@@ -373,7 +373,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum WorkflowRuleActionScope: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum WorkflowRuleActionScope: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Default value, unspecified scope.
@@ -420,7 +420,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum ApplicationErrorCategory: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ApplicationErrorCategory: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -461,7 +461,7 @@ extension Api.Enums.V1 {
 
   /// (-- api-linter: core::0216::synonyms=disabled
   ///     aip.dev/not-precedent: It seems we have both state and status, and status is a better fit for workers. --)
-  public enum WorkerStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum WorkerStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case running // = 1

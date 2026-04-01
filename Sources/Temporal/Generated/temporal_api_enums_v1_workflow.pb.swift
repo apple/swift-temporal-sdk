@@ -26,7 +26,7 @@ extension Api.Enums.V1 {
   /// If the request is denied, the server returns a `WorkflowExecutionAlreadyStartedFailure` error.
   ///
   /// See `WorkflowIdConflictPolicy` for handling workflow id duplication with a *running* workflow.
-  public enum WorkflowIdReusePolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum WorkflowIdReusePolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -96,7 +96,7 @@ extension Api.Enums.V1 {
   /// Note that it is *never* valid to have two actively running instances of the same workflow id.
   ///
   /// See `WorkflowIdReusePolicy` for handling workflow id duplication with a *closed* workflow.
-  public enum WorkflowIdConflictPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum WorkflowIdConflictPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -148,7 +148,7 @@ extension Api.Enums.V1 {
 
 
   /// Defines how child workflows will react to their parent completing
-  public enum ParentClosePolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ParentClosePolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -199,7 +199,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum ContinueAsNewInitiator: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ContinueAsNewInitiator: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -252,7 +252,7 @@ extension Api.Enums.V1 {
 
   /// (-- api-linter: core::0216::synonyms=disabled
   ///     aip.dev/not-precedent: There is WorkflowExecutionState already in another package. --)
-  public enum WorkflowExecutionStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum WorkflowExecutionStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -319,7 +319,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum PendingActivityState: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum PendingActivityState: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case scheduled // = 1
@@ -376,7 +376,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum PendingWorkflowTaskState: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum PendingWorkflowTaskState: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case scheduled // = 1
@@ -417,7 +417,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum HistoryEventFilterType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum HistoryEventFilterType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case allEvent // = 1
@@ -458,7 +458,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum RetryState: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum RetryState: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case inProgress // = 1
@@ -519,7 +519,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum TimeoutType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum TimeoutType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case startToClose // = 1
@@ -573,7 +573,7 @@ extension Api.Enums.V1 {
   /// who completes the first task of the execution, but is also overridable manually for new and
   /// existing workflows (see VersioningOverride).
   /// Experimental. Worker Deployments are experimental and might significantly change in the future.
-  public enum VersioningBehavior: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum VersioningBehavior: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Workflow execution does not have a Versioning Behavior and is called Unversioned. This is the
@@ -658,7 +658,7 @@ extension Api.Enums.V1 {
 
 
   /// Experimental. Defines the versioning behavior to be used by the first task of a new workflow run in a continue-as-new chain.
-  public enum ContinueAsNewVersioningBehavior: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ContinueAsNewVersioningBehavior: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -706,7 +706,7 @@ extension Api.Enums.V1 {
 
 
   /// SuggestContinueAsNewReason specifies why SuggestContinueAsNew is true.
-  public enum SuggestContinueAsNewReason: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum SuggestContinueAsNewReason: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 

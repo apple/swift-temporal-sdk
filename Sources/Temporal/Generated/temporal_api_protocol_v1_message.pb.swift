@@ -73,7 +73,7 @@ extension Api.`Protocol`.V1 {
     /// The event ID or command ID after which this message can be delivered. The
     /// effects of history up to and including this event ID should be visible to
     /// the code that handles this message. Omit to opt out of sequencing.
-    public enum OneOf_SequencingID: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_SequencingID: Equatable, Sendable {
       case eventID(Int64)
       case commandIndex(Int64)
 

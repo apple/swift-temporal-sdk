@@ -339,7 +339,7 @@ extension Api.Cloud.Namespace.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum SearchAttributeType: SwiftProtobuf.Enum, Swift.CaseIterable {
+    @nonexhaustive public enum SearchAttributeType: SwiftProtobuf.Enum, Swift.CaseIterable {
       public typealias RawValue = Int
       case unspecified // = 0
       case text // = 1
@@ -651,7 +651,7 @@ extension Api.Cloud.Namespace.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum State: SwiftProtobuf.Enum, Swift.CaseIterable {
+    @nonexhaustive public enum State: SwiftProtobuf.Enum, Swift.CaseIterable {
       public typealias RawValue = Int
       case unspecified // = 0
 
@@ -826,7 +826,7 @@ extension Api.Cloud.Namespace.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum Health: SwiftProtobuf.Enum, Swift.CaseIterable {
+    @nonexhaustive public enum Health: SwiftProtobuf.Enum, Swift.CaseIterable {
       public typealias RawValue = Int
       case unspecified // = 0
       case ok // = 1

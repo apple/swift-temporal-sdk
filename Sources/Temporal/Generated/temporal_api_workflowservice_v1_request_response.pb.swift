@@ -2814,7 +2814,7 @@ extension Api.Workflowservice.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Filters: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Filters: Equatable, Sendable {
       case executionFilter(Api.Filter.V1.WorkflowExecutionFilter)
       case typeFilter(Api.Filter.V1.WorkflowTypeFilter)
 
@@ -2893,7 +2893,7 @@ extension Api.Workflowservice.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Filters: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Filters: Equatable, Sendable {
       case executionFilter(Api.Filter.V1.WorkflowExecutionFilter)
       case typeFilter(Api.Filter.V1.WorkflowTypeFilter)
       case statusFilter(Api.Filter.V1.StatusFilter)
@@ -4458,7 +4458,7 @@ extension Api.Workflowservice.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Operation: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Operation: Equatable, Sendable {
       /// A new build id. This operation will create a new set which will be the new overall
       /// default version for the queue, with this id as its only member. This new set is
       /// incompatible with all previous sets/versions.
@@ -4672,7 +4672,7 @@ extension Api.Workflowservice.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Operation: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Operation: Equatable, Sendable {
       case insertAssignmentRule(Api.Workflowservice.V1.UpdateWorkerVersioningRulesRequest.InsertBuildIdAssignmentRule)
       case replaceAssignmentRule(Api.Workflowservice.V1.UpdateWorkerVersioningRulesRequest.ReplaceBuildIdAssignmentRule)
       case deleteAssignmentRule(Api.Workflowservice.V1.UpdateWorkerVersioningRulesRequest.DeleteBuildIdAssignmentRule)
@@ -5223,7 +5223,7 @@ extension Api.Workflowservice.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Operation input
-    public enum OneOf_Operation: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Operation: Equatable, Sendable {
       case terminationOperation(Api.Batch.V1.BatchOperationTermination)
       case signalOperation(Api.Batch.V1.BatchOperationSignal)
       case cancellationOperation(Api.Batch.V1.BatchOperationCancellation)
@@ -5767,7 +5767,7 @@ extension Api.Workflowservice.V1 {
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_Operation: Equatable, Sendable {
+      @nonexhaustive public enum OneOf_Operation: Equatable, Sendable {
         /// Additional restrictions:
         /// - setting `cron_schedule` is invalid
         /// - setting `request_eager_execution` is invalid
@@ -5829,7 +5829,7 @@ extension Api.Workflowservice.V1 {
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_Response: Equatable, Sendable {
+      @nonexhaustive public enum OneOf_Response: Equatable, Sendable {
         case startWorkflow(Api.Workflowservice.V1.StartWorkflowExecutionResponse)
         case updateWorkflow(Api.Workflowservice.V1.UpdateWorkflowExecutionResponse)
 
@@ -5926,7 +5926,7 @@ extension Api.Workflowservice.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// either activity id, activity type or update_all must be provided
-    public enum OneOf_Activity: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Activity: Equatable, Sendable {
       /// Only activity with this ID will be updated.
       case id(String)
       /// Update all running activities of this type.
@@ -6020,7 +6020,7 @@ extension Api.Workflowservice.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// either activity id or activity type must be provided
-    public enum OneOf_Activity: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Activity: Equatable, Sendable {
       /// Only the activity with this ID will be paused.
       case id(String)
       /// Pause all running activities of this type.
@@ -6120,7 +6120,7 @@ extension Api.Workflowservice.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// either activity id or activity type must be provided
-    public enum OneOf_Activity: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Activity: Equatable, Sendable {
       /// Only the activity with this ID will be unpaused.
       case id(String)
       /// Unpause all running activities with of this type.
@@ -6230,7 +6230,7 @@ extension Api.Workflowservice.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// either activity id, activity type or update_all must be provided
-    public enum OneOf_Activity: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Activity: Equatable, Sendable {
       /// Only activity with this ID will be reset.
       case id(String)
       /// Reset all running activities with of this type.
@@ -7175,7 +7175,7 @@ extension Api.Workflowservice.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_NewManagerIdentity: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_NewManagerIdentity: Equatable, Sendable {
       /// Arbitrary value for `manager_identity`.
       /// Empty will unset the field.
       case managerIdentity(String)
@@ -7547,7 +7547,7 @@ extension Api.Workflowservice.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Either provide id of existing rule, or rule specification
-    public enum OneOf_Rule: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Rule: Equatable, Sendable {
       case id(String)
       /// Note: Rule ID and expiration date are not used in the trigger request.
       case spec(Api.Rules.V1.WorkflowRuleSpec)
@@ -7913,7 +7913,7 @@ extension Api.Workflowservice.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Response: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Response: Equatable, Sendable {
       /// The worker configuration. Will be returned if the command was sent to a single worker.
       case workerConfig(Api.Sdk.V1.WorkerConfig)
 

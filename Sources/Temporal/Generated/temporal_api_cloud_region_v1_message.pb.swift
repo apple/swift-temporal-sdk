@@ -52,7 +52,7 @@ extension Api.Cloud.Region.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// The cloud provider that's hosting the region.
-    public enum CloudProvider: SwiftProtobuf.Enum, Swift.CaseIterable {
+    @nonexhaustive public enum CloudProvider: SwiftProtobuf.Enum, Swift.CaseIterable {
       public typealias RawValue = Int
       case unspecified // = 0
       case aws // = 1

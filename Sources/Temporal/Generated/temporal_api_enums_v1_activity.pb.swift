@@ -27,7 +27,7 @@ extension Api.Enums.V1 {
   /// status.
   /// (-- api-linter: core::0216::synonyms=disabled
   ///     aip.dev/not-precedent: Named consistently with WorkflowExecutionStatus. --)
-  public enum ActivityExecutionStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ActivityExecutionStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -116,7 +116,7 @@ extension Api.Enums.V1 {
   /// If the request is denied, the server returns an `ActivityExecutionAlreadyStarted` error.
   ///
   /// See `ActivityIdConflictPolicy` for handling ID duplication with a *running* activity.
-  public enum ActivityIdReusePolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ActivityIdReusePolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -173,7 +173,7 @@ extension Api.Enums.V1 {
   /// Note that it is *never* valid to have two running instances of the same activity ID.
   ///
   /// See `ActivityIdReusePolicy` for handling activity ID duplication with a *closed* activity.
-  public enum ActivityIdConflictPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ActivityIdConflictPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 

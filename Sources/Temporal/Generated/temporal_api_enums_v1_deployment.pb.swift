@@ -24,7 +24,7 @@ extension Api.Enums.V1 {
 
   /// Specify the reachability level for a deployment so users can decide if it is time to
   /// decommission the deployment.
-  public enum DeploymentReachability: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum DeploymentReachability: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Reachability level is not specified.
@@ -86,7 +86,7 @@ extension Api.Enums.V1 {
   /// Specify the drainage status for a Worker Deployment Version so users can decide whether they
   /// can safely decommission the version.
   /// Experimental. Worker Deployments are experimental and might significantly change in the future.
-  public enum VersionDrainageStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum VersionDrainageStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Drainage Status is not specified.
@@ -143,7 +143,7 @@ extension Api.Enums.V1 {
   ///   tasks to it.
   /// - Whether or not the workflows processed by this worker are versioned using the worker's version.
   /// Experimental. Worker Deployments are experimental and might significantly change in the future.
-  public enum WorkerVersioningMode: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum WorkerVersioningMode: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -207,7 +207,7 @@ extension Api.Enums.V1 {
   ///     aip.dev/not-precedent: Call this status because it is . --)
   /// Specify the status of a Worker Deployment Version.
   /// Experimental. Worker Deployments are experimental and might significantly change in the future.
-  public enum WorkerDeploymentVersionStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum WorkerDeploymentVersionStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
