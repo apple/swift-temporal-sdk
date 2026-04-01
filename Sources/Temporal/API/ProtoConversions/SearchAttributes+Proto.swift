@@ -45,7 +45,7 @@ extension SearchAttributeCollection {
 }
 
 extension Api.Enums.V1.IndexedValueType {
-    var indexedValueTypeString: String {
+    package var indexedValueTypeString: String {
         switch self {
         case .unspecified: return ""
         case .text: return "Text"
