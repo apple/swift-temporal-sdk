@@ -16,11 +16,11 @@ import SwiftProtobuf
 import Temporal
 
 struct FailingPayloadCodec: PayloadCodec {
-    func encode(payload: Api.Common.V1.Payload) async throws -> Api.Common.V1.Payload {
+    func encode(payloads: some Collection<Api.Common.V1.Payload>) async throws -> [Api.Common.V1.Payload] {
         throw CancellationError()
     }
 
-    func decode(payload: Api.Common.V1.Payload) async throws -> Api.Common.V1.Payload {
+    func decode(payloads: some Collection<Api.Common.V1.Payload>) async throws -> [Api.Common.V1.Payload] {
         throw CancellationError()
     }
 }
