@@ -18,7 +18,7 @@ extension Duration {
     init(protobufDuration: Google_Protobuf_Duration) {
         self.init(
             secondsComponent: protobufDuration.seconds,
-            attosecondsComponent: Int64(protobufDuration.nanos * 1_000_000_000)
+            attosecondsComponent: Int64(protobufDuration.nanos) * 1_000_000_000
         )
     }
 }
