@@ -34,6 +34,8 @@ jobs:
       build_scheme: swift-temporal-sdk-Package
       xcode_16_3_enabled: false
       xcode_16_4_enabled: false
+      xcode_26_0_enabled: false
+      xcode_26_1_enabled: false
       watchos_xcode_build_enabled: false
       tvos_xcode_build_enabled: false
       visionos_xcode_build_enabled: false

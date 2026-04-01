@@ -520,6 +520,7 @@ struct WorkflowStateMachine: ~Copyable {
         workflowTaskQueue: String,
         headers: [String: Api.Common.V1.Payload],
         input: [Api.Common.V1.Payload],
+        summary: Api.Common.V1.Payload?,
         continuation: CheckedContinuation<Coresdk.ActivityResult.ActivityResolution, any Error>
     ) {
         switch consume self.state {
@@ -547,6 +548,10 @@ struct WorkflowStateMachine: ~Copyable {
                             attempt: attempt,
                             originalScheduleTime: originalScheduleTime
                         )
+                    }
+
+                    if let summary {
+                        $0.userMetadata.summary = summary
                     }
                 }
             )
@@ -701,6 +706,8 @@ struct WorkflowStateMachine: ~Copyable {
         inputs: [Api.Common.V1.Payload],
         childWorkflowOptions: ChildWorkflowOptions,
         memo: [String: Api.Common.V1.Payload]?,
+        staticSummary: Api.Common.V1.Payload?,
+        staticDetails: Api.Common.V1.Payload?,
         state: UntypedChildWorkflowHandle.State,
         continuation: CheckedContinuation<(String, String), any Error>
     ) {
@@ -722,6 +729,16 @@ struct WorkflowStateMachine: ~Copyable {
                         headers: headers,
                         inputs: inputs
                     )
+
+                    if staticSummary != nil || staticDetails != nil {
+                        $0.userMetadata = .init()
+                        if let staticSummary {
+                            $0.userMetadata.summary = staticSummary
+                        }
+                        if let staticDetails {
+                            $0.userMetadata.details = staticDetails
+                        }
+                    }
                 }
             )
             active.childWorkflowStartContinuations[sequenceNumber] = (workflowID, continuation)

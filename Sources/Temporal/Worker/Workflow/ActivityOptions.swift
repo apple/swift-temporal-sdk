@@ -149,6 +149,21 @@ public struct ActivityOptions: Hashable, Sendable {
     /// The default value is ``VersioningIntent/unspecified``.
     public var versioningIntent: VersioningIntent = .unspecified
 
+    /// The priority to use for this activity.
+    ///
+    /// Activities inherit priority from the workflow that created them, but may override
+    /// individual fields when they are started. A value of `nil` means inherit the priority
+    /// from the calling workflow.
+    public var priority: Priority?
+
+    /// Short-form text that provides a summary for this activity.
+    ///
+    /// This value is displayed in user interfaces and can be used to provide additional
+    /// context about the activity's purpose.
+    ///
+    /// - Important: This is currently experimental.
+    public var summary: String?
+
     /// Creates activity options with a schedule-to-close timeout as the primary constraint.
     ///
     /// This initializer is suitable when you want to control the total time allowed for activity
@@ -164,6 +179,8 @@ public struct ActivityOptions: Hashable, Sendable {
     ///   - taskQueue: The task queue for execution. If `nil`, uses the workflow's task queue.
     ///   - retryPolicy: The retry policy. If `nil`, retries indefinitely with exponential backoff.
     ///   - versioningIntent: Whether to require compatible worker build IDs.
+    ///   - priority: The priority for this activity. If `nil`, inherits from the calling workflow.
+    ///   - summary: Short-form summary text for the activity. If `nil`, no summary is set.
     public init(
         scheduleToCloseTimeout: Duration,
         startToCloseTimeout: Duration? = nil,
@@ -172,7 +189,9 @@ public struct ActivityOptions: Hashable, Sendable {
         heartbeatTimeout: Duration? = nil,
         taskQueue: String? = nil,
         retryPolicy: RetryPolicy? = nil,
-        versioningIntent: VersioningIntent = .unspecified
+        versioningIntent: VersioningIntent = .unspecified,
+        priority: Priority? = nil,
+        summary: String? = nil
     ) {
         self.scheduleToCloseTimeout = scheduleToCloseTimeout
         self.startToCloseTimeout = startToCloseTimeout
@@ -182,6 +201,8 @@ public struct ActivityOptions: Hashable, Sendable {
         self.taskQueue = taskQueue
         self.retryPolicy = retryPolicy
         self.versioningIntent = versioningIntent
+        self.priority = priority
+        self.summary = summary
     }
 
     /// Creates activity options with a start-to-close timeout as the primary constraint.
@@ -199,6 +220,8 @@ public struct ActivityOptions: Hashable, Sendable {
     ///   - taskQueue: The task queue for execution. If `nil`, uses the workflow's task queue.
     ///   - retryPolicy: The retry policy. If `nil`, retries indefinitely with exponential backoff.
     ///   - versioningIntent: Whether to require compatible worker build IDs.
+    ///   - priority: The priority for this activity. If `nil`, inherits from the calling workflow.
+    ///   - summary: Short-form summary text for the activity. If `nil`, no summary is set.
     public init(
         startToCloseTimeout: Duration,
         scheduleToCloseTimeout: Duration? = nil,
@@ -207,7 +230,9 @@ public struct ActivityOptions: Hashable, Sendable {
         heartbeatTimeout: Duration? = nil,
         taskQueue: String? = nil,
         retryPolicy: RetryPolicy? = nil,
-        versioningIntent: VersioningIntent = .unspecified
+        versioningIntent: VersioningIntent = .unspecified,
+        priority: Priority? = nil,
+        summary: String? = nil
     ) {
         self.scheduleToCloseTimeout = scheduleToCloseTimeout
         self.startToCloseTimeout = startToCloseTimeout
@@ -217,5 +242,7 @@ public struct ActivityOptions: Hashable, Sendable {
         self.taskQueue = taskQueue
         self.retryPolicy = retryPolicy
         self.versioningIntent = versioningIntent
+        self.priority = priority
+        self.summary = summary
     }
 }

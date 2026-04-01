@@ -72,5 +72,9 @@ extension Coresdk.WorkflowCommands.StartChildWorkflowExecution {
         if let cronSchedule = childWorkflowOptions.cronSchedule {
             self.cronSchedule = cronSchedule
         }
+
+        if let priority = childWorkflowOptions.priority {
+            self.priority = .init(priority)
+        }
     }
 }

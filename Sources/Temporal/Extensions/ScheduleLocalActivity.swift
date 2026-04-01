@@ -54,5 +54,8 @@ extension Coresdk.WorkflowCommands.ScheduleLocalActivity {
         if let originalScheduleTime {
             self.originalScheduleTime = originalScheduleTime
         }
+        if let localRetryThreshold = options.localRetryThreshold {
+            self.localRetryThreshold = .init(duration: localRetryThreshold)
+        }
     }
 }

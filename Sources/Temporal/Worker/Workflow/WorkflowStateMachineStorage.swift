@@ -186,6 +186,8 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
             throw CanceledError(message: "Activity cancelled before scheduled")
         }
 
+        let convertedSummary = try options.summary.flatMap { try self.payloadConverter.convertValue($0) }
+
         var options = options
         let isLocal = options.isLocal
         while true {
@@ -199,6 +201,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
                         workflowTaskQueue: workflowTaskQueue,
                         headers: headers,
                         input: input,
+                        summary: convertedSummary,
                         continuation: continuation
                     )
                 }
@@ -300,6 +303,13 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
             childWorkflowMemo = nil
         }
 
+        let convertedStaticSummary = try childWorkflowOptions.staticSummary.flatMap {
+            try self.payloadConverter.convertValue($0)
+        }
+        let convertedStaticDetails = try childWorkflowOptions.staticDetails.flatMap {
+            try self.payloadConverter.convertValue($0)
+        }
+
         let sequenceNumber = self.stateMachine.nextChildWorkflowSequenceNumber()
         let state = UntypedChildWorkflowHandle.State(resolutionState: .unresolved(sequenceNumber: sequenceNumber))
         let (workflowID, firstExecutionRunID) = try await withTaskCancellationHandler {
@@ -313,6 +323,8 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
                     inputs: inputs,
                     childWorkflowOptions: childWorkflowOptions,
                     memo: childWorkflowMemo,
+                    staticSummary: convertedStaticSummary,
+                    staticDetails: convertedStaticDetails,
                     state: state,
                     continuation: continuation
                 )

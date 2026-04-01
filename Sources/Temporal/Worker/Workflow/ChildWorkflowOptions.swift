@@ -140,6 +140,29 @@ public struct ChildWorkflowOptions: Sendable {
     /// The default value is ``VersioningIntent/unspecified``.
     public var versioningIntent: VersioningIntent = .unspecified
 
+    /// The priority to use for this child workflow.
+    ///
+    /// Child workflows inherit priority from the parent workflow that created them, but may
+    /// override individual fields when they are started. A value of `nil` means inherit the
+    /// priority from the parent workflow.
+    public var priority: Priority?
+
+    /// Short-form text that provides a summary for this child workflow.
+    ///
+    /// This value is stored with the workflow execution and displayed in user interfaces.
+    /// It can be used to provide additional context about the child workflow's purpose.
+    ///
+    /// - Important: This is currently experimental.
+    public var staticSummary: String?
+
+    /// Detailed text providing extended information about this child workflow.
+    ///
+    /// This value is stored with the workflow execution and can be used to provide
+    /// comprehensive details about the child workflow's purpose and context.
+    ///
+    /// - Important: This is currently experimental.
+    public var staticDetails: String?
+
     /// Creates child workflow options with the specified configuration parameters.
     ///
     /// All parameters are optional, allowing you to configure only the aspects relevant to your
@@ -159,6 +182,9 @@ public struct ChildWorkflowOptions: Sendable {
     ///   - cronSchedule: Cron schedule expression for recurring execution.
     ///   - cancellationType: How the parent handles child workflow cancellation.
     ///   - versioningIntent: Whether to require compatible worker build IDs.
+    ///   - priority: The priority for this child workflow. If `nil`, inherits from the parent workflow.
+    ///   - staticSummary: Short-form summary text for the child workflow. If `nil`, no summary is set.
+    ///   - staticDetails: Detailed text for the child workflow. If `nil`, no details are set.
     public init(
         id: String? = nil,
         taskQueue: String? = nil,
@@ -172,7 +198,10 @@ public struct ChildWorkflowOptions: Sendable {
         idReusePolicy: Api.Enums.V1.WorkflowIdReusePolicy = .allowDuplicate,
         cronSchedule: String? = nil,
         cancellationType: ChildWorkflowCancellationType = .waitCancellationCompleted,
-        versioningIntent: VersioningIntent = .unspecified
+        versioningIntent: VersioningIntent = .unspecified,
+        priority: Priority? = nil,
+        staticSummary: String? = nil,
+        staticDetails: String? = nil
     ) {
         self.id = id
         self.taskQueue = taskQueue
@@ -187,5 +216,8 @@ public struct ChildWorkflowOptions: Sendable {
         self.cronSchedule = cronSchedule
         self.cancellationType = cancellationType
         self.versioningIntent = versioningIntent
+        self.priority = priority
+        self.staticSummary = staticSummary
+        self.staticDetails = staticDetails
     }
 }

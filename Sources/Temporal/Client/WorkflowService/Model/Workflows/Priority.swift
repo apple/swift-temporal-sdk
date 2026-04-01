@@ -28,7 +28,7 @@
 /// 1. First, consider ``priorityKey``: lower numbers go first (higher priority).
 /// 2. Then, consider fairness: the fairness mechanism attempts to dispatch tasks for a given
 ///    ``fairnessKey`` in proportion to its ``fairnessWeight``.
-public struct Priority: Sendable {
+public struct Priority: Hashable, Sendable {
     /// The priority key, which is a positive integer from 1 to *n*, where smaller integers
     /// correspond to higher priorities (tasks run sooner).
     ///
