@@ -58,7 +58,7 @@ struct TemporalClientOutboundTracingInterceptorTests {
             let interceptor = try #require(
                 TemporalClientTracingInterceptor(
                     tracer: tracer
-                ).makeClientOutboundInterceptor()
+                ).clientOutboundInterceptor
             )
 
             _ = try await interceptor.queryWorkflow(
@@ -114,7 +114,7 @@ struct TemporalClientOutboundTracingInterceptorTests {
             let interceptor = try #require(
                 TemporalClientTracingInterceptor(
                     tracer: tracer
-                ).makeClientOutboundInterceptor()
+                ).clientOutboundInterceptor
             )
 
             do {

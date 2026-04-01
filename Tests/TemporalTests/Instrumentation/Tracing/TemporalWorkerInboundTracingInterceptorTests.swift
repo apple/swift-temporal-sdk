@@ -62,7 +62,7 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         let interceptor = try #require(
             TemporalWorkerTracingInterceptor(
                 tracer: tracer
-            ).makeWorkflowInboundInterceptor()
+            ).workflowInboundInterceptor
         )
 
         let mockIncomingHeaders: [String: Api.Common.V1.Payload] = await [
@@ -113,7 +113,7 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         let interceptor = try #require(
             TemporalWorkerTracingInterceptor(
                 tracer: tracer
-            ).makeWorkflowInboundInterceptor()
+            ).workflowInboundInterceptor
         )
 
         let mockIncomingHeaders: [String: Api.Common.V1.Payload] = await [
@@ -169,7 +169,7 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         let interceptor = try #require(
             TemporalWorkerTracingInterceptor(
                 tracer: tracer
-            ).makeActivityInboundInterceptor()
+            ).activityInboundInterceptor
         )
 
         let mockIncomingHeaders: [String: Api.Common.V1.Payload] = await [
@@ -215,7 +215,7 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         let interceptor = try #require(
             TemporalWorkerTracingInterceptor(
                 tracer: tracer
-            ).makeActivityInboundInterceptor()
+            ).activityInboundInterceptor
         )
 
         let mockIncomingHeaders: [String: Api.Common.V1.Payload] = await [

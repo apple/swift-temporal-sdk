@@ -136,7 +136,7 @@ public final class TemporalClient: Sendable {
             workflowService: self.workflowService,
             interceptors: configuration
                 .interceptors
-                .compactMap { $0.makeClientOutboundInterceptor() }
+                .compactMap { $0.clientOutboundInterceptor }
         )
 
         self.interceptedService = .init(

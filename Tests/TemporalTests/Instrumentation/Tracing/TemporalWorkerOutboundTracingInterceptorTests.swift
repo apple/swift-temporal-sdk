@@ -71,7 +71,7 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                 let interceptor = try #require(
                     TemporalWorkerTracingInterceptor(
                         tracer: tracer
-                    ).makeWorkflowOutboundInterceptor()
+                    ).workflowOutboundInterceptor
                 )
 
                 let input = ScheduleActivityInput<Void>(
@@ -153,7 +153,7 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                 let interceptor = try #require(
                     TemporalWorkerTracingInterceptor(
                         tracer: tracer
-                    ).makeWorkflowOutboundInterceptor()
+                    ).workflowOutboundInterceptor
                 )
 
                 do {

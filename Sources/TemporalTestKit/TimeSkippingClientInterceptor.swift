@@ -32,7 +32,7 @@ struct TimeSkippingClientInterceptor: Temporal.ClientInterceptor, Sendable {
         self.testServer = testServer
     }
 
-    func makeClientOutboundInterceptor() -> Outbound? {
+    var clientOutboundInterceptor: Outbound? {
         Outbound(testServer: self.testServer)
     }
 

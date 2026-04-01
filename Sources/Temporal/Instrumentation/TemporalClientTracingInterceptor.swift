@@ -69,7 +69,7 @@ public struct TemporalClientTracingInterceptor: ClientInterceptor {
         self.tracingHeaderKey = tracingHeaderKey
     }
 
-    public func makeClientOutboundInterceptor() -> Self.Outbound? {
+    public var clientOutboundInterceptor: Self.Outbound? {
         Self.Outbound(tracer: self.tracer, tracingHeaderKey: self.tracingHeaderKey)
     }
 }

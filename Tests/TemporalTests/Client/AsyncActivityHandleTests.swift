@@ -80,7 +80,7 @@ extension TestServerDependentTests {
                 }
             }
 
-            func makeClientOutboundInterceptor() -> Outbound? {
+            var clientOutboundInterceptor: Outbound? {
                 Outbound(interceptor: self)
             }
 

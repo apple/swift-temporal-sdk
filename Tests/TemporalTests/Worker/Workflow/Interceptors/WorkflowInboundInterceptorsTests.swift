@@ -49,7 +49,7 @@ extension TestServerDependentTests {
                 }
             }
 
-            func makeWorkflowInboundInterceptor() -> Inbound? {
+            var workflowInboundInterceptor: Inbound? {
                 Inbound(interceptor: self)
             }
         }
@@ -97,7 +97,7 @@ extension TestServerDependentTests {
                     }
                 }
 
-                func makeWorkflowInboundInterceptor() -> Inbound? {
+                var workflowInboundInterceptor: Inbound? {
                     Inbound(firstInterceptor: firstInterceptor)
                 }
             }

@@ -79,9 +79,18 @@ struct WorkflowInstance: Sendable {
             payloadConverter: payloadConverter,
             failureConverter: failureConverter
         )
-        let inboundInterceptors = workflowWorker.interceptors.compactMap { $0.makeWorkflowInboundInterceptor() }
+        var inboundInterceptors = [any WorkflowInboundInterceptor]()
+        var outboundInterceptors = [any WorkflowOutboundInterceptor]()
+        for interceptor in workflowWorker.interceptors {
+            if let inbound = interceptor.workflowInboundInterceptor {
+                inboundInterceptors.append(inbound)
+            }
+            if let outbound = interceptor.workflowOutboundInterceptor {
+                outboundInterceptors.append(outbound)
+            }
+        }
         self.implementation = .init(interceptors: inboundInterceptors)
-        self.outboundInterceptors = workflowWorker.interceptors.compactMap { $0.makeWorkflowOutboundInterceptor() }
+        self.outboundInterceptors = outboundInterceptors
         self.logger = logger
     }
 

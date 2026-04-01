@@ -12,20 +12,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Factory protocol that creates interceptors for client-side operations.
+/// Protocol for a client interceptor.
 public protocol ClientInterceptor: Sendable {
-    /// The type of client outbound interceptor created by this factory.
+    /// The type of client outbound interceptor created by this interceptor.
     associatedtype ClientOutboundInterceptorType: ClientOutboundInterceptor = ForwardingClientOutboundInterceptor
 
-    /// Creates a client outbound interceptor for intercepting and modifying client operations.
-    func makeClientOutboundInterceptor() -> ClientOutboundInterceptorType?
+    /// The client outbound interceptor for intercepting and modifying client operations, or `nil` if no interception is needed.
+    var clientOutboundInterceptor: ClientOutboundInterceptorType? { get }
 }
 
 extension ClientInterceptor {
-    /// Provides a default implementation that disables interception by returning `nil`.
-    ///
-    /// - Returns: `nil` to disable interception by default.
-    public func makeClientOutboundInterceptor() -> ClientOutboundInterceptorType? { nil }
+    /// Default implementation that returns no client outbound interceptor.
+    public var clientOutboundInterceptor: ClientOutboundInterceptorType? { nil }
 }
 
 /// A client outbound interceptor that forwards all operations to the next interceptor in the chain.
