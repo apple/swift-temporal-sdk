@@ -47,6 +47,12 @@ public struct UntypedWorkflowUpdateHandle: Sendable {
     /// configured, providing precise targeting of workflow executions.
     public let workflowRunID: String?
 
+    /// Cached outcome payloads from a previously completed poll.
+    ///
+    /// When set, subsequent calls to ``result(resultTypes:callOptions:)`` will return the
+    /// cached payloads instead of making additional RPCs to the server.
+    package let knownOutcome: [Api.Common.V1.Payload]?
+
     /// Creates a workflow update handle for managing a specific update operation.
     ///
     /// - Parameters:
@@ -54,15 +60,18 @@ public struct UntypedWorkflowUpdateHandle: Sendable {
     ///   - id: The unique identifier for this update operation.
     ///   - workflowID: The unique identifier of the target workflow.
     ///   - workflowRunID: The optional run ID for precise workflow execution targeting.
+    ///   - knownOutcome: Optional cached outcome payloads from a prior poll.
     package init(
         interceptor: TemporalClient.Interceptor,
         id: String,
         workflowID: String,
         workflowRunID: String? = nil,
+        knownOutcome: [Api.Common.V1.Payload]? = nil,
     ) {
         self.interceptor = interceptor
         self.id = id
         self.workflowID = workflowID
         self.workflowRunID = workflowRunID
+        self.knownOutcome = knownOutcome
     }
 }

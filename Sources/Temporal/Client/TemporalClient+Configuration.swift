@@ -58,6 +58,15 @@ extension TemporalClient {
         /// - Important: Ensure that you only configure either an API key or mTLS.
         public var apiKey: String?
 
+        /// The default query rejection condition applied to all query operations.
+        ///
+        /// When set, this condition is used as the default for all workflow query operations that
+        /// don't specify their own rejection condition. This allows you to globally configure query
+        /// behavior without passing the rejection condition to each individual query call.
+        ///
+        /// Individual query calls can override this default by passing a specific ``Api/Enums/V1/QueryRejectCondition``.
+        public var queryRejectCondition: Api.Enums.V1.QueryRejectCondition?
+
         /// The SDK name identifier sent in all RPC calls to identify the client implementation.
         ///
         /// This constant value identifies this SDK implementation to the Temporal server and appears in
@@ -98,13 +107,15 @@ extension TemporalClient {
         ///   - dataConverter: The converter that handles serialization of workflow data. Defaults to the standard JSON converter.
         ///   - interceptors: Request processing interceptors applied in the specified order. Defaults to the tracing interceptor.
         ///   - apiKey: The API key to use for authenticating with a Temporal Cloud instance. Defaults to none.
+        ///   - queryRejectCondition: The default query rejection condition for all query operations. Defaults to none.
         public init(
             instrumentation: Instrumentation,
             namespace: String = "default",
             identity: String? = nil,
             dataConverter: DataConverter = DataConverter.default,
             interceptors: [any ClientInterceptor] = [TemporalClientTracingInterceptor()],
-            apiKey: String? = nil
+            apiKey: String? = nil,
+            queryRejectCondition: Api.Enums.V1.QueryRejectCondition? = nil
         ) {
             self.instrumentation = instrumentation
             self.namespace = namespace
@@ -112,6 +123,7 @@ extension TemporalClient {
             self.dataConverter = dataConverter
             self.interceptors = interceptors
             self.apiKey = apiKey
+            self.queryRejectCondition = queryRejectCondition
         }
 
         /// Creates a Temporal client configuration from external configuration data.

@@ -67,6 +67,8 @@ extension TemporalClient.WorkflowService {
             }
             if let rejectionCondition {
                 $0.queryRejectCondition = rejectionCondition
+            } else if let defaultCondition = self.configuration.queryRejectCondition {
+                $0.queryRejectCondition = defaultCondition
             }
         }
 

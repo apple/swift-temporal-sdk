@@ -27,6 +27,10 @@ extension UntypedWorkflowUpdateHandle {
     /// must have been successfully processed by the workflow before this method can return a value.
     /// The method suspends until the update reaches a terminal state (completed or failed).
     ///
+    /// If the update outcome was already known at handle creation time (for example, when the
+    /// update was started with ``WorkflowUpdateStage/completed``), the cached result is returned
+    /// without making an additional RPC.
+    ///
     /// - Parameters:
     ///    - resultTypes: The expected result types from the update operation.
     ///    - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
@@ -36,7 +40,13 @@ extension UntypedWorkflowUpdateHandle {
         resultTypes: repeat (each Result).Type,
         callOptions: CallOptions? = nil
     ) async throws -> (repeat each Result) {
-        try await self.interceptor.workflowService.workflowUpdateResult(
+        if let knownOutcome {
+            return try await self.interceptor.workflowService.configuration.dataConverter.convertPayloads(
+                knownOutcome,
+                as: repeat each resultTypes
+            )
+        }
+        return try await self.interceptor.workflowService.workflowUpdateResult(
             workflowID: self.workflowID,
             runID: self.workflowRunID,
             updateID: self.id,

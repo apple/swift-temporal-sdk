@@ -14,6 +14,12 @@
 
 public import GRPCCore
 
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
+
 extension TemporalClient {
     /// Provides access to Temporal operator services for administrative operations.
     public struct OperatorService: Sendable {
@@ -65,6 +71,34 @@ extension TemporalClient {
                 limit: limit,
                 callOptions: callOptions
             )
+        )
+    }
+
+    /// Returns a single page of workflow executions matching the given query.
+    ///
+    /// This method provides manual pagination control for listing workflow executions.
+    /// Each call returns a page of results along with a ``WorkflowListPage/nextPageToken``
+    /// that can be used to retrieve the next page.
+    ///
+    /// - Parameters:
+    ///   - query: The visibility query to match workflow executions against using Temporal's query syntax.
+    ///   - pageSize: The maximum number of results to return per page.
+    ///   - nextPageToken: The page token from a previous response to continue pagination.
+    ///     Pass empty `Data` (or omit) for the first page.
+    ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
+    /// - Returns: A ``WorkflowListPage`` containing the executions and a token for the next page.
+    /// - Throws: An error if the query is malformed or the operation fails.
+    public func listWorkflowsPage(
+        query: String,
+        pageSize: Int? = nil,
+        nextPageToken: Data = Data(),
+        callOptions: CallOptions? = nil
+    ) async throws -> WorkflowListPage {
+        try await self.interceptor.workflowService.listWorkflowExecutionsPage(
+            query: query,
+            pageSize: pageSize,
+            nextPageToken: nextPageToken,
+            callOptions: callOptions
         )
     }
 

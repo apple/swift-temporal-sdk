@@ -16,6 +16,12 @@ import SwiftProtobuf
 
 public import struct GRPCCore.CallOptions
 
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
+
 extension TemporalClient.WorkflowService {
     /// Returns an async sequence of workflow executions matching the specified query.
     ///
@@ -52,6 +58,51 @@ extension TemporalClient.WorkflowService {
             try WorkflowExecution(executionInfo, dataConverter: self.configuration.dataConverter)
         }
         .prefix(limit ?? .max)
+    }
+
+    /// Returns a single page of workflow executions matching the specified query.
+    ///
+    /// This method provides manual pagination control for listing workflow executions.
+    /// Each call returns a page of results along with a ``WorkflowListPage/nextPageToken``
+    /// that can be used to retrieve the next page.
+    ///
+    /// - Parameters:
+    ///   - query: The visibility query to match workflow executions using Temporal's query syntax.
+    ///   - pageSize: The maximum number of results to return per page.
+    ///   - nextPageToken: The page token from a previous response to continue pagination.
+    ///     Pass empty `Data` (or omit) for the first page.
+    ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
+    /// - Returns: A ``WorkflowListPage`` containing the executions and a token for the next page.
+    /// - Throws: An error if the operation fails.
+    public func listWorkflowExecutionsPage(
+        query: String,
+        pageSize: Int? = nil,
+        nextPageToken: Data = Data(),
+        callOptions: CallOptions? = nil
+    ) async throws -> WorkflowListPage {
+        var request = Api.Workflowservice.V1.ListWorkflowExecutionsRequest.with {
+            $0.namespace = configuration.namespace
+            $0.query = query
+            $0.nextPageToken = nextPageToken
+        }
+        if let pageSize {
+            request.pageSize = Int32(pageSize)
+        }
+
+        let response: Api.Workflowservice.V1.ListWorkflowExecutionsResponse = try await self.client.unary(
+            method: Api.Workflowservice.V1.WorkflowService.Method.ListWorkflowExecutions.descriptor,
+            request: request,
+            callOptions: callOptions
+        )
+
+        let executions = try response.executions.map { executionInfo in
+            try WorkflowExecution(executionInfo, dataConverter: self.configuration.dataConverter)
+        }
+
+        return WorkflowListPage(
+            executions: executions,
+            nextPageToken: response.nextPageToken
+        )
     }
 
     /// Counts the number of workflow executions matching the specified query.
