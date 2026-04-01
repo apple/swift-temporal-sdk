@@ -101,6 +101,31 @@ public struct LocalActivityOptions: Sendable {
     /// or the ``scheduleToCloseTimeout`` timeout is exceeded.
     public var retryPolicy: RetryPolicy?
 
+    /// The local retry threshold duration.
+    ///
+    /// If the backoff for a retry would exceed this value, a timer is scheduled and the activity
+    /// will be retried after the timer fires. Otherwise, the backoff will happen internally within
+    /// the core SDK. Defaults to 1 minute if unset.
+    ///
+    /// This is useful for controlling whether long retry backoffs are handled locally or via
+    /// the timer mechanism.
+    public var localRetryThreshold: Duration?
+
+    /// The priority to use for this local activity.
+    ///
+    /// Activities inherit priority from the workflow that created them, but may override
+    /// individual fields when they are started. A value of `nil` means inherit the priority
+    /// from the calling workflow.
+    public var priority: Priority?
+
+    /// Short-form text that provides a summary for this local activity.
+    ///
+    /// This value is displayed in user interfaces and can be used to provide additional
+    /// context about the activity's purpose.
+    ///
+    /// - Important: This is currently experimental.
+    public var summary: String?
+
     /// Creates activity options with a schedule-to-close timeout as the primary constraint.
     ///
     /// This initializer is suitable when you want to control the total time allowed for activity
@@ -112,16 +137,25 @@ public struct LocalActivityOptions: Sendable {
     ///     uses the schedule-to-close timeout for individual attempts.
     ///   - cancellationType: How the workflow handles activity cancellation confirmation.
     ///   - retryPolicy: The retry policy. If `nil`, retries indefinitely with exponential backoff.
+    ///   - localRetryThreshold: The threshold for local vs timer-based retry backoff.
+    ///   - priority: The priority for this local activity. If `nil`, inherits from the calling workflow.
+    ///   - summary: Short-form summary text for the local activity. If `nil`, no summary is set.
     public init(
         scheduleToCloseTimeout: Duration,
         startToCloseTimeout: Duration? = nil,
         cancellationType: ActivityOptions.CancellationType = .tryCancel,
-        retryPolicy: RetryPolicy? = nil
+        retryPolicy: RetryPolicy? = nil,
+        localRetryThreshold: Duration? = nil,
+        priority: Priority? = nil,
+        summary: String? = nil
     ) {
         self.scheduleToCloseTimeout = scheduleToCloseTimeout
         self.startToCloseTimeout = startToCloseTimeout
         self.cancellationType = cancellationType
         self.retryPolicy = retryPolicy
+        self.localRetryThreshold = localRetryThreshold
+        self.priority = priority
+        self.summary = summary
     }
 
     /// Creates activity options with a start-to-close timeout as the primary constraint.
@@ -135,15 +169,24 @@ public struct LocalActivityOptions: Sendable {
     ///     If `nil`, activities may retry indefinitely within workflow execution limits.
     ///   - cancellationType: How the workflow handles activity cancellation confirmation.
     ///   - retryPolicy: The retry policy. If `nil`, retries indefinitely with exponential backoff.
+    ///   - localRetryThreshold: The threshold for local vs timer-based retry backoff.
+    ///   - priority: The priority for this local activity. If `nil`, inherits from the calling workflow.
+    ///   - summary: Short-form summary text for the local activity. If `nil`, no summary is set.
     public init(
         startToCloseTimeout: Duration,
         scheduleToCloseTimeout: Duration? = nil,
         cancellationType: ActivityOptions.CancellationType = .tryCancel,
-        retryPolicy: RetryPolicy? = nil
+        retryPolicy: RetryPolicy? = nil,
+        localRetryThreshold: Duration? = nil,
+        priority: Priority? = nil,
+        summary: String? = nil
     ) {
         self.scheduleToCloseTimeout = scheduleToCloseTimeout
         self.startToCloseTimeout = startToCloseTimeout
         self.cancellationType = cancellationType
         self.retryPolicy = retryPolicy
+        self.localRetryThreshold = localRetryThreshold
+        self.priority = priority
+        self.summary = summary
     }
 }

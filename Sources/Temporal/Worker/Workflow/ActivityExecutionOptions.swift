@@ -25,6 +25,13 @@ enum ActivityExecutionOptions {
         }
     }
 
+    var summary: String? {
+        switch self {
+        case let .remote(options): options.summary
+        case let .local(options, _, _): options.summary
+        }
+    }
+
     func withBackoff(_ backoff: Coresdk.ActivityResult.DoBackoff) -> Self {
         switch self {
         case .remote:

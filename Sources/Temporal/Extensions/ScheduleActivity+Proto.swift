@@ -51,5 +51,8 @@ extension Coresdk.WorkflowCommands.ScheduleActivity {
         if !headers.isEmpty {
             self.headers = headers
         }
+        if let priority = options.priority {
+            self.priority = .init(priority)
+        }
     }
 }
