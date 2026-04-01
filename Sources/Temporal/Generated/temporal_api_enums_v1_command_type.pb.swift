@@ -23,7 +23,7 @@ extension Api.Enums.V1 {
 
 
   /// Whenever this list of command types is changed do change the function shouldBufferEvent in mutableStateBuilder.go to make sure to do the correct event ordering.
-  public enum CommandType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum CommandType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case scheduleActivityTask // = 1

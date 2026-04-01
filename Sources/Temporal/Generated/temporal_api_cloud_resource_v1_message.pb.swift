@@ -22,7 +22,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 extension Api.Cloud.Resource.V1 {
 
 
-  public enum ResourceState: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ResourceState: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 

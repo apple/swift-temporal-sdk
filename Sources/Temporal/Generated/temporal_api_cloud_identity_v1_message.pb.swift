@@ -22,7 +22,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 extension Api.Cloud.Identity.V1 {
 
 
-  public enum OwnerType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum OwnerType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -92,7 +92,7 @@ extension Api.Cloud.Identity.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum Role: SwiftProtobuf.Enum, Swift.CaseIterable {
+    @nonexhaustive public enum Role: SwiftProtobuf.Enum, Swift.CaseIterable {
       public typealias RawValue = Int
       case unspecified // = 0
 
@@ -186,7 +186,7 @@ extension Api.Cloud.Identity.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum Permission: SwiftProtobuf.Enum, Swift.CaseIterable {
+    @nonexhaustive public enum Permission: SwiftProtobuf.Enum, Swift.CaseIterable {
       public typealias RawValue = Int
       case unspecified // = 0
 
@@ -552,7 +552,7 @@ extension Api.Cloud.Identity.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_GroupType: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_GroupType: Equatable, Sendable {
       /// The specification of the google group that this group is associated with.
       case googleGroup(Api.Cloud.Identity.V1.GoogleGroupSpec)
       /// The specification of the SCIM group that this group is associated with.
@@ -660,7 +660,7 @@ extension Api.Cloud.Identity.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_MemberType: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_MemberType: Equatable, Sendable {
       case userID(String)
 
     }

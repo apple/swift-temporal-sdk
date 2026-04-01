@@ -278,7 +278,7 @@ extension Api.Nexus.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Variant: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Variant: Equatable, Sendable {
       case startOperation(Api.Nexus.V1.StartOperationRequest)
       case cancelOperation(Api.Nexus.V1.CancelOperationRequest)
 
@@ -355,7 +355,7 @@ extension Api.Nexus.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Variant: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Variant: Equatable, Sendable {
       case syncSuccess(Api.Nexus.V1.StartOperationResponse.Sync)
       case asyncSuccess(Api.Nexus.V1.StartOperationResponse.Async)
       /// The operation completed unsuccessfully (failed or canceled).
@@ -462,7 +462,7 @@ extension Api.Nexus.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Variant must correlate to the corresponding Request's variant.
-    public enum OneOf_Variant: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Variant: Equatable, Sendable {
       case startOperation(Api.Nexus.V1.StartOperationResponse)
       case cancelOperation(Api.Nexus.V1.CancelOperationResponse)
 
@@ -607,7 +607,7 @@ extension Api.Nexus.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Variant: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Variant: Equatable, Sendable {
       case worker(Api.Nexus.V1.EndpointTarget.Worker)
       case external(Api.Nexus.V1.EndpointTarget.External)
 

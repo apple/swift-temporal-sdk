@@ -50,7 +50,7 @@ extension Api.Activity.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Value: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Value: Equatable, Sendable {
       /// The result if the activity completed successfully.
       case result(Api.Common.V1.Payloads)
       /// The failure if the activity completed unsuccessfully.

@@ -442,7 +442,7 @@ extension Api.Failure.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_FailureInfo: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_FailureInfo: Equatable, Sendable {
       case applicationFailureInfo(Api.Failure.V1.ApplicationFailureInfo)
       case timeoutFailureInfo(Api.Failure.V1.TimeoutFailureInfo)
       case canceledFailureInfo(Api.Failure.V1.CanceledFailureInfo)

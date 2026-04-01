@@ -1117,7 +1117,7 @@ extension Api.Command.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// The command details. The type must match that in `command_type`.
-    public enum OneOf_Attributes: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Attributes: Equatable, Sendable {
       case scheduleActivityTaskCommandAttributes(Api.Command.V1.ScheduleActivityTaskCommandAttributes)
       case startTimerCommandAttributes(Api.Command.V1.StartTimerCommandAttributes)
       case completeWorkflowExecutionCommandAttributes(Api.Command.V1.CompleteWorkflowExecutionCommandAttributes)

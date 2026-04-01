@@ -23,7 +23,7 @@ extension Api.Enums.V1 {
 
 
   /// Event types to exclude when reapplying events beyond the reset point.
-  public enum ResetReapplyExcludeType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ResetReapplyExcludeType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -85,7 +85,7 @@ extension Api.Enums.V1 {
   /// Deprecated: applications should use ResetReapplyExcludeType to specify
   /// exclusions from this set, and new event types should be added to ResetReapplyExcludeType
   /// instead of here.
-  public enum ResetReapplyType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ResetReapplyType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 
@@ -137,7 +137,7 @@ extension Api.Enums.V1 {
 
 
   /// Deprecated, see temporal.api.common.v1.ResetOptions.
-  public enum ResetType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum ResetType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
 

@@ -93,7 +93,7 @@ extension Api.Cloud.Nexus.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Variant: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Variant: Equatable, Sendable {
       /// A target spec for routing nexus requests to a specific cloud namespace worker.
       case workerTargetSpec(Api.Cloud.Nexus.V1.WorkerTargetSpec)
 
@@ -142,7 +142,7 @@ extension Api.Cloud.Nexus.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Variant: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Variant: Equatable, Sendable {
       /// A policy spec that allows one caller namespace to access the endpoint.
       case allowedCloudNamespacePolicySpec(Api.Cloud.Nexus.V1.AllowedCloudNamespacePolicySpec)
 

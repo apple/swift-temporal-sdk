@@ -903,7 +903,7 @@ extension Api.Workflow.V1 {
     /// In rare cases, it can also mean that the task queue is versioned but we failed to write activity's
     /// independently-assigned build ID to the database. This case heals automatically once the task is dispatched.
     /// Deprecated. This field should be cleaned up when versioning-2 API is removed. [cleanup-experimental-wv]
-    public enum OneOf_AssignedBuildID: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_AssignedBuildID: Equatable, Sendable {
       /// Deprecated. When present, it means this activity is assigned to the build ID of its workflow.
       ///
       /// NOTE: This field was marked as deprecated in the .proto file.
@@ -955,7 +955,7 @@ extension Api.Workflow.V1 {
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_PausedBy: Equatable, Sendable {
+      @nonexhaustive public enum OneOf_PausedBy: Equatable, Sendable {
         /// activity was paused by the manual intervention
         case manual(Api.Workflow.V1.PendingActivityInfo.PauseInfo.Manual)
         /// activity was paused by the rule
@@ -1426,7 +1426,7 @@ extension Api.Workflow.V1 {
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_Variant: Equatable, Sendable {
+      @nonexhaustive public enum OneOf_Variant: Equatable, Sendable {
         case workflowClosed(Api.Workflow.V1.CallbackInfo.WorkflowClosed)
 
       }
@@ -1779,7 +1779,7 @@ extension Api.Workflow.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Indicates whether to override the workflow to be AutoUpgrade or Pinned.
-    public enum OneOf_Override: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Override: Equatable, Sendable {
       /// Override the workflow to have Pinned behavior.
       case pinned(Api.Workflow.V1.VersioningOverride.PinnedOverride)
       /// Override the workflow to have AutoUpgrade behavior.
@@ -1787,7 +1787,7 @@ extension Api.Workflow.V1 {
 
     }
 
-    public enum PinnedOverrideBehavior: SwiftProtobuf.Enum, Swift.CaseIterable {
+    @nonexhaustive public enum PinnedOverrideBehavior: SwiftProtobuf.Enum, Swift.CaseIterable {
       public typealias RawValue = Int
 
       /// Unspecified.
@@ -1944,7 +1944,7 @@ extension Api.Workflow.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Variant: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Variant: Equatable, Sendable {
       case signalWorkflow(Api.Workflow.V1.PostResetOperation.SignalWorkflow)
       case updateWorkflowOptions(Api.Workflow.V1.PostResetOperation.UpdateWorkflowOptions)
 

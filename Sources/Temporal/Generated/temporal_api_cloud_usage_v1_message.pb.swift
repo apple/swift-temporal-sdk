@@ -22,7 +22,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 extension Api.Cloud.Usage.V1 {
 
 
-  public enum RecordType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum RecordType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case actions // = 1
@@ -67,7 +67,7 @@ extension Api.Cloud.Usage.V1 {
 extension Api.Cloud.Usage.V1 {
 
 
-  public enum RecordUnit: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum RecordUnit: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case number // = 1
@@ -108,7 +108,7 @@ extension Api.Cloud.Usage.V1 {
 extension Api.Cloud.Usage.V1 {
 
 
-  public enum GroupByKey: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum GroupByKey: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case namespace // = 1

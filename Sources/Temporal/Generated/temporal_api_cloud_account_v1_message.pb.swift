@@ -170,7 +170,7 @@ extension Api.Cloud.Account.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_SinkType: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_SinkType: Equatable, Sendable {
       /// The KinesisSpec when destination_type is Kinesis
       case kinesisSink(Api.Cloud.Sink.V1.KinesisSpec)
       /// The PubSubSpec when destination_type is PubSub

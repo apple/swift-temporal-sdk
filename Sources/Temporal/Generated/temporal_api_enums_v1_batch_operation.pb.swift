@@ -22,7 +22,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 extension Api.Enums.V1 {
 
 
-  public enum BatchOperationType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum BatchOperationType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case terminate // = 1
@@ -91,7 +91,7 @@ extension Api.Enums.V1 {
 extension Api.Enums.V1 {
 
 
-  public enum BatchOperationState: SwiftProtobuf.Enum, Swift.CaseIterable {
+  @nonexhaustive public enum BatchOperationState: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case unspecified // = 0
     case running // = 1

@@ -41,7 +41,7 @@ extension Api.Rules.V1 {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Supported actions.
-    public enum OneOf_Variant: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Variant: Equatable, Sendable {
       case activityPause(Api.Rules.V1.WorkflowRuleAction.ActionActivityPause)
 
     }
@@ -111,7 +111,7 @@ extension Api.Rules.V1 {
 
     /// Specifies how the rule should be triggered and evaluated.
     /// Currently, only "activity start" type is supported.
-    public enum OneOf_Trigger: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Trigger: Equatable, Sendable {
       case activityStart(Api.Rules.V1.WorkflowRuleSpec.ActivityStartingTrigger)
 
     }

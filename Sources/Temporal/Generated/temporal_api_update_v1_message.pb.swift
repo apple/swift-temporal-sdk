@@ -96,7 +96,7 @@ extension Api.Update.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Value: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_Value: Equatable, Sendable {
       case success(Api.Common.V1.Payloads)
       case failure(Api.Failure.V1.Failure)
 

@@ -98,7 +98,7 @@ extension Api.Cloud.Connectivityrule.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_ConnectionType: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_ConnectionType: Equatable, Sendable {
       /// This allows access via public internet.
       case publicRule(Api.Cloud.Connectivityrule.V1.PublicConnectivityRule)
       /// This allows access via specific private vpc.

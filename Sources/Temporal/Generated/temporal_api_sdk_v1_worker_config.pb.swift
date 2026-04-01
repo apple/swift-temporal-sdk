@@ -49,7 +49,7 @@ extension Api.Sdk.V1 {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_PollerBehavior: Equatable, Sendable {
+    @nonexhaustive public enum OneOf_PollerBehavior: Equatable, Sendable {
       case simplePollerBehavior(Api.Sdk.V1.WorkerConfig.SimplePollerBehavior)
       case autoscalingPollerBehavior(Api.Sdk.V1.WorkerConfig.AutoscalingPollerBehavior)
 
