@@ -18,5 +18,19 @@ extension WorkflowExecutionDescription {
     init(_ raw: Api.Workflowservice.V1.DescribeWorkflowExecutionResponse, dataConverter: DataConverter) throws {
         self.execution = try .init(raw.workflowExecutionInfo, dataConverter: dataConverter)
         self.pendingActivities = raw.pendingActivities
+
+        let userMetadata = raw.executionConfig.userMetadata
+        if userMetadata.hasSummary {
+            self.staticSummary = try dataConverter.payloadConverter.convertPayload(
+                userMetadata.summary,
+                as: String.self
+            )
+        }
+        if userMetadata.hasDetails {
+            self.staticDetails = try dataConverter.payloadConverter.convertPayload(
+                userMetadata.details,
+                as: String.self
+            )
+        }
     }
 }
