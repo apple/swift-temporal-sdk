@@ -88,6 +88,21 @@ public protocol ClientOutboundInterceptor: Sendable {
         next: (StartWorkflowUpdateInput<repeat each Input>) async throws -> UntypedWorkflowUpdateHandle
     ) async throws -> UntypedWorkflowUpdateHandle
 
+    /// Intercepts workflow update poll operations.
+    ///
+    /// This method is called when polling for the result of a previously started workflow update.
+    /// It enables interceptors to instrument long-running update polling.
+    ///
+    /// - Parameters:
+    ///   - input: The input passed to poll a workflow update result.
+    ///   - next: A closure that forwards the operation to the next interceptor.
+    /// - Returns: The update outcome from the poll response.
+    /// - Throws: Any error encountered during poll processing or forwarding.
+    func pollWorkflowUpdate(
+        input: PollWorkflowUpdateInput,
+        next: (PollWorkflowUpdateInput) async throws -> Api.Update.V1.Outcome
+    ) async throws -> Api.Update.V1.Outcome
+
     /// Intercepts workflow describe operations.
     ///
     /// - Parameters:
@@ -145,6 +160,22 @@ public protocol ClientOutboundInterceptor: Sendable {
         input: ListWorkflowsInput,
         next: (ListWorkflowsInput) async throws -> Sequence
     ) async throws -> Sequence
+
+    /// Intercepts paginated workflow list operations.
+    ///
+    /// This method is called for each page fetch, both when using
+    /// ``TemporalClient/listWorkflowsPage(query:pageSize:nextPageToken:callOptions:)`` directly
+    /// and internally when iterating the sequence returned by ``TemporalClient/listWorkflows(query:limit:callOptions:)``.
+    ///
+    /// - Parameters:
+    ///   - input: The input passed to fetch a single page of workflow executions.
+    ///   - next: A closure that forwards the operation to the next interceptor.
+    /// - Returns: A single page of workflow executions.
+    /// - Throws: Any error encountered during query processing or forwarding.
+    func listWorkflowsPage(
+        input: ListWorkflowsPageInput,
+        next: (ListWorkflowsPageInput) async throws -> WorkflowListPage
+    ) async throws -> WorkflowListPage
 
     /// Intercepts workflow count operations.
     ///
@@ -365,6 +396,13 @@ extension ClientOutboundInterceptor {
         try await next(input)
     }
 
+    public func pollWorkflowUpdate(
+        input: PollWorkflowUpdateInput,
+        next: (PollWorkflowUpdateInput) async throws -> Api.Update.V1.Outcome
+    ) async throws -> Api.Update.V1.Outcome {
+        try await next(input)
+    }
+
     public func describeWorkflow(
         input: DescribeWorkflowInput,
         next: (DescribeWorkflowInput) async throws -> (WorkflowExecutionDescription)
@@ -397,6 +435,13 @@ extension ClientOutboundInterceptor {
         input: ListWorkflowsInput,
         next: (ListWorkflowsInput) async throws -> Sequence
     ) async throws -> Sequence {
+        try await next(input)
+    }
+
+    public func listWorkflowsPage(
+        input: ListWorkflowsPageInput,
+        next: (ListWorkflowsPageInput) async throws -> WorkflowListPage
+    ) async throws -> WorkflowListPage {
         try await next(input)
     }
 

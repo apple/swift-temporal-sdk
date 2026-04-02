@@ -436,6 +436,19 @@ extension TemporalClient.Interceptor {
         }
     }
 
+    func pollWorkflowUpdate(
+        _ input: PollWorkflowUpdateInput
+    ) async throws -> Api.Update.V1.Outcome {
+        try await self.intercept((any ClientOutboundInterceptor).pollWorkflowUpdate, input: input) { input in
+            try await self.workflowService.pollWorkflowUpdateOutcome(
+                workflowID: input.workflowID,
+                runID: input.runID,
+                updateID: input.updateID,
+                callOptions: input.callOptions
+            )
+        }
+    }
+
     func describeWorkflow(
         _ input: DescribeWorkflowInput
     ) async throws -> WorkflowExecutionDescription {

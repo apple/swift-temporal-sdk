@@ -46,12 +46,16 @@ extension UntypedWorkflowUpdateHandle {
                 as: repeat each resultTypes
             )
         }
-        return try await self.interceptor.workflowService.workflowUpdateResult(
-            workflowID: self.workflowID,
-            runID: self.workflowRunID,
-            updateID: self.id,
-            resultTypes: repeat each resultTypes,
-            callOptions: callOptions
+        let outcome = try await self.interceptor.pollWorkflowUpdate(
+            .init(
+                workflowID: self.workflowID,
+                runID: self.workflowRunID,
+                updateID: self.id,
+                callOptions: callOptions
+            )
         )
+        let dataConverter = self.interceptor.workflowService.configuration.dataConverter
+        let payloads = try await outcome.successPayloads(using: dataConverter)
+        return try await dataConverter.convertPayloads(payloads, as: repeat each resultTypes)
     }
 }
