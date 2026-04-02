@@ -164,14 +164,29 @@ public struct TemporalTestServer: Sendable {
     ///   maintaining appropriate test isolation boundaries.
     ///
     /// - Parameters:
+    ///   - searchAttributes: Custom search attributes to register on the dev server at startup.
+    ///     Each key is converted to a `--search-attribute Name=Type` argument passed to the server.
+    ///   - extraArguments: Additional command-line arguments to pass to the dev server, separated by newlines.
     ///   - body: An async closure that receives the test server instance and performs test operations.
     /// - Returns: The result value returned by the closure.
     /// - Throws: Any errors thrown by the closure or during server lifecycle management.
     public static func withTestServer<Result: Sendable>(
+        searchAttributes: [AnySearchAttributeKey] = [],
+        extraArguments: [String] = [],
         _ body: (borrowing TemporalTestServer) async throws -> Result
     ) async throws -> Result {
-        try await BridgeTestServer.withBridgeDevServer(
-            devServerOptions: Self.devServerOptions,
+        var options = Self.devServerOptions
+        var allExtraArgs = options.testServerOptions.extraArguments
+        for key in searchAttributes {
+            allExtraArgs += "\n--search-attribute\n\(key.name)=\(key.type.indexedValueTypeString)"
+        }
+        for arg in extraArguments {
+            allExtraArgs += "\n\(arg)"
+        }
+        options.testServerOptions.extraArguments = allExtraArgs
+
+        return try await BridgeTestServer.withBridgeDevServer(
+            devServerOptions: options
         ) { bridgeTestServer, target in
             let testServer = TemporalTestServer(
                 serverTarget: target,
