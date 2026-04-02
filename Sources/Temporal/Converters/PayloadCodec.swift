@@ -12,23 +12,43 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// A payload codec transforms an array of ``Api/Common/V1/Payload`` into another ``Api/Common/V1/Payload`` array.
+/// A payload codec transforms payloads into other payloads.
 ///
 /// An example use is compressing or encrypting your workflow execution data.
 ///
 /// - Important: Payload codecs are allowed to be asynchronous and non-deterministic and are applied outside of workflows.
 public protocol PayloadCodec: Sendable {
-    /// Encode the payload.
+    /// Encode the given payloads into a new set of payloads.
     ///
-    /// - Parameter payload: The input payload, e.g. the output of a workflow or an activity.
-    /// - Returns: The encoded payload e.g. the compressed or encrypted version of the input payload.
-    func encode(payload: Api.Common.V1.Payload) async throws -> Api.Common.V1.Payload
+    /// - Parameter payloads: The input payloads to encode.
+    /// - Returns: The encoded payloads. Note, this does not have to be the same number as
+    /// payloads given, but it must be at least one and cannot be more than was given.
+    func encode(payloads: some Collection<Api.Common.V1.Payload>) async throws -> [Api.Common.V1.Payload]
 
-    /// Decodes the payload.
+    /// Decode the given payloads into a new set of payloads.
     ///
-    /// - Parameter payload: The input payload, e.g. the input to a workflow or activity.
-    /// - Returns: The decoded payload, e.g. the uncompressed or decrypted payload.
-    func decode(payload: Api.Common.V1.Payload) async throws -> Api.Common.V1.Payload
+    /// - Parameter payloads: The input payloads to decode.
+    /// - Returns: The decoded payloads. Note, this does not have to be the same number as
+    /// payloads given, but it must be at least one and cannot be more than was given.
+    func decode(payloads: some Collection<Api.Common.V1.Payload>) async throws -> [Api.Common.V1.Payload]
+}
+
+extension PayloadCodec {
+    /// Encode a single payload.
+    ///
+    /// - Parameter payload: The input payload.
+    /// - Returns: The encoded payload.
+    public func encode(payload: Api.Common.V1.Payload) async throws -> Api.Common.V1.Payload {
+        try await self.encode(payloads: CollectionOfOne(payload))[0]
+    }
+
+    /// Decode a single payload.
+    ///
+    /// - Parameter payload: The input payload.
+    /// - Returns: The decoded payload.
+    public func decode(payload: Api.Common.V1.Payload) async throws -> Api.Common.V1.Payload {
+        try await self.decode(payloads: CollectionOfOne(payload))[0]
+    }
 }
 
 extension PayloadCodec {
@@ -41,33 +61,28 @@ extension PayloadCodec {
 
         switch failure.failureInfo {
         case .applicationFailureInfo(var application):
-            var encodedPayloads = [Api.Common.V1.Payload]()
-            for payload in application.details.payloads {
-                encodedPayloads.append(try await self.encode(payload: payload))
-            }
-            application.details.payloads = encodedPayloads
+            application.details.payloads = try await self.encode(payloads: application.details.payloads)
             failure.failureInfo = .applicationFailureInfo(application)
 
         case .canceledFailureInfo(var cancelled):
-            var encodedPayloads = [Api.Common.V1.Payload]()
-            for payload in cancelled.details.payloads {
-                encodedPayloads.append(try await self.encode(payload: payload))
-            }
-            cancelled.details.payloads = encodedPayloads
+            cancelled.details.payloads = try await self.encode(payloads: cancelled.details.payloads)
             failure.failureInfo = .canceledFailureInfo(cancelled)
 
         case .timeoutFailureInfo(var timeout):
-            var encodedPayloads = [Api.Common.V1.Payload]()
-            for payload in timeout.lastHeartbeatDetails.payloads {
-                encodedPayloads.append(try await self.encode(payload: payload))
-            }
-            timeout.lastHeartbeatDetails.payloads = encodedPayloads
+            timeout.lastHeartbeatDetails.payloads = try await self.encode(
+                payloads: timeout.lastHeartbeatDetails.payloads
+            )
             failure.failureInfo = .timeoutFailureInfo(timeout)
 
+        case .resetWorkflowFailureInfo(var resetWorkflow):
+            resetWorkflow.lastHeartbeatDetails.payloads = try await self.encode(
+                payloads: resetWorkflow.lastHeartbeatDetails.payloads
+            )
+            failure.failureInfo = .resetWorkflowFailureInfo(resetWorkflow)
+
         case .terminatedFailureInfo, .childWorkflowExecutionFailureInfo, .activityFailureInfo,
-            .serverFailureInfo, .resetWorkflowFailureInfo, .nexusOperationExecutionFailureInfo,
+            .serverFailureInfo, .nexusOperationExecutionFailureInfo,
             .nexusHandlerFailureInfo:
-            // No payload details to encode
             break
 
         case .none:
@@ -90,36 +105,30 @@ extension PayloadCodec {
 
         switch failure.failureInfo {
         case .applicationFailureInfo(var application):
-            var decodedPayloads = [Api.Common.V1.Payload]()
-            for payload in application.details.payloads {
-                decodedPayloads.append(try await self.decode(payload: payload))
-            }
-            application.details.payloads = decodedPayloads
+            application.details.payloads = try await self.decode(payloads: application.details.payloads)
             failure.failureInfo = .applicationFailureInfo(application)
 
         case .canceledFailureInfo(var cancelled):
-            var decodedPayloads = [Api.Common.V1.Payload]()
-            for payload in cancelled.details.payloads {
-                decodedPayloads.append(try await self.decode(payload: payload))
-            }
-            cancelled.details.payloads = decodedPayloads
+            cancelled.details.payloads = try await self.decode(payloads: cancelled.details.payloads)
             failure.failureInfo = .canceledFailureInfo(cancelled)
 
         case .terminatedFailureInfo:
-            // TerminatedFailureInfo has no payload details in the proto
             break
 
         case .timeoutFailureInfo(var timeout):
-            var decodedPayloads = [Api.Common.V1.Payload]()
-            for payload in timeout.lastHeartbeatDetails.payloads {
-                decodedPayloads.append(try await self.decode(payload: payload))
-            }
-            timeout.lastHeartbeatDetails.payloads = decodedPayloads
+            timeout.lastHeartbeatDetails.payloads = try await self.decode(
+                payloads: timeout.lastHeartbeatDetails.payloads
+            )
             failure.failureInfo = .timeoutFailureInfo(timeout)
 
+        case .resetWorkflowFailureInfo(var resetWorkflow):
+            resetWorkflow.lastHeartbeatDetails.payloads = try await self.decode(
+                payloads: resetWorkflow.lastHeartbeatDetails.payloads
+            )
+            failure.failureInfo = .resetWorkflowFailureInfo(resetWorkflow)
+
         case .childWorkflowExecutionFailureInfo, .activityFailureInfo, .serverFailureInfo,
-            .resetWorkflowFailureInfo, .nexusOperationExecutionFailureInfo, .nexusHandlerFailureInfo:
-            // No payload details to decode
+            .nexusOperationExecutionFailureInfo, .nexusHandlerFailureInfo:
             break
 
         case .none:

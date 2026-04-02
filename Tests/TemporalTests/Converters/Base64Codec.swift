@@ -19,22 +19,26 @@ import Temporal
 struct Base64PayloadCodec: PayloadCodec {
     let encodingName = "application/base64"
 
-    func encode(payload: Api.Common.V1.Payload) async throws -> Api.Common.V1.Payload {
-        var payload = payload
-        payload.data = payload.data.base64EncodedData()
-        payload.metadata["codec"] = Data(self.encodingName.utf8)
-        return payload
+    func encode(payloads: some Collection<Api.Common.V1.Payload>) async throws -> [Api.Common.V1.Payload] {
+        payloads.map { payload in
+            var payload = payload
+            payload.data = payload.data.base64EncodedData()
+            payload.metadata["codec"] = Data(self.encodingName.utf8)
+            return payload
+        }
     }
 
-    func decode(payload: Api.Common.V1.Payload) async throws -> Api.Common.V1.Payload {
-        guard let decodedData = Data(base64Encoded: payload.data) else {
-            fatalError()
-        }
-        var metadata = payload.metadata
-        metadata.removeValue(forKey: "codec")
-        return Api.Common.V1.Payload.with {
-            $0.data = decodedData
-            $0.metadata = metadata
+    func decode(payloads: some Collection<Api.Common.V1.Payload>) async throws -> [Api.Common.V1.Payload] {
+        payloads.map { payload in
+            guard let decodedData = Data(base64Encoded: payload.data) else {
+                fatalError()
+            }
+            var metadata = payload.metadata
+            metadata.removeValue(forKey: "codec")
+            return Api.Common.V1.Payload.with {
+                $0.data = decodedData
+                $0.metadata = metadata
+            }
         }
     }
 }
