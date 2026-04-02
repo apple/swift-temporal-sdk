@@ -168,8 +168,16 @@ public macro WorkflowQuery(name: String? = nil, description: String? = nil) = #e
 /// - Parameter description: An optional description of the update's purpose.
 /// - Parameter unfinishedPolicy: The policy for handling unfinished instances of this handler when
 ///   the workflow exits. Defaults to ``HandlerUnfinishedPolicy/warnAndAbandon``.
+/// - Parameter validator: The name of a method on the workflow class that validates the update input
+///   before execution. The validator method must accept the same input type as the update handler
+///   and return `Void`. It may throw to reject the update. If not provided, no validation is performed.
 @attached(peer, names: arbitrary)
-public macro WorkflowUpdate(name: String? = nil, description: String? = nil, unfinishedPolicy: HandlerUnfinishedPolicy = .warnAndAbandon) =
+public macro WorkflowUpdate(
+    name: String? = nil,
+    description: String? = nil,
+    unfinishedPolicy: HandlerUnfinishedPolicy = .warnAndAbandon,
+    validator: String? = nil
+) =
     #externalMacro(module: "TemporalMacros", type: "WorkflowUpdateMacro")
 
 /// Makes workflow state sendable by ensuring it is modified on the workflow's executor.
