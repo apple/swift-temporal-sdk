@@ -14,6 +14,9 @@
 
 /// Input structure containing parameters and context for workflow query handling in interceptor chains.
 public struct HandleQueryInput<Query: WorkflowQueryDefinition>: Sendable {
+    /// Information about the current workflow execution.
+    public var info: WorkflowInfo
+
     /// The unique identifier for this specific query request.
     ///
     /// The query ID provides a unique identifier for individual query requests,

@@ -29,19 +29,16 @@
 ///
 /// ```swift
 /// @Workflow
-/// final class OrderProcessingWorkflow {
+/// struct OrderProcessingWorkflow {
 ///     var approvalReceived = false
 ///
-///     func run(input: OrderInput) async throws -> Void {
-///         // Wait for approval signal
-///         try await context.condition { approvalReceived }
-///
-///         // Process the order
-///         try await processOrder()
+///     mutating func run(context: WorkflowContext<Self>, input: OrderInput) async throws -> Void {
+///         try await context.condition { $0.approvalReceived }
+///         try await context.executeActivity(ProcessOrderActivity.self, options: .init(startToCloseTimeout: .seconds(30)))
 ///     }
 ///
 ///     @WorkflowSignal
-///     func approveOrder() async throws {
+///     mutating func approveOrder(input: Void) {
 ///         self.approvalReceived = true
 ///     }
 /// }
@@ -75,13 +72,13 @@ public protocol WorkflowSignalDefinition<Workflow>: Sendable {
     /// Executes the signal handler logic.
     ///
     /// This method is called when a signal is received by the workflow.
-    /// Use ``Workflow`` static methods to access workflow operations.
     ///
     /// - Parameters:
     ///   - workflow: The workflow instance receiving the signal.
+    ///   - context: The workflow execution context.
     ///   - input: The input data sent with the signal.
     /// - Throws: Any error that occurs during signal processing.
-    func run(workflow: Workflow, input: Input) async throws
+    func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws
 }
 
 extension WorkflowSignalDefinition {

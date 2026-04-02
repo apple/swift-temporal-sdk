@@ -29,18 +29,17 @@
 ///
 /// ```swift
 /// @Workflow
-/// final class OrderProcessingWorkflow {
+/// struct OrderProcessingWorkflow {
 ///     var currentStatus = "pending"
 ///
-///     func run(input: OrderInput) async throws -> Void {
-///         currentStatus = "processing"
-///         // Process order logic
-///         try await processOrder()
-///         currentStatus = "finished"
+///     mutating func run(context: WorkflowContext<Self>, input: OrderInput) async throws -> Void {
+///         self.currentStatus = "processing"
+///         try await context.executeActivity(ProcessOrderActivity.self, options: .init(startToCloseTimeout: .seconds(30)))
+///         self.currentStatus = "finished"
 ///     }
 ///
 ///     @WorkflowQuery
-///     func getOrderStatus() throws -> String {
+///     func getOrderStatus(input: Void) -> String {
 ///         return currentStatus
 ///     }
 /// }
@@ -72,7 +71,6 @@ public protocol WorkflowQueryDefinition<Workflow>: Sendable {
     /// Executes the query and returns the requested information.
     ///
     /// This method is called when a query request is received for the workflow.
-    /// Use ``Workflow`` to access the workflow execution context.
     ///
     /// - Parameters:
     ///   - workflow: The workflow instance being queried.

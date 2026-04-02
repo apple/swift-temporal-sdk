@@ -52,7 +52,7 @@ public struct ContinueAsNewError: TemporalError {
     var searchAttributes: SearchAttributeCollection?
 
     init(
-        workflowContext: WorkflowContext,
+        workflowContext: InternalWorkflowContext,
         workflowName: String,
         headers: [String: Api.Common.V1.Payload],
         inputs: [Api.Common.V1.Payload],

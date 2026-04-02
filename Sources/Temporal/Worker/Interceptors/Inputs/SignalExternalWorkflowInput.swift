@@ -14,6 +14,9 @@
 
 /// Input structure containing parameters and context for external workflow signaling operations in interceptor chains.
 public struct SignalExternalWorkflowInput<each Input: Sendable>: Sendable {
+    /// Information about the current workflow execution.
+    public var info: WorkflowInfo
+
     /// The workfliw id of the external workflow to signal.
     public var id: String
 

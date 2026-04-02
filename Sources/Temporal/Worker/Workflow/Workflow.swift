@@ -16,55 +16,75 @@ public import Logging
 
 public import struct Foundation.Date
 
-/// Static workflow API that provides access to Temporal workflow operations.
+/// The workflow context providing access to Temporal workflow operations.
 ///
-/// The Workflow struct provides static methods for all workflow operations including activity execution,
-/// child workflow management, timers, conditions, and workflow state management. It serves as the primary
-/// interface through which workflows interact with the Temporal system.
+/// `WorkflowContext` is the primary interface through which workflows interact with the
+/// Temporal system. It provides instance methods for all workflow operations including
+/// activity execution, child workflow management, timers, conditions, and workflow state
+/// management.
 ///
 /// ## Deterministic execution
 ///
-/// All operations performed through the Workflow API are deterministic and replay-safe.
+/// All operations performed through the `WorkflowContext` API are deterministic and replay-safe.
 /// The API ensures that workflow executions are consistent across retries and replay scenarios.
 ///
 /// ## Usage
 ///
-/// The Workflow API uses task-local storage to access the current workflow context:
+/// The `WorkflowContext` is passed as a parameter to the workflow's `run` method and
+/// signal/update handlers:
 ///
 /// ```swift
-/// func run(input: MyInput) async throws -> MyOutput {
+/// mutating func run(context: WorkflowContext<Self>, input: MyInput) async throws -> MyOutput {
 ///     // Execute an activity
-///     let result = try await Workflow.executeActivity(
+///     let result = try await context.executeActivity(
 ///         MyActivity.self,
 ///         options: .init(startToCloseTimeout: .seconds(30)),
 ///         input: "hello"
 ///     )
 ///
 ///     // Sleep for a duration
-///     try await Workflow.sleep(for: .seconds(5))
+///     try await context.sleep(for: .seconds(5))
 ///
 ///     // Wait for a condition
-///     try await Workflow.condition { someState == expectedValue }
+///     try await context.condition { someState == expectedValue }
 ///
 ///     return result
 /// }
 /// ```
 ///
 /// - Important: This type is only valid for use within the scope of a workflow execution.
-public struct Workflow: Sendable {
-    @TaskLocal package static var context: WorkflowContext?
-    @TaskLocal package static var _currentUpdateInfo: WorkflowUpdateInfo?
+public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable {
+    let internalContext: InternalWorkflowContext
+    let stateBox: ArcBox<Workflow>
 
-    private static var _context: WorkflowContext {
-        guard let context = context else {
-            fatalError("Workflow context is not available. This API can only be used within a workflow execution.")
-        }
-        return context
+    init(internalContext: InternalWorkflowContext, stateBox: ArcBox<Workflow>) {
+        self.internalContext = internalContext
+        self.stateBox = stateBox
+    }
+
+    // MARK: - State Access
+
+    /// Mutates the workflow state using a closure.
+    ///
+    /// The closure receives a mutable reference to the workflow struct.
+    ///
+    /// - Parameter mutator: A closure that receives a mutable reference to the workflow struct.
+    public func mutateState(_ mutator: (inout Workflow) -> Void) {
+        stateBox.withMutableValue(mutator)
+    }
+
+    /// Mutates the workflow state using a closure and returns a value.
+    ///
+    /// - Parameter mutator: A closure that receives a mutable reference to the workflow struct
+    ///   and returns a value.
+    /// - Returns: The value returned by the closure.
+    public func mutateState<Return>(_ mutator: (inout Workflow) -> Return) -> Return {
+        stateBox.withMutableValue(mutator)
     }
 
     /// A boolean value that indicates whether the current code is executing within a workflow context.
     public static var inWorkflow: Bool {
-        context != nil
+        InternalWorkflowContext.current != nil
     }
 
     /// Information about the currently executing update, if any.
@@ -73,7 +93,7 @@ public struct Workflow: Sendable {
     /// or update validator. Returns `nil` when called outside of an update context
     /// (e.g., from the main workflow run method, signal handlers, or query handlers).
     public static var currentUpdateInfo: WorkflowUpdateInfo? {
-        _currentUpdateInfo
+        InternalWorkflowContext.currentUpdateInfo
     }
 
     /// The current worker deployment version for this task.
@@ -82,24 +102,24 @@ public struct Workflow: Sendable {
     /// If this worker is the one executing this task for the first time and has a deployment version set,
     /// then its ID will be used. This value may change over the lifetime of the workflow run, but is
     /// deterministic and safe to use for branching.
-    public static var currentDeploymentVersion: DeploymentVersion? {
-        self._context.currentDeploymentVersion
+    public var currentDeploymentVersion: DeploymentVersion? {
+        self.internalContext.currentDeploymentVersion
     }
 
     /// Information about the current workflow execution.
     ///
     /// Provides access to workflow metadata including identifiers, timing information,
     /// configuration, and parent workflow details.
-    public static var info: WorkflowInfo {
-        self._context.info
+    public var info: WorkflowInfo {
+        self.internalContext.info
     }
 
     /// The data converter used for payload serialization and deserialization.
     ///
     /// This converter handles the transformation between Swift types and Temporal's
     /// internal payload format.
-    public static var payloadConverter: any PayloadConverter {
-        self._context.payloadConverter
+    public var payloadConverter: any PayloadConverter {
+        self.internalContext.payloadConverter
     }
 
     /// A deterministic random number generator for workflow use.
@@ -111,11 +131,11 @@ public struct Workflow: Sendable {
     /// ## Usage
     ///
     /// ```swift
-    /// var rng = Workflow.randomNumberGenerator
+    /// var rng = context.randomNumberGenerator
     /// let randomValue = Int.random(in: 1...100, using: &rng)
     /// ```
-    public static var randomNumberGenerator: any RandomNumberGenerator {
-        self._context.randomNumberGenerator
+    public var randomNumberGenerator: any RandomNumberGenerator {
+        self.internalContext.randomNumberGenerator
     }
 
     /// Indicates whether all update and signal handlers have finished executing.
@@ -127,30 +147,30 @@ public struct Workflow: Sendable {
     /// ## Usage
     ///
     /// ```swift
-    /// func run(input: Void) async throws {
+    /// mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
     ///     // Perform workflow logic...
     ///
     ///     // Wait for all handlers to finish before returning
-    ///     try await Workflow.condition { Workflow.allHandlersFinished }
+    ///     try await context.condition { context.allHandlersFinished }
     /// }
     /// ```
     ///
     /// - Returns: `true` if all handlers have finished, `false` otherwise.
-    public static var allHandlersFinished: Bool {
-        self._context.allHandlersFinished
+    public var allHandlersFinished: Bool {
+        self.internalContext.allHandlersFinished
     }
 
     /// The current date of the workflow.
     ///
     /// This value is deterministic and safe for replays.
     /// Do not use any other sources of system time in workflows.
-    public static var now: Date {
-        self._context.now
+    public var now: Date {
+        self.internalContext.now
     }
 
     /// Indicates whether the workflow is currently in replay mode.
-    package static var isReplaying: Bool {
-        self._context.isReplaying
+    package var isReplaying: Bool {
+        self.internalContext.isReplaying
     }
 
     /// The current search attributes for the workflow.
@@ -159,8 +179,8 @@ public struct Workflow: Sendable {
     /// workflow executions. They are searchable through Temporal's visibility APIs.
     ///
     /// - Returns: A collection of the current search attributes.
-    public static var searchAttributes: SearchAttributeCollection {
-        self._context.searchAttributes
+    public var searchAttributes: SearchAttributeCollection {
+        self.internalContext.searchAttributes
     }
 
     /// User specified details for this workflow that may appear in UI/CLI.
@@ -169,40 +189,32 @@ public struct Workflow: Sendable {
     /// This can be in Temporal markdown format and can span multiple lines.
     ///
     /// - Important: This is currently experimental.
-    public static var currentDetails: String? {
-        get { self._context.currentDetails }
-        set {
-            guard let context = context else {
-                fatalError("Workflow context is not available. This API can only be used within a workflow execution.")
-            }
+    public var currentDetails: String? {
+        get { self.internalContext.currentDetails }
+        nonmutating set {
             // Use the internal method since the context struct is immutable
-            context.updateCurrentDetails(newValue)
+            self.internalContext.updateCurrentDetails(newValue)
         }
     }
 
     /// A boolean value that indicates whether continue as new was suggested.
-    public static var continueAsNewSuggested: Bool {
-        self._context.continueAsNewSuggested
+    public var continueAsNewSuggested: Bool {
+        self.internalContext.continueAsNewSuggested
     }
 
     /// Current number of events in the history.
-    public static var currentHistoryLength: Int {
-        self._context.currentHistoryLength
+    public var currentHistoryLength: Int {
+        self.internalContext.currentHistoryLength
     }
 
     /// Current size of the history in bytes.
-    public static var currentHistorySize: Int {
-        self._context.currentHistorySize
+    public var currentHistorySize: Int {
+        self.internalContext.currentHistorySize
     }
 
     /// The logger used for the workflow execution.
-    public static var logger: Logger {
-        self._context.logger
-    }
-
-    /// Ensures that state modifications of the workflow are safe.
-    package static func ensureWorkflowStateModificationIsSafe() {
-        self._context.ensureWorkflowStateModificationIsSafe()
+    public var logger: Logger {
+        self.internalContext.logger
     }
 
     /// Updates or inserts the specified search attributes.
@@ -216,13 +228,13 @@ public struct Workflow: Sendable {
     /// var attributes = SearchAttributeCollection()
     /// attributes[.customStringField("order_status")] = "processing"
     /// attributes[.customIntField("priority")] = 5
-    /// Workflow.upsertSearchAttributes(attributes)
+    /// context.upsertSearchAttributes(attributes)
     /// ```
     ///
     /// - Parameter searchAttributes: The search attributes to update or insert.
     ///   Specify `nil` for a specific attribute to unset it.
-    public static func upsertSearchAttributes(_ searchAttributes: SearchAttributeCollection) {
-        self._context.upsertSearchAttributes(searchAttributes)
+    public func upsertSearchAttributes(_ searchAttributes: SearchAttributeCollection) {
+        self.internalContext.upsertSearchAttributes(searchAttributes)
     }
 
     /// Updates or inserts search attributes using a builder block.
@@ -235,13 +247,13 @@ public struct Workflow: Sendable {
     /// ## Usage
     ///
     /// ```swift
-    /// Workflow.upsertSearchAttributes { attributes in
+    /// context.upsertSearchAttributes { attributes in
     ///     attributes[.customStringField("status")] = "completed"
     ///     attributes[.customIntField("score")] = 100
     ///     attributes[.customStringField("old_field")] = nil // Unset
     /// }
     /// ```
-    public static func upsertSearchAttributes(builder: (inout SearchAttributeCollection) -> Void) {
+    public func upsertSearchAttributes(builder: (inout SearchAttributeCollection) -> Void) {
         var searchAttributes = SearchAttributeCollection()
         builder(&searchAttributes)
         upsertSearchAttributes(searchAttributes)
@@ -253,16 +265,16 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Sleep for 5 seconds
-    /// try await Workflow.sleep(for: .seconds(5))
+    /// try await context.sleep(for: .seconds(5))
     ///
     /// // Sleep with a summary for debugging
-    /// try await Workflow.sleep(for: .minutes(1), summary: "waiting for external system")
+    /// try await context.sleep(for: .minutes(1), summary: "waiting for external system")
     /// ```
     ///
     /// - Parameter duration: The duration to sleep for.
     /// - Parameter summary: A simple string identifying this timer.
-    public static func sleep(for duration: Duration, summary: String? = nil) async throws {
-        try await self._context.sleep(for: duration, summary: summary)
+    public func sleep(for duration: Duration, summary: String? = nil) async throws {
+        try await self.internalContext.sleep(for: duration, summary: summary)
     }
 
     /// Runs a closure until a timeout is reached.
@@ -278,12 +290,12 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Run an operation with a 30-second timeout
-    /// let result = try await Workflow.timeout(for: .seconds(30)) {
+    /// let result = try await context.timeout(for: .seconds(30)) {
     ///     return try await performLongRunningOperation()
     /// }
     ///
     /// // Handle timeout by catching cancellation in the body
-    /// let result = try await Workflow.timeout(for: .minutes(2)) {
+    /// let result = try await context.timeout(for: .minutes(2)) {
     ///     do {
     ///         return try await externalServiceCall()
     ///     } catch is CancellationError {
@@ -297,19 +309,23 @@ public struct Workflow: Sendable {
     ///   - duration: The duration for the timeout.
     ///   - body: The closure to run with a given timeout.
     /// - Returns: The result of the closure.
-    public static func timeout<Return: Sendable, Failure: Error>(
+    public func timeout<Return: Sendable, Failure: Error>(
         for duration: Duration,
         body: @Sendable @escaping () async throws(Failure) -> Return
     ) async throws(Failure) -> Return {
-        try await self._context.timeout(for: duration, body: body)
+        try await self.internalContext.timeout(for: duration, body: body)
     }
 
     /// Waits for the given closure to return `true`.
     ///
+    /// The closure receives the current workflow state and is re-evaluated each time the
+    /// executor runs (e.g., after a signal handler mutates state). Since the state is passed
+    /// as a parameter, there is no need to capture `self`.
+    ///
     /// The closure must be side-effect free since it may be invoked frequently during
     /// executor iteration.
     ///
-    /// This is very commonly used to wait on a value to be set by a handler. Special care was taken to only resume up a single wait
+    /// This is very commonly used to wait on a value to be set by a handler. Special care was taken to only resume a single wait
     /// condition when it evaluates to true. Therefore if multiple wait conditions are waiting on the same thing, only one
     /// is resumed at a time, which means the code immediately following that wait condition can change the variable before
     /// other wait conditions are evaluated. This is a useful property for building mutexes/semaphores.
@@ -318,22 +334,40 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Wait for a boolean flag to become true
-    /// var isReady = false
-    /// try await Workflow.condition { isReady }
+    /// try await context.condition { $0.approved }
     ///
     /// // Wait for a counter to reach a threshold
-    /// var processedItems = 0
-    /// try await Workflow.condition { processedItems >= 10 }
+    /// try await context.condition { $0.processedItems >= 10 }
     ///
     /// // Wait for an optional value to be set
-    /// var result: String?
-    /// try await Workflow.condition { result != nil }
+    /// try await context.condition { $0.result != nil }
     /// ```
     ///
-    /// - Parameter condition: The closure to run many times to test if the condition evaluates to `true`.
+    /// - Parameter condition: A closure that receives the workflow state and returns `true`
+    ///   when the condition is satisfied.
     /// - Throws: A `CanceledError` if the waiting was cancelled.
-    public static func condition(_ condition: @escaping () -> Bool) async throws {
-        try await self._context.condition(condition)
+    public func condition(_ condition: @escaping (Workflow) -> Bool) async throws {
+        try await self.internalContext.condition { [stateBox] in
+            stateBox.withValue { condition($0) }
+        }
+    }
+
+    /// Waits for the given closure to return `true`.
+    ///
+    /// Use this overload when the condition does not depend on workflow state properties,
+    /// for example when waiting on a value from the context itself.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Wait for all handlers to finish
+    /// try await context.condition { context.allHandlersFinished }
+    /// ```
+    ///
+    /// - Parameter condition: A closure that returns `true` when the condition is satisfied.
+    /// - Throws: A `CanceledError` if the waiting was cancelled.
+    public func condition(_ condition: @escaping () -> Bool) async throws {
+        try await self.internalContext.condition(condition)
     }
 
     /// Patches a workflow to support versioning and backward compatibility.
@@ -348,7 +382,7 @@ public struct Workflow: Sendable {
     /// ## Usage
     ///
     /// ```swift
-    /// if Workflow.patch("fix-bug-123") {
+    /// if context.patch("fix-bug-123") {
     ///     // New code path with the bug fix
     ///     return await newImplementation()
     /// } else {
@@ -359,8 +393,8 @@ public struct Workflow: Sendable {
     ///
     /// - Parameter id: A unique identifier for this patch.
     /// - Returns: A boolean value that indicates whether this should take the newer patch path.
-    public static func patch(_ id: String) -> Bool {
-        self._context.patch(id)
+    public func patch(_ id: String) -> Bool {
+        self.internalContext.patch(id)
     }
 
     /// Marks a patch as deprecated.
@@ -372,14 +406,14 @@ public struct Workflow: Sendable {
     /// ## Usage
     ///
     /// ```swift
-    /// Workflow.deprecatePatch("fix-bug-123")
+    /// context.deprecatePatch("fix-bug-123")
     /// // Old code path can now be safely removed
     /// return await newImplementation()
     /// ```
     ///
     /// - Parameter id: The patch identifier to deprecate.
-    public static func deprecatePatch(_ id: String) {
-        self._context.deprecatePatch(id)
+    public func deprecatePatch(_ id: String) {
+        self.internalContext.deprecatePatch(id)
     }
 
     /// Execute an operation with a cancellation shield.
@@ -388,8 +422,8 @@ public struct Workflow: Sendable {
     /// For example, you can use this to execute an activity as part of a cleanup operation when your Workflow is getting cancelled.
     ///
     /// - Parameter operation: The operation that should be executed.
-    public static func withCancellationShield<Result: Sendable>(_ operation: sending @escaping () async throws -> Result) async throws -> Result {
-        try await self._context.withCancellationShield(operation)
+    public func withCancellationShield<Result: Sendable>(_ operation: sending @escaping () async throws -> Result) async throws -> Result {
+        try await self.internalContext.withCancellationShield(operation)
     }
 
     // MARK: - Activity Execution
@@ -400,14 +434,14 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Execute an activity with input
-    /// let result = try await Workflow.executeActivity(
+    /// let result = try await context.executeActivity(
     ///     ProcessOrderActivity.self,
     ///     options: .init(startToCloseTimeout: .seconds(30)),
     ///     input: OrderRequest(id: "order-123", items: items)
     /// )
     ///
     /// // Execute with retry policy
-    /// let emailResult = try await Workflow.executeActivity(
+    /// let emailResult = try await context.executeActivity(
     ///     SendEmailActivity.self,
     ///     options: .init(
     ///         startToCloseTimeout: .seconds(60),
@@ -425,7 +459,7 @@ public struct Workflow: Sendable {
     ///   - options: The activity's execution options.
     ///   - input: The activity's input data.
     /// - Returns: The activity's output.
-    public static func executeActivity<Activity: ActivityDefinition>(
+    public func executeActivity<Activity: ActivityDefinition>(
         _ activityType: Activity.Type = Activity.self,
         options: ActivityOptions,
         input: Activity.Input
@@ -444,13 +478,13 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Execute an activity with no input parameters
-    /// let systemInfo = try await Workflow.executeActivity(
+    /// let systemInfo = try await context.executeActivity(
     ///     GetSystemInfoActivity.self,
     ///     options: .init(startToCloseTimeout: .seconds(15))
     /// )
     ///
     /// // Health check activity
-    /// let isHealthy = try await Workflow.executeActivity(
+    /// let isHealthy = try await context.executeActivity(
     ///     HealthCheckActivity.self,
     ///     options: .init(startToCloseTimeout: .seconds(10))
     /// )
@@ -460,7 +494,7 @@ public struct Workflow: Sendable {
     ///   - activityType: The activity's type.
     ///   - options: The activity's execution options.
     /// - Returns: The activity's output.
-    public static func executeActivity<Activity: ActivityDefinition>(
+    public func executeActivity<Activity: ActivityDefinition>(
         _ activityType: Activity.Type = Activity.self,
         options: ActivityOptions
     ) async throws -> Activity.Output where Activity.Input == Void {
@@ -472,7 +506,7 @@ public struct Workflow: Sendable {
     /// - Parameters:
     ///   - activityType: The activity's type.
     ///   - options: The activity's execution options.
-    public static func executeActivity<Activity: ActivityDefinition>(
+    public func executeActivity<Activity: ActivityDefinition>(
         _ activityType: Activity.Type = Activity.self,
         options: ActivityOptions
     ) async throws where Activity.Input == Void, Activity.Output == Void {
@@ -485,7 +519,7 @@ public struct Workflow: Sendable {
     ///   - activityType: The activity's type.
     ///   - options: The activity's execution options.
     ///   - input: The activity's input data.
-    public static func executeActivity<Activity: ActivityDefinition>(
+    public func executeActivity<Activity: ActivityDefinition>(
         _ activityType: Activity.Type = Activity.self,
         options: ActivityOptions,
         input: Activity.Input
@@ -504,7 +538,7 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Execute activity by string name
-    /// let result: String = try await Workflow.executeActivity(
+    /// let result: String = try await context.executeActivity(
     ///     name: "ProcessPayment",
     ///     options: .init(startToCloseTimeout: .seconds(45)),
     ///     input: PaymentRequest(amount: 100.00, currency: "USD"),
@@ -512,7 +546,7 @@ public struct Workflow: Sendable {
     /// )
     ///
     /// // Execute with multiple inputs
-    /// let summary: OrderSummary = try await Workflow.executeActivity(
+    /// let summary: OrderSummary = try await context.executeActivity(
     ///     name: "GenerateOrderSummary",
     ///     options: .init(startToCloseTimeout: .seconds(30)),
     ///     input: orderID, customerInfo, items,
@@ -526,13 +560,13 @@ public struct Workflow: Sendable {
     ///   - input: The activity's input values.
     ///   - outputType: The activity's output type.
     /// - Returns: The activity's output.
-    public static func executeActivity<each Input: Sendable, Output: Sendable>(
+    public func executeActivity<each Input: Sendable, Output: Sendable>(
         name: String,
         options: ActivityOptions,
         input: repeat each Input,
         outputType: Output.Type = Output.self
     ) async throws -> Output {
-        try await self._context.executeActivity(name: name, options: options, input: repeat each input, outputType: outputType)
+        try await self.internalContext.executeActivity(name: name, options: options, input: repeat each input, outputType: outputType)
     }
 
     // MARK: Local Activity Execution
@@ -543,14 +577,14 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Execute a local activity with input
-    /// let result = try await Workflow.executeLocalActivity(
+    /// let result = try await context.executeLocalActivity(
     ///     ProcessOrderActivity.self,
     ///     options: .init(startToCloseTimeout: .seconds(30)),
     ///     input: OrderRequest(id: "order-123", items: items)
     /// )
     ///
     /// // Execute with retry policy
-    /// let emailResult = try await Workflow.executeLocalActivity(
+    /// let emailResult = try await context.executeLocalActivity(
     ///     SendEmailActivity.self,
     ///     options: .init(
     ///         startToCloseTimeout: .seconds(60),
@@ -568,7 +602,7 @@ public struct Workflow: Sendable {
     ///   - options: The activity's execution options.
     ///   - input: The activity's input data.
     /// - Returns: The activity's output.
-    public static func executeLocalActivity<Activity: ActivityDefinition>(
+    public func executeLocalActivity<Activity: ActivityDefinition>(
         _ activityType: Activity.Type = Activity.self,
         options: LocalActivityOptions,
         input: Activity.Input
@@ -587,13 +621,13 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Execute a local activity with no input parameters
-    /// let systemInfo = try await Workflow.executeLocalActivity(
+    /// let systemInfo = try await context.executeLocalActivity(
     ///     GetSystemInfoActivity.self,
     ///     options: .init(startToCloseTimeout: .seconds(15))
     /// )
     ///
     /// // Health check local activity
-    /// let isHealthy = try await Workflow.executeLocalActivity(
+    /// let isHealthy = try await context.executeLocalActivity(
     ///     HealthCheckActivity.self,
     ///     options: .init(startToCloseTimeout: .seconds(10))
     /// )
@@ -603,7 +637,7 @@ public struct Workflow: Sendable {
     ///   - activityType: The activity's type.
     ///   - options: The activity's execution options.
     /// - Returns: The activity's output.
-    public static func executeLocalActivity<Activity: ActivityDefinition>(
+    public func executeLocalActivity<Activity: ActivityDefinition>(
         _ activityType: Activity.Type = Activity.self,
         options: LocalActivityOptions
     ) async throws -> Activity.Output where Activity.Input == Void {
@@ -619,7 +653,7 @@ public struct Workflow: Sendable {
     /// - Parameters:
     ///   - activityType: The activity's type.
     ///   - options: The local activity's execution options.
-    public static func executeLocalActivity<Activity: ActivityDefinition>(
+    public func executeLocalActivity<Activity: ActivityDefinition>(
         _ activityType: Activity.Type = Activity.self,
         options: LocalActivityOptions
     ) async throws where Activity.Input == Void, Activity.Output == Void {
@@ -636,7 +670,7 @@ public struct Workflow: Sendable {
     ///   - activityType: The activity's type.
     ///   - options: The local activity's execution options.
     ///   - input: The activity's input data.
-    public static func executeLocalActivity<Activity: ActivityDefinition>(
+    public func executeLocalActivity<Activity: ActivityDefinition>(
         _ activityType: Activity.Type = Activity.self,
         options: LocalActivityOptions,
         input: Activity.Input
@@ -655,7 +689,7 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Execute local activity by string name
-    /// let result: String = try await Workflow.executeLocalActivity(
+    /// let result: String = try await context.executeLocalActivity(
     ///     name: "ProcessPayment",
     ///     options: .init(startToCloseTimeout: .seconds(45)),
     ///     input: PaymentRequest(amount: 100.00, currency: "USD"),
@@ -663,7 +697,7 @@ public struct Workflow: Sendable {
     /// )
     ///
     /// // Execute with multiple inputs
-    /// let summary: OrderSummary = try await Workflow.executeLocalActivity(
+    /// let summary: OrderSummary = try await context.executeLocalActivity(
     ///     name: "GenerateOrderSummary",
     ///     options: .init(startToCloseTimeout: .seconds(30)),
     ///     input: orderID, customerInfo, items,
@@ -677,13 +711,13 @@ public struct Workflow: Sendable {
     ///   - input: The local activity's input values.
     ///   - outputType: The local activity's output type.
     /// - Returns: The local activity's output.
-    public static func executeLocalActivity<each Input: Sendable, Output: Sendable>(
+    public func executeLocalActivity<each Input: Sendable, Output: Sendable>(
         name: String,
         options: LocalActivityOptions,
         input: repeat each Input,
         outputType: Output.Type = Output.self
     ) async throws -> Output {
-        try await self._context.executeLocalActivity(
+        try await self.internalContext.executeLocalActivity(
             name: name,
             options: options,
             input: repeat each input,
@@ -702,7 +736,7 @@ public struct Workflow: Sendable {
     /// ## Usage
     ///
     /// ```swift
-    /// let handle = Workflow.getExternalWorkflowHandle(
+    /// let handle = context.getExternalWorkflowHandle(
     ///     ExternalTargetWorkflow.self,
     ///     id: "other-workflow-id"
     /// )
@@ -719,13 +753,13 @@ public struct Workflow: Sendable {
     ///   - id: The workflow ID of the external workflow.
     ///   - runId: The optional run ID of the external workflow. If `nil`, targets the latest run.
     /// - Returns: A typed handle to the external workflow.
-    public static func getExternalWorkflowHandle<W: WorkflowDefinition>(
-        _ type: W.Type,
+    public func getExternalWorkflowHandle<ExternalW: WorkflowDefinition>(
+        _ type: ExternalW.Type,
         id: String,
         runId: String? = nil
-    ) -> ExternalWorkflowHandle<W> {
+    ) -> ExternalWorkflowHandle<ExternalW> {
         ExternalWorkflowHandle(
-            untypedHandle: self._context.getExternalWorkflowHandle(id: id, runId: runId)
+            untypedHandle: self.internalContext.getExternalWorkflowHandle(id: id, runId: runId)
         )
     }
 
@@ -738,7 +772,7 @@ public struct Workflow: Sendable {
     /// ## Usage
     ///
     /// ```swift
-    /// let handle = Workflow.getExternalWorkflowHandle(id: "other-workflow-id")
+    /// let handle = context.getExternalWorkflowHandle(id: "other-workflow-id")
     ///
     /// // Signal the external workflow
     /// try await handle.signal(signalName: "mySignal", input: signalData)
@@ -751,11 +785,11 @@ public struct Workflow: Sendable {
     ///   - id: The workflow ID of the external workflow.
     ///   - runId: The optional run ID of the external workflow. If `nil`, targets the latest run.
     /// - Returns: An untyped handle to the external workflow.
-    public static func getExternalWorkflowHandle(
+    public func getExternalWorkflowHandle(
         id: String,
         runId: String? = nil
     ) -> UntypedExternalWorkflowHandle {
-        self._context.getExternalWorkflowHandle(id: id, runId: runId)
+        self.internalContext.getExternalWorkflowHandle(id: id, runId: runId)
     }
 
     // MARK: - Child Workflow
@@ -764,13 +798,13 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Start a child workflow and get a handle
-    /// let childHandle = try await Workflow.startChildWorkflow(
+    /// let childHandle = try await context.startChildWorkflow(
     ///     ProcessOrderWorkflow.self,
     ///     input: OrderData(id: "order-456", customerID: "customer-789")
     /// )
     ///
     /// // Start with custom task queue
-    /// let reportHandle = try await Workflow.startChildWorkflow(
+    /// let reportHandle = try await context.startChildWorkflow(
     ///     GenerateReportWorkflow.self,
     ///     options: .init(
     ///         taskQueue: "reports-task-queue"
@@ -787,12 +821,12 @@ public struct Workflow: Sendable {
     ///   - options: The child workflow options.
     ///   - input: The input to the workflow.
     /// - Returns: A handle to the child workflow.
-    public static func startChildWorkflow<ChildWorkflow: WorkflowDefinition>(
+    public func startChildWorkflow<ChildWorkflow: WorkflowDefinition>(
         _ workflowType: ChildWorkflow.Type = ChildWorkflow.self,
         options: ChildWorkflowOptions = .init(),
         input: ChildWorkflow.Input
     ) async throws -> ChildWorkflowHandle<ChildWorkflow> {
-        try await self._context.startChildWorkflow(workflowType: workflowType, options: options, input: input)
+        try await self.internalContext.startChildWorkflow(workflowType: workflowType, options: options, input: input)
     }
 
     /// Starts a child workflow by name.
@@ -802,12 +836,12 @@ public struct Workflow: Sendable {
     ///   - options: The child workflow options.
     ///   - inputs: The inputs to the child workflow.
     /// - Returns: A handle to the child workflow.
-    public static func startChildWorkflow<each Input: Sendable>(
+    public func startChildWorkflow<each Input: Sendable>(
         name: String,
         options: ChildWorkflowOptions = .init(),
         inputs: repeat each Input
     ) async throws -> UntypedChildWorkflowHandle {
-        try await self._context.startChildWorkflow(name: name, options: options, inputs: repeat each inputs)
+        try await self.internalContext.startChildWorkflow(name: name, options: options, inputs: repeat each inputs)
     }
 
     /// Starts a child workflow and awaits the result.
@@ -816,17 +850,17 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Execute child workflow and wait for result
-    /// let processedOrder = try await Workflow.executeChildWorkflow(
+    /// let processedOrder = try await context.executeChildWorkflow(
     ///     ProcessOrderWorkflow.self,
     ///     input: OrderData(id: orderID, items: items, customerID: customerID)
     /// )
     ///
     /// // Execute multiple child workflows in parallel
-    /// async let emailResult = Workflow.executeChildWorkflow(
+    /// async let emailResult = context.executeChildWorkflow(
     ///     SendEmailWorkflow.self,
     ///     input: EmailNotification(to: customer.email, template: "order-confirmation")
     /// )
-    /// async let smsResult = Workflow.executeChildWorkflow(
+    /// async let smsResult = context.executeChildWorkflow(
     ///     SendSmsWorkflow.self,
     ///     input: SmsNotification(to: customer.phone, message: "Order confirmed")
     /// )
@@ -839,7 +873,7 @@ public struct Workflow: Sendable {
     ///   - options: The child workflow options.
     ///   - input: The input to the workflow.
     /// - Returns: The child workflow's output.
-    public static func executeChildWorkflow<ChildWorkflow: WorkflowDefinition>(
+    public func executeChildWorkflow<ChildWorkflow: WorkflowDefinition>(
         _ workflowType: ChildWorkflow.Type = ChildWorkflow.self,
         options: ChildWorkflowOptions = .init(),
         input: ChildWorkflow.Input
@@ -855,7 +889,7 @@ public struct Workflow: Sendable {
     ///   - inputs: The inputs to the child workflow.
     ///   - resultType: The type of the workflow's result.
     /// - Returns: The child workflow's output.
-    public static func executeChildWorkflow<each Input: Sendable, Result: Sendable>(
+    public func executeChildWorkflow<each Input: Sendable, Result: Sendable>(
         name: String,
         options: ChildWorkflowOptions = .init(),
         inputs: repeat each Input,
@@ -872,17 +906,17 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Get a string memo value
-    /// let customerType: String? = try await Workflow.getMemoValue(for: "customer_type")
+    /// let customerType: String? = try await context.getMemoValue(for: "customer_type")
     ///
     /// // Get a custom struct memo value
-    /// let config: WorkflowConfig? = try await Workflow.getMemoValue(for: "workflow_config")
+    /// let config: WorkflowConfig? = try await context.getMemoValue(for: "workflow_config")
     ///
     /// // Handle optional memo values
-    /// let priority: Int? = try await Workflow.getMemoValue(for: "priority")
+    /// let priority: Int? = try await context.getMemoValue(for: "priority")
     /// let effectivePriority = priority ?? 1 // Default if not set
     ///
     /// // Check if memo exists and handle accordingly
-    /// if let experimentGroup: String = try await Workflow.getMemoValue(for: "experiment_group") {
+    /// if let experimentGroup: String = try await context.getMemoValue(for: "experiment_group") {
     ///     // Use experiment-specific logic
     ///     processExperimentalFeature(group: experimentGroup)
     /// } else {
@@ -894,11 +928,11 @@ public struct Workflow: Sendable {
     /// - Parameter key: The memo's key.
     /// - Parameter valueType: The memo's value's type.
     /// - Returns: The value if present, otherwise `nil`.
-    public static func getMemoValue<Value>(
+    public func getMemoValue<Value>(
         for key: String,
         as valueType: Value.Type = Value.self
     ) async throws -> Value? {
-        try await self._context.getMemoValue(for: key)
+        try await self.internalContext.getMemoValue(for: key)
     }
 
     /// Issues updates to the workflow memo.
@@ -907,7 +941,7 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Update memo with various data types
-    /// try await Workflow.upsertMemo([
+    /// try await context.upsertMemo([
     ///     "customer_id": "customer-123",
     ///     "order_total": 150.75,
     ///     "priority": 2,
@@ -915,13 +949,13 @@ public struct Workflow: Sendable {
     /// ])
     ///
     /// // Update specific memo fields
-    /// try await Workflow.upsertMemo([
+    /// try await context.upsertMemo([
     ///     "status": "processing",
     ///     "last_updated": Date().timeIntervalSince1970
     /// ])
     ///
     /// // Remove memo fields by setting to nil
-    /// try await Workflow.upsertMemo([
+    /// try await context.upsertMemo([
     ///     "temporary_flag": nil,  // Remove this field
     ///     "debug_info": nil       // Remove this field too
     /// ])
@@ -931,15 +965,15 @@ public struct Workflow: Sendable {
     ///     version: "2.1",
     ///     feature_flags: ["new_checkout": true]
     /// )
-    /// try await Workflow.upsertMemo([
+    /// try await context.upsertMemo([
     ///     "metadata": workflowMetadata
     /// ])
     /// ```
     ///
     /// - Parameter memo: Updates to apply. Value can be `nil` to effectively remove the
     ///   memo value.
-    public static func upsertMemo(_ memo: [String: (any Sendable)?]) async throws {
-        try await self._context.upsertMemo(memo)
+    public func upsertMemo(_ memo: [String: (any Sendable)?]) async throws {
+        try await self.internalContext.upsertMemo(memo)
     }
 
     // MARK: - Continue As New
@@ -950,8 +984,8 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Continue as new with updated input
-    /// if Workflow.continueAsNewSuggested {
-    ///     let continueError = try await Workflow.makeContinueAsNewError(
+    /// if context.continueAsNewSuggested {
+    ///     let continueError = try await context.makeContinueAsNewError(
     ///         options: .init(),
     ///         input: WorkflowInput(
     ///             processedItems: currentState.processedItems,
@@ -963,7 +997,7 @@ public struct Workflow: Sendable {
     ///
     /// // Continue with same input but different task queue
     /// if shouldMigrateToNewTaskQueue {
-    ///     let continueError = try await Workflow.makeContinueAsNewError(
+    ///     let continueError = try await context.makeContinueAsNewError(
     ///         options: .init(taskQueue: "new-task-queue-v2"),
     ///         input: currentInput
     ///     )
@@ -971,7 +1005,7 @@ public struct Workflow: Sendable {
     /// }
     ///
     /// // Continue with multiple parameters
-    /// let continueError = try await Workflow.makeContinueAsNewError(
+    /// let continueError = try await context.makeContinueAsNewError(
     ///     options: .init(),
     ///     input: newUserID, updatedConfig, processedCount
     /// )
@@ -983,11 +1017,11 @@ public struct Workflow: Sendable {
     ///   - input: The input values for the new workflow execution.
     /// - Returns: A continue-as-new error.
     /// - Throws: When the input, headers or memo fails to convert.
-    public static func makeContinueAsNewError<each Input: Sendable>(
+    public func makeContinueAsNewError<each Input: Sendable>(
         options: ContinueAsNewOptions,
         input: repeat each Input
     ) async throws -> ContinueAsNewError {
-        try await self._context.makeContinueAsNewError(
+        try await self.internalContext.makeContinueAsNewError(
             workflowName: self.info.workflowName,
             options: options,
             input: repeat each input
@@ -1002,7 +1036,7 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Continue as a different workflow type
-    /// throw try await Workflow.makeContinueAsNewError(
+    /// throw try await context.makeContinueAsNewError(
     ///     workflowType: ProcessingWorkflowV2.self,
     ///     options: .init(),
     ///     input: migratedInput
@@ -1015,13 +1049,13 @@ public struct Workflow: Sendable {
     ///   - input: The input values for the new workflow execution.
     /// - Returns: A continue-as-new error.
     /// - Throws: When the input, headers or memo fails to convert.
-    public static func makeContinueAsNewError<W: WorkflowDefinition, each Input: Sendable>(
-        workflowType: W.Type,
+    public func makeContinueAsNewError<OtherW: WorkflowDefinition, each Input: Sendable>(
+        workflowType: OtherW.Type,
         options: ContinueAsNewOptions = .init(),
         input: repeat each Input
     ) async throws -> ContinueAsNewError {
-        try await self._context.makeContinueAsNewError(
-            workflowName: W.name,
+        try await self.internalContext.makeContinueAsNewError(
+            workflowName: OtherW.name,
             options: options,
             input: repeat each input
         )
@@ -1036,7 +1070,7 @@ public struct Workflow: Sendable {
     ///
     /// ```swift
     /// // Continue as a different workflow by name
-    /// throw try await Workflow.makeContinueAsNewError(
+    /// throw try await context.makeContinueAsNewError(
     ///     workflowName: "ProcessingWorkflowV2",
     ///     options: .init(),
     ///     input: migratedInput
@@ -1049,12 +1083,12 @@ public struct Workflow: Sendable {
     ///   - input: The input values for the new workflow execution.
     /// - Returns: A continue-as-new error.
     /// - Throws: When the input, headers or memo fails to convert.
-    public static func makeContinueAsNewError<each Input: Sendable>(
+    public func makeContinueAsNewError<each Input: Sendable>(
         workflowName: String,
         options: ContinueAsNewOptions = .init(),
         input: repeat each Input
     ) async throws -> ContinueAsNewError {
-        try await self._context.makeContinueAsNewError(
+        try await self.internalContext.makeContinueAsNewError(
             workflowName: workflowName,
             options: options,
             input: repeat each input

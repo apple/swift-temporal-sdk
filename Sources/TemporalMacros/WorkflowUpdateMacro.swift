@@ -22,15 +22,20 @@ public struct WorkflowUpdateMacro: PeerMacro {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        // Can only be used inside a workflow
-        guard let parent = context.lexicalContext.first,
-            let parentClass = parent.as(ClassDeclSyntax.self),
-            parentClass.attributes.contains(where: { element in
+        // Can only be used inside a workflow (struct or class)
+        guard let parent = context.lexicalContext.first else {
+            throw MacroError(message: "@WorkflowUpdate can only be used inside a workflow")
+        }
+
+        let parentName: String
+        guard let structDecl = parent.as(StructDeclSyntax.self),
+            structDecl.attributes.contains(where: { element in
                 element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description == "Workflow"
             })
         else {
-            throw MacroError(message: "@WorkflowUpdate can only be used inside a workflow class")
+            throw MacroError(message: "@WorkflowUpdate can only be used inside a workflow struct")
         }
+        parentName = structDecl.name.text
 
         // Only methods can be updates
         guard let functionDecl = declaration.as(FunctionDeclSyntax.self) else {
@@ -41,17 +46,26 @@ public struct WorkflowUpdateMacro: PeerMacro {
         let returnType = functionDecl.signature.returnClause?.type.description ?? "Void"
         let parameters = functionDecl.signature.parameterClause.parameters
 
-        // Updates must have one parameter (the input)
-        guard parameters.count == 1 else {
-            throw MacroError(message: "Workflow updates must have one parameter")
+        // Updates must have one or two parameters (input, and optionally context)
+        let hasContextParam: Bool
+        if parameters.count == 2 {
+            guard parameters.first?.firstName.text == "context" else {
+                throw MacroError(message: "Workflow update first parameter must be called 'context'")
+            }
+            guard parameters.dropFirst().first?.firstName.text == "input" else {
+                throw MacroError(message: "Workflow update second parameter must be called 'input'")
+            }
+            hasContextParam = true
+        } else if parameters.count == 1 {
+            guard parameters.first?.firstName.text == "input" else {
+                throw MacroError(message: "Workflow update parameter must be called 'input'")
+            }
+            hasContextParam = false
+        } else {
+            throw MacroError(message: "Workflow updates must have one or two parameters")
         }
 
-        // The parameter must be the input
-        guard parameters.first?.firstName.text == "input" else {
-            throw MacroError(message: "Workflow update parameter must be called 'input'")
-        }
-
-        let input = parameters.first!
+        let input = hasContextParam ? parameters.dropFirst().first! : parameters.first!
 
         let rawAccessModifier = functionDecl.modifiers.accessModifierPrefix(supportedModifiers: .allAccessModifiers)
 
@@ -70,13 +84,14 @@ public struct WorkflowUpdateMacro: PeerMacro {
 
         let validatorName = node.stringValueForArgument(named: "validator")
         let updateName = functionDecl.name.text.capitalizingFirst()
+        let isMutating = functionDecl.modifiers.contains { $0.name.tokenKind == .keyword(.mutating) }
 
         let initParams: String
         let initBody: String
         var validatorDecl: DeclSyntax?
         if validatorName != nil {
             initParams =
-                "run: @Sendable @escaping (Workflow, Input) async throws -> Output, validate: @Sendable @escaping (Workflow, Input) throws -> Void"
+                "run: @Sendable @escaping (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output, validate: @Sendable @escaping (Workflow, Input) throws -> Void"
             initBody = """
                 self._run = run
                             self._validate = validate
@@ -88,16 +103,31 @@ public struct WorkflowUpdateMacro: PeerMacro {
                         }
                 """
         } else {
-            initParams = "run: @Sendable @escaping (Workflow, Input) async throws -> Output"
+            initParams = "run: @Sendable @escaping (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output"
             initBody = "self._run = run"
+        }
+
+        // For mutating updates, the closure needs a mutable copy of the workflow.
+        // Since @_WorkflowState uses reference-backed boxes, mutations on the copy
+        // are visible through the shared boxes.
+        let runClosureBody: String
+        if isMutating && hasContextParam {
+            runClosureBody =
+                "{ workflow, context, input in var workflow = workflow; return try await workflow.\(functionDecl.name.text)(context: context, input: input) }"
+        } else if isMutating {
+            runClosureBody = "{ workflow, _, input in var workflow = workflow; return try await workflow.\(functionDecl.name.text)(input: input) }"
+        } else if hasContextParam {
+            runClosureBody = "{ workflow, context, input in try await workflow.\(functionDecl.name.text)(context: context, input: input) }"
+        } else {
+            runClosureBody = "{ workflow, _, input in try await workflow.\(functionDecl.name.text)(input: input) }"
         }
 
         let staticVarBody: String
         if let validatorName = validatorName {
             staticVarBody =
-                "\(updateName)(run: { try await $0.\(functionDecl.name.text)(input: $1) }, validate: { try $0.\(validatorName)(input: $1) })"
+                "\(updateName)(run: \(runClosureBody), validate: { try $0.\(validatorName)(input: $1) })"
         } else {
-            staticVarBody = "\(updateName)(run: { try await $0.\(functionDecl.name.text)(input: $1) })"
+            staticVarBody = "\(updateName)(run: \(runClosureBody))"
         }
 
         return [
@@ -105,14 +135,14 @@ public struct WorkflowUpdateMacro: PeerMacro {
             \(raw: rawAccessModifier)struct \(raw: updateName): WorkflowUpdateDefinition {
                 \(raw: rawAccessModifier)typealias Input = \(input.type)
                 \(raw: rawAccessModifier)typealias Output = \(raw: returnType)
-                \(raw: rawAccessModifier)typealias Workflow = \(parentClass.name)
+                \(raw: rawAccessModifier)typealias Workflow = \(raw: parentName)
 
-                let _run: @Sendable (Workflow, Input) async throws -> Output
+                let _run: @Sendable (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output
                 init(\(raw: initParams)) {
                     \(raw: initBody)
                 }
-                \(raw: rawAccessModifier)func run(workflow: Workflow, input: Input) async throws -> Output{
-                    try await self._run(workflow, input)
+                \(raw: rawAccessModifier)func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws -> Output{
+                    try await self._run(workflow, context, input)
                 }
                 \(nameDecl)
                 \(descriptionDecl)

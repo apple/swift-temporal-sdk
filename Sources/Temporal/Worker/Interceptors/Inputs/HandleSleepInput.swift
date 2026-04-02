@@ -14,6 +14,9 @@
 
 /// Input structure containing parameters and context for workflow sleep operations in interceptor chains.
 public struct HandleSleepInput: Sendable {
+    /// Information about the current workflow execution.
+    public var info: WorkflowInfo
+
     /// The duration of the sleep operation.
     public var duration: Duration
 

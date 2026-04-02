@@ -36,10 +36,10 @@ extension TemporalWorkerTracingInterceptor {
             next: (ExecuteWorkflowInput<Workflow>) async throws -> Workflow.Output
         ) async throws -> Workflow.Output {
             try await self.traceRecording.recordInbound(
-                spanName: "RunWorkflow:\(Temporal.Workflow.info.workflowName)",
+                spanName: "RunWorkflow:\(input.info.workflowName)",
                 headers: input.headers,
                 setSpanAttributes: { span in
-                    span.setWorkerExecuteWorkflowSpanAttributes(info: Temporal.Workflow.info)
+                    span.setWorkerExecuteWorkflowSpanAttributes(info: input.info)
                 },
                 next: {
                     try await next(input)
@@ -55,7 +55,7 @@ extension TemporalWorkerTracingInterceptor {
                 spanName: "HandleSignal:\(input.name)",
                 headers: input.headers,
                 setSpanAttributes: { span in
-                    span.setWorkerHandleSignalSpanAttributes(signalName: input.name, workflowInfo: Workflow.info)
+                    span.setWorkerHandleSignalSpanAttributes(signalName: input.name, workflowInfo: input.info)
                 },
                 next: {
                     try await next(input)
@@ -71,7 +71,7 @@ extension TemporalWorkerTracingInterceptor {
                 spanName: "HandleQuery:\(input.name)",
                 headers: input.headers,
                 setSpanAttributes: { span in
-                    span.setWorkerHandleQuerySpanAttributes(queryId: input.id, queryName: input.name, workflowInfo: Workflow.info)
+                    span.setWorkerHandleQuerySpanAttributes(queryId: input.id, queryName: input.name, workflowInfo: input.info)
                 },
                 next: {
                     try next(input)
@@ -87,7 +87,7 @@ extension TemporalWorkerTracingInterceptor {
                 spanName: "HandleUpdate:\(input.name)",
                 headers: input.headers,
                 setSpanAttributes: { span in
-                    span.setWorkerHandleUpdateSpanAttributes(updateId: input.id, updateName: input.name, workflowInfo: Workflow.info)
+                    span.setWorkerHandleUpdateSpanAttributes(updateId: input.id, updateName: input.name, workflowInfo: input.info)
                 },
                 next: {
                     try await next(input)
@@ -103,7 +103,7 @@ extension TemporalWorkerTracingInterceptor {
                 spanName: "ValidateUpdate:\(input.name)",
                 headers: input.headers,
                 setSpanAttributes: { span in
-                    span.setWorkerHandleUpdateSpanAttributes(updateId: input.id, updateName: input.name, workflowInfo: Workflow.info)
+                    span.setWorkerHandleUpdateSpanAttributes(updateId: input.id, updateName: input.name, workflowInfo: input.info)
                 },
                 next: {
                     try next(input)

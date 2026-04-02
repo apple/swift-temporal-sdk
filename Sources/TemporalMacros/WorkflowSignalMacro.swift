@@ -22,15 +22,20 @@ public struct WorkflowSignalMacro: PeerMacro {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        // Can only be used inside a workflow
-        guard let parent = context.lexicalContext.first,
-            let parentClass = parent.as(ClassDeclSyntax.self),
-            parentClass.attributes.contains(where: { element in
+        // Can only be used inside a workflow (struct or class)
+        guard let parent = context.lexicalContext.first else {
+            throw MacroError(message: "@WorkflowSignal can only be used inside a workflow")
+        }
+
+        let parentName: String
+        guard let structDecl = parent.as(StructDeclSyntax.self),
+            structDecl.attributes.contains(where: { element in
                 element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description == "Workflow"
             })
         else {
-            throw MacroError(message: "@WorkflowSignal can only be used inside a workflow class")
+            throw MacroError(message: "@WorkflowSignal can only be used inside a workflow struct")
         }
+        parentName = structDecl.name.text
 
         // Only methods can be signals
         guard let functionDecl = declaration.as(FunctionDeclSyntax.self) else {
@@ -46,20 +51,30 @@ public struct WorkflowSignalMacro: PeerMacro {
 
         let parameters = functionDecl.signature.parameterClause.parameters
 
-        // Signals must have one parameter (the input)
-        guard parameters.count == 1 else {
-            throw MacroError(message: "Workflow signals must have one parameter")
+        // Signals must have one or two parameters (input, and optionally context)
+        let hasContextParam: Bool
+        if parameters.count == 2 {
+            guard parameters.first?.firstName.text == "context" else {
+                throw MacroError(message: "Workflow signal first parameter must be called 'context'")
+            }
+            guard parameters.dropFirst().first?.firstName.text == "input" else {
+                throw MacroError(message: "Workflow signal second parameter must be called 'input'")
+            }
+            hasContextParam = true
+        } else if parameters.count == 1 {
+            guard parameters.first?.firstName.text == "input" else {
+                throw MacroError(message: "Workflow signal parameter must be called 'input'")
+            }
+            hasContextParam = false
+        } else {
+            throw MacroError(message: "Workflow signals must have one or two parameters")
         }
 
-        // The parameter must be the input
-        guard parameters.first?.firstName.text == "input" else {
-            throw MacroError(message: "Workflow signal parameter must be called 'input'")
-        }
-
-        let input = parameters.first!
+        let input = hasContextParam ? parameters.dropFirst().first! : parameters.first!
 
         let throwingSignal = functionDecl.signature.effectSpecifiers?.throwsClause?.throwsSpecifier.presence == .present
         let asyncSignal = functionDecl.signature.effectSpecifiers?.asyncSpecifier?.presence == .present
+        let isMutating = functionDecl.modifiers.contains { $0.name.tokenKind == .keyword(.mutating) }
 
         let rawAccessModifier = functionDecl.modifiers.accessModifierPrefix(supportedModifiers: .allAccessModifiers)
 
@@ -77,18 +92,37 @@ public struct WorkflowSignalMacro: PeerMacro {
         }
 
         let signalName = functionDecl.name.text.capitalizingFirst()
+
+        // For mutating signals, the closure needs a mutable copy of the workflow.
+        // Since @_WorkflowState uses reference-backed boxes, mutations on the copy
+        // are visible through the shared boxes.
+        let closureBody: String
+        if isMutating && hasContextParam {
+            closureBody =
+                "{ workflow, context, input in var workflow = workflow; \(throwingSignal ? "try" : "") \(asyncSignal ? "await" : "") workflow.\(functionDecl.name.text)(context: context, input: input) }"
+        } else if isMutating {
+            closureBody =
+                "{ workflow, _, input in var workflow = workflow; \(throwingSignal ? "try" : "") \(asyncSignal ? "await" : "") workflow.\(functionDecl.name.text)(input: input) }"
+        } else if hasContextParam {
+            closureBody =
+                "{ workflow, context, input in \(throwingSignal ? "try" : "") \(asyncSignal ? "await" : "") workflow.\(functionDecl.name.text)(context: context, input: input) }"
+        } else {
+            closureBody =
+                "{ workflow, _, input in \(throwingSignal ? "try" : "") \(asyncSignal ? "await" : "") workflow.\(functionDecl.name.text)(input: input) }"
+        }
+
         return [
             """
             \(raw: rawAccessModifier)struct \(raw: signalName): WorkflowSignalDefinition {
                 \(raw: rawAccessModifier)typealias Input = \(input.type)
-                \(raw: rawAccessModifier)typealias Workflow = \(parentClass.name)
+                \(raw: rawAccessModifier)typealias Workflow = \(raw: parentName)
 
-                let _run: @Sendable (Workflow, Input) async throws -> Void
-                init(run: @Sendable @escaping (Workflow, Input) async throws -> Void) {
+                let _run: @Sendable (Workflow, WorkflowContext<Workflow>, Input) async throws -> Void
+                init(run: @Sendable @escaping (Workflow, WorkflowContext<Workflow>, Input) async throws -> Void) {
                     self._run = run
                 }
-                \(raw: rawAccessModifier)func run(workflow: Workflow, input: Input) async throws {
-                    try await self._run(workflow, input)
+                \(raw: rawAccessModifier)func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws {
+                    try await self._run(workflow, context, input)
                 }
                 \(nameDecl)
                 \(descriptionDecl)
@@ -97,7 +131,7 @@ public struct WorkflowSignalMacro: PeerMacro {
             """,
             """
             static var \(raw: functionDecl.name.text): \(raw: signalName) {
-                \(raw: signalName)(run: { \(raw: throwingSignal ? "try" : "") \(raw: asyncSignal ? "await" : "") $0.\(raw: functionDecl.name.text)(input: $1) })
+                \(raw: signalName)(run: \(raw: closureBody))
             }
             """,
         ]

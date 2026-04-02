@@ -22,15 +22,20 @@ public struct WorkflowQueryMacro: PeerMacro {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        // Can only be used inside a workflow
-        guard let parent = context.lexicalContext.first,
-            let parentClass = parent.as(ClassDeclSyntax.self),
-            parentClass.attributes.contains(where: { element in
+        // Can only be used inside a workflow (struct or class)
+        guard let parent = context.lexicalContext.first else {
+            throw MacroError(message: "@WorkflowQuery can only be used inside a workflow")
+        }
+
+        let parentName: String
+        guard let structDecl = parent.as(StructDeclSyntax.self),
+            structDecl.attributes.contains(where: { element in
                 element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description == "Workflow"
             })
         else {
-            throw MacroError(message: "@WorkflowQuery can only be used inside a workflow class")
+            throw MacroError(message: "@WorkflowQuery can only be used inside a workflow struct")
         }
+        parentName = structDecl.name.text
 
         // Only methods can be queries
         guard let functionDecl = declaration.as(FunctionDeclSyntax.self) else {
@@ -46,17 +51,26 @@ public struct WorkflowQueryMacro: PeerMacro {
 
         let parameters = functionDecl.signature.parameterClause.parameters
 
-        // Queries must have one parameter (the input)
-        guard parameters.count == 1 else {
-            throw MacroError(message: "Workflow queries must have one parameter")
+        // Queries must have one or two parameters (input, and optionally context)
+        let hasContextParam: Bool
+        if parameters.count == 2 {
+            guard parameters.first?.firstName.text == "context" else {
+                throw MacroError(message: "Workflow query first parameter must be called 'context'")
+            }
+            guard parameters.dropFirst().first?.firstName.text == "input" else {
+                throw MacroError(message: "Workflow query second parameter must be called 'input'")
+            }
+            hasContextParam = true
+        } else if parameters.count == 1 {
+            guard parameters.first?.firstName.text == "input" else {
+                throw MacroError(message: "Workflow query parameter must be called 'input'")
+            }
+            hasContextParam = false
+        } else {
+            throw MacroError(message: "Workflow queries must have one or two parameters")
         }
 
-        // The parameter must be the input
-        guard parameters.first?.firstName.text == "input" else {
-            throw MacroError(message: "Workflow query parameter must be called 'input'")
-        }
-
-        let input = parameters.first!
+        let input = hasContextParam ? parameters.dropFirst().first! : parameters.first!
 
         let throwingQuery = functionDecl.signature.effectSpecifiers?.throwsClause?.throwsSpecifier.presence == .present
 
@@ -77,8 +91,8 @@ public struct WorkflowQueryMacro: PeerMacro {
             \(raw: rawAccessModifier)struct \(raw: queryName): WorkflowQueryDefinition {
                 \(raw: rawAccessModifier)typealias Input = \(input.type)
                 \(raw: rawAccessModifier)typealias Output = \(returnClause.type)
-                \(raw: rawAccessModifier)typealias Workflow = \(parentClass.name)
-                
+                \(raw: rawAccessModifier)typealias Workflow = \(raw: parentName)
+
                 let _run: @Sendable (Workflow, Input) throws -> Output
                 init(run: @Sendable @escaping (Workflow, Input) throws -> Output) {
                     self._run = run

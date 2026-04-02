@@ -14,6 +14,9 @@
 
 /// Input structure containing parameters and context for workflow continue-as-new error generation in interceptor chains.
 public struct MakeContinueAsNewErrorInput<each Input: Sendable>: Sendable {
+    /// Information about the current workflow execution.
+    public var info: WorkflowInfo
+
     /// The workflow name to continue as.
     public var workflowName: String
 

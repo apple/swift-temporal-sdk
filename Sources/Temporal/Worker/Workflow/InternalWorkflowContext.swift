@@ -12,14 +12,21 @@
 //
 //===----------------------------------------------------------------------===//
 
-package import Logging
+import Logging
 
 import struct Foundation.Date
 
-/// The execution context available during workflow execution.
-package struct WorkflowContext: Sendable {
+/// The internal execution context available during workflow execution.
+struct InternalWorkflowContext: Sendable {
+    @TaskLocal
+    static var current: InternalWorkflowContext?
+    @TaskLocal
+    static var currentUpdateInfo: WorkflowUpdateInfo?
+    @TaskLocal
+    static var currentExecutor: WorkflowTaskExecutor?
+
     /// Internal state machine for workflow execution.
-    private let stateMachine: WorkflowStateMachineStorage
+    let stateMachine: WorkflowStateMachineStorage
 
     /// Outbound interceptors for workflow operations.
     private let outboundInterceptors: [any WorkflowOutboundInterceptor]
@@ -80,10 +87,6 @@ package struct WorkflowContext: Sendable {
         }
     }
 
-    func ensureWorkflowStateModificationIsSafe() {
-        self.stateMachine.ensureWorkflowStateModificationIsSafe()
-    }
-
     /// Internal method to update current details when context is immutable.
     func updateCurrentDetails(_ newValue: String?) {
         self.stateMachine.setCurrentDetails(newValue)
@@ -131,6 +134,7 @@ package struct WorkflowContext: Sendable {
     func sleep(for duration: Duration, summary: String? = nil) async throws {
         try await self.implementation.sleep(
             input: .init(
+                info: self.info,
                 duration: duration,
                 summary: summary
             )
@@ -221,6 +225,7 @@ package struct WorkflowContext: Sendable {
     ) async throws -> Output {
         try await self.implementation.executeActivity(
             input: ScheduleActivityInput<repeat each Input>(
+                info: self.info,
                 name: name,
                 options: options,
                 headers: [:],
@@ -239,6 +244,7 @@ package struct WorkflowContext: Sendable {
     ) async throws -> Output {
         try await self.implementation.executeLocalActivity(
             input: ScheduleLocalActivityInput<repeat each Input>(
+                info: self.info,
                 name: name,
                 options: options,
                 headers: [:],
@@ -269,6 +275,7 @@ package struct WorkflowContext: Sendable {
     ) async throws -> UntypedChildWorkflowHandle {
         return try await self.implementation.startChildWorkflow(
             input: StartChildWorkflowInput<repeat each Input>(
+                info: self.info,
                 name: name,
                 options: options,
                 headers: [:],
@@ -286,6 +293,8 @@ package struct WorkflowContext: Sendable {
         UntypedExternalWorkflowHandle(
             id: id,
             runId: runId,
+            namespace: self.info.namespace,
+            info: self.info,
             stateMachine: self.stateMachine,
             interceptors: self.outboundInterceptors,
             payloadConverter: self.payloadConverter
@@ -343,6 +352,7 @@ package struct WorkflowContext: Sendable {
         try await self.implementation.makeContinueAsNewError(
             context: self,
             input: MakeContinueAsNewErrorInput<repeat each Input>(
+                info: self.info,
                 workflowName: workflowName,
                 options: options,
                 headers: [:],
@@ -352,7 +362,7 @@ package struct WorkflowContext: Sendable {
     }
 }
 
-extension WorkflowContext {
+extension InternalWorkflowContext {
     struct Implementation: InterceptorImplementation {
         let interceptors: [any WorkflowOutboundInterceptor]
         let stateMachine: WorkflowStateMachineStorage
@@ -360,7 +370,7 @@ extension WorkflowContext {
     }
 }
 
-extension WorkflowContext.Implementation {
+extension InternalWorkflowContext.Implementation {
     func sleep(
         input: HandleSleepInput
     ) async throws {
@@ -380,7 +390,7 @@ extension WorkflowContext.Implementation {
                 // TODO: Support dynamic activity
                 activityType: input.name,
                 options: .remote(input.options),
-                workflowTaskQueue: Workflow.info.taskQueue,
+                workflowTaskQueue: input.info.taskQueue,
                 headers: input.headers,
                 input: inputPayloads
             )
@@ -403,7 +413,7 @@ extension WorkflowContext.Implementation {
                 // TODO: Support dynamic activity
                 activityType: input.name,
                 options: .local(input.options),
-                workflowTaskQueue: Workflow.info.taskQueue,
+                workflowTaskQueue: input.info.taskQueue,
                 headers: input.headers,
                 input: inputPayloads
             )
@@ -429,8 +439,8 @@ extension WorkflowContext.Implementation {
             }
 
             return try await self.stateMachine.startChildWorkflow(
-                namespace: Workflow.info.namespace,
-                taskQueue: Workflow.info.taskQueue,
+                namespace: input.info.namespace,
+                taskQueue: input.info.taskQueue,
                 workflowName: input.name,
                 headers: input.headers,
                 inputs: inputPayloads,
@@ -441,7 +451,7 @@ extension WorkflowContext.Implementation {
     }
 
     func makeContinueAsNewError<each Input: Sendable>(
-        context: WorkflowContext,
+        context: InternalWorkflowContext,
         input: MakeContinueAsNewErrorInput<repeat each Input>
     ) async throws -> ContinueAsNewError {
         try await intercept(Interceptor.makeContinueAsNewError, input: input) { input in
@@ -470,7 +480,7 @@ extension WorkflowContext.Implementation {
             let payloads = try self.payloadConverter.convertValues(repeat each input.input)
 
             try await self.stateMachine.signalExternalWorkflow(
-                namespace: Workflow.info.namespace,
+                namespace: input.info.namespace,
                 workflowID: input.id,
                 runID: input.runId,
                 signalName: input.name,
@@ -485,7 +495,7 @@ extension WorkflowContext.Implementation {
     ) async throws {
         try await intercept((any WorkflowOutboundInterceptor).cancelExternalWorkflow, input: input) { input in
             try await self.stateMachine.cancelExternalWorkflow(
-                namespace: Workflow.info.namespace,
+                namespace: input.info.namespace,
                 workflowID: input.id,
                 runID: input.runId
             )

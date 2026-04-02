@@ -14,6 +14,9 @@
 
 /// Input structure containing parameters and context for workflow signal handling in interceptor chains.
 public struct HandleSignalInput<Signal: WorkflowSignalDefinition>: Sendable {
+    /// Information about the current workflow execution.
+    public var info: WorkflowInfo
+
     /// The name identifying the type of signal being processed.
     public var name: String
 
