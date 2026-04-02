@@ -245,6 +245,41 @@ extension TemporalClientTracingInterceptor {
             )
         }
 
+        public func listWorkflowsPage(
+            input: ListWorkflowsPageInput,
+            next: (ListWorkflowsPageInput) async throws -> WorkflowListPage
+        ) async throws -> WorkflowListPage {
+            try await self.traceRecording.recordOutbound(
+                spanName:
+                    Api.Workflowservice.V1.WorkflowService.Method.ListWorkflowExecutions.descriptor.fullyQualifiedMethod,
+                setRequestAttributes: { span in
+                    span.setListWorkflowsPageRequestSpanAttributes(query: input.query, pageSize: input.pageSize)
+                },
+                setResponseAttributes: { span, response in
+                    span.setListWorkflowsPageResponseSpanAttributes(count: response.executions.count)
+                },
+                next: { _ in
+                    try await next(input)
+                }
+            )
+        }
+
+        public func pollWorkflowUpdate(
+            input: PollWorkflowUpdateInput,
+            next: (PollWorkflowUpdateInput) async throws -> Api.Update.V1.Outcome
+        ) async throws -> Api.Update.V1.Outcome {
+            try await self.traceRecording.recordOutbound(
+                spanName:
+                    Api.Workflowservice.V1.WorkflowService.Method.PollWorkflowExecutionUpdate.descriptor.fullyQualifiedMethod,
+                setRequestAttributes: { span in
+                    span.setPollWorkflowUpdateRequestSpanAttributes(input: input)
+                },
+                next: { _ in
+                    try await next(input)
+                }
+            )
+        }
+
         public func countWorkflows(
             input: CountWorkflowsInput,
             next: (CountWorkflowsInput) async throws -> WorkflowExecutionCount

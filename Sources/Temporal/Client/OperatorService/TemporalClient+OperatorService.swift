@@ -94,11 +94,13 @@ extension TemporalClient {
         nextPageToken: Data = Data(),
         callOptions: CallOptions? = nil
     ) async throws -> WorkflowListPage {
-        try await self.interceptor.workflowService.listWorkflowExecutionsPage(
-            query: query,
-            pageSize: pageSize,
-            nextPageToken: nextPageToken,
-            callOptions: callOptions
+        try await self.interceptor.listWorkflowsPage(
+            .init(
+                query: query,
+                pageSize: pageSize,
+                nextPageToken: nextPageToken,
+                callOptions: callOptions
+            )
         )
     }
 
@@ -202,6 +204,19 @@ extension TemporalClient.Interceptor {
             try await self.workflowService.listWorkflowExecutions(
                 query: input.query,
                 limit: input.limit,
+                callOptions: input.callOptions
+            )
+        }
+    }
+
+    package func listWorkflowsPage(
+        _ input: ListWorkflowsPageInput
+    ) async throws -> WorkflowListPage {
+        try await self.intercept((any ClientOutboundInterceptor).listWorkflowsPage, input: input) { input in
+            try await self.workflowService.listWorkflowExecutionsPage(
+                query: input.query,
+                pageSize: input.pageSize,
+                nextPageToken: input.nextPageToken,
                 callOptions: input.callOptions
             )
         }

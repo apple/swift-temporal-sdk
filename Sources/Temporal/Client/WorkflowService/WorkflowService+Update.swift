@@ -281,6 +281,61 @@ extension TemporalClient.WorkflowService {
 
     // MARK: - Workflow Update Result
 
+    /// Polls for the outcome of a previously started workflow update using long polling.
+    ///
+    /// This method waits for a workflow update to complete and returns its raw outcome.
+    /// It uses long polling to efficiently wait until the update finishes processing,
+    /// automatically handling retries and connection timeouts.
+    ///
+    /// - Parameters:
+    ///   - workflowID: The unique identifier of the target workflow.
+    ///   - runID: The specific run ID that was updated. If nil, uses the latest run.
+    ///   - updateID: The unique identifier of the update to retrieve results for.
+    ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
+    /// - Returns: The raw update outcome from the poll response.
+    /// - Throws: ``WorkflowUpdateRPCTimeoutOrCanceledError`` if the poll times out or is cancelled,
+    ///   or an error for other retrieval failures.
+    package func pollWorkflowUpdateOutcome(
+        workflowID: String,
+        runID: String? = nil,
+        updateID: String,
+        callOptions: CallOptions? = nil
+    ) async throws -> Api.Update.V1.Outcome {
+        // This setups a long poll since we need to wait until the
+        // update completed. We don't have to sleep between each request
+        // since the request will wait until the various timeouts trigger.
+        while true {
+            do {
+                let response: Api.Workflowservice.V1.PollWorkflowExecutionUpdateResponse = try await self.client.unary(
+                    method: Api.Workflowservice.V1.WorkflowService.Method.PollWorkflowExecutionUpdate.descriptor,
+                    request: Api.Workflowservice.V1.PollWorkflowExecutionUpdateRequest.with {
+                        $0.namespace = self.configuration.namespace
+                        $0.updateRef.workflowExecution.workflowID = workflowID
+                        if let runID {
+                            $0.updateRef.workflowExecution.runID = runID
+                        }
+                        $0.updateRef.updateID = updateID
+                        $0.identity = self.configuration.identity
+                        $0.waitPolicy.lifecycleStage = .completed
+                    },
+                    callOptions: callOptions ?? .userPollRetryOptions
+                )
+
+                if response.hasOutcome {
+                    return response.outcome
+                }
+            } catch let rpcError as RPCError
+                where rpcError.code == .deadlineExceeded || rpcError.code == .cancelled
+            {
+                throw WorkflowUpdateRPCTimeoutOrCanceledError(cause: rpcError)
+            } catch is CancellationError {
+                throw WorkflowUpdateRPCTimeoutOrCanceledError()
+            } catch {
+                throw error
+            }
+        }
+    }
+
     /// Retrieves the result of a previously started workflow update using long polling.
     ///
     /// This method waits for a workflow update to complete and returns its results.
@@ -303,50 +358,14 @@ extension TemporalClient.WorkflowService {
         resultTypes: repeat (each Result).Type,
         callOptions: CallOptions? = nil
     ) async throws -> (repeat each Result) {
-        // This setups a long poll since we need to wait until the
-        // update completed. We don't have to sleep between each request
-        // since the request will wait until the various timeouts trigger.
-        while true {
-            do {
-                let response: Api.Workflowservice.V1.PollWorkflowExecutionUpdateResponse = try await self.client.unary(
-                    method: Api.Workflowservice.V1.WorkflowService.Method.PollWorkflowExecutionUpdate.descriptor,
-                    request: Api.Workflowservice.V1.PollWorkflowExecutionUpdateRequest.with {
-                        $0.namespace = self.configuration.namespace
-                        $0.updateRef.workflowExecution.workflowID = workflowID
-                        if let runID {
-                            $0.updateRef.workflowExecution.runID = runID
-                        }
-                        $0.updateRef.updateID = updateID
-                        $0.identity = self.configuration.identity
-                        $0.waitPolicy.lifecycleStage = .completed
-                    },
-                    callOptions: callOptions ?? .userPollRetryOptions
-                )
-
-                if response.hasOutcome {
-                    switch response.outcome.value {
-                    case .success(let success):
-                        return try await self.configuration.dataConverter.convertPayloads(
-                            success.payloads,
-                            as: repeat each resultTypes
-                        )
-                    case .failure(let failure):
-                        let error = await self.configuration.dataConverter.convertFailure(failure)
-                        throw WorkflowUpdateFailedError(cause: error)
-                    case .none:
-                        break
-                    }
-                }
-            } catch let rpcError as RPCError
-                where rpcError.code == .deadlineExceeded || rpcError.code == .cancelled
-            {
-                throw WorkflowUpdateRPCTimeoutOrCanceledError(cause: rpcError)
-            } catch is CancellationError {
-                throw WorkflowUpdateRPCTimeoutOrCanceledError()
-            } catch {
-                throw error
-            }
-        }
+        let outcome = try await self.pollWorkflowUpdateOutcome(
+            workflowID: workflowID,
+            runID: runID,
+            updateID: updateID,
+            callOptions: callOptions
+        )
+        let payloads = try await outcome.successPayloads(using: self.configuration.dataConverter)
+        return try await self.configuration.dataConverter.convertPayloads(payloads, as: repeat each resultTypes)
     }
 
     /// Retrieves the result of a previously started strongly-typed workflow update using long polling.
