@@ -22,8 +22,8 @@ import Tracing
 @Suite(.tags(.instrumentationTests))
 struct TemporalWorkerInboundTracingInterceptorTests {
     @Workflow
-    final class VoidWorkflow {
-        func run(input: Void) async {}
+    struct VoidWorkflow {
+        mutating func run(context: WorkflowContext<Self>, input: Void) async {}
     }
 
     struct TemporalTraceID: Encodable {
@@ -39,19 +39,28 @@ struct TemporalWorkerInboundTracingInterceptorTests {
     private static let runID = UUID().uuidString
     private static let taskQueue = "TestTaskQueue"
     private static let namespace = "TestNamespace"
-    private static let workflowContext = WorkflowContext.makeTestContext(
-        info: .init(
-            attempt: Self.attempt,
-            startTime: Self.startTime,
-            workflowName: Self.workflowName,
-            workflowID: Self.workflowID,
-            workflowType: Self.workflowType,
-            runID: Self.runID,
-            taskQueue: Self.taskQueue,
-            namespace: Self.namespace,
-            headers: [:]
-        )
+    private static let testWorkflowInfo = WorkflowInfo(
+        attempt: Self.attempt,
+        startTime: Self.startTime,
+        workflowName: Self.workflowName,
+        workflowID: Self.workflowID,
+        workflowType: Self.workflowType,
+        runID: Self.runID,
+        taskQueue: Self.taskQueue,
+        namespace: Self.namespace,
+        headers: [:]
     )
+    //    private static let internalWorkflowContext = InternalWorkflowContext(
+    //        stateMachine: .init(
+    //            executor: .init(),
+    //            payloadConverter: DefaultPayloadConverter(),
+    //            failureConverter: DefaultFailureConverter()
+    //        ),
+    //        workflowInfo: Self.testWorkflowInfo,
+    //        payloadConverter: DefaultPayloadConverter(),
+    //        outboundInterceptors: [],
+    //        logger: .init(label: "TestWorkflowContext")
+    //    )
 
     // only test one inbound workflow worker interceptor, as logic is the same (except for the setting of span attributes)
     @Test
@@ -71,17 +80,18 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 TemporalTraceID(traceparent: traceID)
             )
         ]
-        try await Workflow.$context.withValue(Self.workflowContext) {
-            _ = try await interceptor.executeWorkflow(
-                input: ExecuteWorkflowInput<VoidWorkflow>(
-                    headers: mockIncomingHeaders,
-                    input: ()
-                )
-            ) { input in
-                // Make sure we get the metadata injected into our service context
-                #expect(ServiceContext.current?.traceID == traceID.uuidString)
-            }
+        //        try await InternalWorkflowContext.$current.withValue(Self.internalWorkflowContext) {
+        _ = try await interceptor.executeWorkflow(
+            input: ExecuteWorkflowInput<VoidWorkflow>(
+                info: Self.testWorkflowInfo,
+                headers: mockIncomingHeaders,
+                input: ()
+            )
+        ) { input in
+            // Make sure we get the metadata injected into our service context
+            #expect(ServiceContext.current?.traceID == traceID.uuidString)
         }
+        //        }
 
         assertTestSpanComponents(
             forSpan: "RunWorkflow:\(Self.workflowName)",
@@ -124,20 +134,21 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         ]
 
         do {
-            try await Workflow.$context.withValue(Self.workflowContext) {
-                _ = try await interceptor.executeWorkflow(
-                    input: ExecuteWorkflowInput<VoidWorkflow>(
-                        headers: mockIncomingHeaders,
-                        input: ()
-                    )
-                ) { input in
-                    // Make sure we get the metadata injected into our service context
-                    #expect(ServiceContext.current?.traceID == traceID.uuidString)
+            //            try await InternalWorkflowContext.$current.withValue(Self.internalWorkflowContext) {
+            _ = try await interceptor.executeWorkflow(
+                input: ExecuteWorkflowInput<VoidWorkflow>(
+                    info: Self.testWorkflowInfo,
+                    headers: mockIncomingHeaders,
+                    input: ()
+                )
+            ) { input in
+                // Make sure we get the metadata injected into our service context
+                #expect(ServiceContext.current?.traceID == traceID.uuidString)
 
-                    // Simulates an error within the RPC
-                    throw TracingInterceptorTestError.testError
-                }
+                // Simulates an error within the RPC
+                throw TracingInterceptorTestError.testError
             }
+            //            }
 
             Issue.record("Should have thrown")
         } catch {
@@ -256,21 +267,5 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 #expect(errors == [.testError])
             }
         }
-    }
-}
-
-extension WorkflowContext {
-    static func makeTestContext(info: WorkflowInfo) -> WorkflowContext {
-        .init(
-            stateMachine: .init(
-                executor: .init(),
-                payloadConverter: DefaultPayloadConverter(),
-                failureConverter: DefaultFailureConverter()
-            ),
-            workflowInfo: info,
-            payloadConverter: DefaultPayloadConverter(),
-            outboundInterceptors: [],
-            logger: .init(label: "TestWorkflowContext")
-        )
     }
 }

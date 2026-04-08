@@ -29,7 +29,7 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SimpleActivityWorkflow {
+        struct SimpleActivityWorkflow {
             enum Scenario: String, Codable, CaseIterable {
                 case remoteSymbol
                 case remoteStringName
@@ -43,29 +43,29 @@ extension TestServerDependentTests {
                 self.scenario = input
             }
 
-            func run(input: Scenario) async throws -> String {
+            mutating func run(context: WorkflowContext<Self>, input: Scenario) async throws -> String {
                 switch input {
                 case .remoteSymbol:
-                    return try await Workflow.executeActivity(
+                    return try await context.executeActivity(
                         SimpleActivity.self,
                         options: .init(startToCloseTimeout: .seconds(1)),
                         input: scenario.rawValue
                     )
                 case .remoteStringName:
-                    return try await Workflow.executeActivity(
+                    return try await context.executeActivity(
                         name: "SimpleActivity",
                         options: .init(scheduleToCloseTimeout: .seconds(10)),
                         input: scenario.rawValue,
                         outputType: String.self
                     )
                 case .localSymbol:
-                    return try await Workflow.executeLocalActivity(
+                    return try await context.executeLocalActivity(
                         SimpleActivity.self,
                         options: .init(startToCloseTimeout: .seconds(1)),
                         input: scenario.rawValue
                     )
                 case .localStringName:
-                    return try await Workflow.executeLocalActivity(
+                    return try await context.executeLocalActivity(
                         name: "SimpleActivity",
                         options: .init(scheduleToCloseTimeout: .seconds(10)),
                         input: scenario.rawValue,
@@ -145,7 +145,7 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SelfCancellingActivityWorkflow {
+        struct SelfCancellingActivityWorkflow {
             enum Scenario: Codable {
                 case preCancel(Int)
                 case postCancel(Int)
@@ -160,7 +160,7 @@ extension TestServerDependentTests {
                 }
             }
 
-            func run(input scenario: Scenario) async throws {
+            mutating func run(context: WorkflowContext<Self>, input scenario: Scenario) async throws {
                 try await withThrowingTaskGroup(of: Void.self) { taskGroup in
                     if case .preCancel = scenario {
                         taskGroup.cancelAll()
@@ -171,7 +171,7 @@ extension TestServerDependentTests {
                         activityOptions.heartbeatTimeout = .seconds(10)
                         activityOptions.cancellationType = scenario.cancellationType
                         let error = try await #require(throws: (any Error).self) {
-                            try await Workflow.executeActivity(
+                            try await context.executeActivity(
                                 InfiniteActivity.self,
                                 options: activityOptions,
                                 input: ()
@@ -181,7 +181,7 @@ extension TestServerDependentTests {
                     }
 
                     if case .postCancel = scenario {
-                        try await Workflow.sleep(for: .seconds(1))
+                        try await context.sleep(for: .seconds(1))
                         taskGroup.cancelAll()
                     }
                 }
@@ -229,9 +229,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class DynamicActivityWorkflow {
-            func run(input: String) async throws -> String {
-                try await Workflow.executeActivity(
+        struct DynamicActivityWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+                try await context.executeActivity(
                     name: "SomeUnregisteredActivity",
                     options: .init(startToCloseTimeout: .seconds(10)),
                     input: input,

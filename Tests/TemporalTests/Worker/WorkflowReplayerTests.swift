@@ -39,12 +39,12 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SayHelloWorkflow {
+        struct SayHelloWorkflow {
             private var waiting = false
             private var finish = false
 
-            func run(input params: ReplayParams) async throws -> String {
-                let result = try await Workflow.executeActivity(
+            mutating func run(context: WorkflowContext<Self>, input params: ReplayParams) async throws -> String {
+                let result = try await context.executeActivity(
                     ReplayActivity.self,
                     options: .init(scheduleToCloseTimeout: .seconds(60)),
                     input: params.name
@@ -52,9 +52,9 @@ extension TestServerDependentTests {
 
                 // Wait if requested
                 if params.shouldWait {
-                    waiting = true
-                    try await Workflow.condition { self.finish }
-                    waiting = false
+                    self.waiting = true
+                    try await context.condition { $0.finish }
+                    self.waiting = false
                 }
 
                 // Throw if requested
@@ -64,15 +64,15 @@ extension TestServerDependentTests {
 
                 // Cause non-determinism if requested and we're replaying
                 // This simulates a code change that adds an extra timer
-                if params.shouldCauseNonDeterminism && Workflow.isReplaying {
-                    try await Workflow.sleep(for: .milliseconds(1))
+                if params.shouldCauseNonDeterminism && context.isReplaying {
+                    try await context.sleep(for: .milliseconds(1))
                 }
 
                 return result
             }
 
             @WorkflowSignal
-            func finish(input: Void) async {
+            mutating func finish(input: Void) async {
                 finish = true
             }
 

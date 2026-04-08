@@ -17,7 +17,7 @@ import Temporal
 
 /// Workflow for processing NYC film permits with parallel and sequential modes.
 @Workflow
-final class FilmPermitWorkflow {
+struct FilmPermitWorkflow {
     enum ProcessingMode: String, Codable, Sendable {
         case sequential
         case parallel
@@ -33,7 +33,7 @@ final class FilmPermitWorkflow {
         let processingTimeMs: Double
     }
 
-    func run(input: BatchRequest) async throws -> BatchResult {
+    mutating func run(context: WorkflowContext<Self>, input: BatchRequest) async throws -> BatchResult {
         let startTime = Date()
 
         // Process permits based on mode (permits already fetched)
@@ -42,15 +42,14 @@ final class FilmPermitWorkflow {
         if input.mode == .sequential {
             // Sequential processing
             for permit in input.permits {
-                let analysis = try await processPermit(permit: permit)
+                let analysis = try await Self.processPermit(permit: permit, context: context)
                 analyses.append(analysis)
             }
         } else {
-            // Parallel processing with task group
             try await withThrowingTaskGroup(of: FilmPermitActivities.PermitAnalysis.self) { group in
                 for permit in input.permits {
                     group.addTask {
-                        try await self.processPermit(permit: permit)
+                        try await Self.processPermit(permit: permit, context: context)
                     }
                 }
 
@@ -61,7 +60,7 @@ final class FilmPermitWorkflow {
         }
 
         // Generate analytics report
-        let report = try await Workflow.executeActivity(
+        let report = try await context.executeActivity(
             FilmPermitActivities.Activities.GenerateAnalyticsReport.self,
             options: ActivityOptions(
                 startToCloseTimeout: .seconds(10)
@@ -78,23 +77,26 @@ final class FilmPermitWorkflow {
     }
 
     /// Process a single permit through validation, location analysis, and categorization.
-    private func processPermit(permit: FilmPermitActivities.FilmPermit) async throws -> FilmPermitActivities.PermitAnalysis {
+    private static func processPermit(
+        permit: FilmPermitActivities.FilmPermit,
+        context: WorkflowContext<Self>
+    ) async throws -> FilmPermitActivities.PermitAnalysis {
         let permitStart = Date()
 
         // Run three analyses in parallel using async let
-        async let validation = Workflow.executeActivity(
+        async let validation = context.executeActivity(
             FilmPermitActivities.Activities.ValidatePermit.self,
             options: ActivityOptions(startToCloseTimeout: .seconds(5)),
             input: permit
         )
 
-        async let location = Workflow.executeActivity(
+        async let location = context.executeActivity(
             FilmPermitActivities.Activities.AnalyzeLocation.self,
             options: ActivityOptions(startToCloseTimeout: .seconds(5)),
             input: permit
         )
 
-        async let category = Workflow.executeActivity(
+        async let category = context.executeActivity(
             FilmPermitActivities.Activities.CategorizePermit.self,
             options: ActivityOptions(startToCloseTimeout: .seconds(5)),
             input: permit

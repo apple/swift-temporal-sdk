@@ -41,7 +41,7 @@ extension TestServerDependentTests {
         // MARK: - Workflows
 
         @Workflow(name: "PatchWorkflow")
-        final class PrePatchWorkflow {
+        struct PrePatchWorkflow {
             @WorkflowQuery
             func result(input: Void) throws -> String {
                 return _result
@@ -49,37 +49,39 @@ extension TestServerDependentTests {
             @_WorkflowState  // This works around a compiler crash
             var _result = ""
 
-            func run(input: Void) async throws {
-                _result = try await Workflow.executeActivity(
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                let r = try await context.executeActivity(
                     PrePatchActivity.self,
                     options: .init(scheduleToCloseTimeout: .seconds(100))
                 )
+                self._result = r
             }
         }
 
         @Workflow
-        final class PatchWorkflow {
+        struct PatchWorkflow {
             @WorkflowQuery
             func result(input: Void) throws -> String {
                 return _result
             }
             var _result = ""
 
-            func run(input: Void) async throws {
-                _result =
-                    if Workflow.patch("my-patch") {
-                        try await Workflow.executeActivity(
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                let r: String =
+                    if context.patch("my-patch") {
+                        try await context.executeActivity(
                             PostPatchActivity.self,
                             options: .init(scheduleToCloseTimeout: .seconds(100))
                         )
                     } else {
-                        try await Workflow.executeActivity(PrePatchActivity.self, options: .init(scheduleToCloseTimeout: .seconds(100)))
+                        try await context.executeActivity(PrePatchActivity.self, options: .init(scheduleToCloseTimeout: .seconds(100)))
                     }
+                self._result = r
             }
         }
 
         @Workflow(name: "PatchWorkflow")
-        final class DeprecatedPatchWorkflow {
+        struct DeprecatedPatchWorkflow {
             @WorkflowQuery
             func result(input: Void) throws -> String {
                 return _result
@@ -87,17 +89,18 @@ extension TestServerDependentTests {
             @_WorkflowState  // This works around a compiler crash
             var _result = ""
 
-            func run(input: Void) async throws {
-                Workflow.deprecatePatch("my-patch")
-                _result = try await Workflow.executeActivity(
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                context.deprecatePatch("my-patch")
+                let r = try await context.executeActivity(
                     PostPatchActivity.self,
                     options: .init(scheduleToCloseTimeout: .seconds(100))
                 )
+                self._result = r
             }
         }
 
         @Workflow(name: "PatchWorkflow")
-        final class PostPatchWorkflow {
+        struct PostPatchWorkflow {
             @WorkflowQuery
             func result(input: Void) throws -> String {
                 return _result
@@ -105,11 +108,12 @@ extension TestServerDependentTests {
             @_WorkflowState  // This works around a compiler crash
             var _result = ""
 
-            func run(input: Void) async throws {
-                _result = try await Workflow.executeActivity(
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                let r = try await context.executeActivity(
                     PostPatchActivity.self,
                     options: .init(scheduleToCloseTimeout: .seconds(100))
                 )
+                self._result = r
             }
         }
 

@@ -18,7 +18,7 @@ import Temporal
 ///
 /// Runs sequentially after cooking is complete.
 @Workflow
-final class AssignDeliveryWorkflow {
+struct AssignDeliveryWorkflow {
     // MARK: - Input/Output Types
 
     struct DeliveryInput: Codable {
@@ -30,9 +30,9 @@ final class AssignDeliveryWorkflow {
 
     // MARK: - Workflow Implementation
 
-    func run(input: DeliveryInput) async throws -> String {
+    mutating func run(context: WorkflowContext<Self>, input: DeliveryInput) async throws -> String {
         // Step 1: Assign a driver
-        let driverInfo = try await Workflow.executeActivity(
+        let driverInfo = try await context.executeActivity(
             PizzaActivities.Activities.AssignDriver.self,
             options: .init(startToCloseTimeout: .seconds(30)),
             input: PizzaActivities.AssignDriverInput(
@@ -43,7 +43,7 @@ final class AssignDeliveryWorkflow {
         )
 
         // Step 2: Simulate delivery
-        let deliveryResult = try await Workflow.executeActivity(
+        let deliveryResult = try await context.executeActivity(
             PizzaActivities.Activities.DeliverOrder.self,
             options: .init(startToCloseTimeout: .seconds(30)),
             input: PizzaActivities.DeliverOrderInput(

@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import Logging
 import SwiftProtobuf
 import Temporal
 import Testing
@@ -21,8 +22,8 @@ import Tracing
 @Suite(.tags(.instrumentationTests))
 struct TemporalWorkerOutboundTracingInterceptorTests {
     @Workflow
-    final class VoidWorkflow {
-        func run(input: Void) async {}
+    struct VoidWorkflow {
+        mutating func run(context: WorkflowContext<Self>, input: Void) async {}
     }
 
     struct TemporalTraceID: Decodable {
@@ -44,19 +45,28 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
     private static let runID = UUID().uuidString
     private static let taskQueue = "TestTaskQueue"
     private static let namespace = "TestNamespace"
-    private static let workflowContext = WorkflowContext.makeTestContext(
-        info: .init(
-            attempt: Self.attempt,
-            startTime: Self.startTime,
-            workflowName: Self.workflowName,
-            workflowID: Self.workflowID,
-            workflowType: Self.workflowType,
-            runID: Self.runID,
-            taskQueue: Self.taskQueue,
-            namespace: Self.namespace,
-            headers: [:]
-        )
+    private static let testWorkflowInfo = WorkflowInfo(
+        attempt: Self.attempt,
+        startTime: Self.startTime,
+        workflowName: Self.workflowName,
+        workflowID: Self.workflowID,
+        workflowType: Self.workflowType,
+        runID: Self.runID,
+        taskQueue: Self.taskQueue,
+        namespace: Self.namespace,
+        headers: [:]
     )
+    //    private static let internalWorkflowContext = InternalWorkflowContext(
+    //        stateMachine: .init(
+    //            executor: .init(),
+    //            payloadConverter: DefaultPayloadConverter(),
+    //            failureConverter: DefaultFailureConverter()
+    //        ),
+    //        workflowInfo: Self.testWorkflowInfo,
+    //        payloadConverter: DefaultPayloadConverter(),
+    //        outboundInterceptors: [],
+    //        logger: .init(label: "TestWorkflowContext")
+    //    )
 
     // only test one outbound workflow worker interceptor, as logic is the same (except for the setting of span attributes)
     @Test
@@ -66,15 +76,100 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
         let traceIDString = UUID().uuidString
         serviceContext.traceID = traceIDString
 
-        try await Workflow.$context.withValue(Self.workflowContext) {
-            try await ServiceContext.withValue(serviceContext) {
-                let interceptor = try #require(
-                    TemporalWorkerTracingInterceptor(
-                        tracer: tracer
-                    ).workflowOutboundInterceptor
-                )
+        //        try await InternalWorkflowContext.$current.withValue(Self.internalWorkflowContext) {
+        try await ServiceContext.withValue(serviceContext) {
+            let interceptor = try #require(
+                TemporalWorkerTracingInterceptor(
+                    tracer: tracer
+                ).workflowOutboundInterceptor
+            )
 
+            let input = ScheduleActivityInput<Void>(
+                info: Self.testWorkflowInfo,
+                name: Self.activityInfo.name,
+                options: ActivityOptions(
+                    scheduleToCloseTimeout: Self.scheduleToCloseTimeout,
+                    disableEagerActivityExecution: Self.disableEagerActivityExecution,
+                    cancellationType: Self.cancellationType,
+                    versioningIntent: Self.versioningIntent
+                ),
+                headers: [:],
+                input: ()
+            )
+
+            _ = try await interceptor.executeActivity(
+                input: input,
+                next: { input in
+                    // Assert that headers contain the injected traceID
+                    let traceHeaderPayload = try #require(
+                        input.headers.first(where: { key, value in
+                            key == "_tracer-data"  // default Temporal tracing header key
+                        })?.1 as? Api.Common.V1.Payload
+                    )
+
+                    let traceHeader: TemporalTraceID = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
+                        traceHeaderPayload
+                    )
+                    #expect(traceHeader.traceparent.uuidString == traceIDString)
+
+                    return ()
+                }
+            )
+
+            assertTestSpanComponents(
+                forSpan: "StartActivity:\(Self.activityInfo.name)",
+                tracer: tracer
+            ) { events in
+                // No events are recorded
+                #expect(events.isEmpty)
+            } assertAttributes: { attributes in
+                #expect(attributes[TemporalTracingKeys.activityName]?.toSpanAttribute() == .string(Self.activityInfo.name))
+                #expect(attributes[TemporalTracingKeys.activityCancellationType]?.toSpanAttribute() == .string(Self.cancellationType.description))
+                #expect(
+                    attributes[TemporalTracingKeys.activityScheduleToCloseTimeout]?.toSpanAttribute()
+                        == .string(Self.scheduleToCloseTimeout.description)
+                )
+                #expect(
+                    attributes[TemporalTracingKeys.activityDisableEagerExecution]?.toSpanAttribute()
+                        == .string(Self.disableEagerActivityExecution.description)
+                )
+                #expect(attributes[TemporalTracingKeys.activityVersioningIntent]?.toSpanAttribute() == .string(Self.versioningIntent.description))
+
+                #expect(attributes[TemporalTracingKeys.workflowType]?.toSpanAttribute() == .string(Self.workflowType))
+                #expect(attributes[TemporalTracingKeys.workflowRunId]?.toSpanAttribute() == .string(Self.runID))
+                #expect(attributes[TemporalTracingKeys.workflowId]?.toSpanAttribute() == .string(Self.workflowID))
+                #expect(attributes[TemporalTracingKeys.workflowStartTime]?.toSpanAttribute() == .string(Self.startTime.description))
+                #expect(attributes[TemporalTracingKeys.workflowName]?.toSpanAttribute() == .string(Self.workflowName))
+                #expect(attributes[TemporalTracingKeys.workflowTaskQueue]?.toSpanAttribute() == .string(Self.taskQueue))
+                #expect(attributes[TemporalTracingKeys.workflowNamespace]?.toSpanAttribute() == .string(Self.namespace))
+                #expect(attributes[TemporalTracingKeys.workflowAttempt]?.toSpanAttribute() == .int64(Int64(Self.attempt)))
+            } assertStatus: { status in
+                #expect(status == nil)
+            } assertErrors: { errors in
+                #expect(errors == [])
+            }
+        }
+        //        }
+    }
+
+    @Test
+    func outboundTracingWorkflowWorkerFailure() async throws {
+        let tracer = TestTracer()
+        var serviceContext = ServiceContext.topLevel
+        let traceIDString = UUID().uuidString
+        serviceContext.traceID = traceIDString
+
+        //        try await InternalWorkflowContext.$current.withValue(Self.internalWorkflowContext) {
+        try await ServiceContext.withValue(serviceContext) {
+            let interceptor = try #require(
+                TemporalWorkerTracingInterceptor(
+                    tracer: tracer
+                ).workflowOutboundInterceptor
+            )
+
+            do {
                 let input = ScheduleActivityInput<Void>(
+                    info: Self.testWorkflowInfo,
                     name: Self.activityInfo.name,
                     options: ActivityOptions(
                         scheduleToCloseTimeout: Self.scheduleToCloseTimeout,
@@ -101,110 +196,27 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                         )
                         #expect(traceHeader.traceparent.uuidString == traceIDString)
 
-                        return ()
+                        // Simulates an error within the RPC
+                        throw TracingInterceptorTestError.testError
                     }
                 )
-
+                Issue.record("Should have thrown")
+            } catch {
                 assertTestSpanComponents(
                     forSpan: "StartActivity:\(Self.activityInfo.name)",
                     tracer: tracer
                 ) { events in
                     // No events are recorded
                     #expect(events.isEmpty)
-                } assertAttributes: { attributes in
-                    #expect(attributes[TemporalTracingKeys.activityName]?.toSpanAttribute() == .string(Self.activityInfo.name))
-                    #expect(attributes[TemporalTracingKeys.activityCancellationType]?.toSpanAttribute() == .string(Self.cancellationType.description))
-                    #expect(
-                        attributes[TemporalTracingKeys.activityScheduleToCloseTimeout]?.toSpanAttribute()
-                            == .string(Self.scheduleToCloseTimeout.description)
-                    )
-                    #expect(
-                        attributes[TemporalTracingKeys.activityDisableEagerExecution]?.toSpanAttribute()
-                            == .string(Self.disableEagerActivityExecution.description)
-                    )
-                    #expect(attributes[TemporalTracingKeys.activityVersioningIntent]?.toSpanAttribute() == .string(Self.versioningIntent.description))
-
-                    #expect(attributes[TemporalTracingKeys.workflowType]?.toSpanAttribute() == .string(Self.workflowType))
-                    #expect(attributes[TemporalTracingKeys.workflowRunId]?.toSpanAttribute() == .string(Self.runID))
-                    #expect(attributes[TemporalTracingKeys.workflowId]?.toSpanAttribute() == .string(Self.workflowID))
-                    #expect(attributes[TemporalTracingKeys.workflowStartTime]?.toSpanAttribute() == .string(Self.startTime.description))
-                    #expect(attributes[TemporalTracingKeys.workflowName]?.toSpanAttribute() == .string(Self.workflowName))
-                    #expect(attributes[TemporalTracingKeys.workflowTaskQueue]?.toSpanAttribute() == .string(Self.taskQueue))
-                    #expect(attributes[TemporalTracingKeys.workflowNamespace]?.toSpanAttribute() == .string(Self.namespace))
-                    #expect(attributes[TemporalTracingKeys.workflowAttempt]?.toSpanAttribute() == .int64(Int64(Self.attempt)))
+                } assertAttributes: { _ in
+                    // don't recheck attributes from test above
                 } assertStatus: { status in
-                    #expect(status == nil)
+                    #expect(status == .some(.init(code: .error)))
                 } assertErrors: { errors in
-                    #expect(errors == [])
+                    #expect(errors == [.testError])
                 }
             }
         }
-    }
-
-    @Test
-    func outboundTracingWorkflowWorkerFailure() async throws {
-        let tracer = TestTracer()
-        var serviceContext = ServiceContext.topLevel
-        let traceIDString = UUID().uuidString
-        serviceContext.traceID = traceIDString
-
-        try await Workflow.$context.withValue(Self.workflowContext) {
-            try await ServiceContext.withValue(serviceContext) {
-                let interceptor = try #require(
-                    TemporalWorkerTracingInterceptor(
-                        tracer: tracer
-                    ).workflowOutboundInterceptor
-                )
-
-                do {
-                    let input = ScheduleActivityInput<Void>(
-                        name: Self.activityInfo.name,
-                        options: ActivityOptions(
-                            scheduleToCloseTimeout: Self.scheduleToCloseTimeout,
-                            disableEagerActivityExecution: Self.disableEagerActivityExecution,
-                            cancellationType: Self.cancellationType,
-                            versioningIntent: Self.versioningIntent
-                        ),
-                        headers: [:],
-                        input: ()
-                    )
-
-                    _ = try await interceptor.executeActivity(
-                        input: input,
-                        next: { input in
-                            // Assert that headers contain the injected traceID
-                            let traceHeaderPayload = try #require(
-                                input.headers.first(where: { key, value in
-                                    key == "_tracer-data"  // default Temporal tracing header key
-                                })?.1 as? Api.Common.V1.Payload
-                            )
-
-                            let traceHeader: TemporalTraceID = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
-                                traceHeaderPayload
-                            )
-                            #expect(traceHeader.traceparent.uuidString == traceIDString)
-
-                            // Simulates an error within the RPC
-                            throw TracingInterceptorTestError.testError
-                        }
-                    )
-                    Issue.record("Should have thrown")
-                } catch {
-                    assertTestSpanComponents(
-                        forSpan: "StartActivity:\(Self.activityInfo.name)",
-                        tracer: tracer
-                    ) { events in
-                        // No events are recorded
-                        #expect(events.isEmpty)
-                    } assertAttributes: { _ in
-                        // don't recheck attributes from test above
-                    } assertStatus: { status in
-                        #expect(status == .some(.init(code: .error)))
-                    } assertErrors: { errors in
-                        #expect(errors == [.testError])
-                    }
-                }
-            }
-        }
+        //        }
     }
 }

@@ -22,16 +22,16 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowUpdateTests {
         @Workflow
-        final class UpdateWorkflow {
+        struct UpdateWorkflow {
             private var state = ""
 
-            func run(input: Void) async throws {
-                try await Workflow.condition { self.state == "updated" }
-                try await Workflow.condition { Workflow.allHandlersFinished }
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { $0.state == "updated" }
+                try await context.condition { context.allHandlersFinished }
             }
 
             @WorkflowUpdate
-            func update(input: String) async throws -> String {
+            mutating func update(context: WorkflowContext<Self>, input: String) async throws -> String {
                 self.state = "updated"
                 return "Hello from update, \(input)"
             }
@@ -139,16 +139,16 @@ extension TestServerDependentTests {
         // MARK: - Update Validator Tests
 
         @Workflow
-        final class ValidatedUpdateWorkflow {
+        struct ValidatedUpdateWorkflow {
             private var value = ""
 
-            func run(input: Void) async throws -> String {
-                try await Workflow.condition { !self.value.isEmpty }
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> String {
+                try await context.condition { !$0.value.isEmpty }
                 return self.value
             }
 
             @WorkflowUpdate(validator: "validateSetValue")
-            func setValue(input: String) async throws -> String {
+            mutating func setValue(context: WorkflowContext<Self>, input: String) async throws -> String {
                 self.value = input
                 return "set:\(input)"
             }
@@ -218,16 +218,16 @@ extension TestServerDependentTests {
         // MARK: - Update-with-Start Tests
 
         @Workflow
-        final class UpdateWithStartTargetWorkflow {
+        struct UpdateWithStartTargetWorkflow {
             var value: String = ""
 
-            func run(input: String) async throws -> String {
-                try await Workflow.condition { !self.value.isEmpty }
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+                try await context.condition { !$0.value.isEmpty }
                 return self.value
             }
 
             @WorkflowUpdate
-            func setValue(input: String) async -> String {
+            mutating func setValue(input: String) async -> String {
                 self.value = input
                 return "updated:\(input)"
             }

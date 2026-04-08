@@ -18,7 +18,7 @@ import Temporal
 ///
 /// Can run in parallel with pizza preparation.
 @Workflow
-final class PrepareSidesWorkflow {
+struct PrepareSidesWorkflow {
     // MARK: - Input/Output Types
 
     struct SidesInput: Codable {
@@ -27,9 +27,9 @@ final class PrepareSidesWorkflow {
 
     // MARK: - Workflow Implementation
 
-    func run(input: SidesInput) async throws -> String {
+    mutating func run(context: WorkflowContext<Self>, input: SidesInput) async throws -> String {
         // Prepare all sides
-        let result = try await Workflow.executeActivity(
+        let result = try await context.executeActivity(
             PizzaActivities.Activities.PrepareSides.self,
             options: .init(startToCloseTimeout: .seconds(30)),
             input: PizzaActivities.PrepareSidesInput(sides: input.sides)

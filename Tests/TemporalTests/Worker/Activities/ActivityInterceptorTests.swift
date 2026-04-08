@@ -31,9 +31,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class VoidWorkflow {
-            func run(input: Void) async -> Int {
-                try! await Workflow.executeActivity(
+        struct VoidWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async -> Int {
+                try! await context.executeActivity(
                     Tests.Activities.Constant.self,
                     options: .init(scheduleToCloseTimeout: .seconds(5)),
                     input: ()
@@ -42,9 +42,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class HeartbeatingWorkflow {
-            func run(input: Void) async {
-                try! await Workflow.executeActivity(
+        struct HeartbeatingWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async {
+                try! await context.executeActivity(
                     Tests.Activities.Heartbeat.self,
                     options: .init(scheduleToCloseTimeout: .seconds(5)),
                     input: ()

@@ -20,7 +20,7 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowMemoTests {
         @Workflow
-        final class MemoWorkflow {
+        struct MemoWorkflow {
             struct Output: Codable, Hashable {
                 var originalKey1: String?
                 var originalKey2: String?
@@ -30,15 +30,15 @@ extension TestServerDependentTests {
                 var updatedKey3: String?
             }
 
-            func run(input: Void) async throws -> Output {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> Output {
                 var output = Output()
-                output.originalKey1 = try await Workflow.getMemoValue(for: "key1")
-                output.originalKey2 = try await Workflow.getMemoValue(for: "key2")
-                output.originalKey3 = try await Workflow.getMemoValue(for: "key3")
-                try await Workflow.upsertMemo(["key1": "new-val1", "key2": nil])
-                output.updatedKey1 = try await Workflow.getMemoValue(for: "key1")
-                output.updatedKey2 = try await Workflow.getMemoValue(for: "key2")
-                output.updatedKey3 = try await Workflow.getMemoValue(for: "key3")
+                output.originalKey1 = try await context.getMemoValue(for: "key1")
+                output.originalKey2 = try await context.getMemoValue(for: "key2")
+                output.originalKey3 = try await context.getMemoValue(for: "key3")
+                try await context.upsertMemo(["key1": "new-val1", "key2": nil])
+                output.updatedKey1 = try await context.getMemoValue(for: "key1")
+                output.updatedKey2 = try await context.getMemoValue(for: "key2")
+                output.updatedKey3 = try await context.getMemoValue(for: "key3")
                 return output
             }
         }

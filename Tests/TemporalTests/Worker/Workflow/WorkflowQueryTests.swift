@@ -36,12 +36,13 @@ extension TestServerDependentTests {
         }
 
         @Workflow(name: "SimpleQueryWorkflow")
-        final class SimpleQueryWorkflow<Activity: ActivityDefinition> where Activity.Input == Void, Activity.Output == String {
+        struct SimpleQueryWorkflow<Activity: ActivityDefinition> where Activity.Input == Void, Activity.Output == String {
             @_WorkflowState  // This works around a compiler crash
             private var state = "initial"
 
-            func run(input: Void) async throws {
-                state = try await Workflow.executeActivity(Activity.self, options: .init(scheduleToCloseTimeout: .seconds(100)))
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                let result = try await context.executeActivity(Activity.self, options: .init(scheduleToCloseTimeout: .seconds(100)))
+                self.state = result
             }
 
             @WorkflowQuery
@@ -51,15 +52,15 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class QueryWorkflow {
+        struct QueryWorkflow {
             enum QueryScenario: Codable {
                 case simpleQuery
             }
 
             private var state = "initial"
 
-            func run(input: Void) async throws {
-                try await Workflow.condition { self.state == "finished" }
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { $0.state == "finished" }
             }
 
             @WorkflowQuery
@@ -71,7 +72,7 @@ extension TestServerDependentTests {
             }
 
             @WorkflowSignal
-            func signal(input: String) async throws {
+            mutating func signal(input: String) {
                 self.state = input
             }
         }

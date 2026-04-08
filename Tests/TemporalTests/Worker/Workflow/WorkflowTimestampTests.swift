@@ -27,20 +27,23 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SlowWorkflow {
-            func run(input: Void) async throws -> Result {
-                let now0 = Workflow.now
-                let now1 = Workflow.now
+        struct SlowWorkflow {
+            var lastTime: Date = .distantPast
 
-                try await Workflow.sleep(for: .seconds(1))
-                let end = Workflow.now
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> Result {
+                let now0 = context.now
+                let now1 = context.now
+                self.lastTime = now0
+
+                try await context.sleep(for: .seconds(1))
+                let end = context.now
 
                 return Result(now0: now0, now1: now1, end: end)
             }
 
             @WorkflowQuery
             func queryTime(input: Void) -> Date {
-                Workflow.now
+                lastTime
             }
         }
 

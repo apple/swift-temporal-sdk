@@ -19,7 +19,7 @@ import Temporal
 ///
 /// Demonstrates parallel and sequential child workflow execution.
 @Workflow
-final class PizzaOrderWorkflow {
+struct PizzaOrderWorkflow {
     // MARK: - Input/Output Types
 
     struct OrderInput: Codable {
@@ -51,8 +51,8 @@ final class PizzaOrderWorkflow {
 
     // MARK: - Workflow Implementation
 
-    func run(input: OrderInput) async throws -> OrderOutput {
-        let startTime = Workflow.now
+    mutating func run(context: WorkflowContext<Self>, input: OrderInput) async throws -> OrderOutput {
+        let startTime = context.now
 
         print("📦 Order \(input.orderId) - Starting fulfillment")
         print("   \(input.pizzas.count) pizza(s), sides: \(input.sides.joined(separator: ", "))")
@@ -64,7 +64,7 @@ final class PizzaOrderWorkflow {
         let pizzaResults = try await withThrowingTaskGroup(of: (Int, String).self) { group in
             for (index, pizzaSpec) in input.pizzas.enumerated() {
                 group.addTask {
-                    let handle = try await Workflow.startChildWorkflow(
+                    let handle = try await context.startChildWorkflow(
                         MakePizzaWorkflow.self,
                         options: .init(id: "\(input.orderId)-pizza-\(index + 1)"),
                         input: MakePizzaWorkflow.PizzaInput(
@@ -89,7 +89,7 @@ final class PizzaOrderWorkflow {
         // Execute sides preparation in parallel with pizzas (if any)
         let sidesResult: String
         if !input.sides.isEmpty {
-            let sidesHandle = try await Workflow.startChildWorkflow(
+            let sidesHandle = try await context.startChildWorkflow(
                 PrepareSidesWorkflow.self,
                 options: .init(id: "\(input.orderId)-sides"),
                 input: PrepareSidesWorkflow.SidesInput(sides: input.sides)
@@ -104,12 +104,12 @@ final class PizzaOrderWorkflow {
 
         // Stage 2: Package everything
         print("\n📦 Stage 2: Packaging order")
-        try await Workflow.sleep(for: .seconds(2))
+        try await context.sleep(for: .seconds(2))
         print("   ✓ Order packaged and ready for delivery")
 
         // Stage 3: Assign delivery (sequential - must happen after cooking)
         print("\n🚗 Stage 3: Delivery assignment (sequential execution)")
-        let deliveryHandle = try await Workflow.startChildWorkflow(
+        let deliveryHandle = try await context.startChildWorkflow(
             AssignDeliveryWorkflow.self,
             options: .init(id: "\(input.orderId)-delivery"),
             input: AssignDeliveryWorkflow.DeliveryInput(
@@ -122,7 +122,7 @@ final class PizzaOrderWorkflow {
         let deliveryResult = try await deliveryHandle.result()
         print("   ✓ \(deliveryResult)")
 
-        let endTime = Workflow.now
+        let endTime = context.now
         let totalMinutes = Int(endTime.timeIntervalSince(startTime) / 60)
 
         return OrderOutput(

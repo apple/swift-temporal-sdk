@@ -20,15 +20,15 @@ extension TestServerDependentTests {
     @Suite(.tags(.clientTests))
     struct WorkflowHandleTests {
         @Workflow
-        final class HelloWorldWorkflow {
-            func run(input: Void) async -> String {
+        struct HelloWorldWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async -> String {
                 "Hello, World!"
             }
         }
 
         @Workflow
-        final class HelloInputWorkflow {
-            func run(input: String) async -> String {
+        struct HelloInputWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async -> String {
                 input
             }
         }

@@ -22,22 +22,22 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowExternalWorkflowTests {
         @Workflow
-        final class ExternalTargetWorkflow {
+        struct ExternalTargetWorkflow {
             private var signals = [String]()
             private var finished = false
 
-            func run(input: Void) async throws -> String {
-                try await Workflow.condition { self.finished }
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> String {
+                try await context.condition { $0.finished }
                 return "done"
             }
 
             @WorkflowSignal
-            func signal(input: String) {
+            mutating func signal(input: String) {
                 self.signals.append(input)
             }
 
             @WorkflowSignal
-            func finish(input: Void) {
+            mutating func finish(input: Void) {
                 self.finished = true
             }
 
@@ -48,9 +48,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SignalExternalWorkflow {
-            func run(input: String) async throws -> String {
-                let handle = Workflow.getExternalWorkflowHandle(
+        struct SignalExternalWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+                let handle = context.getExternalWorkflowHandle(
                     ExternalTargetWorkflow.self,
                     id: input
                 )
@@ -67,9 +67,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class CancelExternalWorkflow {
-            func run(input: String) async throws -> String {
-                let handle = Workflow.getExternalWorkflowHandle(
+        struct CancelExternalWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+                let handle = context.getExternalWorkflowHandle(
                     ExternalTargetWorkflow.self,
                     id: input
                 )
@@ -79,9 +79,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SignalExternalWithInputWorkflow {
-            func run(input: String) async throws -> String {
-                let handle = Workflow.getExternalWorkflowHandle(id: input)
+        struct SignalExternalWithInputWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+                let handle = context.getExternalWorkflowHandle(id: input)
                 try await handle.signal(
                     signalName: "Signal",
                     input: "custom-signal-data"
@@ -91,9 +91,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class CancelExternalUntypedWorkflow {
-            func run(input: String) async throws -> String {
-                let handle = Workflow.getExternalWorkflowHandle(id: input)
+        struct CancelExternalUntypedWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+                let handle = context.getExternalWorkflowHandle(id: input)
                 try await handle.cancel()
                 return "cancelled-untyped"
             }

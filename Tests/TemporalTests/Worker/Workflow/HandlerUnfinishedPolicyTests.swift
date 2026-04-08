@@ -23,45 +23,45 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct HandlerUnfinishedPolicyIntegrationTests {
         @Workflow
-        final class UnfinishedSignalWorkflow {
+        struct UnfinishedSignalWorkflow {
             private var signalReceived = false
 
-            func run(input: Void) async throws {
-                try await Workflow.condition { self.signalReceived }
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { $0.signalReceived }
             }
 
             @WorkflowSignal
-            func warnSignal(input: Void) async throws {
+            mutating func warnSignal(context: WorkflowContext<Self>, input: Void) async throws {
                 self.signalReceived = true
-                try await Workflow.sleep(for: .seconds(999_999))
+                try await context.sleep(for: .seconds(999_999))
             }
 
             @WorkflowSignal(unfinishedPolicy: .abandon)
-            func abandonSignal(input: Void) async throws {
+            mutating func abandonSignal(context: WorkflowContext<Self>, input: Void) async throws {
                 self.signalReceived = true
-                try await Workflow.sleep(for: .seconds(999_999))
+                try await context.sleep(for: .seconds(999_999))
             }
         }
 
         @Workflow
-        final class UnfinishedUpdateWorkflow {
+        struct UnfinishedUpdateWorkflow {
             private var updateReceived = false
 
-            func run(input: Void) async throws {
-                try await Workflow.condition { self.updateReceived }
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { $0.updateReceived }
             }
 
             @WorkflowUpdate
-            func warnUpdate(input: Void) async throws -> String {
+            mutating func warnUpdate(context: WorkflowContext<Self>, input: Void) async throws -> String {
                 self.updateReceived = true
-                try await Workflow.sleep(for: .seconds(999_999))
+                try await context.sleep(for: .seconds(999_999))
                 return "done"
             }
 
             @WorkflowUpdate(unfinishedPolicy: .abandon)
-            func abandonUpdate(input: Void) async throws -> String {
+            mutating func abandonUpdate(context: WorkflowContext<Self>, input: Void) async throws -> String {
                 self.updateReceived = true
-                try await Workflow.sleep(for: .seconds(999_999))
+                try await context.sleep(for: .seconds(999_999))
                 return "done"
             }
         }

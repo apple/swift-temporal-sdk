@@ -94,10 +94,10 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class AsyncCompletionWorkflow {
-            func run(input: String) async throws -> String {
+        struct AsyncCompletionWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
                 let activity = CompleteExternalContainer.Activities.ActivityDefault.self
-                return try await Workflow.executeActivity(
+                return try await context.executeActivity(
                     activity,
                     options: .init(scheduleToCloseTimeout: .seconds(30)),
                     input: input
@@ -217,10 +217,10 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class AsyncCompletionCancellationWaitingWorkflow {
-            func run(input: String) async throws -> String {
+        struct AsyncCompletionCancellationWaitingWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
                 let activity = CompleteExternalContainer.Activities.ActivityDefault.self
-                return try await Workflow.executeActivity(
+                return try await context.executeActivity(
                     activity,
                     options: .init(scheduleToCloseTimeout: .seconds(30), cancellationType: .waitCancellationCompleted),
                     input: input
@@ -230,10 +230,10 @@ extension TestServerDependentTests {
 
         /// Workflow with a short timeout specifically for testing timeout behavior.
         @Workflow
-        final class AsyncCompletionShortTimeoutWorkflow {
-            func run(input: String) async throws -> String {
+        struct AsyncCompletionShortTimeoutWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
                 let activity = CompleteExternalContainer.Activities.ActivityDefault.self
-                return try await Workflow.executeActivity(
+                return try await context.executeActivity(
                     activity,
                     options: .init(scheduleToCloseTimeout: .seconds(1), cancellationType: .waitCancellationCompleted),
                     input: input

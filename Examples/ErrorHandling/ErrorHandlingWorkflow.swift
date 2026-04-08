@@ -22,7 +22,7 @@ import Temporal
 /// - Saga pattern for distributed transaction compensation
 /// - Proper error handling with retryable vs non-retryable errors
 @Workflow
-final class ErrorHandlingWorkflow {
+struct ErrorHandlingWorkflow {
     // MARK: - Input/Output Types
 
     struct TravelBookingRequest: Codable {
@@ -45,7 +45,7 @@ final class ErrorHandlingWorkflow {
 
     // MARK: - Workflow Implementation
 
-    func run(input: TravelBookingRequest) async throws -> BookingResult {
+    mutating func run(context: WorkflowContext<Self>, input: TravelBookingRequest) async throws -> BookingResult {
         let bookingId = "BOOKING-\(input.customerId)-\(Int.random(in: 1000...9999))"
 
         // Track reservations for potential compensation
@@ -55,7 +55,7 @@ final class ErrorHandlingWorkflow {
         do {
             // Step 1: Reserve flight
             // This activity demonstrates retry on transient failures
-            flightReservationId = try await Workflow.executeActivity(
+            flightReservationId = try await context.executeActivity(
                 ErrorHandlingActivities.Activities.ReserveFlight.self,
                 options: .init(
                     startToCloseTimeout: .seconds(30),
@@ -74,7 +74,7 @@ final class ErrorHandlingWorkflow {
 
             // Step 2: Reserve hotel
             // This activity also demonstrates retry on transient failures
-            hotelReservationId = try await Workflow.executeActivity(
+            hotelReservationId = try await context.executeActivity(
                 ErrorHandlingActivities.Activities.ReserveHotel.self,
                 options: .init(
                     startToCloseTimeout: .seconds(30),
@@ -93,7 +93,7 @@ final class ErrorHandlingWorkflow {
 
             // Step 3: Charge payment
             // This demonstrates non-retryable errors (insufficient funds, invalid card)
-            let paymentId = try await Workflow.executeActivity(
+            let paymentId = try await context.executeActivity(
                 ErrorHandlingActivities.Activities.ChargePayment.self,
                 options: .init(
                     startToCloseTimeout: .seconds(60),
@@ -131,7 +131,7 @@ final class ErrorHandlingWorkflow {
             if let hotelResId = hotelReservationId {
                 // Cancel hotel reservation
                 do {
-                    try await Workflow.executeActivity(
+                    try await context.executeActivity(
                         ErrorHandlingActivities.Activities.CancelHotel.self,
                         options: .init(
                             startToCloseTimeout: .seconds(30),
@@ -156,7 +156,7 @@ final class ErrorHandlingWorkflow {
             if let flightResId = flightReservationId {
                 // Cancel flight reservation
                 do {
-                    try await Workflow.executeActivity(
+                    try await context.executeActivity(
                         ErrorHandlingActivities.Activities.CancelFlight.self,
                         options: .init(
                             startToCloseTimeout: .seconds(30),

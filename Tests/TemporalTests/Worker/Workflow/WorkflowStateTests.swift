@@ -22,7 +22,7 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowStateTests {
         @Workflow
-        final class StateWorkflow {
+        struct StateWorkflow {
             struct Output: Codable {
                 var counter1: Int
                 var counter2: Int
@@ -36,21 +36,21 @@ extension TestServerDependentTests {
                 self.counter1 = input
             }
 
-            func run(input: Int) async throws -> Output {
+            mutating func run(context: WorkflowContext<Self>, input: Int) async throws -> Output {
                 self.counter1 += 1
                 self.counter2 += 1
                 self.counter3? += 1
 
                 await withTaskGroup { group in
                     group.addTask {
-                        self.counter1 += 1
-                        self.counter2 += 1
-                        self.counter3? += 1
+                        context.mutateState { $0.counter1 += 1 }
+                        context.mutateState { $0.counter2 += 1 }
+                        context.mutateState { $0.counter3? += 1 }
                     }
                     group.addTask {
-                        self.counter1 += 1
-                        self.counter2 += 1
-                        self.counter3? += 1
+                        context.mutateState { $0.counter1 += 1 }
+                        context.mutateState { $0.counter2 += 1 }
+                        context.mutateState { $0.counter3? += 1 }
                     }
                 }
 

@@ -62,12 +62,13 @@ extension TestServerDependentTests {
         /// Has a default workflow name, invokes an activity
         /// with a default name.
         @Workflow
-        final class ExampleWorkflowDefaultName {
-            func run(
+        struct ExampleWorkflowDefaultName {
+            mutating func run(
+                context: WorkflowContext<Self>,
                 input: String
             ) async throws -> String {
                 let activity = ExampleActivityContainer.Activities.ActivityDefault.self
-                return try await Workflow.executeActivity(
+                return try await context.executeActivity(
                     activity,
                     options: .init(startToCloseTimeout: .seconds(3)),
                     input: input
@@ -78,12 +79,13 @@ extension TestServerDependentTests {
         /// Has a custom workflow name, invokes an activity
         /// with a custom name.
         @Workflow(name: "MyCustomWorkflowName")
-        final class ExampleWorkflowCustomName {
-            func run(
+        struct ExampleWorkflowCustomName {
+            mutating func run(
+                context: WorkflowContext<Self>,
                 input: String
             ) async throws -> String {
                 let activity = ExampleActivityContainer.Activities.ActivityCustom.self
-                return try await Workflow.executeActivity(
+                return try await context.executeActivity(
                     activity,
                     options: .init(startToCloseTimeout: .seconds(3)),
                     input: input

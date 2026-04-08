@@ -22,13 +22,13 @@ extension TestServerDependentTests {
     struct WorkflowContinueAsNewTests {
 
         @Workflow
-        final class ContinueAsNewWorkflow {
-            func run(input: [String]) async throws -> [String] {
-                let pastRunIDsCount: Int? = try await Workflow.getMemoValue(for: "past_run_id_count")
+        struct ContinueAsNewWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: [String]) async throws -> [String] {
+                let pastRunIDsCount: Int? = try await context.getMemoValue(for: "past_run_id_count")
                 guard input.count == pastRunIDsCount ?? 0 else {
                     throw TestError()
                 }
-                guard Workflow.info.retryPolicy?.maximumAttempts == input.count + 1000 else {
+                guard context.info.retryPolicy?.maximumAttempts == input.count + 1000 else {
                     throw TestError()
                 }
 
@@ -37,8 +37,8 @@ extension TestServerDependentTests {
                 }
 
                 var input = input
-                input.append(Workflow.info.runID)
-                throw try await Workflow.makeContinueAsNewError(
+                input.append(context.info.runID)
+                throw try await context.makeContinueAsNewError(
                     options: .init(
                         retryPolicy: .init(maximumAttempts: input.count + 1000),
                         memo: ["past_run_id_count": input.count]
@@ -94,9 +94,9 @@ extension TestServerDependentTests {
         // MARK: - Continue as different workflow type
 
         @Workflow
-        final class ContinueAsDifferentTypedWorkflow {
-            func run(input: String) async throws -> String {
-                throw try await Workflow.makeContinueAsNewError(
+        struct ContinueAsDifferentTypedWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+                throw try await context.makeContinueAsNewError(
                     workflowType: ContinueAsNewTargetWorkflow.self,
                     input: input + "-continued"
                 )
@@ -104,9 +104,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class ContinueAsDifferentUntypedWorkflow {
-            func run(input: String) async throws -> String {
-                throw try await Workflow.makeContinueAsNewError(
+        struct ContinueAsDifferentUntypedWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+                throw try await context.makeContinueAsNewError(
                     workflowName: ContinueAsNewTargetWorkflow.name,
                     input: input + "-continued"
                 )
@@ -114,8 +114,8 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class ContinueAsNewTargetWorkflow {
-            func run(input: String) async throws -> String {
+        struct ContinueAsNewTargetWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
                 return input + "-done"
             }
         }

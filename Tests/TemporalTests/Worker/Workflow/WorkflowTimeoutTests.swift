@@ -20,7 +20,7 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests), .serialized)
     struct WorkflowTimeoutTests {
         @Workflow
-        final class TimeoutWorkflow {
+        struct TimeoutWorkflow {
             enum Scenario: Codable {
                 case timeoutSleep
                 case errorIsRethrown
@@ -29,12 +29,12 @@ extension TestServerDependentTests {
                 case alreadyCancelled
             }
 
-            func run(input: Scenario) async throws -> String {
+            mutating func run(context: WorkflowContext<Self>, input: Scenario) async throws -> String {
                 switch input {
                 case .timeoutSleep:
                     do {
-                        try await Workflow.timeout(for: .seconds(1)) {
-                            try await Workflow.sleep(for: .seconds(100))
+                        try await context.timeout(for: .seconds(1)) {
+                            try await context.sleep(for: .seconds(100))
                         }
                         return "Done"
                     } catch {
@@ -42,7 +42,7 @@ extension TestServerDependentTests {
                     }
                 case .errorIsRethrown:
                     do {
-                        try await Workflow.timeout(for: .milliseconds(1)) {
+                        try await context.timeout(for: .milliseconds(1)) {
                             throw TestError()
                         }
                         return "Done"
@@ -50,22 +50,22 @@ extension TestServerDependentTests {
                         return "\(type(of: error))"
                     }
                 case .bodyReturnsAfterCancel:
-                    return await Workflow.timeout(for: .milliseconds(1)) {
+                    return await context.timeout(for: .milliseconds(1)) {
                         do {
-                            try await Workflow.sleep(for: .seconds(100))
+                            try await context.sleep(for: .seconds(100))
                             fatalError()
                         } catch {
                             return "Done"
                         }
                     }
                 case .bodyReturnsBeforeCancel:
-                    return await Workflow.timeout(for: .milliseconds(1)) {
+                    return await context.timeout(for: .milliseconds(1)) {
                         return "Done"
                     }
                 case .alreadyCancelled:
                     return await withTaskGroup(of: String.self) { group in
                         group.addTask {
-                            await Workflow.timeout(for: .seconds(1)) {
+                            await context.timeout(for: .seconds(1)) {
                                 return "Done"
                             }
                         }

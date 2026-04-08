@@ -46,21 +46,21 @@ private struct FirstWorkflow: WorkflowDefinition {
     static let name: String = "DuplicateWorkflow"
 
     init(input: Void) {}
-    func run(input: Void) async throws {}
+    mutating func run(context: WorkflowContext<Self>, input: Void) async throws {}
 }
 
 private struct SecondWorkflow: WorkflowDefinition {
     static let name: String = "DuplicateWorkflow"  // Same name as FirstWorkflow
 
     init(input: Void) {}
-    func run(input: Void) async throws {}
+    mutating func run(context: WorkflowContext<Self>, input: Void) async throws {}
 }
 
 private struct UniqueWorkflow: WorkflowDefinition {
     static let name: String = "UniqueWorkflow"
 
     init(input: Void) {}
-    func run(input: Void) async throws {}
+    mutating func run(context: WorkflowContext<Self>, input: Void) async throws {}
 }
 
 @Suite()

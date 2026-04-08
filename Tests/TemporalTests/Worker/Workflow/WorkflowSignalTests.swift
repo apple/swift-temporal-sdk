@@ -22,7 +22,7 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowSignalTests {
         @Workflow
-        final class SignalWorkflow {
+        struct SignalWorkflow {
             enum SignalScenario: Codable {
                 case updateState
                 case throwTestFailureError
@@ -33,14 +33,14 @@ extension TestServerDependentTests {
 
             private var state = ""
 
-            func run(input: Void) async throws {
-                try await Workflow.condition { self.state == "signaled" }
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { $0.state == "signaled" }
                 self.state = "runFinished"
-                try await Workflow.condition { Workflow.allHandlersFinished }
+                try await context.condition { context.allHandlersFinished }
             }
 
             @WorkflowSignal
-            func signal(input: SignalScenario) async throws {
+            mutating func signal(context: WorkflowContext<Self>, input: SignalScenario) async throws {
                 switch input {
                 case .updateState:
                     self.state = "signaled"
@@ -52,11 +52,11 @@ extension TestServerDependentTests {
                         type: "Failure"
                     )
                 case .timer:
-                    try await Workflow.sleep(for: .seconds(1))
+                    try await context.sleep(for: .seconds(1))
                     self.state = "signaled"
                 case .updateStateAndWaitCondition:
                     self.state = "signaled"
-                    try await Workflow.condition { self.state == "runFinished" }
+                    try await context.condition { $0.state == "runFinished" }
                 }
             }
         }

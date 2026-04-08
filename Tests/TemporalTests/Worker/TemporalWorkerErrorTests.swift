@@ -30,8 +30,8 @@ extension TestServerDependentTests {
     }
 
     @Workflow
-    final class VoidWorkflow {
-        func run(input: Void) async {}
+    struct VoidWorkflow {
+        mutating func run(context: WorkflowContext<Self>, input: Void) async {}
     }
 
     @Suite(.timeLimit(.minutes(1)))

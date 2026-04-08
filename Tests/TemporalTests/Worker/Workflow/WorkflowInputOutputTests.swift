@@ -21,36 +21,36 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowInputOutputTests {
         @Workflow
-        final class VoidWorkflow {
-            func run(input: Void) async {}
+        struct VoidWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async {}
         }
 
         @Workflow
-        final class StringWorkflow {
-            func run(input: String) async -> String {
+        struct StringWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async -> String {
                 return input
             }
         }
 
         @Workflow
-        final class TestStructWorkflow {
+        struct TestStructWorkflow {
             struct TestStruct {}
 
-            func run(input: Void) async -> TestStruct {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async -> TestStruct {
                 return .init()
             }
         }
 
         static let throwsTestErrorThenSucceedsCounter = Mutex(0)
         @Workflow
-        final class ThrowingWorkflow {
+        struct ThrowingWorkflow {
             enum Scenario: Codable {
                 case throwTestError
                 case throwApplicationError
                 case throwsTestErrorThenSucceeds
             }
 
-            func run(input: Scenario) async throws {
+            mutating func run(context: WorkflowContext<Self>, input: Scenario) async throws {
                 switch input {
                 case .throwTestError:
                     throw TestError()

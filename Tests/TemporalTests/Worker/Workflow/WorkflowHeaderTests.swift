@@ -132,16 +132,16 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class HeaderWorkflow {
+        struct HeaderWorkflow {
             var proceed = false
 
-            func run(input: Void) async throws -> Bool {
-                try await Workflow.condition { self.proceed }
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> Bool {
+                try await context.condition { $0.proceed }
                 return true
             }
 
             @WorkflowSignal
-            func signal(input: Void) throws {
+            mutating func signal(input: Void) throws {
                 proceed = true
             }
 

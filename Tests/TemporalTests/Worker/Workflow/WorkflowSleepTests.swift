@@ -22,7 +22,7 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowSleepTests {
         @Workflow
-        final class SleepWorkflow {
+        struct SleepWorkflow {
             enum Scenario: Codable {
                 case singleSleep
                 case multiSleep
@@ -34,45 +34,45 @@ extension TestServerDependentTests {
                 case cancelWorklow
             }
 
-            func run(input: Scenario) async throws -> String {
+            mutating func run(context: WorkflowContext<Self>, input: Scenario) async throws -> String {
                 switch input {
                 case .singleSleep:
-                    try await Workflow.sleep(for: .seconds(1))
+                    try await context.sleep(for: .seconds(1))
                     return "Done"
                 case .multiSleep:
-                    try await Workflow.sleep(for: .seconds(1))
-                    try await Workflow.sleep(for: .seconds(1))
-                    try await Workflow.sleep(for: .seconds(1))
+                    try await context.sleep(for: .seconds(1))
+                    try await context.sleep(for: .seconds(1))
+                    try await context.sleep(for: .seconds(1))
                     return "Done"
                 case .concurrentSleep:
-                    return try await self.concurrentSleep()
+                    return try await self.concurrentSleep(context: context)
                 case .alreadyCanceledSleep:
-                    return await self.alreadyCanceledSleep()
+                    return await self.alreadyCanceledSleep(context: context)
                 case .cancelSleep:
-                    return await self.cancelSleep()
+                    return await self.cancelSleep(context: context)
                 case .negativeDuration:
-                    return await self.negativeDuration()
+                    return await self.negativeDuration(context: context)
                 case .zeroDuration:
-                    try await Workflow.sleep(for: .zero)
+                    try await context.sleep(for: .zero)
                     return "Done"
                 case .cancelWorklow:
-                    try? await Workflow.sleep(for: .seconds(10000))
+                    try? await context.sleep(for: .seconds(10000))
                     return "Done"
                 }
             }
 
-            private func concurrentSleep() async throws -> String {
+            private func concurrentSleep(context: WorkflowContext<Self>) async throws -> String {
                 return try await withThrowingTaskGroup(of: String.self) { group in
                     group.addTask {
-                        try await Workflow.sleep(for: .seconds(1))
+                        try await context.sleep(for: .seconds(1))
                         return "1"
                     }
                     group.addTask {
-                        try await Workflow.sleep(for: .seconds(1))
+                        try await context.sleep(for: .seconds(1))
                         return "2"
                     }
                     group.addTask {
-                        try await Workflow.sleep(for: .seconds(1))
+                        try await context.sleep(for: .seconds(1))
                         return "3"
                     }
                     var output = ""
@@ -83,11 +83,11 @@ extension TestServerDependentTests {
                 }
             }
 
-            private func alreadyCanceledSleep() async -> String {
+            private func alreadyCanceledSleep(context: WorkflowContext<Self>) async -> String {
                 await withThrowingTaskGroup(of: String.self) { group in
                     group.cancelAll()
                     group.addTask {
-                        try await Workflow.sleep(for: .seconds(100))
+                        try await context.sleep(for: .seconds(100))
                         return "Second"
                     }
                     do {
@@ -98,15 +98,15 @@ extension TestServerDependentTests {
                 }
             }
 
-            private func cancelSleep() async -> String {
+            private func cancelSleep(context: WorkflowContext<Self>) async -> String {
                 await withThrowingTaskGroup(of: String.self) { group in
                     group.addTask {
-                        try await Workflow.sleep(for: .seconds(100))
+                        try await context.sleep(for: .seconds(100))
                         return "Done"
                     }
 
                     do {
-                        try await Workflow.sleep(for: .seconds(1))
+                        try await context.sleep(for: .seconds(1))
                         group.cancelAll()
                         return try await group.next()!
                     } catch {
@@ -115,9 +115,9 @@ extension TestServerDependentTests {
                 }
             }
 
-            private func negativeDuration() async -> String {
+            private func negativeDuration(context: WorkflowContext<Self>) async -> String {
                 do {
-                    try await Workflow.sleep(for: .seconds(-1))
+                    try await context.sleep(for: .seconds(-1))
                 } catch {
                     return "\(type(of: error))"
                 }
