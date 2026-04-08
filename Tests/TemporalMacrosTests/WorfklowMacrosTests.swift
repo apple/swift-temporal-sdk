@@ -870,7 +870,7 @@ struct WorkflowMacrosTests {
             """
         )
         #expect(diagnostics.count == 1)
-        #expect(diagnostics.first?.message == "Validator method 'doesNotExist' not found in workflow class")
+        #expect(diagnostics.first?.message == "Validator method 'doesNotExist' not found in workflow")
         // Diagnostic should be on the @WorkflowUpdate attribute
         #expect(diagnostics.first?.node.description.contains("WorkflowUpdate") == true)
     }

@@ -31,22 +31,15 @@ final class ArcBox<Value>: @unchecked Sendable {
     ///
     /// - Parameter body: A closure that receives the value.
     /// - Returns: The value returned by the closure.
-    func withValue<R>(_ body: (Value) -> R) -> R {
+    func withValue<Return>(_ body: (Value) -> Return) -> Return {
         body(value)
-    }
-
-    /// Mutates the value through a closure.
-    ///
-    /// - Parameter body: A closure that receives a mutable reference to the value.
-    func withMutableValue(_ body: (inout Value) -> Void) {
-        body(&value)
     }
 
     /// Mutates the value through a closure and returns a result.
     ///
     /// - Parameter body: A closure that receives a mutable reference to the value.
     /// - Returns: The value returned by the closure.
-    func withMutableValue<R>(_ body: (inout Value) -> R) -> R {
+    func withMutableValue<Return>(_ body: (inout Value) -> Return) -> Return {
         body(&value)
     }
 }

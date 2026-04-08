@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Error thrown by a workflow out of the ``WorkflowDefinition/run(input:)``
+/// Error thrown by a workflow out of the ``WorkflowDefinition/run(context:input:)``
 /// method to issue a continue-as-new.
 public struct ContinueAsNewError: TemporalError {
     /// The error's message.

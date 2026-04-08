@@ -44,7 +44,8 @@ Build activities and workflows.
 
 Create workflows that orchestrate business logic and coordinate activities.
 
-- ``Workflow``
+- ``WorkflowContext``
+- ``WorkflowContextView``
 - ``WorkflowOptions``
 - ``WorkflowHandle``
 

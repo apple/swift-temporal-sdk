@@ -64,15 +64,6 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
 
     // MARK: - State Access
 
-    /// Mutates the workflow state using a closure.
-    ///
-    /// The closure receives a mutable reference to the workflow struct.
-    ///
-    /// - Parameter mutator: A closure that receives a mutable reference to the workflow struct.
-    public func mutateState(_ mutator: (inout Workflow) -> Void) {
-        stateBox.withMutableValue(mutator)
-    }
-
     /// Mutates the workflow state using a closure and returns a value.
     ///
     /// - Parameter mutator: A closure that receives a mutable reference to the workflow struct
