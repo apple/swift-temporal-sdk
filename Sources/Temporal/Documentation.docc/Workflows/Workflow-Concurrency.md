@@ -39,20 +39,20 @@ Here's an example using a task group to run two child tasks concurrently:
 
 ```swift
 @Workflow
-final class DataProcessingWorkflow {
-    func run(input: Void) async throws -> String {
+struct DataProcessingWorkflow {
+    mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> String {
         // Use task group to run two operations concurrently
         return try await withTaskGroup(of: String.self) { group in
             // First child task - validate data
             group.addTask {
                 return "First"
             }
-            
+
             // Second child task - fetch configuration
             group.addTask {
                 return "Second"
             }
-            
+
             // Collect results from both tasks
             var result = [String]()
             for try await string in group {
@@ -78,16 +78,16 @@ APIs inside your workflows:
 **Safe to use:**
 - `async let` bindings for concurrent operations.
 - Task group APIs (`withTaskGroup`, `withThrowingTaskGroup`, discarding variants).
-- All ``Workflow`` APIs for activities, timers, conditions, and more.
+- All ``WorkflowContext`` APIs for activities, timers, conditions, and more.
 - Swift's standard Task cancellation primitives.
 
 **Avoid these APIs:**
 - `Task.detached` - Instead use Structured Concurrency alternatives.
 - Actor isolation - Introduces potential executor hops.
-- `Task.sleep` or `Clock.sleep` - Instead, use ``Workflow/sleep(for:summary:)``.
+- `Task.sleep` or `Clock.sleep` - Instead, use ``WorkflowContext/sleep(for:summary:)``.
 - Direct I/O operations - Instead, use activities for any non-deterministic code.
 - Non-deterministic APIs like `RandomNumberGenerator` - Instead, use
-``Workflow/randomNumberGenerator``.
+``WorkflowContext/randomNumberGenerator``.
 
 ### Handle cancellation properly
 
@@ -95,7 +95,7 @@ Workflows support Swift's standard cancellation primitives, enabling graceful
 shutdown and cleanup. Use `Task.isCancelled`, `withTaskCancellationHandler`, and
 other cancellation APIs as you would in regular Swift code.
 
-When a workflow is cancelled, many ``Workflow`` operations throw
+When a workflow is cancelled, many ``WorkflowContext`` operations throw
 `CancellationError`, allowing your workflow to detect cancellation and perform
 cleanup. Cancellation propagates through structured concurrency patterns, such as
 task groups, ensuring that all child tasks are properly cancelled when the workflow
