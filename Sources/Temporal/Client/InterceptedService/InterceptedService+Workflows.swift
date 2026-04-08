@@ -492,13 +492,17 @@ extension TemporalClient.InterceptedService {
         resultTypes: repeat (each Result).Type,
         callOptions: CallOptions? = nil
     ) async throws -> (repeat each Result) {
-        try await self.interceptor.workflowService.workflowUpdateResult(  // Other SDKs also don't go through interceptor
-            workflowID: id,
-            runID: runID,
-            updateID: updateID,
-            resultTypes: repeat each resultTypes,
-            callOptions: callOptions
+        let outcome = try await self.interceptor.pollWorkflowUpdate(
+            .init(
+                workflowID: id,
+                runID: runID,
+                updateID: updateID,
+                callOptions: callOptions
+            )
         )
+        let dataConverter = self.interceptor.workflowService.configuration.dataConverter
+        let payloads = try await outcome.successPayloads(using: dataConverter)
+        return try await dataConverter.convertPayloads(payloads, as: repeat each resultTypes)
     }
 
     // MARK: Cancel

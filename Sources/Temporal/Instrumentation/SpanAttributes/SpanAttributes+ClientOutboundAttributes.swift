@@ -338,6 +338,31 @@ extension Span {
         self.attributes[TemporalTracingKeys.workflowCountNumber] = count
     }
 
+    // MARK: List Workflows Page
+
+    func setListWorkflowsPageRequestSpanAttributes(query: String, pageSize: Int?) {
+        self.attributes[TemporalTracingKeys.scheduleListQuery] = query
+
+        if let pageSize {
+            self.attributes[TemporalTracingKeys.workflowListLimit] = pageSize
+        }
+    }
+
+    func setListWorkflowsPageResponseSpanAttributes(count: Int) {
+        self.attributes[TemporalTracingKeys.workflowCountNumber] = count
+    }
+
+    // MARK: Poll Workflow Update
+
+    func setPollWorkflowUpdateRequestSpanAttributes(input: PollWorkflowUpdateInput) {
+        self.attributes[TemporalTracingKeys.workflowId] = input.workflowID
+        self.attributes[TemporalTracingKeys.workflowUpdateId] = input.updateID
+
+        if let runID = input.runID {
+            self.attributes[TemporalTracingKeys.workflowRunId] = runID
+        }
+    }
+
     // MARK: Schedules
 
     func setCreateScheduleRequestSpanAttributes<Workflow>(input: CreateScheduleInput<Workflow>) {
