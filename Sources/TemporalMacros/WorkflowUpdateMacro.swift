@@ -68,7 +68,38 @@ public struct WorkflowUpdateMacro: PeerMacro {
             unfinishedPolicyDecl = "\(raw: rawAccessModifier)static var unfinishedPolicy: HandlerUnfinishedPolicy { .\(raw: policyName) }"
         }
 
+        let validatorName = node.stringValueForArgument(named: "validator")
         let updateName = functionDecl.name.text.capitalizingFirst()
+
+        let initParams: String
+        let initBody: String
+        var validatorDecl: DeclSyntax?
+        if validatorName != nil {
+            initParams =
+                "run: @Sendable @escaping (Workflow, Input) async throws -> Output, validate: @Sendable @escaping (Workflow, Input) throws -> Void"
+            initBody = """
+                self._run = run
+                            self._validate = validate
+                """
+            validatorDecl = """
+                let _validate: @Sendable (Workflow, Input) throws -> Void
+                        \(raw: rawAccessModifier)func validateInput(workflow: Workflow, _ input: Input) throws {
+                            try self._validate(workflow, input)
+                        }
+                """
+        } else {
+            initParams = "run: @Sendable @escaping (Workflow, Input) async throws -> Output"
+            initBody = "self._run = run"
+        }
+
+        let staticVarBody: String
+        if let validatorName = validatorName {
+            staticVarBody =
+                "\(updateName)(run: { try await $0.\(functionDecl.name.text)(input: $1) }, validate: { try $0.\(validatorName)(input: $1) })"
+        } else {
+            staticVarBody = "\(updateName)(run: { try await $0.\(functionDecl.name.text)(input: $1) })"
+        }
+
         return [
             """
             \(raw: rawAccessModifier)struct \(raw: updateName): WorkflowUpdateDefinition {
@@ -77,8 +108,8 @@ public struct WorkflowUpdateMacro: PeerMacro {
                 \(raw: rawAccessModifier)typealias Workflow = \(parentClass.name)
 
                 let _run: @Sendable (Workflow, Input) async throws -> Output
-                init(run: @Sendable @escaping (Workflow, Input) async throws -> Output) {
-                    self._run = run
+                init(\(raw: initParams)) {
+                    \(raw: initBody)
                 }
                 \(raw: rawAccessModifier)func run(workflow: Workflow, input: Input) async throws -> Output{
                     try await self._run(workflow, input)
@@ -86,11 +117,12 @@ public struct WorkflowUpdateMacro: PeerMacro {
                 \(nameDecl)
                 \(descriptionDecl)
                 \(unfinishedPolicyDecl)
+                \(validatorDecl)
             }
             """,
             """
             static var \(raw: functionDecl.name.text): \(raw: updateName) {
-                \(raw: updateName)(run: { try await $0.\(raw: functionDecl.name.text)(input: $1) })
+                \(raw: staticVarBody)
             }
             """,
         ]

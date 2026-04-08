@@ -851,6 +851,7 @@ struct WorkflowInstance: Sendable {
                 try Self.$isWorkflowStateFrozen.withValue(true) {
                     // Context is frozen during update validation to prevent side effects
                     try implementation.validateUpdate(
+                        workflow: workflow,
                         context: workflowContext,
                         input: .init(
                             id: id,
@@ -873,6 +874,7 @@ struct WorkflowInstance: Sendable {
                 )
                 let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
                 self.stateMachine.updateRejected(id: id, failure: failure)
+                return
             }
         }
 
@@ -1116,6 +1118,7 @@ extension WorkflowInstance.Implementation {
     }
 
     func validateUpdate<Update: WorkflowUpdateDefinition>(
+        workflow: Update.Workflow,
         context: WorkflowContext,
         input: HandleUpdateInput<Update>
     ) throws {
@@ -1126,7 +1129,7 @@ extension WorkflowInstance.Implementation {
                 try WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
                     try intercept((any WorkflowInboundInterceptor).validateUpdate, input: input) { input in
                         try WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
-                            try input.definition.validateInput(input.input)
+                            try input.definition.validateInput(workflow: workflow, input.input)
                         }
                     }
                 }

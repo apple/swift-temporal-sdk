@@ -136,6 +136,85 @@ extension TestServerDependentTests {
             }
         }
 
+        // MARK: - Update Validator Tests
+
+        @Workflow
+        final class ValidatedUpdateWorkflow {
+            private var value = ""
+
+            func run(input: Void) async throws -> String {
+                try await Workflow.condition { !self.value.isEmpty }
+                return self.value
+            }
+
+            @WorkflowUpdate(validator: "validateSetValue")
+            func setValue(input: String) async throws -> String {
+                self.value = input
+                return "set:\(input)"
+            }
+
+            func validateSetValue(input: String) throws {
+                guard !input.isEmpty else {
+                    throw ApplicationError(message: "Input cannot be empty")
+                }
+                guard input.count <= 100 else {
+                    throw ApplicationError(message: "Input too long")
+                }
+            }
+        }
+
+        @Test
+        func updateValidatorAccepts() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [ValidatedUpdateWorkflow.self]
+            ) { taskQueue, client in
+                let handle = try await client.startWorkflow(
+                    type: ValidatedUpdateWorkflow.self,
+                    options: .init(id: UUID().uuidString, taskQueue: taskQueue)
+                )
+                let result = try await handle.executeUpdate(
+                    updateType: ValidatedUpdateWorkflow.SetValue.self,
+                    input: "hello"
+                )
+                #expect(result == "set:hello")
+
+                let workflowResult = try await handle.result()
+                #expect(workflowResult == "hello")
+            }
+        }
+
+        @Test
+        func updateValidatorRejects() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [ValidatedUpdateWorkflow.self]
+            ) { taskQueue, client in
+                let handle = try await client.startWorkflow(
+                    type: ValidatedUpdateWorkflow.self,
+                    options: .init(id: UUID().uuidString, taskQueue: taskQueue)
+                )
+
+                // Empty input should be rejected by the validator.
+                // executeUpdate waits for completion, so it will throw on rejection.
+                await #expect(throws: (any Error).self) {
+                    try await handle.executeUpdate(
+                        updateType: ValidatedUpdateWorkflow.SetValue.self,
+                        input: ""
+                    )
+                }
+
+                // Workflow should still be running (validator rejection doesn't fail the workflow).
+                // Send a valid update to complete it.
+                let result = try await handle.executeUpdate(
+                    updateType: ValidatedUpdateWorkflow.SetValue.self,
+                    input: "valid"
+                )
+                #expect(result == "set:valid")
+
+                let workflowResult = try await handle.result()
+                #expect(workflowResult == "valid")
+            }
+        }
+
         // MARK: - Update-with-Start Tests
 
         @Workflow

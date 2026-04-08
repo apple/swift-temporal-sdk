@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
@@ -733,5 +734,245 @@ struct WorkflowMacrosTests {
             removeWhitespace: true
         )
         #expect(expectedOutput == actualOutput)
+    }
+
+    @Test(arguments: [nil, "public", "package", "internal", "fileprivate", "private"])
+    func updateWithValidator(modifier: String?) throws {
+        let modifierPrefix = modifier.map { "\($0) " } ?? ""
+
+        let (expectedOutput, _) = try parse(
+            """
+            final class FooWorkflow {
+                \(modifierPrefix)func foo(input: String) async throws -> Int {}
+
+                \(modifierPrefix)struct Foo: WorkflowUpdateDefinition {
+                    \(modifierPrefix)typealias Input = String
+                    \(modifierPrefix)typealias Output = Int
+                    \(modifierPrefix)typealias Workflow = FooWorkflow
+
+                    let _run: @Sendable (Workflow, Input) async throws -> Output
+                    init(run: @Sendable @escaping (Workflow, Input) async throws -> Output, validate: @Sendable @escaping (Workflow, Input) throws -> Void) {
+                        self._run = run
+                        self._validate = validate
+                    }
+                    \(modifierPrefix)func run(workflow: Workflow, input: Input) async throws -> Output {
+                        try await self._run(workflow, input)
+                    }
+
+                    let _validate: @Sendable (Workflow, Input) throws -> Void
+                    \(modifierPrefix)func validateInput(workflow: Workflow, _ input: Input) throws {
+                        try self._validate(workflow, input)
+                    }
+                }
+
+                static var foo: Foo {
+                    Foo(run: {
+                            try await $0.foo(input: $1)
+                        }, validate: {
+                            try $0.validateFoo(input: $1)
+                        })
+                }
+
+                func validateFoo(input: String) throws {}
+
+                static var updates: [any WorkflowUpdateDefinition<FooWorkflow>] {
+                    [Self.foo]
+                }
+
+                required init(input: Input) {}
+            }
+
+            extension FooWorkflow: WorkflowDefinition {
+            }
+            """,
+            removeWhitespace: true
+        )
+        let (actualOutput, _) = try parse(
+            """
+            @Workflow
+            final class FooWorkflow {
+                @WorkflowUpdate(validator: "validateFoo")
+                \(modifierPrefix)func foo(input: String) async throws -> Int {}
+
+                func validateFoo(input: String) throws {}
+            }
+            """,
+            removeWhitespace: true
+        )
+        #expect(expectedOutput == actualOutput)
+    }
+
+    // MARK: - Validator Diagnostic Tests
+
+    @Test
+    func validatorGeneratesCorrectCall() throws {
+        let (_, diagnostics) = try parse(
+            """
+            @Workflow
+            final class FooWorkflow {
+                @WorkflowUpdate(validator: "validateFoo")
+                func foo(input: String) async throws -> Int {}
+
+                func validateFoo(input: String) throws {}
+            }
+            """,
+            removeWhitespace: true
+        )
+        #expect(diagnostics.isEmpty)
+    }
+
+    @Test
+    func updateWithoutValidatorHasNoValidateMethod() throws {
+        let (output, diagnostics) = try parse(
+            """
+            @Workflow
+            final class FooWorkflow {
+                @WorkflowUpdate
+                func foo(input: String) async throws -> Int {}
+            }
+            """,
+            removeWhitespace: true
+        )
+        #expect(diagnostics.isEmpty)
+        #expect(!output.contains("validateInput"))
+        #expect(!output.contains("_validate"))
+    }
+
+    @Test
+    func updateWithValidatorGeneratesValidateInput() throws {
+        let (output, diagnostics) = try parse(
+            """
+            @Workflow
+            final class FooWorkflow {
+                @WorkflowUpdate(validator: "validateFoo")
+                func foo(input: String) async throws -> Int {}
+
+                func validateFoo(input: String) throws {}
+            }
+            """,
+            removeWhitespace: true
+        )
+        #expect(diagnostics.isEmpty)
+        #expect(output.contains("validateInput"))
+        #expect(output.contains("_validate"))
+        #expect(output.contains("validateFoo"))
+    }
+
+    @Test
+    func validatorNotFound() throws {
+        let (_, diagnostics) = try parse(
+            """
+            @Workflow
+            final class FooWorkflow {
+                @WorkflowUpdate(validator: "doesNotExist")
+                func foo(input: String) async throws -> Int {}
+            }
+            """
+        )
+        #expect(diagnostics.count == 1)
+        #expect(diagnostics.first?.message == "Validator method 'doesNotExist' not found in workflow class")
+        // Diagnostic should be on the @WorkflowUpdate attribute
+        #expect(diagnostics.first?.node.description.contains("WorkflowUpdate") == true)
+    }
+
+    @Test
+    func validatorIsAsync() throws {
+        let (_, diagnostics) = try parse(
+            """
+            @Workflow
+            final class FooWorkflow {
+                @WorkflowUpdate(validator: "validateFoo")
+                func foo(input: String) async throws -> Int {}
+
+                func validateFoo(input: String) async throws {}
+            }
+            """
+        )
+        #expect(diagnostics.count == 1)
+        #expect(diagnostics.first?.message == "Validator method 'validateFoo' must not be async")
+        // Diagnostic should be on the validator function declaration
+        #expect(diagnostics.first?.node.description.contains("validateFoo") == true)
+    }
+
+    @Test
+    func validatorReturnsValue() throws {
+        let (_, diagnostics) = try parse(
+            """
+            @Workflow
+            final class FooWorkflow {
+                @WorkflowUpdate(validator: "validateFoo")
+                func foo(input: String) async throws -> Int {}
+
+                func validateFoo(input: String) throws -> Bool {}
+            }
+            """
+        )
+        #expect(diagnostics.count == 1)
+        #expect(diagnostics.first?.message == "Validator method 'validateFoo' must return Void")
+        // Diagnostic should be on the return clause
+        #expect(diagnostics.first?.node.description.contains("Bool") == true)
+    }
+
+    @Test
+    func validatorWrongParameterCount() throws {
+        let (_, diagnostics) = try parse(
+            """
+            @Workflow
+            final class FooWorkflow {
+                @WorkflowUpdate(validator: "validateFoo")
+                func foo(input: String) async throws -> Int {}
+
+                func validateFoo(input: String, extra: Int) throws {}
+            }
+            """
+        )
+        #expect(diagnostics.count == 1)
+        #expect(
+            diagnostics.first?.message
+                == "Validator method 'validateFoo' must have exactly one parameter matching the update input"
+        )
+        // Diagnostic should be on the parameter clause
+        #expect(diagnostics.first?.node.description.contains("extra") == true)
+    }
+
+    @Test
+    func validatorWrongParameterName() throws {
+        let (_, diagnostics) = try parse(
+            """
+            @Workflow
+            final class FooWorkflow {
+                @WorkflowUpdate(validator: "validateFoo")
+                func foo(input: String) async throws -> Int {}
+
+                func validateFoo(value: String) throws {}
+            }
+            """
+        )
+        #expect(diagnostics.count == 1)
+        #expect(diagnostics.first?.message == "Validator method 'validateFoo' parameter must be called 'input'")
+        // Diagnostic should be on the parameter
+        #expect(diagnostics.first?.node.description.contains("value") == true)
+    }
+
+    @Test
+    func validatorWrongInputType() throws {
+        let (_, diagnostics) = try parse(
+            """
+            @Workflow
+            final class FooWorkflow {
+                @WorkflowUpdate(validator: "validateFoo")
+                func foo(input: String) async throws -> Int {}
+
+                func validateFoo(input: Int) throws {}
+            }
+            """
+        )
+        #expect(diagnostics.count == 1)
+        #expect(
+            diagnostics.first?.message
+                == "Validator method 'validateFoo' input type 'Int' does not match update input type 'String'"
+        )
+        // Diagnostic should be on the parameter type
+        #expect(diagnostics.first?.node.description.contains("Int") == true)
     }
 }

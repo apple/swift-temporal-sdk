@@ -88,9 +88,11 @@ public protocol WorkflowUpdateDefinition<Workflow>: Sendable {
     /// and ensure the workflow is in an appropriate state to handle the update.
     /// Throwing an error from this method rejects the update.
     ///
-    /// - Parameter input: The input data to validate.
+    /// - Parameters:
+    ///   - workflow: The workflow instance being updated.
+    ///   - input: The input data to validate.
     /// - Throws: Any validation error that should prevent update execution.
-    func validateInput(_ input: Input) throws
+    func validateInput(workflow: Workflow, _ input: Input) throws
 
     /// Executes the update and returns the result.
     ///
@@ -135,5 +137,5 @@ extension WorkflowUpdateDefinition {
     /// Default implementation that performs no validation.
     ///
     /// Override this method to provide custom validation logic for update inputs.
-    public func validateInput(_ input: Input) throws {}
+    public func validateInput(workflow: Workflow, _ input: Input) throws {}
 }
