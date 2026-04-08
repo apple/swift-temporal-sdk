@@ -547,6 +547,10 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         return self.stateMachine.continueAsNewSuggested()
     }
 
+    func suggestContinueAsNewReasons() -> [SuggestContinueAsNewReason] {
+        return self.stateMachine.suggestContinueAsNewReasons()
+    }
+
     func currentHistorySize() -> Int {
         return self.stateMachine.currentHistorySize()
     }

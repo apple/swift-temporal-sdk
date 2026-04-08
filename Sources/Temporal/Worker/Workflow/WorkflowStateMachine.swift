@@ -75,6 +75,9 @@ struct WorkflowStateMachine: ~Copyable {
             /// Whether continue as new was suggested.
             var continueAsNewSuggested: Bool
 
+            /// The reasons why continue as new was suggested.
+            var suggestContinueAsNewReasons: [SuggestContinueAsNewReason]
+
             /// Current number of events in the history.
             var currentHistoryLength: Int
 
@@ -158,6 +161,7 @@ struct WorkflowStateMachine: ~Copyable {
             isReplaying: false,
             now: .now,
             continueAsNewSuggested: false,
+            suggestContinueAsNewReasons: [],
             currentHistoryLength: 0,
             currentHistorySize: 0,
             commands: [],
@@ -268,6 +272,9 @@ struct WorkflowStateMachine: ~Copyable {
             active.isReplaying = activation.isReplaying
             active.now = activation.timestamp.date
             active.continueAsNewSuggested = activation.continueAsNewSuggested
+            active.suggestContinueAsNewReasons = activation.suggestContinueAsNewReasons.map {
+                SuggestContinueAsNewReason($0)
+            }
             active.currentHistoryLength = Int(activation.historyLength)
             active.currentHistorySize = Int(activation.historySizeBytes)
             if activation.hasDeploymentVersionForCurrentTask {
@@ -947,6 +954,12 @@ struct WorkflowStateMachine: ~Copyable {
     func continueAsNewSuggested() -> Bool {
         switch state {
         case .active(let active): active.continueAsNewSuggested
+        }
+    }
+
+    func suggestContinueAsNewReasons() -> [SuggestContinueAsNewReason] {
+        switch state {
+        case .active(let active): active.suggestContinueAsNewReasons
         }
     }
 
