@@ -1,3 +1,17 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Swift Temporal SDK open source project
+//
+// Copyright (c) 2025-2026 Apple Inc. and the Swift Temporal SDK project authors
+// Licensed under MIT License
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of Swift Temporal SDK project authors
+//
+// SPDX-License-Identifier: MIT
+//
+//===----------------------------------------------------------------------===//
+
 // To run a local Temporal dev server for testing these examples:
 //
 //   container image pull temporalio/temporal:latest
@@ -9,6 +23,7 @@
 
 // snippet.hide
 import Foundation
+import Logging
 import Temporal
 // snippet.show
 
@@ -48,7 +63,6 @@ struct Base64PayloadCodec: PayloadCodec {
 // snippet.end
 
 // snippet.hide
-import Logging
 // snippet.show
 
 // snippet.workerWithCodec
