@@ -15,7 +15,7 @@ containers, handle cancellation and timeouts, and implement proper error
 handling patterns. You'll learn to build robust activities that integrate
 seamlessly with your workflow orchestration.
 
-### Define activities with the Activity macro
+## Define activities with the Activity macro
 
 Use the `@Activity` macro to define activities:
 
@@ -46,7 +46,7 @@ inside a type annotated with the `@ActivityContainer` macro. The container
 allows you to group related activities together and provide dependencies,
 such as database clients, to your activities.
 
-### Give activities custom names
+## Give activities custom names
 
 Temporal identifies activities by name, sometimes called the *activity type*. This defaults to the unqualified method name of the activity,
 but can be customized by providing a `name` parameter to the `@Activity` macro:
@@ -59,7 +59,7 @@ func findUser(input: FindUserInput) async throws -> FindUserOutput {
 }
 ```
 
-### Register activities with a worker
+## Register activities with a worker
 
 Register your activities with a ``TemporalWorker`` to make them available for
 execution:
@@ -95,7 +95,7 @@ the appropriate activity methods based on their names. When a workflow schedules
 an activity execution, Temporal routes the task to a worker that has registered
 an activity with the matching name.
 
-### Access the activity's execution context
+## Access the activity's execution context
 
 When running in an activity, the ``ActivityExecutionContext`` is available
 via ``ActivityExecutionContext/current`` which is backed by a task local.
@@ -105,7 +105,7 @@ Among other capabilities, this context provides:
 - ``ActivityExecutionContext/heartbeat(details:)`` - Method to call to record an activity heartbeat.
 - ``ActivityExecutionContext/cancellationReason`` - The reason for why an activity is canceled.
 
-### Handle activity heartbeating and cancellation
+## Handle activity heartbeating and cancellation
 
 For a non-local activity to receive cancellation requests, it must call
 ``ActivityExecutionContext/heartbeat(details:)``. Call this function regularly

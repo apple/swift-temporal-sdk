@@ -14,7 +14,7 @@ This article shows you how to define workflows, coordinate activities, handle
 signals and queries, and implement complex orchestration patterns. You'll learn
 to build workflows that survive failures and scale across distributed systems.
 
-### Define a workflow with the Workflow macro
+## Define a workflow with the Workflow macro
 
 Use the `@Workflow` macro on a `struct` to create a ``WorkflowDefinition``.
 The main entry point for a workflow is the `run(context:input:)` method, which
@@ -78,13 +78,13 @@ struct RegisterUserWorkflow {
 }
 ```
 
-#### Best practices for workflow definitions
+### Best practices for workflow definitions
 
 Workflows should define custom input and output types rather than using basic
 types. This allows adding optional fields to input or output structures without
 breaking existing workflows.
 
-#### Customizing workflow names
+### Customizing workflow names
 
 By default, workflows use their struct name as the workflow type. You can
 customize this by providing a `name` parameter in the `@Workflow` macro:
@@ -96,7 +96,7 @@ struct RegisterUserWorkflow {
 }
 ```
 
-#### Initializing state
+### Initializing state
 
 Define an optional `init(input:)` initializer to set up the workflow state from
 input parameters, eliminating the need for optional properties or
@@ -124,13 +124,13 @@ struct RegisterUserWorkflow {
 }
 ```
 
-### Defining signal, query, and update handlers
+## Define signal, query, and update handlers
 
 Use the `@WorkflowSignal`, `@WorkflowQuery`, and `@WorkflowUpdate` macros
 inside a type annotated with the `@Workflow` macro to define those respective
 handlers.
 
-#### Signal handlers
+### Signal handlers
 
 Signal handlers allow external systems to send information to running workflows.
 They're ideal for handling approvals, cancellations, or status updates.
@@ -207,7 +207,7 @@ You can customize the signal name using the `name` parameter, for example:
 @WorkflowSignal(name: "CustomApproveRegistration")
 ```
 
-#### Query handlers
+### Query handlers
 
 Queries allow external systems to retrieve information synchronously from running workflows.
 They're useful for getting the current state of a workflow without modifying it.
@@ -280,7 +280,7 @@ You can customize the query name using the `name` parameter, for example:
 @WorkflowQuery(name: "CustomGetRegistrationState")
 ```
 
-#### Update handlers
+### Update handlers
 
 Updates combine aspects of both signals and queries - they can modify a workflow's
 state and return values asynchronously.
