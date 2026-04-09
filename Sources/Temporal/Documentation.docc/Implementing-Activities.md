@@ -6,8 +6,8 @@ with proper error handling and lifecycle management.
 ## Overview
 
 Activities represent the individual units of work in your Temporal application.
-They execute the actual business logic such as calling external APIs, processing
-data, interacting with databases, or performing any side-effect operations that
+They run the actual business logic such as calling external APIs, processing
+data, interacting with databases, or performing side effect operations that
 workflows coordinate.
 
 This article shows you how to define activities using macros, organize them in
@@ -43,13 +43,14 @@ struct UserActivities {
 
 The `@Activity` macro automatically generates activity definitions when nested
 inside a type annotated with the `@ActivityContainer` macro. The container
-allows you to group related activities together and provide dependencies,
+lets you group related activities together and provide dependencies,
 such as database clients, to your activities.
 
 ## Give activities custom names
 
-Temporal identifies activities by name, sometimes called the *activity type*. This defaults to the unqualified method name of the activity,
-but can be customized by providing a `name` parameter to the `@Activity` macro:
+Temporal identifies activities by name, sometimes called the *activity type*.
+This defaults to the unqualified method name of the activity,
+but you can customize it by providing a `name` parameter to the `@Activity` macro:
 
 ```swift
 @Activity(name: "CustomFindUser")
@@ -76,7 +77,7 @@ let worker = try TemporalWorker(
 )
 ```
 
-You can also register all activities inside a container at once:
+You can also register all activities in a container at once:
 
 ```swift
 import Temporal
@@ -97,8 +98,8 @@ an activity with the matching name.
 
 ## Access the activity's execution context
 
-When running in an activity, the ``ActivityExecutionContext`` is available
-via ``ActivityExecutionContext/current`` which is backed by a task local.
+Access the ``ActivityExecutionContext`` through
+``ActivityExecutionContext/current``, a task local, while running in an activity.
 Among other capabilities, this context provides:
 
 - ``ActivityExecutionContext/Info`` - Information about the currently running activity.
@@ -111,13 +112,13 @@ For a non-local activity to receive cancellation requests, it must call
 ``ActivityExecutionContext/heartbeat(details:)``. Call this function regularly
 in all but the fastest activities.
 
-Cancellation is propagated through Swift's built-in task cancellation and can 
-be checked by calling `Task.isCancelled` or setting up a task cancellation handler.
+Cancellation propagates through Swift's built-in task cancellation. Check
+for cancellation by calling `Task.isCancelled` or setting up a task cancellation handler.
 
-An activity can be canceled for multiple reasons, some server-side and some
-worker-side. Server-side cancellation reasons include workflow canceling the
-activity, workflow completing, or activity timing out. On the worker side, the
-activity can be canceled on worker shutdown.
+Multiple reasons can cancel an activity, some server-side and some
+worker-side. Server-side cancellation reasons include the workflow canceling the
+activity, the workflow completing, or the activity timing out. On the worker side,
+worker shutdown cancels the activity.
 
 ```swift
 @Activity
@@ -140,11 +141,11 @@ func longRunningCalculation(input: Int) async throws -> Int {
 }
 ```
 
-In addition to obtaining cancellation information, heartbeats also support
+Beyond cancellation information, heartbeats also support
 detail data that the server persists for retrieval during activity retry.
 Provide the details when calling the ``ActivityExecutionContext/heartbeat(details:)``
 method and retrieve them with the ``ActivityExecutionContext/Info/heartbeatDetails(as:)``
-method. The above example can use this to resume from the latest computation result
+method. The following example uses this to resume from the latest computation result
 when retrying the activity.
 
 ```swift
