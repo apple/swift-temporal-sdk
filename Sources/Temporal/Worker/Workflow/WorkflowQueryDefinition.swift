@@ -44,6 +44,17 @@
 ///     }
 /// }
 /// ```
+///
+/// You can also define a query that receives a read-only ``WorkflowContextView`` as its first
+/// parameter. This is useful when the query needs access to live workflow metadata such as
+/// the current time or search attributes:
+///
+/// ```swift
+/// @WorkflowQuery
+/// func getStatusWithTime(context: WorkflowContextView, input: Void) -> String {
+///     return "\(currentStatus) as of \(context.now)"
+/// }
+/// ```
 public protocol WorkflowQueryDefinition<Workflow>: Sendable {
     /// The input type for the query.
     associatedtype Input: Sendable
@@ -74,10 +85,11 @@ public protocol WorkflowQueryDefinition<Workflow>: Sendable {
     ///
     /// - Parameters:
     ///   - workflow: The workflow instance being queried.
+    ///   - view: The read-only workflow context view.
     ///   - input: The input data for the query.
     /// - Returns: The query result.
     /// - Throws: Any error that occurs during query processing.
-    func run(workflow: Workflow, input: Input) throws -> Output
+    func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output
 }
 
 extension WorkflowQueryDefinition {

@@ -75,18 +75,18 @@ struct WorkflowMacrosTests {
                     typealias Output = String
                     typealias Workflow = Foo
 
-                    let _run: @Sendable (Workflow, Input) throws -> Output
-                    init(run: @Sendable @escaping (Workflow, Input) throws -> Output) {
+                    let _run: @Sendable (Workflow, WorkflowContextView, Input) throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContextView, Input) throws -> Output) {
                         self._run = run
                     }
-                    func run(workflow: Workflow, input: Input) throws -> Output {
-                        try self._run(workflow, input)
+                    func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output {
+                        try self._run(workflow, view, input)
                     }
                 }
 
                 static var fooQuery: FooQuery {
-                    FooQuery(run: {
-                            try $0.fooQuery(input: $1)
+                    FooQuery(run: { workflow, _, input in
+                            try workflow.fooQuery(input: input)
                         })
                 }
                 func fooUpdate(input: String) async throws -> Int {}
@@ -107,7 +107,7 @@ struct WorkflowMacrosTests {
 
                 static var fooUpdate: FooUpdate {
                     FooUpdate(run: { workflow, _, input in
-                            try await workflow.fooUpdate(input: input)
+                            return try await workflow.fooUpdate(input: input)
                         })
                 }
 
@@ -268,18 +268,18 @@ struct WorkflowMacrosTests {
                     \(modifierPrefix)typealias Output = String
                     \(modifierPrefix)typealias Workflow = FooWorkflow
 
-                    let _run: @Sendable (Workflow, Input) throws -> Output
-                    init(run: @Sendable @escaping (Workflow, Input) throws -> Output) {
+                    let _run: @Sendable (Workflow, WorkflowContextView, Input) throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContextView, Input) throws -> Output) {
                         self._run = run
                     }
-                    \(modifierPrefix)func run(workflow: Workflow, input: Input) throws -> Output{
-                        try self._run(workflow, input)
+                    \(modifierPrefix)func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output{
+                        try self._run(workflow, view, input)
                     }
                 }
 
                 static var foo: Foo {
-                    Foo(run: {
-                            try $0.foo(input: $1)
+                    Foo(run: { workflow, _, input in
+                            try workflow.foo(input: input)
                         })
                 }
                 \(modifierPrefix)func bar(input: Void) throws -> Int {
@@ -290,12 +290,12 @@ struct WorkflowMacrosTests {
                     \(modifierPrefix)typealias Output = Int
                     \(modifierPrefix)typealias Workflow = FooWorkflow
 
-                    let _run: @Sendable (Workflow, Input) throws -> Output
-                    init(run: @Sendable @escaping (Workflow, Input) throws -> Output) {
+                    let _run: @Sendable (Workflow, WorkflowContextView, Input) throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContextView, Input) throws -> Output) {
                         self._run = run
                     }
-                    \(modifierPrefix)func run(workflow: Workflow, input: Input) throws -> Output{
-                        try self._run(workflow, input)
+                    \(modifierPrefix)func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output{
+                        try self._run(workflow, view, input)
                     }
                     \(modifierPrefix)static var name: String {
                         "MyQuery"
@@ -306,8 +306,8 @@ struct WorkflowMacrosTests {
                 }
 
                 static var bar: Bar {
-                    Bar(run: {
-                            try $0.bar(input: $1)
+                    Bar(run: { workflow, _, input in
+                            try workflow.bar(input: input)
                         })
                 }
 
@@ -363,7 +363,7 @@ struct WorkflowMacrosTests {
 
                 static var foo: Foo {
                     Foo(run: { workflow, _, input in
-                            try await workflow.foo(input: input)
+                            return try await workflow.foo(input: input)
                         })
                 }
                 \(modifierPrefix)func bar(input: Void) throws -> String {
@@ -391,7 +391,7 @@ struct WorkflowMacrosTests {
 
                 static var bar: Bar {
                     Bar(run: { workflow, _, input in
-                            try await workflow.bar(input: input)
+                            return try workflow.bar(input: input)
                         })
                 }
 
@@ -707,7 +707,7 @@ struct WorkflowMacrosTests {
 
                 static var foo: Foo {
                     Foo(run: { workflow, _, input in
-                            try await workflow.foo(input: input)
+                            return try await workflow.foo(input: input)
                         })
                 }
 
@@ -767,7 +767,7 @@ struct WorkflowMacrosTests {
 
                 static var foo: Foo {
                     Foo(run: { workflow, _, input in
-                            try await workflow.foo(input: input)
+                            return try await workflow.foo(input: input)
                         }, validate: {
                             try $0.validateFoo(input: $1)
                         })

@@ -257,5 +257,50 @@ extension TestServerDependentTests {
             }
         }
 
+        @Workflow
+        struct QueryWithContextWorkflow {
+            private var state = "initial"
+
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { $0.state == "finished" }
+            }
+
+            @WorkflowQuery
+            func queryWithContext(context: WorkflowContextView, input: Void) throws -> String {
+                "\(state) at \(context.info.workflowType)"
+            }
+
+            @WorkflowSignal
+            mutating func signal(input: String) {
+                self.state = input
+            }
+        }
+
+        @Test
+        func queryWithContextParameter() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [QueryWithContextWorkflow.self]
+            ) { taskQueue, client in
+                let handle = try await client.startWorkflow(
+                    type: QueryWithContextWorkflow.self,
+                    options: .init(id: UUID().uuidString, taskQueue: taskQueue)
+                )
+
+                let result = try await handle.query(
+                    queryType: QueryWithContextWorkflow.QueryWithContext.self
+                )
+                // The query accesses both self.state and context.info.workflowType
+                #expect(result.contains("initial"))
+                #expect(result.contains("QueryWithContextWorkflow"))
+
+                try await handle.signal(
+                    signalType: QueryWithContextWorkflow.Signal.self,
+                    input: "finished"
+                )
+
+                try await handle.result()
+            }
+        }
+
     }
 }

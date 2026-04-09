@@ -15,6 +15,19 @@
 import Logging
 import SwiftProtobuf
 
+/// Holds the state needed to drive a single workflow execution.
+struct WorkflowExecutionState<Workflow: WorkflowDefinition> {
+    /// The boxed workflow value, shared via `ArcBox` so mutations through
+    /// `@_WorkflowState` are visible across the workflow's run method and all handlers.
+    let workflowStateBox: ArcBox<Workflow>
+
+    /// The internal (package-level) workflow context used by the SDK internals.
+    let workflowContext: InternalWorkflowContext
+
+    /// The public workflow context passed to user-visible APIs (run, signal, update handlers).
+    let publicContext: WorkflowContext<Workflow>
+}
+
 /// A workflow runner is responsible for handling a single instance of a workflow.
 ///
 /// This type processes new workflow activations, handles the workflow's executor and sends any outbound commands.
@@ -108,12 +121,10 @@ struct WorkflowInstance: Sendable {
         // 6. Continue from 4. until all wait conditions are checked
 
         // 1.
-        let workflowStateBox: ArcBox<Workflow>
+        let executionState: WorkflowExecutionState<Workflow>
         let input: WorkflowTaskExecutorIsolatedBox<Workflow.Input>
-        let workflowContext: InternalWorkflowContext
-        let publicContext: WorkflowContext<Workflow>
         do {
-            (workflowStateBox, input, workflowContext, publicContext) = try await self.initializeWorkflow(
+            (executionState, input) = try await self.initializeWorkflow(
                 activation,
                 workflowType: workflowType
             )
@@ -141,23 +152,19 @@ struct WorkflowInstance: Sendable {
             // 2.
             await self.applyJobs(
                 jobs: activation.jobs,
-                workflowStateBox: workflowStateBox,
-                workflowContext: workflowContext,
-                publicContext: publicContext,
+                executionState: executionState,
                 group: &group
             )
 
             // 3.
             self.startWorkflow(
-                workflowStateBox: workflowStateBox,
+                executionState: executionState,
                 input: input,
-                workflowContext: workflowContext,
-                publicContext: publicContext,
                 group: &group
             )
 
             // 4.-6.
-            self.runExecutor(context: workflowContext)
+            self.runExecutor(context: executionState.workflowContext)
 
             // We are finished applying the very first activation
             // We have to send the activation completion now
@@ -175,14 +182,12 @@ struct WorkflowInstance: Sendable {
                 // 2.
                 await self.applyJobs(
                     jobs: activation.jobs,
-                    workflowStateBox: workflowStateBox,
-                    workflowContext: workflowContext,
-                    publicContext: publicContext,
+                    executionState: executionState,
                     group: &group
                 )
 
                 // 4.-6.
-                self.runExecutor(context: workflowContext)
+                self.runExecutor(context: executionState.workflowContext)
 
                 // If this throws we will tear everything down and exit since
                 // it indicates we failed to send the completion to the worker
@@ -209,7 +214,7 @@ struct WorkflowInstance: Sendable {
             // There might be outstanding continuations for wait conditions, activities, etc.. The cancel
             // should resume them but we have to run the executor one more time for the workflow run method
             // and any message handler to finish.
-            self.runExecutor(context: workflowContext)
+            self.runExecutor(context: executionState.workflowContext)
         }
     }
 
@@ -217,7 +222,7 @@ struct WorkflowInstance: Sendable {
     private func initializeWorkflow<Workflow: WorkflowDefinition>(
         _ activation: Coresdk.WorkflowActivation.WorkflowActivation,
         workflowType: Workflow.Type
-    ) async throws -> (ArcBox<Workflow>, WorkflowTaskExecutorIsolatedBox<Workflow.Input>, InternalWorkflowContext, WorkflowContext<Workflow>) {
+    ) async throws -> (WorkflowExecutionState<Workflow>, WorkflowTaskExecutorIsolatedBox<Workflow.Input>) {
         guard case .initializeWorkflow(let initializeWorkflow) = activation.jobs.first?.variant else {
             throw ArgumentError(
                 message: "Expected first job to be initialize workflow job"
@@ -264,29 +269,32 @@ struct WorkflowInstance: Sendable {
             internalContext: workflowContext,
             stateBox: workflowStateBox
         )
-        return (workflowStateBox, inputBox, workflowContext, publicContext)
+        let executionState = WorkflowExecutionState(
+            workflowStateBox: workflowStateBox,
+            workflowContext: workflowContext,
+            publicContext: publicContext
+        )
+        return (executionState, inputBox)
     }
 
     // Starts the workflows run method in a separate child task
     private func startWorkflow<Workflow: WorkflowDefinition>(
-        workflowStateBox: ArcBox<Workflow>,
+        executionState: WorkflowExecutionState<Workflow>,
         input: WorkflowTaskExecutorIsolatedBox<Workflow.Input>,
-        workflowContext: InternalWorkflowContext,
-        publicContext: WorkflowContext<Workflow>,
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
         group.addTask(executorPreference: self.executor) {
             self.logger.trace("Intercepting workflow")
-            let workflow = workflowStateBox.value
+            let workflow = executionState.workflowStateBox.value
             let workflowResult = await Result {
                 // Context is not frozen during normal workflow execution
                 try await self.implementation.executeWorkflow(
                     workflow: workflow,
-                    context: workflowContext,
-                    publicContext: publicContext,
+                    context: executionState.workflowContext,
+                    publicContext: executionState.publicContext,
                     input: .init(
-                        info: workflowContext.info,
-                        headers: workflowContext.info.headers,
+                        info: executionState.workflowContext.info,
+                        headers: executionState.workflowContext.info.headers,
                         input: input.wrapped
                     )
                 )
@@ -325,9 +333,7 @@ struct WorkflowInstance: Sendable {
     /// Applies the jobs of an activation.
     private func applyJobs<Workflow: WorkflowDefinition>(
         jobs: [Coresdk.WorkflowActivation.WorkflowActivationJob],
-        workflowStateBox: ArcBox<Workflow>,
-        workflowContext: InternalWorkflowContext,
-        publicContext: WorkflowContext<Workflow>,
+        executionState: WorkflowExecutionState<Workflow>,
         group: inout ThrowingTaskGroup<Void, any Error>
     ) async {
         for job in jobs {
@@ -382,24 +388,19 @@ struct WorkflowInstance: Sendable {
             case .queryWorkflow(let queryWorkflow):
                 self.queryWorkflow(
                     queryWorkflow,
-                    workflowStateBox: workflowStateBox,
-                    workflowContext: workflowContext,
+                    executionState: executionState,
                     group: &group
                 )
             case .signalWorkflow(let signalWorkflow):
                 self.signalWorkflow(
                     signalWorkflow,
-                    workflowStateBox: workflowStateBox,
-                    workflowContext: workflowContext,
-                    publicContext: publicContext,
+                    executionState: executionState,
                     group: &group
                 )
             case .doUpdate(let updateWorkflow):
                 self.updateWorkflow(
                     updateWorkflow,
-                    workflowStateBox: workflowStateBox,
-                    workflowContext: workflowContext,
-                    publicContext: publicContext,
+                    executionState: executionState,
                     group: &group
                 )
             case .resolveNexusOperation:
@@ -489,13 +490,11 @@ struct WorkflowInstance: Sendable {
 
     private func signalWorkflow<Workflow: WorkflowDefinition>(
         _ signalWorkflow: Coresdk.WorkflowActivation.SignalWorkflow,
-        workflowStateBox: ArcBox<Workflow>,
-        workflowContext: InternalWorkflowContext,
-        publicContext: WorkflowContext<Workflow>,
+        executionState: WorkflowExecutionState<Workflow>,
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
         group.addTask(executorPreference: self.executor) {
-            let workflow = workflowStateBox.value
+            let workflow = executionState.workflowStateBox.value
             guard let signal = Workflow.signals.first(where: { $0.name == signalWorkflow.signalName }) else {
                 self.logger.error(
                     "No signal handler found",
@@ -513,8 +512,8 @@ struct WorkflowInstance: Sendable {
                     signal: signal,
                     workflow: workflow,
                     headers: signalWorkflow.headers,
-                    context: workflowContext,
-                    publicContext: publicContext,
+                    context: executionState.workflowContext,
+                    publicContext: executionState.publicContext,
                     temporalPayloads: signalWorkflow.input
                 )
             }
@@ -579,12 +578,11 @@ struct WorkflowInstance: Sendable {
 
     private func queryWorkflow<Workflow: WorkflowDefinition>(
         _ queryWorkflow: Coresdk.WorkflowActivation.QueryWorkflow,
-        workflowStateBox: ArcBox<Workflow>,
-        workflowContext: InternalWorkflowContext,
+        executionState: WorkflowExecutionState<Workflow>,
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
         group.addTask(executorPreference: self.executor) {
-            let workflow = workflowStateBox.value
+            let workflow = executionState.workflowStateBox.value
             if queryWorkflow.queryType == "__temporal_workflow_metadata" {
                 await self.runMessageHandler(
                     name: queryWorkflow.queryType,
@@ -592,7 +590,7 @@ struct WorkflowInstance: Sendable {
                     unfinishedPolicy: .abandon
                 ) {
                     do {
-                        let metadata = workflowMetadata(type: Workflow.self, context: workflowContext)
+                        let metadata = workflowMetadata(type: Workflow.self, context: executionState.workflowContext)
                         // Use the default data converter as this query will be
                         // used for displaying information in the Temporal UI.
                         let payload = try await DataConverter.default.convertValue(metadata)
@@ -640,7 +638,7 @@ struct WorkflowInstance: Sendable {
                     id: queryWorkflow.queryID,
                     query: query,
                     workflow: workflow,
-                    context: workflowContext,
+                    context: executionState.workflowContext,
                     headers: queryWorkflow.headers,
                     temporalPayloads: queryWorkflow.arguments
                 )
@@ -766,13 +764,11 @@ struct WorkflowInstance: Sendable {
 
     private func updateWorkflow<Workflow: WorkflowDefinition>(
         _ updateWorkflow: Coresdk.WorkflowActivation.DoUpdate,
-        workflowStateBox: ArcBox<Workflow>,
-        workflowContext: InternalWorkflowContext,
-        publicContext: WorkflowContext<Workflow>,
+        executionState: WorkflowExecutionState<Workflow>,
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
         group.addTask(executorPreference: self.executor) {
-            let workflow = workflowStateBox.value
+            let workflow = executionState.workflowStateBox.value
             guard let update = Workflow.updates.first(where: { $0.name == updateWorkflow.name }) else {
                 self.logger.error(
                     "No update handler found",
@@ -800,8 +796,8 @@ struct WorkflowInstance: Sendable {
                     runValidator: updateWorkflow.runValidator,
                     update: update,
                     workflow: workflow,
-                    workflowContext: workflowContext,
-                    publicContext: publicContext,
+                    workflowContext: executionState.workflowContext,
+                    publicContext: executionState.publicContext,
                     headers: updateWorkflow.headers,
                     temporalPayloads: updateWorkflow.input
                 )
@@ -1090,6 +1086,7 @@ extension WorkflowInstance.Implementation {
                 try intercept((any WorkflowInboundInterceptor).handleQuery, input: input) { input in
                     try input.definition.run(
                         workflow: workflow,
+                        view: WorkflowContextView(storage: context.stateMachine, info: context.info),
                         input: input.input
                     )
                 }

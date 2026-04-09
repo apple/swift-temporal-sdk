@@ -43,6 +43,22 @@
 ///     }
 /// }
 /// ```
+///
+/// You can also define an async signal handler that receives a ``WorkflowContext`` as its
+/// first parameter. This is useful when the signal handler needs to issue commands such
+/// as executing activities or sleeping:
+///
+/// ```swift
+/// @WorkflowSignal
+/// mutating func processApproval(context: WorkflowContext<Self>, input: ApprovalData) async throws {
+///     self.approvalReceived = true
+///     try await context.executeActivity(
+///         NotifyApprovalActivity.self,
+///         options: .init(startToCloseTimeout: .seconds(10)),
+///         input: input
+///     )
+/// }
+/// ```
 public protocol WorkflowSignalDefinition<Workflow>: Sendable {
     /// The input type for the signal.
     associatedtype Input: Sendable

@@ -66,6 +66,29 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
 
     /// Mutates the workflow state using a closure and returns a value.
     ///
+    /// Normally you can just mutate the state of the workflow by making you run method or the handler
+    /// mutating. However, you cannot capture `self` in escaping closures such as async let's or
+    /// child tasks. This method allows you to mutate the state safely in such closures.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// @WorkflowSignal
+    /// func addItem(context: WorkflowContext<Self>, input: Item) async throws {
+    ///     async let execute = {
+    ///         context.mutateState { workflow in
+    ///             workflow.items.append(input)
+    ///         }
+    ///         try await context.executeActivity(
+    ///             PersistItemActivity.self,
+    ///             options: .init(startToCloseTimeout: .seconds(10)),
+    ///             input: input
+    ///         )
+    ///     }
+    ///     try await execute
+    /// }
+    /// ```
+    ///
     /// - Parameter mutator: A closure that receives a mutable reference to the workflow struct
     ///   and returns a value.
     /// - Returns: The value returned by the closure.
@@ -83,7 +106,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     /// Returns the update ID and name when called from within an update handler
     /// or update validator. Returns `nil` when called outside of an update context
     /// (e.g., from the main workflow run method, signal handlers, or query handlers).
-    public static var currentUpdateInfo: WorkflowUpdateInfo? {
+    public var currentUpdateInfo: WorkflowUpdateInfo? {
         InternalWorkflowContext.currentUpdateInfo
     }
 

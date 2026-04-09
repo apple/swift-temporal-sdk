@@ -227,9 +227,8 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
         }
 
         if !hasMatchingInitializer {
-            let modifiers: DeclModifierListSyntax = accessModifier
             emptyInitDecl = InitializerDeclSyntax(
-                modifiers: modifiers,
+                modifiers: accessModifier,
                 signature: .init(
                     parameterClause: .init(parameters: [
                         FunctionParameterSyntax(firstName: .identifier("input"), type: IdentifierTypeSyntax(name: .identifier("Input")))

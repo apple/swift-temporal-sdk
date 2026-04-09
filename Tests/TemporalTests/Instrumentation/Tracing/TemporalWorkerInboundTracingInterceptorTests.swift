@@ -50,17 +50,6 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         namespace: Self.namespace,
         headers: [:]
     )
-    //    private static let internalWorkflowContext = InternalWorkflowContext(
-    //        stateMachine: .init(
-    //            executor: .init(),
-    //            payloadConverter: DefaultPayloadConverter(),
-    //            failureConverter: DefaultFailureConverter()
-    //        ),
-    //        workflowInfo: Self.testWorkflowInfo,
-    //        payloadConverter: DefaultPayloadConverter(),
-    //        outboundInterceptors: [],
-    //        logger: .init(label: "TestWorkflowContext")
-    //    )
 
     // only test one inbound workflow worker interceptor, as logic is the same (except for the setting of span attributes)
     @Test
@@ -80,7 +69,6 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 TemporalTraceID(traceparent: traceID)
             )
         ]
-        //        try await InternalWorkflowContext.$current.withValue(Self.internalWorkflowContext) {
         _ = try await interceptor.executeWorkflow(
             input: ExecuteWorkflowInput<VoidWorkflow>(
                 info: Self.testWorkflowInfo,
@@ -91,7 +79,6 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             // Make sure we get the metadata injected into our service context
             #expect(ServiceContext.current?.traceID == traceID.uuidString)
         }
-        //        }
 
         assertTestSpanComponents(
             forSpan: "RunWorkflow:\(Self.workflowName)",
@@ -134,7 +121,6 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         ]
 
         do {
-            //            try await InternalWorkflowContext.$current.withValue(Self.internalWorkflowContext) {
             _ = try await interceptor.executeWorkflow(
                 input: ExecuteWorkflowInput<VoidWorkflow>(
                     info: Self.testWorkflowInfo,
@@ -148,7 +134,6 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 // Simulates an error within the RPC
                 throw TracingInterceptorTestError.testError
             }
-            //            }
 
             Issue.record("Should have thrown")
         } catch {

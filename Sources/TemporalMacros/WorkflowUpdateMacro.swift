@@ -22,7 +22,7 @@ public struct WorkflowUpdateMacro: PeerMacro {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        // Can only be used inside a workflow (struct or class)
+        // Can only be used inside a workflow struct
         guard let parent = context.lexicalContext.first else {
             throw MacroError(message: "@WorkflowUpdate can only be used inside a workflow")
         }
@@ -50,22 +50,26 @@ public struct WorkflowUpdateMacro: PeerMacro {
         let hasContextParam: Bool
         if parameters.count == 2 {
             guard parameters.first?.firstName.text == "context" else {
-                throw MacroError(message: "Workflow update first parameter must be called 'context'")
+                throw MacroError(message: "Workflow update first parameter must be called 'context' with type 'WorkflowContext<Self>'")
             }
             guard parameters.dropFirst().first?.firstName.text == "input" else {
-                throw MacroError(message: "Workflow update second parameter must be called 'input'")
+                throw MacroError(message: "Workflow update second parameter must be called 'input' with a Sendable type")
             }
             hasContextParam = true
         } else if parameters.count == 1 {
             guard parameters.first?.firstName.text == "input" else {
-                throw MacroError(message: "Workflow update parameter must be called 'input'")
+                throw MacroError(message: "Workflow update parameter must be called 'input' with a Sendable type")
             }
             hasContextParam = false
         } else {
-            throw MacroError(message: "Workflow updates must have one or two parameters")
+            throw MacroError(message: "Workflow updates must have one parameter 'input' or two parameters 'context' and 'input'")
         }
 
         let input = hasContextParam ? parameters.dropFirst().first! : parameters.first!
+
+        let throwingUpdate = functionDecl.signature.effectSpecifiers?.throwsClause?.throwsSpecifier.presence == .present
+        let asyncUpdate = functionDecl.signature.effectSpecifiers?.asyncSpecifier?.presence == .present
+        let isMutating = functionDecl.modifiers.contains { $0.name.tokenKind == .keyword(.mutating) }
 
         let rawAccessModifier = functionDecl.modifiers.accessModifierPrefix(supportedModifiers: .allAccessModifiers)
 
@@ -84,7 +88,6 @@ public struct WorkflowUpdateMacro: PeerMacro {
 
         let validatorName = node.stringValueForArgument(named: "validator")
         let updateName = functionDecl.name.text.capitalizingFirst()
-        let isMutating = functionDecl.modifiers.contains { $0.name.tokenKind == .keyword(.mutating) }
 
         let initParams: String
         let initBody: String
@@ -110,16 +113,24 @@ public struct WorkflowUpdateMacro: PeerMacro {
         // For mutating updates, the closure needs a mutable copy of the workflow.
         // Since @_WorkflowState uses reference-backed boxes, mutations on the copy
         // are visible through the shared boxes.
+        let tryKeyword = throwingUpdate ? "try " : ""
+        let awaitKeyword = asyncUpdate ? "await " : ""
+        let returnKeyword = returnType != "Void" ? "return " : ""
+
         let runClosureBody: String
-        if isMutating && hasContextParam {
+        switch (isMutating, hasContextParam) {
+        case (true, true):
             runClosureBody =
-                "{ workflow, context, input in var workflow = workflow; return try await workflow.\(functionDecl.name.text)(context: context, input: input) }"
-        } else if isMutating {
-            runClosureBody = "{ workflow, _, input in var workflow = workflow; return try await workflow.\(functionDecl.name.text)(input: input) }"
-        } else if hasContextParam {
-            runClosureBody = "{ workflow, context, input in try await workflow.\(functionDecl.name.text)(context: context, input: input) }"
-        } else {
-            runClosureBody = "{ workflow, _, input in try await workflow.\(functionDecl.name.text)(input: input) }"
+                "{ workflow, context, input in var workflow = workflow; \(returnKeyword)\(tryKeyword)\(awaitKeyword)workflow.\(functionDecl.name.text)(context: context, input: input) }"
+        case (true, false):
+            runClosureBody =
+                "{ workflow, _, input in var workflow = workflow; \(returnKeyword)\(tryKeyword)\(awaitKeyword)workflow.\(functionDecl.name.text)(input: input) }"
+        case (false, true):
+            runClosureBody =
+                "{ workflow, context, input in \(returnKeyword)\(tryKeyword)\(awaitKeyword)workflow.\(functionDecl.name.text)(context: context, input: input) }"
+        case (false, false):
+            runClosureBody =
+                "{ workflow, _, input in \(returnKeyword)\(tryKeyword)\(awaitKeyword)workflow.\(functionDecl.name.text)(input: input) }"
         }
 
         let staticVarBody: String

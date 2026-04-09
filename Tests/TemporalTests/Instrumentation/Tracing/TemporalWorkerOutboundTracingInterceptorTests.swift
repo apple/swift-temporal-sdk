@@ -56,17 +56,6 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
         namespace: Self.namespace,
         headers: [:]
     )
-    //    private static let internalWorkflowContext = InternalWorkflowContext(
-    //        stateMachine: .init(
-    //            executor: .init(),
-    //            payloadConverter: DefaultPayloadConverter(),
-    //            failureConverter: DefaultFailureConverter()
-    //        ),
-    //        workflowInfo: Self.testWorkflowInfo,
-    //        payloadConverter: DefaultPayloadConverter(),
-    //        outboundInterceptors: [],
-    //        logger: .init(label: "TestWorkflowContext")
-    //    )
 
     // only test one outbound workflow worker interceptor, as logic is the same (except for the setting of span attributes)
     @Test
@@ -76,7 +65,6 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
         let traceIDString = UUID().uuidString
         serviceContext.traceID = traceIDString
 
-        //        try await InternalWorkflowContext.$current.withValue(Self.internalWorkflowContext) {
         try await ServiceContext.withValue(serviceContext) {
             let interceptor = try #require(
                 TemporalWorkerTracingInterceptor(
@@ -149,7 +137,6 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                 #expect(errors == [])
             }
         }
-        //        }
     }
 
     @Test
@@ -159,7 +146,6 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
         let traceIDString = UUID().uuidString
         serviceContext.traceID = traceIDString
 
-        //        try await InternalWorkflowContext.$current.withValue(Self.internalWorkflowContext) {
         try await ServiceContext.withValue(serviceContext) {
             let interceptor = try #require(
                 TemporalWorkerTracingInterceptor(
@@ -217,6 +203,5 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                 }
             }
         }
-        //        }
     }
 }

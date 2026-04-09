@@ -22,7 +22,7 @@ public struct WorkflowSignalMacro: PeerMacro {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        // Can only be used inside a workflow (struct or class)
+        // Can only be used inside a workflow struct
         guard let parent = context.lexicalContext.first else {
             throw MacroError(message: "@WorkflowSignal can only be used inside a workflow")
         }
@@ -55,19 +55,19 @@ public struct WorkflowSignalMacro: PeerMacro {
         let hasContextParam: Bool
         if parameters.count == 2 {
             guard parameters.first?.firstName.text == "context" else {
-                throw MacroError(message: "Workflow signal first parameter must be called 'context'")
+                throw MacroError(message: "Workflow signal first parameter must be called 'context' with type 'WorkflowContext<Self>'")
             }
             guard parameters.dropFirst().first?.firstName.text == "input" else {
-                throw MacroError(message: "Workflow signal second parameter must be called 'input'")
+                throw MacroError(message: "Workflow signal second parameter must be called 'input' with a Sendable type")
             }
             hasContextParam = true
         } else if parameters.count == 1 {
             guard parameters.first?.firstName.text == "input" else {
-                throw MacroError(message: "Workflow signal parameter must be called 'input'")
+                throw MacroError(message: "Workflow signal parameter must be called 'input' with a Sendable type")
             }
             hasContextParam = false
         } else {
-            throw MacroError(message: "Workflow signals must have one or two parameters")
+            throw MacroError(message: "Workflow signals must have one parameter 'input' or two parameters 'context' and 'input'")
         }
 
         let input = hasContextParam ? parameters.dropFirst().first! : parameters.first!
@@ -96,20 +96,17 @@ public struct WorkflowSignalMacro: PeerMacro {
         // For mutating signals, the closure needs a mutable copy of the workflow.
         // Since @_WorkflowState uses reference-backed boxes, mutations on the copy
         // are visible through the shared boxes.
-        let closureBody: String
-        if isMutating && hasContextParam {
-            closureBody =
+        let closureBody: String =
+            switch (isMutating, hasContextParam) {
+            case (true, true):
                 "{ workflow, context, input in var workflow = workflow; \(throwingSignal ? "try" : "") \(asyncSignal ? "await" : "") workflow.\(functionDecl.name.text)(context: context, input: input) }"
-        } else if isMutating {
-            closureBody =
+            case (true, false):
                 "{ workflow, _, input in var workflow = workflow; \(throwingSignal ? "try" : "") \(asyncSignal ? "await" : "") workflow.\(functionDecl.name.text)(input: input) }"
-        } else if hasContextParam {
-            closureBody =
+            case (false, true):
                 "{ workflow, context, input in \(throwingSignal ? "try" : "") \(asyncSignal ? "await" : "") workflow.\(functionDecl.name.text)(context: context, input: input) }"
-        } else {
-            closureBody =
+            case (false, false):
                 "{ workflow, _, input in \(throwingSignal ? "try" : "") \(asyncSignal ? "await" : "") workflow.\(functionDecl.name.text)(input: input) }"
-        }
+            }
 
         return [
             """
