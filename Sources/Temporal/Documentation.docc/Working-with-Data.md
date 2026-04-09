@@ -19,7 +19,7 @@ converters.
 Data converters (``DataConverter``) combine a ``PayloadConverter``, an optional
 ``PayloadCodec``, and a ``FailureConverter``. Payload converters convert Swift
 types to and from serialized bytes. Payload codecs transform bytes to bytes,
-for example by compressing or encrypting them. Failure converters convert
+for example, by compressing or encrypting them. Failure converters convert
 `Error` values to and from serialized failures.
 
 The SDK provides ``DataConverter/default``, which uses the
@@ -53,7 +53,7 @@ payload data as Base64:
 
 @Snippet(path: "swift-temporal-sdk/Snippets/DataConversion", slice: "base64PayloadCodec")
 
-To use a custom codec, create a ``DataConverter`` that includes it and pass
+To use a custom codec, create a ``DataConverter`` that includes your codec and pass
 the converter to your worker configuration:
 
 @Snippet(path: "swift-temporal-sdk/Snippets/DataConversion", slice: "workerWithCodec")
@@ -70,8 +70,8 @@ Unlike payload codecs, payload converters **must be deterministic** because
 they run inside workflows during replay.
 
 Use ``CompositePayloadConverter`` to chain multiple ``EncodingPayloadConverter``
-implementations together. The composite converter tries each one in order until
-one successfully encodes the value:
+implementations together. The composite converter tries each converter in order until
+it successfully encodes the value:
 
 @Snippet(path: "swift-temporal-sdk/Snippets/DataConversion", slice: "compositePayloadConverter")
 
