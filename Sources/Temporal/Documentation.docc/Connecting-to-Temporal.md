@@ -45,8 +45,8 @@ used in production environments.
 
 ## Connect to Temporal with mTLS
 
-Most production Temporal servers require mutual TLS (mTLS) authentication which uses
-client certificates. The example below illustrates how to configure your client with
+Most production Temporal servers require mutual TLS (mTLS) authentication, which uses
+client certificates. The following example illustrates how to configure your client with
 the required certificates:
 
 ```swift
@@ -83,14 +83,15 @@ try await client.run()
 
 For more advanced transport configuration, use the
 ``TemporalClient/connect(transport:configuration:logger:_:)`` method
-and check out the [grpc-swift project](https://github.com/grpc/grpc-swift-2).
+and see the [grpc-swift project](https://github.com/grpc/grpc-swift-2).
 
 ## Manage client lifecycle
 
 Handle client startup and shutdown gracefully in your application using
 [Swift ServiceLifecycle](https://github.com/swift-server/swift-service-lifecycle).
 An instance of ``TemporalClient`` conforms to the `Service` protocol,
-which you can include within the `ServiceGroup` your app runs, as show below:
+which you can include within the `ServiceGroup` your app runs, as shown in the
+following example:
 
 ```swift
 import Logging

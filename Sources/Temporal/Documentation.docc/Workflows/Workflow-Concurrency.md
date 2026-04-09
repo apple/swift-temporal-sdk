@@ -1,4 +1,4 @@
-# How workflows leverage Swift Concurrency
+# Using Swift Concurrency in workflows
 
 Build deterministic workflows using Swift's async/await and Structured
 Concurrency primitives.
@@ -82,7 +82,7 @@ APIs inside your workflows:
 - Swift's standard Task cancellation primitives.
 
 **Avoid these APIs:**
-- `Task.detached` - Instead use Structured Concurrency alternatives.
+- `Task.detached` - Instead, use Structured Concurrency alternatives.
 - Actor isolation - Introduces potential executor hops.
 - `Task.sleep` or `Clock.sleep` - Instead, use ``WorkflowContext/sleep(for:summary:)``.
 - Direct I/O operations - Instead, use activities for any non-deterministic code.

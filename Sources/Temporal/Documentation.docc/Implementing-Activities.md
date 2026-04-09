@@ -48,8 +48,7 @@ such as database clients, to your activities.
 
 ### Give activities custom names
 
-Temporal activities are identified by their name (or sometimes referred to as
-"activity type"). This defaults to the unqualified method name of the activity,
+Temporal identifies activities by name, sometimes called the *activity type*. This defaults to the unqualified method name of the activity,
 but can be customized by providing a `name` parameter to the `@Activity` macro:
 
 ```swift
@@ -60,7 +59,7 @@ func findUser(input: FindUserInput) async throws -> FindUserOutput {
 }
 ```
 
-### Registering activities with a worker
+### Register activities with a worker
 
 Register your activities with a ``TemporalWorker`` to make them available for
 execution:
@@ -100,7 +99,7 @@ an activity with the matching name.
 
 When running in an activity, the ``ActivityExecutionContext`` is available
 via ``ActivityExecutionContext/current`` which is backed by a task local.
-In addition to other more advanced things, this context provides:
+Among other capabilities, this context provides:
 
 - ``ActivityExecutionContext/Info`` - Information about the currently running activity.
 - ``ActivityExecutionContext/heartbeat(details:)`` - Method to call to record an activity heartbeat.
@@ -108,9 +107,9 @@ In addition to other more advanced things, this context provides:
 
 ### Handle activity heartbeating and cancellation
 
-In order for a non-local activity to be notified of cancellation requests, it must call
-``ActivityExecutionContext/heartbeat(details:)``. It is strongly recommended that
-all but the fastest executing activities call this function regularly.
+For a non-local activity to receive cancellation requests, it must call
+``ActivityExecutionContext/heartbeat(details:)``. Call this function regularly
+in all but the fastest activities.
 
 Cancellation is propagated through Swift's built-in task cancellation and can 
 be checked by calling `Task.isCancelled` or setting up a task cancellation handler.
@@ -142,7 +141,7 @@ func longRunningCalculation(input: Int) async throws -> Int {
 ```
 
 In addition to obtaining cancellation information, heartbeats also support
-detail data that is persisted on the server for retrieval during activity retry.
+detail data that the server persists for retrieval during activity retry.
 Provide the details when calling the ``ActivityExecutionContext/heartbeat(details:)``
 method and retrieve them with the ``ActivityExecutionContext/Info/heartbeatDetails(as:)``
 method. The above example can use this to resume from the latest computation result

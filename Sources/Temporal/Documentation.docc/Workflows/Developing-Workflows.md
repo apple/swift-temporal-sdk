@@ -195,7 +195,7 @@ struct RegisterUserWorkflow {
 ```
 
 Signal handlers that modify workflow state are declared as `mutating func`.
-Because workflows are now value types, signal handlers that only mutate state
+Because workflows are value types, signal handlers that only mutate state
 do not need to be `async throws`. Follow the same best practice of using custom
 input types for signal handlers as you do for workflows to support backward
 compatibility.
@@ -273,7 +273,7 @@ query handlers provide compile-time safety: they are non-mutating by default,
 guaranteeing they cannot modify workflow state. Use custom input and output types
 for queries to maintain backward compatibility.
 
-By default, the signal name is the unqualified capitalized method name.
+By default, the query name is the unqualified capitalized method name.
 You can customize the query name using the `name` parameter, for example:
 
 ```swift
@@ -316,14 +316,14 @@ struct RegisterUserWorkflow {
     mutating func updateUserName(input: UpdateUserNameInput) async throws -> UpdateUserNameOutput {
         // Can only update details while waiting for approval
         guard currentState == .waitingForApproval else {
-            return UpdateUserDetailsOutput(
+            return UpdateUserNameOutput(
                 success: false
             )
         }
 
         self.userName = input.userName
 
-        return UpdateUserDetailsOutput(
+        return UpdateUserNameOutput(
             success: true
         )
     }
@@ -341,6 +341,6 @@ By default the update name is the unqualified
 capitalized method name. You can customize the update name using the
 `name` parameter, for example:
 
-```swidt
+```swift
 @WorkflowUpdate(name: "CustomUpdateUserName")
 ```

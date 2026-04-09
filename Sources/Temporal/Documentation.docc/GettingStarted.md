@@ -32,7 +32,8 @@ dependencies: [
 
 ## Set up a local Temporal server
 
-Install the Temporal CLI by visiting https://temporal.io/setup/install-temporal-cli
+Install the Temporal CLI by visiting the
+[Temporal CLI installation page](https://temporal.io/setup/install-temporal-cli)
 and following the installation instructions for your platform. After the CLI is installed,
 start a development server:
 
@@ -41,14 +42,14 @@ start a development server:
 temporal server start-dev
 ```
 
-The development server runs at `localhost:7233`, and hosts a Web UI at
+The development server runs at `localhost:7233`, and hosts a web UI at
 `http://localhost:8233`.
 
 ## Create your first workflow
 
 ### Define the activity
 
-Activities are the units of work within a workflow, and define the logic that performs the work in your application.
+Each activity defines a unit of work — an individual operation that a workflow coordinates.
 Create a simple greeting activity:
 
 ```swift
@@ -65,7 +66,7 @@ struct GreetingActivities {
 
 ### Define the workflow
 
-Workflows orchestrate activities and contain your business logic for coordinating them.
+Workflows contain your business logic and orchestrate the activities that carry it out.
 Create a workflow that calls the activity and returns the generated greeting:
 
 ```swift
@@ -88,7 +89,7 @@ struct GreetingWorkflow {
 ### Start a worker and client
 
 Create an application that starts a worker with the workflow and activity, then
-execute the workflow:
+executes the workflow:
 
 ```swift
 import Foundation
@@ -163,7 +164,7 @@ struct GreetingApplication {
 
 ## Run your application
 
-When you run your application, you should see output similar to:
+When you run your application, the output looks similar to:
 
 ```
 Executing workflow
