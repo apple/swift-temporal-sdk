@@ -65,6 +65,11 @@ public struct DefaultFailureConverter: FailureConverter {
         return temporalFailure
     }
 
+    /// Converts the given Temporal failure to a Swift error.
+    ///
+    /// - Parameter temporalFailure: The Temporal failure to convert.
+    /// - Parameter payloadConverter: The payload converter to use when decoding encoded attributes.
+    /// - Returns: The converted error.
     public func convertFailure(
         _ temporalFailure: Api.Failure.V1.Failure,
         payloadConverter: some PayloadConverter
