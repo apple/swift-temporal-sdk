@@ -60,7 +60,7 @@ func findUser(input: FindUserInput) async throws -> FindUserOutput {
 }
 ```
 
-## Register activities with a worker
+### Register activities with a worker
 
 Register your activities with a ``TemporalWorker`` to make them available for
 execution:
