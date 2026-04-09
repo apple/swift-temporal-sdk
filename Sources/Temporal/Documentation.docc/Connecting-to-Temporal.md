@@ -10,9 +10,8 @@ Temporal services. Use it to start workflows, query workflow state,
 send signals, and manage workflow lifecycles across different environments.
 
 This article shows you how to establish connections to local development
-and production instances. You'll learn to configure authentication,
-handle connection lifecycle, and implement retry policies for robust client
-operations.
+and production instances. You'll learn to configure authentication and
+handle connection lifecycle.
 
 ## Connect to a local development server
 
