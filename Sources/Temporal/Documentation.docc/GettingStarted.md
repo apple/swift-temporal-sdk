@@ -4,9 +4,9 @@ Build your first Temporal workflow and activity.
 
 ## Overview
 
-Create a simple Temporal workflow consisting of a single activity,
-from installation to running your first workflow locally.
-Define an activity, create a workflow that calls it,
+This guide walks you through creating a simple Temporal workflow consisting
+of a single activity, from installation to running your first workflow locally.
+This article shows you how to create an activity, define a workflow that calls it,
 set up a worker, and run the workflow.
 
 ## Add the dependency

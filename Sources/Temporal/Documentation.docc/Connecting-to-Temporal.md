@@ -5,8 +5,8 @@ environments.
 
 ## Overview
 
-The Temporal client serves as your application's gateway to interact with
-Temporal services. Use it to start workflows, query workflow state,
+The Temporal client serves as your application's gateway to Temporal services.
+Use it to start workflows, query workflow state,
 send signals, and manage workflow lifecycles across different environments.
 
 This article shows you how to establish connections to local development
@@ -39,14 +39,13 @@ try await client.run()
 ```
 
 A development server typically runs on `localhost:7233` with a plaintext
-transport. This configuration provides no encryption and should **never** be
-used in production environments.
+transport. This configuration provides no encryption — never use it
+in production environments.
 
 ## Connect to Temporal with mTLS
 
 Most production Temporal servers require mutual TLS (mTLS) authentication, which uses
-client certificates. The following example illustrates how to configure your client with
-the required certificates:
+client certificates. Configure your client with the required certificates:
 
 ```swift
 import X509
@@ -120,5 +119,5 @@ struct TemporalApplication {
 }
 ```
 
-By using the Swift Service Lifecycle to manage the service, your application shuts
+Use Swift Service Lifecycle to manage the service so your application shuts
 down cleanly when it receives termination signals.
