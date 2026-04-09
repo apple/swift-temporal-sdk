@@ -54,7 +54,7 @@ extension TemporalWorkerTracingInterceptor {
                 headers: input.headers,
                 setRequestAttributes: { span in
                     span.setWorkerExecuteActivityRequestSpanAttributes(
-                        workflowInfo: Workflow.info,
+                        workflowInfo: input.info,
                         activityName: input.name,
                         activityOptions: input.options
                     )
@@ -76,7 +76,7 @@ extension TemporalWorkerTracingInterceptor {
                 headers: input.headers,
                 setRequestAttributes: { span in
                     span.setWorkerExecuteLocalActivityRequestSpanAttributes(
-                        workflowInfo: Workflow.info,
+                        workflowInfo: input.info,
                         activityName: input.name,
                         activityOptions: input.options
                     )
@@ -94,11 +94,11 @@ extension TemporalWorkerTracingInterceptor {
             next: (MakeContinueAsNewErrorInput<repeat each Input>) async throws -> ContinueAsNewError
         ) async throws -> ContinueAsNewError {
             try await self.traceRecording.recordOutbound(
-                spanName: "CreateContinuedAsNewError:\(Workflow.info.workflowName)",
+                spanName: "CreateContinuedAsNewError:\(input.info.workflowName)",
                 headers: input.headers,
                 setRequestAttributes: { span in
                     span.setWorkerContinueAsNewRequestSpanAttributes(
-                        workflowInfo: Workflow.info,
+                        workflowInfo: input.info,
                         options: input.options
                     )
                 },
@@ -124,7 +124,7 @@ extension TemporalWorkerTracingInterceptor {
                 headers: input.headers,
                 setRequestAttributes: { span in
                     span.setWorkerStartChildWorkflowRequestSpanAttributes(
-                        workflowInfo: Workflow.info,
+                        workflowInfo: input.info,
                         options: input.options
                     )
                 },

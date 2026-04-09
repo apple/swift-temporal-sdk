@@ -21,9 +21,9 @@ extension TestServerDependentTests {
     @Suite
     struct TemporalWorkerCancellationTests {
         @Workflow
-        final class SimpleWorkflow {
-            func run(input: Void) async throws {
-                try await Workflow.sleep(for: .seconds(1000))
+        struct SimpleWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.sleep(for: .seconds(1000))
             }
         }
 

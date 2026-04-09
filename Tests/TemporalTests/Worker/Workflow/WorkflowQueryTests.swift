@@ -36,12 +36,13 @@ extension TestServerDependentTests {
         }
 
         @Workflow(name: "SimpleQueryWorkflow")
-        final class SimpleQueryWorkflow<Activity: ActivityDefinition> where Activity.Input == Void, Activity.Output == String {
+        struct SimpleQueryWorkflow<Activity: ActivityDefinition> where Activity.Input == Void, Activity.Output == String {
             @_WorkflowState  // This works around a compiler crash
             private var state = "initial"
 
-            func run(input: Void) async throws {
-                state = try await Workflow.executeActivity(Activity.self, options: .init(scheduleToCloseTimeout: .seconds(100)))
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                let result = try await context.executeActivity(Activity.self, options: .init(scheduleToCloseTimeout: .seconds(100)))
+                self.state = result
             }
 
             @WorkflowQuery
@@ -51,15 +52,15 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class QueryWorkflow {
+        struct QueryWorkflow {
             enum QueryScenario: Codable {
                 case simpleQuery
             }
 
             private var state = "initial"
 
-            func run(input: Void) async throws {
-                try await Workflow.condition { self.state == "finished" }
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { $0.state == "finished" }
             }
 
             @WorkflowQuery
@@ -71,7 +72,7 @@ extension TestServerDependentTests {
             }
 
             @WorkflowSignal
-            func signal(input: String) async throws {
+            mutating func signal(input: String) {
                 self.state = input
             }
         }
@@ -253,6 +254,51 @@ extension TestServerDependentTests {
                 try await handle.result()
 
                 #expect(interceptor.counter.withLock { $0 } >= 1)
+            }
+        }
+
+        @Workflow
+        struct QueryWithContextWorkflow {
+            private var state = "initial"
+
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { $0.state == "finished" }
+            }
+
+            @WorkflowQuery
+            func queryWithContext(context: WorkflowContextView, input: Void) throws -> String {
+                "\(state) at \(context.info.workflowType)"
+            }
+
+            @WorkflowSignal
+            mutating func signal(input: String) {
+                self.state = input
+            }
+        }
+
+        @Test
+        func queryWithContextParameter() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [QueryWithContextWorkflow.self]
+            ) { taskQueue, client in
+                let handle = try await client.startWorkflow(
+                    type: QueryWithContextWorkflow.self,
+                    options: .init(id: UUID().uuidString, taskQueue: taskQueue)
+                )
+
+                let result = try await handle.query(
+                    queryType: QueryWithContextWorkflow.QueryWithContext.self
+                )
+                // The query accesses both self.state and context.info.workflowType
+                #expect(result.contains("initial"))
+                #expect(result.contains("QueryWithContextWorkflow"))
+
+                try await handle.signal(
+                    signalType: QueryWithContextWorkflow.Signal.self,
+                    input: "finished"
+                )
+
+                try await handle.result()
             }
         }
 

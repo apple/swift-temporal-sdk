@@ -35,7 +35,8 @@ dynamically, and maintain long-running business processes with confidence.
   workers
 - ⚡ **Swift Concurrency**: Native integration with Swift Structured Concurrency
 - 🎯 **Type Safety**: Compile-time type checking for workflow and activity
-  definitions
+  definitions, with struct-based workflows providing additional safety guarantees
+  (queries can't mutate state, validators can't mutate state)
 - 📊 **Observability**: Built-in support for logging, metrics and tracing
 - 🔧 **Macro-based APIs**: Simple `@Workflow` and `@Activity` macros to avoid
   boilerplate
@@ -130,9 +131,9 @@ struct GreetingActivities {
 
 // Define a workflow
 @Workflow
-final class GreetingWorkflow {
-    func run(input: String) async throws -> String {
-        let greeting = try await Workflow.executeActivity(
+struct GreetingWorkflow {
+    mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+        let greeting = try await context.executeActivity(
             GreetingActivities.Activities.SayHello.self,
             options: ActivityOptions(startToCloseTimeout: .seconds(30)),
             input: input

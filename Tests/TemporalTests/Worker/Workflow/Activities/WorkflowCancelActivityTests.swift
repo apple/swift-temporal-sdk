@@ -55,19 +55,19 @@ extension TestServerDependentTests {
             }
         }
         @Workflow
-        final class CancellationWorkflow {
+        struct CancellationWorkflow {
             enum Scenario: String, Codable, CaseIterable {
                 case tryCancel
                 case waitCancellationCompleted
                 case abandon
             }
 
-            func run(input: Void) async throws {
-                try await Workflow.condition { false }
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { false }
             }
 
             @WorkflowUpdate
-            func update(input: Scenario) async throws -> String {
+            func update(context: WorkflowContext<Self>, input: Scenario) async throws -> String {
                 let cancellationType =
                     switch input {
                     case .tryCancel:
@@ -77,8 +77,8 @@ extension TestServerDependentTests {
                     case .abandon:
                         ActivityOptions.CancellationType.abandon
                     }
-                return try await Workflow.timeout(for: .seconds(0.1)) {
-                    try await Workflow.executeActivity(
+                return try await context.timeout(for: .seconds(0.1)) {
+                    try await context.executeActivity(
                         CancellationActivity.self,
                         options: .init(
                             scheduleToCloseTimeout: .seconds(10),
@@ -90,15 +90,15 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class CancellationShieldWorkflow {
-            func run(input: Void) async throws -> String {
+        struct CancellationShieldWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> String {
                 do {
-                    try await Workflow.condition { false }
+                    try await context.condition { false }
                     Issue.record("Condition finished unexpectedly.")
                     return "condition became true"
                 } catch is CanceledError {
-                    return try await Workflow.withCancellationShield {
-                        try await Workflow.executeActivity(
+                    return try await context.withCancellationShield {
+                        try await context.executeActivity(
                             CancellationActivity.self,
                             options: .init(scheduleToCloseTimeout: .seconds(10)),
                         )
@@ -111,9 +111,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SimpleActivityWorkflow {
-            func run(input: Void) async throws {
-                _ = try await Workflow.executeActivity(SimpleActivity.self, options: .init(scheduleToCloseTimeout: .seconds(60)))
+        struct SimpleActivityWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                _ = try await context.executeActivity(SimpleActivity.self, options: .init(scheduleToCloseTimeout: .seconds(60)))
             }
         }
 

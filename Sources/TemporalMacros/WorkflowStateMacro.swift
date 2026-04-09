@@ -44,7 +44,10 @@ public struct WorkflowStateMacro: AccessorMacro, PeerMacro {
             return []
         }
 
-        guard context.lexicalContext[0].as(ClassDeclSyntax.self) != nil else {
+        guard
+            context.lexicalContext[0].as(ClassDeclSyntax.self) != nil
+                || context.lexicalContext[0].as(StructDeclSyntax.self) != nil
+        else {
             return []
         }
 
@@ -86,7 +89,10 @@ public struct WorkflowStateMacro: AccessorMacro, PeerMacro {
             return []
         }
 
-        guard context.lexicalContext[0].as(ClassDeclSyntax.self) != nil else {
+        guard
+            context.lexicalContext[0].as(ClassDeclSyntax.self) != nil
+                || context.lexicalContext[0].as(StructDeclSyntax.self) != nil
+        else {
             return []
         }
 

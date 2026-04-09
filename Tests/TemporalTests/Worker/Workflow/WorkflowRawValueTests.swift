@@ -23,9 +23,9 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowRawValueTests {
         @Workflow
-        final class RawValueWorkflow {
-            func run(input: TemporalRawValue) async throws -> TemporalRawValue {
-                try await Workflow.executeActivity(
+        struct RawValueWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: TemporalRawValue) async throws -> TemporalRawValue {
+                try await context.executeActivity(
                     Container.Activities.DoubleContent.self,
                     options: .init(scheduleToCloseTimeout: .seconds(100)),
                     input: input

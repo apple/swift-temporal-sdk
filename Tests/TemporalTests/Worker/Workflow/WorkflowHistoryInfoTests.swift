@@ -21,7 +21,7 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowHistoryInfoTests {
         @Workflow
-        final class HistoryInfoWorkflow {
+        struct HistoryInfoWorkflow {
             struct Output: Codable {
                 let isReplaying: Bool
                 let continueAsNewSuggested: Bool
@@ -29,20 +29,20 @@ extension TestServerDependentTests {
                 let currentHistorySize: Int
             }
 
-            func run(input: Void) async throws -> Output {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> Output {
                 try await withThrowingDiscardingTaskGroup { group in
                     for _ in 0..<30 {
                         group.addTask {
-                            try await Workflow.sleep(for: .milliseconds(10))
+                            try await context.sleep(for: .milliseconds(10))
                         }
                     }
                 }
 
                 return .init(
-                    isReplaying: Workflow.isReplaying,
-                    continueAsNewSuggested: Workflow.continueAsNewSuggested,
-                    currentHistoryLength: Workflow.currentHistoryLength,
-                    currentHistorySize: Workflow.currentHistorySize
+                    isReplaying: context.isReplaying,
+                    continueAsNewSuggested: context.continueAsNewSuggested,
+                    currentHistoryLength: context.currentHistoryLength,
+                    currentHistorySize: context.currentHistorySize
                 )
             }
         }

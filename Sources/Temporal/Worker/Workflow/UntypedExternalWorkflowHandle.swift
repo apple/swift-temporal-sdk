@@ -50,19 +50,30 @@ public struct UntypedExternalWorkflowHandle: Sendable {
     /// The internal implementation handling interceptor chains and operations.
     private let implementation: Implementation
 
+    /// The namespace of the workflow that owns this handle.
+    private let namespace: String
+
+    /// The workflow info of the owning workflow.
+    private let info: WorkflowInfo
+
     package init(
         id: String,
         runId: String?,
+        namespace: String,
+        info: WorkflowInfo,
         stateMachine: WorkflowStateMachineStorage,
         interceptors: [any WorkflowOutboundInterceptor],
         payloadConverter: any PayloadConverter
     ) {
         self.id = id
         self.runId = runId
+        self.namespace = namespace
+        self.info = info
         self.implementation = .init(
             interceptors: interceptors,
             stateMachine: stateMachine,
-            payloadConverter: payloadConverter
+            payloadConverter: payloadConverter,
+            namespace: namespace
         )
     }
 
@@ -87,6 +98,7 @@ public struct UntypedExternalWorkflowHandle: Sendable {
     ) async throws {
         try await implementation.signalExternalWorkflow(
             input: SignalExternalWorkflowInput<repeat each Input>(
+                info: self.info,
                 id: self.id,
                 runId: self.runId,
                 name: signalName,
@@ -111,6 +123,7 @@ public struct UntypedExternalWorkflowHandle: Sendable {
     public func cancel() async throws {
         try await implementation.cancelExternalWorkflow(
             input: CancelExternalWorkflowInput(
+                info: self.info,
                 id: self.id,
                 runId: self.runId
             )
@@ -123,6 +136,7 @@ extension UntypedExternalWorkflowHandle {
         let interceptors: [any WorkflowOutboundInterceptor]
         let stateMachine: WorkflowStateMachineStorage
         let payloadConverter: any PayloadConverter
+        let namespace: String
     }
 }
 
@@ -134,7 +148,7 @@ extension UntypedExternalWorkflowHandle.Implementation {
             let payloads = try self.payloadConverter.convertValues(repeat each input.input)
 
             try await self.stateMachine.signalExternalWorkflow(
-                namespace: Workflow.info.namespace,
+                namespace: self.namespace,
                 workflowID: input.id,
                 runID: input.runId,
                 signalName: input.name,
@@ -149,7 +163,7 @@ extension UntypedExternalWorkflowHandle.Implementation {
     ) async throws {
         try await intercept((any WorkflowOutboundInterceptor).cancelExternalWorkflow, input: input) { input in
             try await self.stateMachine.cancelExternalWorkflow(
-                namespace: Workflow.info.namespace,
+                namespace: self.namespace,
                 workflowID: input.id,
                 runID: input.runId
             )

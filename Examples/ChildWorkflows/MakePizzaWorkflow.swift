@@ -18,7 +18,7 @@ import Temporal
 ///
 /// Demonstrates a typical child workflow with multiple activities.
 @Workflow
-final class MakePizzaWorkflow {
+struct MakePizzaWorkflow {
     // MARK: - Input/Output Types
 
     struct PizzaInput: Codable {
@@ -29,16 +29,16 @@ final class MakePizzaWorkflow {
 
     // MARK: - Workflow Implementation
 
-    func run(input: PizzaInput) async throws -> String {
+    mutating func run(context: WorkflowContext<Self>, input: PizzaInput) async throws -> String {
         // Step 1: Prepare the dough
-        _ = try await Workflow.executeActivity(
+        _ = try await context.executeActivity(
             PizzaActivities.Activities.PrepareDough.self,
             options: .init(startToCloseTimeout: .seconds(30)),
             input: PizzaActivities.PrepareDoughInput(size: input.size)
         )
 
         // Step 2: Add toppings
-        _ = try await Workflow.executeActivity(
+        _ = try await context.executeActivity(
             PizzaActivities.Activities.AddToppings.self,
             options: .init(startToCloseTimeout: .seconds(30)),
             input: PizzaActivities.AddToppingsInput(
@@ -48,7 +48,7 @@ final class MakePizzaWorkflow {
         )
 
         // Step 3: Bake the pizza
-        let bakeResult = try await Workflow.executeActivity(
+        let bakeResult = try await context.executeActivity(
             PizzaActivities.Activities.BakePizza.self,
             options: .init(startToCloseTimeout: .seconds(30)),
             input: PizzaActivities.BakePizzaInput(

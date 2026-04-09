@@ -21,8 +21,8 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkerTunerTests {
         @Workflow
-        final class SimpleWorkflow {
-            func run(input: String) async -> String {
+        struct SimpleWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async -> String {
                 return "Hello, \(input)!"
             }
         }

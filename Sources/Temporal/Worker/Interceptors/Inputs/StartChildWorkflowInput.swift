@@ -14,6 +14,9 @@
 
 /// Input structure containing parameters and context for child workflow startup operations in interceptor chains.
 public struct StartChildWorkflowInput<each Input: Sendable>: Sendable {
+    /// Information about the current workflow execution.
+    public var info: WorkflowInfo
+
     /// The name identifying the type of child workflow to be started.
     public var name: String
 

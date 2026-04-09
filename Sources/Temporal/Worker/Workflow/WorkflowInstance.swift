@@ -15,20 +15,23 @@
 import Logging
 import SwiftProtobuf
 
+/// Holds the state needed to drive a single workflow execution.
+struct WorkflowExecutionState<Workflow: WorkflowDefinition> {
+    /// The boxed workflow value, shared via `ArcBox` so mutations through
+    /// `@_WorkflowState` are visible across the workflow's run method and all handlers.
+    let workflowStateBox: ArcBox<Workflow>
+
+    /// The internal (package-level) workflow context used by the SDK internals.
+    let workflowContext: InternalWorkflowContext
+
+    /// The public workflow context passed to user-visible APIs (run, signal, update handlers).
+    let publicContext: WorkflowContext<Workflow>
+}
+
 /// A workflow runner is responsible for handling a single instance of a workflow.
 ///
 /// This type processes new workflow activations, handles the workflow's executor and sends any outbound commands.
 struct WorkflowInstance: Sendable {
-    /// Task local indicating whether the workflow state is currently frozen.
-    ///
-    /// When frozen, workflow operations are blocked to ensure deterministic execution. It is frozen in the following cases:
-    /// - Workflow initialization
-    /// - Query execution
-    /// - Update validation handler
-    /// - Intercepting calls
-    @TaskLocal
-    static var isWorkflowStateFrozen: Bool = false
-
     /// Task local indicating whether code is currently running on the WorkflowInstance.
     ///
     /// When true, ``WorkflowStateMachineStorage`` methods are allowed to be called from off the executor.
@@ -89,7 +92,7 @@ struct WorkflowInstance: Sendable {
                 outboundInterceptors.append(outbound)
             }
         }
-        self.implementation = .init(interceptors: inboundInterceptors)
+        self.implementation = .init(interceptors: inboundInterceptors, executor: self.executor)
         self.outboundInterceptors = outboundInterceptors
         self.logger = logger
     }
@@ -118,11 +121,10 @@ struct WorkflowInstance: Sendable {
         // 6. Continue from 4. until all wait conditions are checked
 
         // 1.
-        let workflow: WorkflowTaskExecutorIsolatedBox<Workflow>
+        let executionState: WorkflowExecutionState<Workflow>
         let input: WorkflowTaskExecutorIsolatedBox<Workflow.Input>
-        let workflowContext: WorkflowContext
         do {
-            (workflow, input, workflowContext) = try await self.initializeWorkflow(
+            (executionState, input) = try await self.initializeWorkflow(
                 activation,
                 workflowType: workflowType
             )
@@ -150,21 +152,19 @@ struct WorkflowInstance: Sendable {
             // 2.
             await self.applyJobs(
                 jobs: activation.jobs,
-                workflow: workflow,
-                workflowContext: workflowContext,
+                executionState: executionState,
                 group: &group
             )
 
             // 3.
             self.startWorkflow(
-                workflow: workflow,
+                executionState: executionState,
                 input: input,
-                workflowContext: workflowContext,
                 group: &group
             )
 
             // 4.-6.
-            self.runExecutor(context: workflowContext)
+            self.runExecutor(context: executionState.workflowContext)
 
             // We are finished applying the very first activation
             // We have to send the activation completion now
@@ -182,13 +182,12 @@ struct WorkflowInstance: Sendable {
                 // 2.
                 await self.applyJobs(
                     jobs: activation.jobs,
-                    workflow: workflow,
-                    workflowContext: workflowContext,
+                    executionState: executionState,
                     group: &group
                 )
 
                 // 4.-6.
-                self.runExecutor(context: workflowContext)
+                self.runExecutor(context: executionState.workflowContext)
 
                 // If this throws we will tear everything down and exit since
                 // it indicates we failed to send the completion to the worker
@@ -215,7 +214,7 @@ struct WorkflowInstance: Sendable {
             // There might be outstanding continuations for wait conditions, activities, etc.. The cancel
             // should resume them but we have to run the executor one more time for the workflow run method
             // and any message handler to finish.
-            self.runExecutor(context: workflowContext)
+            self.runExecutor(context: executionState.workflowContext)
         }
     }
 
@@ -223,7 +222,7 @@ struct WorkflowInstance: Sendable {
     private func initializeWorkflow<Workflow: WorkflowDefinition>(
         _ activation: Coresdk.WorkflowActivation.WorkflowActivation,
         workflowType: Workflow.Type
-    ) async throws -> (WorkflowTaskExecutorIsolatedBox<Workflow>, WorkflowTaskExecutorIsolatedBox<Workflow.Input>, WorkflowContext) {
+    ) async throws -> (WorkflowExecutionState<Workflow>, WorkflowTaskExecutorIsolatedBox<Workflow.Input>) {
         guard case .initializeWorkflow(let initializeWorkflow) = activation.jobs.first?.variant else {
             throw ArgumentError(
                 message: "Expected first job to be initialize workflow job"
@@ -246,7 +245,7 @@ struct WorkflowInstance: Sendable {
             self.stateMachine.updateRandomnessSeed(initializeWorkflow.randomnessSeed)
         }
 
-        let workflowContext = WorkflowContext(
+        let workflowContext = InternalWorkflowContext(
             stateMachine: self.stateMachine,
             workflowInfo: WorkflowInfo(
                 initializeWorkflow: initializeWorkflow,
@@ -261,37 +260,41 @@ struct WorkflowInstance: Sendable {
             logger: self.logger,
         )
 
-        let workflowBox = WorkflowTaskExecutorIsolatedBox(
-            executor: self.executor,
-            wrapped: Self.$isWorkflowStateFrozen.withValue(true) {
-                // Context is available but frozen during initialization
-                // WorkflowContext.current will return nil due to frozen state
-                return Workflow(input: input)
-            }
-        )
+        let workflowStateBox = ArcBox(Workflow(input: input))
         let inputBox = WorkflowTaskExecutorIsolatedBox(
             executor: self.executor,
             wrapped: input
         )
-        return (workflowBox, inputBox, workflowContext)
+        let publicContext = WorkflowContext(
+            internalContext: workflowContext,
+            stateBox: workflowStateBox
+        )
+        let executionState = WorkflowExecutionState(
+            workflowStateBox: workflowStateBox,
+            workflowContext: workflowContext,
+            publicContext: publicContext
+        )
+        return (executionState, inputBox)
     }
 
     // Starts the workflows run method in a separate child task
     private func startWorkflow<Workflow: WorkflowDefinition>(
-        workflow: WorkflowTaskExecutorIsolatedBox<Workflow>,
+        executionState: WorkflowExecutionState<Workflow>,
         input: WorkflowTaskExecutorIsolatedBox<Workflow.Input>,
-        workflowContext: WorkflowContext,
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
         group.addTask(executorPreference: self.executor) {
             self.logger.trace("Intercepting workflow")
+            let workflow = executionState.workflowStateBox.value
             let workflowResult = await Result {
                 // Context is not frozen during normal workflow execution
                 try await self.implementation.executeWorkflow(
-                    workflow: workflow.wrapped,
-                    context: workflowContext,
+                    workflow: workflow,
+                    context: executionState.workflowContext,
+                    publicContext: executionState.publicContext,
                     input: .init(
-                        headers: workflowContext.info.headers,
+                        info: executionState.workflowContext.info,
+                        headers: executionState.workflowContext.info.headers,
                         input: input.wrapped
                     )
                 )
@@ -330,8 +333,7 @@ struct WorkflowInstance: Sendable {
     /// Applies the jobs of an activation.
     private func applyJobs<Workflow: WorkflowDefinition>(
         jobs: [Coresdk.WorkflowActivation.WorkflowActivationJob],
-        workflow: WorkflowTaskExecutorIsolatedBox<Workflow>,
-        workflowContext: WorkflowContext,
+        executionState: WorkflowExecutionState<Workflow>,
         group: inout ThrowingTaskGroup<Void, any Error>
     ) async {
         for job in jobs {
@@ -386,22 +388,19 @@ struct WorkflowInstance: Sendable {
             case .queryWorkflow(let queryWorkflow):
                 self.queryWorkflow(
                     queryWorkflow,
-                    workflow: workflow,
-                    workflowContext: workflowContext,
+                    executionState: executionState,
                     group: &group
                 )
             case .signalWorkflow(let signalWorkflow):
                 self.signalWorkflow(
                     signalWorkflow,
-                    workflow: workflow,
-                    workflowContext: workflowContext,
+                    executionState: executionState,
                     group: &group
                 )
             case .doUpdate(let updateWorkflow):
                 self.updateWorkflow(
                     updateWorkflow,
-                    workflow: workflow,
-                    workflowContext: workflowContext,
+                    executionState: executionState,
                     group: &group
                 )
             case .resolveNexusOperation:
@@ -415,7 +414,7 @@ struct WorkflowInstance: Sendable {
     }
 
     /// Runs the executor until everything has yielded and all wait conditions have been processed.
-    private func runExecutor(context: WorkflowContext) {
+    private func runExecutor(context: InternalWorkflowContext) {
         while true {
             // 4.
             self.executor.run()
@@ -425,7 +424,7 @@ struct WorkflowInstance: Sendable {
             // executor again. This allows wait condition users to trust that the line after the
             // condition still has the condition satisfied.
             let continuationID = Self.$isOnWorkflowInstance.withValue(true) {
-                Workflow.$context.withValue(context) {
+                InternalWorkflowContext.$current.withValue(context) {
                     self.stateMachine.conditions().first(where: { $0.value() })?.key
                 }
             }
@@ -491,12 +490,11 @@ struct WorkflowInstance: Sendable {
 
     private func signalWorkflow<Workflow: WorkflowDefinition>(
         _ signalWorkflow: Coresdk.WorkflowActivation.SignalWorkflow,
-        workflow: WorkflowTaskExecutorIsolatedBox<Workflow>,
-        workflowContext: WorkflowContext,
+        executionState: WorkflowExecutionState<Workflow>,
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
         group.addTask(executorPreference: self.executor) {
-            let workflow = workflow.wrapped
+            let workflow = executionState.workflowStateBox.value
             guard let signal = Workflow.signals.first(where: { $0.name == signalWorkflow.signalName }) else {
                 self.logger.error(
                     "No signal handler found",
@@ -514,7 +512,8 @@ struct WorkflowInstance: Sendable {
                     signal: signal,
                     workflow: workflow,
                     headers: signalWorkflow.headers,
-                    context: workflowContext,
+                    context: executionState.workflowContext,
+                    publicContext: executionState.publicContext,
                     temporalPayloads: signalWorkflow.input
                 )
             }
@@ -525,7 +524,8 @@ struct WorkflowInstance: Sendable {
         signal: Signal,
         workflow: Signal.Workflow,
         headers: [String: Api.Common.V1.Payload],
-        context: WorkflowContext,
+        context: InternalWorkflowContext,
+        publicContext: WorkflowContext<Signal.Workflow>,
         temporalPayloads: [Api.Common.V1.Payload]
     ) async {
         let input: Signal.Input
@@ -548,7 +548,9 @@ struct WorkflowInstance: Sendable {
             try await implementation.handleSignal(
                 workflow: workflow,
                 context: context,
+                publicContext: publicContext,
                 input: .init(
+                    info: context.info,
                     name: signal.name,
                     definition: signal,
                     headers: headers,
@@ -576,12 +578,11 @@ struct WorkflowInstance: Sendable {
 
     private func queryWorkflow<Workflow: WorkflowDefinition>(
         _ queryWorkflow: Coresdk.WorkflowActivation.QueryWorkflow,
-        workflow: WorkflowTaskExecutorIsolatedBox<Workflow>,
-        workflowContext: WorkflowContext,
+        executionState: WorkflowExecutionState<Workflow>,
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
         group.addTask(executorPreference: self.executor) {
-            let workflow = workflow.wrapped
+            let workflow = executionState.workflowStateBox.value
             if queryWorkflow.queryType == "__temporal_workflow_metadata" {
                 await self.runMessageHandler(
                     name: queryWorkflow.queryType,
@@ -589,7 +590,7 @@ struct WorkflowInstance: Sendable {
                     unfinishedPolicy: .abandon
                 ) {
                     do {
-                        let metadata = workflowMetadata(type: Workflow.self, context: workflowContext)
+                        let metadata = workflowMetadata(type: Workflow.self, context: executionState.workflowContext)
                         // Use the default data converter as this query will be
                         // used for displaying information in the Temporal UI.
                         let payload = try await DataConverter.default.convertValue(metadata)
@@ -637,7 +638,7 @@ struct WorkflowInstance: Sendable {
                     id: queryWorkflow.queryID,
                     query: query,
                     workflow: workflow,
-                    context: workflowContext,
+                    context: executionState.workflowContext,
                     headers: queryWorkflow.headers,
                     temporalPayloads: queryWorkflow.arguments
                 )
@@ -649,7 +650,7 @@ struct WorkflowInstance: Sendable {
         id: String,
         query: Query,
         workflow: Workflow,
-        context: WorkflowContext,
+        context: InternalWorkflowContext,
         headers: [String: Api.Common.V1.Payload],
         temporalPayloads: [Api.Common.V1.Payload]
     ) async where Query.Workflow == Workflow {
@@ -677,20 +678,18 @@ struct WorkflowInstance: Sendable {
                     LoggingKeys.workflowQueryName: "\(Query.name)",
                 ]
             )
-            let output = try Self.$isWorkflowStateFrozen.withValue(true) {
-                // Context is frozen during query execution to prevent side effects
-                try implementation.handleQuery(
-                    workflow: workflow,
-                    context: context,
-                    input: .init(
-                        id: id,
-                        name: Query.name,
-                        definition: query,
-                        headers: headers,
-                        input: input
-                    )
+            let output = try implementation.handleQuery(
+                workflow: workflow,
+                context: context,
+                input: .init(
+                    info: context.info,
+                    id: id,
+                    name: Query.name,
+                    definition: query,
+                    headers: headers,
+                    input: input
                 )
-            }
+            )
             self.logger.trace(
                 "Running query handler finished",
                 metadata: [
@@ -717,7 +716,7 @@ struct WorkflowInstance: Sendable {
 
     private func workflowMetadata<Workflow: WorkflowDefinition>(
         type: Workflow.Type,
-        context: WorkflowContext
+        context: InternalWorkflowContext
     ) -> Api.Sdk.V1.WorkflowMetadata {
         var definition = Api.Sdk.V1.WorkflowDefinition.with {
             $0.type = context.info.workflowType
@@ -765,12 +764,11 @@ struct WorkflowInstance: Sendable {
 
     private func updateWorkflow<Workflow: WorkflowDefinition>(
         _ updateWorkflow: Coresdk.WorkflowActivation.DoUpdate,
-        workflow: WorkflowTaskExecutorIsolatedBox<Workflow>,
-        workflowContext: WorkflowContext,
+        executionState: WorkflowExecutionState<Workflow>,
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
         group.addTask(executorPreference: self.executor) {
-            let workflow = workflow.wrapped
+            let workflow = executionState.workflowStateBox.value
             guard let update = Workflow.updates.first(where: { $0.name == updateWorkflow.name }) else {
                 self.logger.error(
                     "No update handler found",
@@ -798,7 +796,8 @@ struct WorkflowInstance: Sendable {
                     runValidator: updateWorkflow.runValidator,
                     update: update,
                     workflow: workflow,
-                    workflowContext: workflowContext,
+                    workflowContext: executionState.workflowContext,
+                    publicContext: executionState.publicContext,
                     headers: updateWorkflow.headers,
                     temporalPayloads: updateWorkflow.input
                 )
@@ -811,7 +810,8 @@ struct WorkflowInstance: Sendable {
         runValidator: Bool,
         update: Update,
         workflow: Workflow,
-        workflowContext: WorkflowContext,
+        workflowContext: InternalWorkflowContext,
+        publicContext: WorkflowContext<Workflow>,
         headers: [String: Api.Common.V1.Payload],
         temporalPayloads: [Api.Common.V1.Payload]
     ) async where Update.Workflow == Workflow {
@@ -848,20 +848,18 @@ struct WorkflowInstance: Sendable {
                     return
                 }
 
-                try Self.$isWorkflowStateFrozen.withValue(true) {
-                    // Context is frozen during update validation to prevent side effects
-                    try implementation.validateUpdate(
-                        workflow: workflow,
-                        context: workflowContext,
-                        input: .init(
-                            id: id,
-                            name: Update.name,
-                            definition: update,
-                            headers: headers,
-                            input: validatorInput
-                        )
+                try implementation.validateUpdate(
+                    workflow: workflow,
+                    context: workflowContext,
+                    input: .init(
+                        info: workflowContext.info,
+                        id: id,
+                        name: Update.name,
+                        definition: update,
+                        headers: headers,
+                        input: validatorInput
                     )
-                }
+                )
             } catch {
                 self.logger.debug(
                     "Update rejected",
@@ -897,7 +895,9 @@ struct WorkflowInstance: Sendable {
             let output = try await implementation.handleUpdate(
                 workflow: workflow,
                 context: workflowContext,
+                publicContext: publicContext,
                 input: .init(
+                    info: workflowContext.info,
                     id: id,
                     name: Update.name,
                     definition: update,
@@ -1036,21 +1036,22 @@ struct WorkflowInstance: Sendable {
 extension WorkflowInstance {
     struct Implementation: InterceptorImplementation {
         let interceptors: [any WorkflowInboundInterceptor]
+        let executor: WorkflowTaskExecutor
     }
 }
 
 extension WorkflowInstance.Implementation {
     func executeWorkflow<Workflow: WorkflowDefinition>(
         workflow: Workflow,
-        context: WorkflowContext,
+        context: InternalWorkflowContext,
+        publicContext: WorkflowContext<Workflow>,
         input: ExecuteWorkflowInput<Workflow>
     ) async throws -> Workflow.Output {
-        try await Temporal.Workflow.$context.withValue(context) {
-            try await WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
+        try await Temporal.InternalWorkflowContext.$currentExecutor.withValue(self.executor) {
+            try await Temporal.InternalWorkflowContext.$current.withValue(context) {
                 try await intercept((any WorkflowInboundInterceptor).executeWorkflow, input: input) { input in
-                    try await WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
-                        try await workflow.run(input: input.input)
-                    }
+                    var workflow = workflow
+                    return try await workflow.run(context: publicContext, input: input.input)
                 }
             }
         }
@@ -1058,18 +1059,18 @@ extension WorkflowInstance.Implementation {
 
     func handleSignal<Signal: WorkflowSignalDefinition>(
         workflow: Signal.Workflow,
-        context: WorkflowContext,
+        context: InternalWorkflowContext,
+        publicContext: WorkflowContext<Signal.Workflow>,
         input: HandleSignalInput<Signal>
     ) async throws {
-        try await Temporal.Workflow.$context.withValue(context) {
-            try await WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
+        try await Temporal.InternalWorkflowContext.$currentExecutor.withValue(self.executor) {
+            try await Temporal.InternalWorkflowContext.$current.withValue(context) {
                 try await intercept((any WorkflowInboundInterceptor).handleSignal, input: input) { input in
-                    try await WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
-                        try await input.definition.run(
-                            workflow: workflow,
-                            input: input.input
-                        )
-                    }
+                    try await input.definition.run(
+                        workflow: workflow,
+                        context: publicContext,
+                        input: input.input
+                    )
                 }
             }
         }
@@ -1077,18 +1078,17 @@ extension WorkflowInstance.Implementation {
 
     func handleQuery<Query: WorkflowQueryDefinition>(
         workflow: Query.Workflow,
-        context: WorkflowContext,
+        context: InternalWorkflowContext,
         input: HandleQueryInput<Query>
     ) throws -> Query.Output {
-        try Temporal.Workflow.$context.withValue(context) {
-            try WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
+        try Temporal.InternalWorkflowContext.$currentExecutor.withValue(self.executor) {
+            try Temporal.InternalWorkflowContext.$current.withValue(context) {
                 try intercept((any WorkflowInboundInterceptor).handleQuery, input: input) { input in
-                    try WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
-                        try input.definition.run(
-                            workflow: workflow,
-                            input: input.input
-                        )
-                    }
+                    try input.definition.run(
+                        workflow: workflow,
+                        view: WorkflowContextView(storage: context.stateMachine, info: context.info),
+                        input: input.input
+                    )
                 }
             }
         }
@@ -1096,21 +1096,21 @@ extension WorkflowInstance.Implementation {
 
     func handleUpdate<Update: WorkflowUpdateDefinition>(
         workflow: Update.Workflow,
-        context: WorkflowContext,
+        context: InternalWorkflowContext,
+        publicContext: WorkflowContext<Update.Workflow>,
         input: HandleUpdateInput<Update>
     ) async throws -> Update.Output {
-        try await Temporal.Workflow.$context.withValue(context) {
-            try await Temporal.Workflow.$_currentUpdateInfo.withValue(
-                WorkflowUpdateInfo(id: input.id, name: input.name)
-            ) {
-                try await WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
+        try await Temporal.InternalWorkflowContext.$currentExecutor.withValue(self.executor) {
+            try await Temporal.InternalWorkflowContext.$current.withValue(context) {
+                try await Temporal.InternalWorkflowContext.$currentUpdateInfo.withValue(
+                    WorkflowUpdateInfo(id: input.id, name: input.name)
+                ) {
                     try await intercept((any WorkflowInboundInterceptor).handleUpdate, input: input) { input in
-                        try await WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
-                            try await input.definition.run(
-                                workflow: workflow,
-                                input: input.input
-                            )
-                        }
+                        try await input.definition.run(
+                            workflow: workflow,
+                            context: publicContext,
+                            input: input.input
+                        )
                     }
                 }
             }
@@ -1119,18 +1119,16 @@ extension WorkflowInstance.Implementation {
 
     func validateUpdate<Update: WorkflowUpdateDefinition>(
         workflow: Update.Workflow,
-        context: WorkflowContext,
+        context: InternalWorkflowContext,
         input: HandleUpdateInput<Update>
     ) throws {
-        try Temporal.Workflow.$context.withValue(context) {
-            try Temporal.Workflow.$_currentUpdateInfo.withValue(
-                WorkflowUpdateInfo(id: input.id, name: input.name)
-            ) {
-                try WorkflowInstance.$isWorkflowStateFrozen.withValue(true) {
+        try Temporal.InternalWorkflowContext.$currentExecutor.withValue(self.executor) {
+            try Temporal.InternalWorkflowContext.$current.withValue(context) {
+                try Temporal.InternalWorkflowContext.$currentUpdateInfo.withValue(
+                    WorkflowUpdateInfo(id: input.id, name: input.name)
+                ) {
                     try intercept((any WorkflowInboundInterceptor).validateUpdate, input: input) { input in
-                        try WorkflowInstance.$isWorkflowStateFrozen.withValue(false) {
-                            try input.definition.validateInput(workflow: workflow, input.input)
-                        }
+                        try input.definition.validateInput(workflow: workflow, input.input)
                     }
                 }
             }

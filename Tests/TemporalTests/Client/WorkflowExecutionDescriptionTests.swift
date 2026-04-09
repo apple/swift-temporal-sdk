@@ -20,9 +20,9 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowExecutionDescriptionTests {
         @Workflow
-        final class SimpleWorkflow {
-            func run(input: Void) async throws {
-                try await Workflow.condition { false }
+        struct SimpleWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { false }
             }
         }
 

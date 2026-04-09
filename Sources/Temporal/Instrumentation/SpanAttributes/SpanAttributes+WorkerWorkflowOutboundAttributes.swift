@@ -107,7 +107,7 @@ extension Span {
         if let summary = sleepInput.summary {
             self.attributes[TemporalTracingKeys.workflowSleepSummary] = summary
         }
-        self.setWorkerExecuteWorkflowSpanAttributes(info: Workflow.info)
+        self.setWorkerExecuteWorkflowSpanAttributes(info: sleepInput.info)
     }
 
     func setWorkerExecuteActivityRequestSpanAttributes(

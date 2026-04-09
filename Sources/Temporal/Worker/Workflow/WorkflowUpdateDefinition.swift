@@ -29,27 +29,24 @@
 ///
 /// ```swift
 /// @Workflow
-/// final class OrderProcessingWorkflow {
+/// struct OrderProcessingWorkflow {
 ///     var orderItems: [OrderItem] = []
 ///     var currentStatus: OrderStatus = .pending
 ///
-///     func run(input: OrderInput) async throws -> OrderResult {
-///         // Process order logic
-///         currentStatus = .processing
-///         return try await processOrder()
+///     mutating func run(context: WorkflowContext<Self>, input: OrderInput) async throws -> OrderResult {
+///         self.currentStatus = .processing
+///         return try await context.executeActivity(
+///             ProcessOrderActivity.self,
+///             options: .init(startToCloseTimeout: .seconds(30)),
+///             input: input
+///         )
 ///     }
 ///
 ///     @WorkflowUpdate
-///     func changeStatus(newStatus: OrderStatus) async throws -> OrderStatus {
+///     mutating func changeStatus(context: WorkflowContext<Self>, input: OrderStatus) async throws -> OrderStatus {
 ///         let previousStatus = currentStatus
-///         currentStatus = newStatus
+///         self.currentStatus = input
 ///         return previousStatus
-///     }
-///
-///     @WorkflowUpdate
-///     func addOrderItem(item: OrderItem) async throws -> Int {
-///         orderItems.append(item)
-///         return orderItems.count
 ///     }
 /// }
 /// ```
@@ -97,14 +94,14 @@ public protocol WorkflowUpdateDefinition<Workflow>: Sendable {
     /// Executes the update and returns the result.
     ///
     /// This method is called when an update request is received for the workflow.
-    /// Use ``Workflow`` to access the workflow execution context.
     ///
     /// - Parameters:
     ///   - workflow: The workflow instance being updated.
+    ///   - context: The workflow execution context.
     ///   - input: The input data for the update.
     /// - Returns: The update result.
     /// - Throws: Any error that occurs during update processing.
-    func run(workflow: Workflow, input: Input) async throws -> Output
+    func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws -> Output
 }
 
 extension WorkflowUpdateDefinition {

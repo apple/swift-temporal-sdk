@@ -21,25 +21,25 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowWaitConditionTests {
         @Workflow
-        final class WaitConditionWorkflow {
+        struct WaitConditionWorkflow {
             enum Scenario: Codable {
                 case workflowCancel
                 case timeout
             }
 
-            func run(input: Scenario) async -> String {
+            mutating func run(context: WorkflowContext<Self>, input: Scenario) async -> String {
                 switch input {
                 case .workflowCancel:
                     // For testing purposes we are ignoring the error here.
                     // We just want the workflow to complete.
-                    try? await Workflow.condition { false }
+                    try? await context.condition { false }
                     return "Done"
                 case .timeout:
                     // For testing purposes we are ignoring the error here.
                     // We just want the workflow to complete.
-                    try? await Workflow.timeout(for: .seconds(1)) {
+                    try? await context.timeout(for: .seconds(1)) {
                         // Waiting until cancellation here.
-                        try await Workflow.condition { false }
+                        try await context.condition { false }
                     }
                     return "Done"
                 }
@@ -47,11 +47,11 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class ConditionCancelledWorkflow {
-            func run(input: Duration) async -> String {
+        struct ConditionCancelledWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Duration) async -> String {
                 do {
                     try? await Task.sleep(for: input)  // if it throws a cancellation error already we are good!
-                    try await Workflow.condition { false }
+                    try await context.condition { false }
                     Issue.record("Condition resolved unexpectedly.")
                     return "Unexpected resolve"
                 } catch let error as CanceledError {

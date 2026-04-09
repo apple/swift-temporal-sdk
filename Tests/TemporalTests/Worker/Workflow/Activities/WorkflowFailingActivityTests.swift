@@ -25,7 +25,7 @@ extension TestServerDependentTests {
             }
         }
         @Workflow
-        final class FailureWorkflow {
+        struct FailureWorkflow {
             enum Scenario: String, Codable, CaseIterable {
                 case local
                 case remote
@@ -37,15 +37,15 @@ extension TestServerDependentTests {
                 self.scenario = input
             }
 
-            func run(input: Scenario) async throws {
+            mutating func run(context: WorkflowContext<Self>, input: Scenario) async throws {
                 switch input {
                 case .local:
-                    try await Workflow.executeLocalActivity(
+                    try await context.executeLocalActivity(
                         FailureActivity.self,
                         options: .init(startToCloseTimeout: .seconds(10), retryPolicy: .init(maximumAttempts: 1))
                     )
                 case .remote:
-                    try await Workflow.executeActivity(
+                    try await context.executeActivity(
                         FailureActivity.self,
                         options: .init(startToCloseTimeout: .seconds(10), retryPolicy: .init(maximumAttempts: 1))
                     )

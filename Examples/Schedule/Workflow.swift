@@ -16,8 +16,8 @@ import Foundation
 import Temporal
 
 @Workflow
-final class SpaceMissionWorkflow {
-    func run(input: MissionOperationInput) async throws -> MissionOperationResult {
+struct SpaceMissionWorkflow {
+    mutating func run(context: WorkflowContext<Self>, input: MissionOperationInput) async throws -> MissionOperationResult {
         let startTime = Date()
 
         let activityOptions = ActivityOptions(
@@ -31,7 +31,7 @@ final class SpaceMissionWorkflow {
         do {
             switch input.operation {
             case .collectTelemetry:
-                let telemetry = try await Workflow.executeActivity(
+                let telemetry = try await context.executeActivity(
                     SpaceMissionActivities.Activities.CollectRealTelemetry.self,
                     options: activityOptions,
                     input: TelemetryRequest()
@@ -45,7 +45,7 @@ final class SpaceMissionWorkflow {
                 )
 
             case .checkCrew:
-                let crew = try await Workflow.executeActivity(
+                let crew = try await context.executeActivity(
                     SpaceMissionActivities.Activities.CheckCrewStatus.self,
                     options: activityOptions,
                     input: CrewStatusRequest(filterCraft: "ISS")
@@ -59,7 +59,7 @@ final class SpaceMissionWorkflow {
                 )
 
             case .systemHealth:
-                let health = try await Workflow.executeActivity(
+                let health = try await context.executeActivity(
                     SpaceMissionActivities.Activities.PerformSystemHealthCheck.self,
                     options: activityOptions,
                     input: HealthCheckRequest(priority: input.priority)
@@ -74,7 +74,7 @@ final class SpaceMissionWorkflow {
 
             case .orbitCorrection:
                 // First get current telemetry
-                let telemetry = try await Workflow.executeActivity(
+                let telemetry = try await context.executeActivity(
                     SpaceMissionActivities.Activities.CollectRealTelemetry.self,
                     options: activityOptions,
                     input: TelemetryRequest()
@@ -96,10 +96,10 @@ final class SpaceMissionWorkflow {
                 }
                 // Simulate thruster burn duration
                 let burnDuration = 45
-                try await Workflow.sleep(for: .seconds(burnDuration))
+                try await context.sleep(for: .seconds(burnDuration))
 
                 // Execute correction
-                let correction = try await Workflow.executeActivity(
+                let correction = try await context.executeActivity(
                     SpaceMissionActivities.Activities.ExecuteOrbitCorrection.self,
                     options: activityOptions,
                     input: OrbitCorrectionInput(
@@ -119,7 +119,7 @@ final class SpaceMissionWorkflow {
                 )
 
             case .generateReport:
-                let report = try await Workflow.executeActivity(
+                let report = try await context.executeActivity(
                     SpaceMissionActivities.Activities.GenerateMissionReport.self,
                     options: activityOptions,
                     input: ReportRequest(includeHistory: false)

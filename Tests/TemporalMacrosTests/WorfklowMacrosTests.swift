@@ -25,9 +25,9 @@ struct WorkflowMacrosTests {
     func simple() throws {
         let (expectedOutput, _) = try parse(
             """
-            final class Foo {
+            struct Foo {
 
-                required init(input: Input) {}
+                init(input: Input) {}
             }
 
             extension Foo: WorkflowDefinition {
@@ -37,7 +37,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow
-            final class Foo {}
+            struct Foo {}
             """
         )
         #expect(expectedOutput == actualOutput)
@@ -47,25 +47,25 @@ struct WorkflowMacrosTests {
     func accessModifier(modifier: String) throws {
         let (expectedOutput, _) = try parse(
             """
-            \(modifier) final class Foo {
+            \(modifier) struct Foo {
                 func fooSignal(input: String) async throws {}
 
                 struct FooSignal: WorkflowSignalDefinition {
                     typealias Input = String
                     typealias Workflow = Foo
 
-                    let _run: @Sendable (Workflow, Input) async throws -> Void
-                    init(run: @Sendable @escaping (Workflow, Input) async throws -> Void) {
+                    let _run: @Sendable (Workflow, WorkflowContext<Workflow>, Input) async throws -> Void
+                    init(run: @Sendable @escaping (Workflow, WorkflowContext<Workflow>, Input) async throws -> Void) {
                         self._run = run
                     }
-                    func run(workflow: Workflow, input: Input) async throws {
-                        try await self._run(workflow, input)
+                    func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws {
+                        try await self._run(workflow, context, input)
                     }
                 }
 
                 static var fooSignal: FooSignal {
-                    FooSignal(run: {
-                            try await $0.fooSignal(input: $1)
+                    FooSignal(run: { workflow, _, input in
+                            try await workflow.fooSignal(input: input)
                         })
                 }
                 func fooQuery(input: String) throws -> String {}
@@ -75,18 +75,18 @@ struct WorkflowMacrosTests {
                     typealias Output = String
                     typealias Workflow = Foo
 
-                    let _run: @Sendable (Workflow, Input) throws -> Output
-                    init(run: @Sendable @escaping (Workflow, Input) throws -> Output) {
+                    let _run: @Sendable (Workflow, WorkflowContextView, Input) throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContextView, Input) throws -> Output) {
                         self._run = run
                     }
-                    func run(workflow: Workflow, input: Input) throws -> Output {
-                        try self._run(workflow, input)
+                    func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output {
+                        try self._run(workflow, view, input)
                     }
                 }
 
                 static var fooQuery: FooQuery {
-                    FooQuery(run: {
-                            try $0.fooQuery(input: $1)
+                    FooQuery(run: { workflow, _, input in
+                            try workflow.fooQuery(input: input)
                         })
                 }
                 func fooUpdate(input: String) async throws -> Int {}
@@ -96,18 +96,18 @@ struct WorkflowMacrosTests {
                     typealias Output = Int
                     typealias Workflow = Foo
 
-                    let _run: @Sendable (Workflow, Input) async throws -> Output
-                    init(run: @Sendable @escaping (Workflow, Input) async throws -> Output) {
+                    let _run: @Sendable (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output) {
                         self._run = run
                     }
-                    func run(workflow: Workflow, input: Input) async throws -> Output {
-                        try await self._run(workflow, input)
+                    func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws -> Output{
+                        try await self._run(workflow, context, input)
                     }
                 }
 
                 static var fooUpdate: FooUpdate {
-                    FooUpdate(run: {
-                            try await $0.fooUpdate(input: $1)
+                    FooUpdate(run: { workflow, _, input in
+                            return try await workflow.fooUpdate(input: input)
                         })
                 }
 
@@ -123,7 +123,7 @@ struct WorkflowMacrosTests {
                     [Self.fooUpdate]
                 }
 
-                \(modifier) required init(input: Input) {}
+                \(modifier) init(input: Input) {}
             }
 
             extension Foo: WorkflowDefinition {
@@ -135,7 +135,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow(name: "CustomName")
-            \(modifier) final class Foo {
+            \(modifier) struct Foo {
                 @WorkflowSignal
                 func fooSignal(input: String) async throws {}
                 @WorkflowQuery
@@ -153,9 +153,9 @@ struct WorkflowMacrosTests {
     func namedWorkflow() throws {
         let (expectedOutput, _) = try parse(
             """
-            final class Foo {
+            struct Foo {
 
-                required init(input: Input) {}
+                init(input: Input) {}
             }
 
             extension Foo: WorkflowDefinition {
@@ -166,7 +166,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow(name: "CustomName")
-            final class Foo {}
+            struct Foo {}
             """
         )
         #expect(expectedOutput == actualOutput)
@@ -178,25 +178,25 @@ struct WorkflowMacrosTests {
 
         let (expectedOutput, _) = try parse(
             """
-            final class FooWorkflow {
-                \(modifierPrefix)func foo(input: String) async throws {} 
+            struct FooWorkflow {
+                \(modifierPrefix)func foo(input: String) async throws {}
 
                 \(modifierPrefix)struct Foo: WorkflowSignalDefinition {
                     \(modifierPrefix)typealias Input = String
                     \(modifierPrefix)typealias Workflow = FooWorkflow
 
-                    let _run: @Sendable (Workflow, Input) async throws -> Void
-                    init(run: @Sendable @escaping (Workflow, Input) async throws -> Void) {
+                    let _run: @Sendable (Workflow, WorkflowContext<Workflow>, Input) async throws -> Void
+                    init(run: @Sendable @escaping (Workflow, WorkflowContext<Workflow>, Input) async throws -> Void) {
                         self._run = run
                     }
-                    \(modifierPrefix)func run(workflow: Workflow, input: Input) async throws {
-                        try await self._run(workflow, input)
+                    \(modifierPrefix)func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws {
+                        try await self._run(workflow, context, input)
                     }
                 }
 
                 static var foo: Foo {
-                    Foo(run: {
-                            try await $0.foo(input: $1)
+                    Foo(run: { workflow, _, input in
+                            try await workflow.foo(input: input)
                         })
                 }
                 \(modifierPrefix)func bar(input: Void) async throws {
@@ -206,12 +206,12 @@ struct WorkflowMacrosTests {
                     \(modifierPrefix)typealias Input = Void
                     \(modifierPrefix)typealias Workflow = FooWorkflow
 
-                    let _run: @Sendable (Workflow, Input) async throws -> Void
-                    init(run: @Sendable @escaping (Workflow, Input) async throws -> Void) {
+                    let _run: @Sendable (Workflow, WorkflowContext<Workflow>, Input) async throws -> Void
+                    init(run: @Sendable @escaping (Workflow, WorkflowContext<Workflow>, Input) async throws -> Void) {
                         self._run = run
                     }
-                    \(modifierPrefix)func run(workflow: Workflow, input: Input) async throws {
-                        try await self._run(workflow, input)
+                    \(modifierPrefix)func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws {
+                        try await self._run(workflow, context, input)
                     }
                     \(modifierPrefix)static var name: String {
                         "MySignal"
@@ -222,8 +222,8 @@ struct WorkflowMacrosTests {
                 }
 
                 static var bar: Bar {
-                    Bar(run: {
-                            try await $0.bar(input: $1)
+                    Bar(run: { workflow, _, input in
+                            try await workflow.bar(input: input)
                         })
                 }
 
@@ -231,7 +231,7 @@ struct WorkflowMacrosTests {
                     [Self.foo, Self.bar]
                 }
 
-                required init(input: Input) {}
+                init(input: Input) {}
             }
 
             extension FooWorkflow: WorkflowDefinition {
@@ -242,7 +242,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowSignal
                 \(modifierPrefix)func foo(input: String) async throws {}
                 @WorkflowSignal(name: "MySignal", description: "This is a description.")
@@ -260,7 +260,7 @@ struct WorkflowMacrosTests {
 
         let (expectedOutput, _) = try parse(
             """
-            final class FooWorkflow {
+            struct FooWorkflow {
                 \(modifierPrefix)func foo(input: String) throws -> String {} 
 
                 \(modifierPrefix)struct Foo: WorkflowQueryDefinition {
@@ -268,18 +268,18 @@ struct WorkflowMacrosTests {
                     \(modifierPrefix)typealias Output = String
                     \(modifierPrefix)typealias Workflow = FooWorkflow
 
-                    let _run: @Sendable (Workflow, Input) throws -> Output
-                    init(run: @Sendable @escaping (Workflow, Input) throws -> Output) {
+                    let _run: @Sendable (Workflow, WorkflowContextView, Input) throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContextView, Input) throws -> Output) {
                         self._run = run
                     }
-                    \(modifierPrefix)func run(workflow: Workflow, input: Input) throws -> Output{
-                        try self._run(workflow, input)
+                    \(modifierPrefix)func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output{
+                        try self._run(workflow, view, input)
                     }
                 }
 
                 static var foo: Foo {
-                    Foo(run: {
-                            try $0.foo(input: $1)
+                    Foo(run: { workflow, _, input in
+                            try workflow.foo(input: input)
                         })
                 }
                 \(modifierPrefix)func bar(input: Void) throws -> Int {
@@ -290,12 +290,12 @@ struct WorkflowMacrosTests {
                     \(modifierPrefix)typealias Output = Int
                     \(modifierPrefix)typealias Workflow = FooWorkflow
 
-                    let _run: @Sendable (Workflow, Input) throws -> Output
-                    init(run: @Sendable @escaping (Workflow, Input) throws -> Output) {
+                    let _run: @Sendable (Workflow, WorkflowContextView, Input) throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContextView, Input) throws -> Output) {
                         self._run = run
                     }
-                    \(modifierPrefix)func run(workflow: Workflow, input: Input) throws -> Output{
-                        try self._run(workflow, input)
+                    \(modifierPrefix)func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output{
+                        try self._run(workflow, view, input)
                     }
                     \(modifierPrefix)static var name: String {
                         "MyQuery"
@@ -306,8 +306,8 @@ struct WorkflowMacrosTests {
                 }
 
                 static var bar: Bar {
-                    Bar(run: {
-                            try $0.bar(input: $1)
+                    Bar(run: { workflow, _, input in
+                            try workflow.bar(input: input)
                         })
                 }
 
@@ -315,7 +315,7 @@ struct WorkflowMacrosTests {
                     [Self.foo, Self.bar]
                 }
 
-                required init(input: Input) {}
+                init(input: Input) {}
             }
 
             extension FooWorkflow: WorkflowDefinition {
@@ -326,7 +326,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowQuery
                 \(modifierPrefix)func foo(input: String) throws -> String {}
                 @WorkflowQuery(name: "MyQuery", description: "This is a description.")
@@ -344,26 +344,26 @@ struct WorkflowMacrosTests {
 
         let (expectedOutput, _) = try parse(
             """
-            final class FooWorkflow {
-                \(modifierPrefix)func foo(input: String) async throws -> Int {} 
+            struct FooWorkflow {
+                \(modifierPrefix)func foo(input: String) async throws -> Int {}
 
                 \(modifierPrefix)struct Foo: WorkflowUpdateDefinition {
                     \(modifierPrefix)typealias Input = String
                     \(modifierPrefix)typealias Output = Int
                     \(modifierPrefix)typealias Workflow = FooWorkflow
 
-                    let _run: @Sendable (Workflow, Input) async throws -> Output
-                    init(run: @Sendable @escaping (Workflow, Input) async throws -> Output) {
+                    let _run: @Sendable (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output) {
                         self._run = run
                     }
-                    \(modifierPrefix)func run(workflow: Workflow, input: Input) async throws -> Output {
-                        try await self._run(workflow, input)
+                    \(modifierPrefix)func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws -> Output{
+                        try await self._run(workflow, context, input)
                     }
                 }
 
                 static var foo: Foo {
-                    Foo(run: {
-                            try await $0.foo(input: $1)
+                    Foo(run: { workflow, _, input in
+                            return try await workflow.foo(input: input)
                         })
                 }
                 \(modifierPrefix)func bar(input: Void) throws -> String {
@@ -374,12 +374,12 @@ struct WorkflowMacrosTests {
                     \(modifierPrefix)typealias Output = String
                     \(modifierPrefix)typealias Workflow = FooWorkflow
 
-                    let _run: @Sendable (Workflow, Input) async throws -> Output
-                    init(run: @Sendable @escaping (Workflow, Input) async throws -> Output) {
+                    let _run: @Sendable (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output) {
                         self._run = run
                     }
-                    \(modifierPrefix)func run(workflow: Workflow, input: Input) async throws -> Output {
-                        try await self._run(workflow, input)
+                    \(modifierPrefix)func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws -> Output{
+                        try await self._run(workflow, context, input)
                     }
                     \(modifierPrefix)static var name: String {
                         "MyUpdate"
@@ -390,8 +390,8 @@ struct WorkflowMacrosTests {
                 }
 
                 static var bar: Bar {
-                    Bar(run: {
-                            try await $0.bar(input: $1)
+                    Bar(run: { workflow, _, input in
+                            return try workflow.bar(input: input)
                         })
                 }
 
@@ -399,7 +399,7 @@ struct WorkflowMacrosTests {
                     [Self.foo, Self.bar]
                 }
 
-                required init(input: Input) {}
+                init(input: Input) {}
             }
 
             extension FooWorkflow: WorkflowDefinition {
@@ -410,7 +410,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowUpdate
                 \(modifierPrefix)func foo(input: String) async throws -> Int {}
                 @WorkflowUpdate(name: "MyUpdate", description: "This is a description.")
@@ -428,10 +428,10 @@ struct WorkflowMacrosTests {
     func emptyInitGeneration(type: String) throws {
         let (expectedOutput, _) = try parse(
             """
-            final class Foo {
+            struct Foo {
                 func run(input: \(type)) async throws {}
 
-                required init(input: Input) {}
+                init(input: Input) {}
             }
 
             extension Foo: WorkflowDefinition {
@@ -441,7 +441,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow
-            final class Foo {
+            struct Foo {
                 func run(input: \(type)) async throws {}
             }
             """
@@ -453,12 +453,12 @@ struct WorkflowMacrosTests {
     func typealiasInitGeneration() throws {
         let (expectedOutput, _) = try parse(
             """
-            final class Foo {
+            struct Foo {
                 typealias Input = String
 
                 func run(input: Input) async throws {}
 
-                required init(input: Input) {}
+                init(input: Input) {}
             }
 
             extension Foo: WorkflowDefinition {
@@ -468,7 +468,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow
-            final class Foo {
+            struct Foo {
                 typealias Input = String
 
                 func run(input: Input) async throws {}
@@ -482,14 +482,14 @@ struct WorkflowMacrosTests {
     func structInitGeneration() throws {
         let (expectedOutput, _) = try parse(
             """
-            final class Foo {
+            struct Foo {
                 struct Input {
                     let test: Int
                 }
 
                 func run(input: Input) async throws {}
 
-                required init(input: Input) {}
+                init(input: Input) {}
             }
 
             extension Foo: WorkflowDefinition {
@@ -499,7 +499,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow
-            final class Foo {
+            struct Foo {
                 struct Input {
                     let test: Int
                 }
@@ -515,7 +515,7 @@ struct WorkflowMacrosTests {
     func existingInit() throws {
         let (expectedOutput, _) = try parse(
             """
-            final class Foo {
+            struct Foo {
                 init(input: Void) {}
 
                 func run(input: Void) async throws {}
@@ -528,7 +528,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow
-            final class Foo {
+            struct Foo {
                 init(input: Void) {}
 
                 func run(input: Void) async throws {}
@@ -542,7 +542,7 @@ struct WorkflowMacrosTests {
     func workflowState() throws {
         let (expectedOutput, _) = try parse(
             """
-            final class Foo {
+            struct Foo {
                 var state {
                     @storageRestrictions(initializes: _state)
                     init(initialValue) {
@@ -561,7 +561,7 @@ struct WorkflowMacrosTests {
                 func run(input: Void) async throws {
                 }
 
-                required init(input: Input) {
+                init(input: Input) {
                 }
             }
 
@@ -572,7 +572,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow
-            final class Foo {
+            struct Foo {
                 var state = 0
 
                 func run(input: Void) async throws {}
@@ -586,7 +586,7 @@ struct WorkflowMacrosTests {
     func workflowStateCustomName() throws {
         let (expectedOutput, _) = try parse(
             """
-            final class Foo {
+            struct Foo {
                 var state {
                     @storageRestrictions(initializes: _state)
                     init(initialValue) {
@@ -605,7 +605,7 @@ struct WorkflowMacrosTests {
                 func run(input: Void) async throws {
                 }
 
-                required init(input: Input) {
+                init(input: Input) {
                 }
             }
 
@@ -619,7 +619,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow(name: "CustomName")
-            final class Foo {
+            struct Foo {
                 var state = 0
 
                 func run(input: Void) async throws {}
@@ -633,27 +633,27 @@ struct WorkflowMacrosTests {
     func signalWithUnfinishedPolicy() throws {
         let (expectedOutput, _) = try parse(
             """
-            final class FooWorkflow {
+            struct FooWorkflow {
                 func foo(input: String) async throws {}
 
                 struct Foo: WorkflowSignalDefinition {
                     typealias Input = String
                     typealias Workflow = FooWorkflow
 
-                    let _run: @Sendable (Workflow, Input) async throws -> Void
-                    init(run: @Sendable @escaping (Workflow, Input) async throws -> Void) {
+                    let _run: @Sendable (Workflow, WorkflowContext<Workflow>, Input) async throws -> Void
+                    init(run: @Sendable @escaping (Workflow, WorkflowContext<Workflow>, Input) async throws -> Void) {
                         self._run = run
                     }
-                    func run(workflow: Workflow, input: Input) async throws {
-                        try await self._run(workflow, input)
+                    func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws {
+                        try await self._run(workflow, context, input)
                     }
 
                     static var unfinishedPolicy: HandlerUnfinishedPolicy { .abandon }
                 }
 
                 static var foo: Foo {
-                    Foo(run: {
-                            try await $0.foo(input: $1)
+                    Foo(run: { workflow, _, input in
+                            try await workflow.foo(input: input)
                         })
                 }
 
@@ -661,7 +661,7 @@ struct WorkflowMacrosTests {
                     [Self.foo]
                 }
 
-                required init(input: Input) {}
+                init(input: Input) {}
             }
 
             extension FooWorkflow: WorkflowDefinition {
@@ -672,7 +672,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowSignal(unfinishedPolicy: .abandon)
                 func foo(input: String) async throws {}
             }
@@ -686,7 +686,7 @@ struct WorkflowMacrosTests {
     func updateWithUnfinishedPolicy() throws {
         let (expectedOutput, _) = try parse(
             """
-            final class FooWorkflow {
+            struct FooWorkflow {
                 func foo(input: String) async throws -> Int {}
 
                 struct Foo: WorkflowUpdateDefinition {
@@ -694,20 +694,20 @@ struct WorkflowMacrosTests {
                     typealias Output = Int
                     typealias Workflow = FooWorkflow
 
-                    let _run: @Sendable (Workflow, Input) async throws -> Output
-                    init(run: @Sendable @escaping (Workflow, Input) async throws -> Output) {
+                    let _run: @Sendable (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output) {
                         self._run = run
                     }
-                    func run(workflow: Workflow, input: Input) async throws -> Output {
-                        try await self._run(workflow, input)
+                    func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws -> Output{
+                        try await self._run(workflow, context, input)
                     }
 
                     static var unfinishedPolicy: HandlerUnfinishedPolicy { .abandon }
                 }
 
                 static var foo: Foo {
-                    Foo(run: {
-                            try await $0.foo(input: $1)
+                    Foo(run: { workflow, _, input in
+                            return try await workflow.foo(input: input)
                         })
                 }
 
@@ -715,7 +715,7 @@ struct WorkflowMacrosTests {
                     [Self.foo]
                 }
 
-                required init(input: Input) {}
+                init(input: Input) {}
             }
 
             extension FooWorkflow: WorkflowDefinition {
@@ -726,7 +726,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowUpdate(unfinishedPolicy: .abandon)
                 func foo(input: String) async throws -> Int {}
             }
@@ -742,7 +742,7 @@ struct WorkflowMacrosTests {
 
         let (expectedOutput, _) = try parse(
             """
-            final class FooWorkflow {
+            struct FooWorkflow {
                 \(modifierPrefix)func foo(input: String) async throws -> Int {}
 
                 \(modifierPrefix)struct Foo: WorkflowUpdateDefinition {
@@ -750,13 +750,13 @@ struct WorkflowMacrosTests {
                     \(modifierPrefix)typealias Output = Int
                     \(modifierPrefix)typealias Workflow = FooWorkflow
 
-                    let _run: @Sendable (Workflow, Input) async throws -> Output
-                    init(run: @Sendable @escaping (Workflow, Input) async throws -> Output, validate: @Sendable @escaping (Workflow, Input) throws -> Void) {
+                    let _run: @Sendable (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContext<Workflow>, Input) async throws -> Output, validate: @Sendable @escaping (Workflow, Input) throws -> Void) {
                         self._run = run
                         self._validate = validate
                     }
-                    \(modifierPrefix)func run(workflow: Workflow, input: Input) async throws -> Output {
-                        try await self._run(workflow, input)
+                    \(modifierPrefix)func run(workflow: Workflow, context: WorkflowContext<Workflow>, input: Input) async throws -> Output{
+                        try await self._run(workflow, context, input)
                     }
 
                     let _validate: @Sendable (Workflow, Input) throws -> Void
@@ -766,8 +766,8 @@ struct WorkflowMacrosTests {
                 }
 
                 static var foo: Foo {
-                    Foo(run: {
-                            try await $0.foo(input: $1)
+                    Foo(run: { workflow, _, input in
+                            return try await workflow.foo(input: input)
                         }, validate: {
                             try $0.validateFoo(input: $1)
                         })
@@ -779,7 +779,7 @@ struct WorkflowMacrosTests {
                     [Self.foo]
                 }
 
-                required init(input: Input) {}
+                init(input: Input) {}
             }
 
             extension FooWorkflow: WorkflowDefinition {
@@ -790,7 +790,7 @@ struct WorkflowMacrosTests {
         let (actualOutput, _) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowUpdate(validator: "validateFoo")
                 \(modifierPrefix)func foo(input: String) async throws -> Int {}
 
@@ -809,7 +809,7 @@ struct WorkflowMacrosTests {
         let (_, diagnostics) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowUpdate(validator: "validateFoo")
                 func foo(input: String) async throws -> Int {}
 
@@ -826,7 +826,7 @@ struct WorkflowMacrosTests {
         let (output, diagnostics) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowUpdate
                 func foo(input: String) async throws -> Int {}
             }
@@ -843,7 +843,7 @@ struct WorkflowMacrosTests {
         let (output, diagnostics) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowUpdate(validator: "validateFoo")
                 func foo(input: String) async throws -> Int {}
 
@@ -863,14 +863,14 @@ struct WorkflowMacrosTests {
         let (_, diagnostics) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowUpdate(validator: "doesNotExist")
                 func foo(input: String) async throws -> Int {}
             }
             """
         )
         #expect(diagnostics.count == 1)
-        #expect(diagnostics.first?.message == "Validator method 'doesNotExist' not found in workflow class")
+        #expect(diagnostics.first?.message == "Validator method 'doesNotExist' not found in workflow")
         // Diagnostic should be on the @WorkflowUpdate attribute
         #expect(diagnostics.first?.node.description.contains("WorkflowUpdate") == true)
     }
@@ -880,7 +880,7 @@ struct WorkflowMacrosTests {
         let (_, diagnostics) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowUpdate(validator: "validateFoo")
                 func foo(input: String) async throws -> Int {}
 
@@ -899,7 +899,7 @@ struct WorkflowMacrosTests {
         let (_, diagnostics) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowUpdate(validator: "validateFoo")
                 func foo(input: String) async throws -> Int {}
 
@@ -918,7 +918,7 @@ struct WorkflowMacrosTests {
         let (_, diagnostics) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowUpdate(validator: "validateFoo")
                 func foo(input: String) async throws -> Int {}
 
@@ -940,7 +940,7 @@ struct WorkflowMacrosTests {
         let (_, diagnostics) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowUpdate(validator: "validateFoo")
                 func foo(input: String) async throws -> Int {}
 
@@ -959,7 +959,7 @@ struct WorkflowMacrosTests {
         let (_, diagnostics) = try parse(
             """
             @Workflow
-            final class FooWorkflow {
+            struct FooWorkflow {
                 @WorkflowUpdate(validator: "validateFoo")
                 func foo(input: String) async throws -> Int {}
 

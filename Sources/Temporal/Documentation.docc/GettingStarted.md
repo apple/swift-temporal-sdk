@@ -70,16 +70,16 @@ Create a workflow that calls the activity and returns the generated greeting:
 
 ```swift
 @Workflow
-final class GreetingWorkflow {
-    func run(input: String) async throws -> String {
-        let greeting = try await Workflow.executeActivity(
+struct GreetingWorkflow {
+    mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+        let greeting = try await context.executeActivity(
             GreetingActivities.Activities.sayHello.self,
             options: ActivityOptions(
                 startToCloseTimeout: .seconds(30)
             ),
             input: input
         )
-        
+
         return greeting
     }
 }

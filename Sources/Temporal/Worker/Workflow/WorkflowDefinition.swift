@@ -28,17 +28,16 @@
 ///
 /// ```swift
 /// @Workflow
-/// final class OrderProcessingWorkflow: WorkflowDefinition {
-///     let orderRequest: OrderRequest
+/// struct OrderProcessingWorkflow {
+///     var orderRequest: OrderRequest?
 ///
 ///     init(input: OrderRequest) {
 ///         self.orderRequest = input
 ///     }
 ///
-///     func run(input: OrderRequest) async throws -> OrderResult {
-///         // Use Workflow static methods to perform workflow operations
-///         let result = try await Workflow.executeActivity(
-///             activityType: ProcessOrderActivity.self,
+///     mutating func run(context: WorkflowContext<Self>, input: OrderRequest) async throws -> OrderResult {
+///         let result = try await context.executeActivity(
+///             ProcessOrderActivity.self,
 ///             options: .init(startToCloseTimeout: .seconds(30)),
 ///             input: orderRequest
 ///         )
@@ -89,12 +88,14 @@ public protocol WorkflowDefinition: Sendable {
     ///
     /// This method contains the core workflow implementation and defines the orchestration
     /// of activities, child workflows, and other workflow operations.
-    /// Use ``Workflow`` to access the workflow execution context.
+    /// Use the provided ``WorkflowContext`` to access workflow operations.
     ///
-    /// - Parameter input: The workflow input.
+    /// - Parameters:
+    ///   - context: The workflow execution context providing access to all workflow operations.
+    ///   - input: The workflow input.
     /// - Returns: The workflow execution result.
     /// - Throws: Any error that causes the workflow to fail.
-    func run(input: Input) async throws -> Output
+    mutating func run(context: WorkflowContext<Self>, input: Input) async throws -> Output
 }
 
 extension WorkflowDefinition {

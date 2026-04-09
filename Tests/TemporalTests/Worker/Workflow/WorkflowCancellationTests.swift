@@ -36,25 +36,25 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class CancellationWorkflow {
-            func run(input: Scenario) async throws {
+        struct CancellationWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Scenario) async throws {
                 switch input {
                 case .swiftCancellationError:
                     do {
-                        try await Workflow.condition { false }
+                        try await context.condition { false }
                     } catch {
                         // ignore cancellation handling from Workflow/condition(_:)
                         try Task.checkCancellation()
                     }
                 case .cancelledError:
-                    try await Workflow.sleep(for: .seconds(40))
+                    try await context.sleep(for: .seconds(40))
                 case .activityCancelled:
-                    try await Workflow.executeActivity(
+                    try await context.executeActivity(
                         CancellationActivities.Activities.ActivityCancellation.self,
                         options: ActivityOptions(scheduleToCloseTimeout: .seconds(60))
                     )
                 case .childWorkflowCancelled:
-                    try await Workflow.executeChildWorkflow(
+                    try await context.executeChildWorkflow(
                         CancellationWorkflow.self,
                         options: .init(),
                         input: .cancelledError
@@ -64,8 +64,8 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class ThrowingWorkflow {
-            func run(input: Void) async throws {
+        struct ThrowingWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
                 throw CanceledError(message: "Workflow wasn't actually cancelled.")
             }
         }

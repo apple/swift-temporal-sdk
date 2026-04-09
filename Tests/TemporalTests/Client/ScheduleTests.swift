@@ -24,15 +24,15 @@ extension TestServerDependentTests {
     @Suite(.tags(.clientTests))
     struct ScheduleTests {
         @Workflow
-        final class HelloWorldScheduleWorkflow {
-            func run(input: Void) async -> String {
+        struct HelloWorldScheduleWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async -> String {
                 "Hello, World!"
             }
         }
 
         @Workflow
-        final class HelloInputScheduleWorkflow {
-            func run(input: String) async -> String {
+        struct HelloInputScheduleWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async -> String {
                 input
             }
         }

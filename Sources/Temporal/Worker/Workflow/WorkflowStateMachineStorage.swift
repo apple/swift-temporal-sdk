@@ -55,10 +55,6 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         self.failureConverter = failureConverter
     }
 
-    func ensureWorkflowStateModificationIsSafe() {
-        self.ensureOnExecutor(access: .reading)
-    }
-
     func updateRandomnessSeed(_ seed: UInt64) {
         self.stateMachine.updateRandomnessSeed(seed)
     }
@@ -617,13 +613,6 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         // Allow access if the workflow instance itself is modifying the state
         if WorkflowInstance.isOnWorkflowInstance {
             return
-        }
-
-        // Prevent any mutating state machine operations when context is frozen
-        if access == .mutating && WorkflowInstance.isWorkflowStateFrozen {
-            fatalError(
-                "WorkflowStateMachine operations are not allowed when context is frozen. This typically occurs during workflow initialization, query execution, or update validation."
-            )
         }
 
         // This is using custom logic instead of preconditionIsolated to ensure

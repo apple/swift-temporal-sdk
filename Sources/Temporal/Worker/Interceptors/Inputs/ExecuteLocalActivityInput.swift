@@ -14,6 +14,9 @@
 
 /// Input structure containing parameters and context for activity scheduling operations in interceptor chains.
 public struct ScheduleLocalActivityInput<each Input: Sendable>: Sendable {
+    /// Information about the current workflow execution.
+    public var info: WorkflowInfo
+
     /// The name identifying the type of activity to be scheduled for execution.
     public var name: String
 
@@ -29,16 +32,19 @@ public struct ScheduleLocalActivityInput<each Input: Sendable>: Sendable {
     /// Creates a new activity scheduling input with the specified parameters.
     ///
     /// - Parameters:
+    ///   - info: Information about the current workflow execution.
     ///   - name: The activity name identifying the activity type to execute.
     ///   - options: The configuration options controlling activity execution behavior.
     ///   - headers: The metadata and context headers for activity execution.
     ///   - input: The input parameters to pass to the activity, of varying types and counts.
     package init(
+        info: WorkflowInfo,
         name: String,
         options: LocalActivityOptions,
         headers: [String: Api.Common.V1.Payload],
         input: (repeat each Input)
     ) {
+        self.info = info
         self.name = name
         self.options = options
         self.headers = headers

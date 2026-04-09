@@ -29,20 +29,30 @@
 ///
 /// ```swift
 /// @Workflow
-/// final class OrderProcessingWorkflow {
+/// struct OrderProcessingWorkflow {
 ///     var currentStatus = "pending"
 ///
-///     func run(input: OrderInput) async throws -> Void {
-///         currentStatus = "processing"
-///         // Process order logic
-///         try await processOrder()
-///         currentStatus = "finished"
+///     mutating func run(context: WorkflowContext<Self>, input: OrderInput) async throws -> Void {
+///         self.currentStatus = "processing"
+///         try await context.executeActivity(ProcessOrderActivity.self, options: .init(startToCloseTimeout: .seconds(30)))
+///         self.currentStatus = "finished"
 ///     }
 ///
 ///     @WorkflowQuery
-///     func getOrderStatus() throws -> String {
+///     func getOrderStatus(input: Void) -> String {
 ///         return currentStatus
 ///     }
+/// }
+/// ```
+///
+/// You can also define a query that receives a read-only ``WorkflowContextView`` as its first
+/// parameter. This is useful when the query needs access to live workflow metadata such as
+/// the current time or search attributes:
+///
+/// ```swift
+/// @WorkflowQuery
+/// func getStatusWithTime(context: WorkflowContextView, input: Void) -> String {
+///     return "\(currentStatus) as of \(context.now)"
 /// }
 /// ```
 public protocol WorkflowQueryDefinition<Workflow>: Sendable {
@@ -72,14 +82,14 @@ public protocol WorkflowQueryDefinition<Workflow>: Sendable {
     /// Executes the query and returns the requested information.
     ///
     /// This method is called when a query request is received for the workflow.
-    /// Use ``Workflow`` to access the workflow execution context.
     ///
     /// - Parameters:
     ///   - workflow: The workflow instance being queried.
+    ///   - view: The read-only workflow context view.
     ///   - input: The input data for the query.
     /// - Returns: The query result.
     /// - Throws: Any error that occurs during query processing.
-    func run(workflow: Workflow, input: Input) throws -> Output
+    func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output
 }
 
 extension WorkflowQueryDefinition {

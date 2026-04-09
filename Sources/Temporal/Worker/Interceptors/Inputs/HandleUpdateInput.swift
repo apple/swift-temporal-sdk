@@ -14,6 +14,9 @@
 
 /// Input structure containing parameters and context for workflow update handling in interceptor chains.
 public struct HandleUpdateInput<Update: WorkflowUpdateDefinition>: Sendable {
+    /// Information about the current workflow execution.
+    public var info: WorkflowInfo
+
     /// The unique identifier for this specific update request.
     public var id: String
 

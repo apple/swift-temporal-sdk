@@ -21,7 +21,7 @@ import Temporal
 /// - Passing data between activities in a workflow
 /// - Why certain operations should be activities (external API calls, database operations)
 @Workflow
-final class MultipleActivitiesWorkflow {
+struct MultipleActivitiesWorkflow {
     struct OrderRequest: Codable {
         let orderId: String
         let customerId: String
@@ -36,10 +36,10 @@ final class MultipleActivitiesWorkflow {
         let trackingNumber: String
     }
 
-    func run(input: OrderRequest) async throws -> OrderResult {
+    mutating func run(context: WorkflowContext<Self>, input: OrderRequest) async throws -> OrderResult {
         // Step 1: Validate inventory for all items
         // This is an activity because it queries external inventory systems
-        _ = try await Workflow.executeActivity(
+        _ = try await context.executeActivity(
             MultipleActivitiesActivities.Activities.CheckInventory.self,
             options: .init(
                 startToCloseTimeout: .seconds(30),
@@ -56,7 +56,7 @@ final class MultipleActivitiesWorkflow {
         // Step 2: Process payment with payment gateway
         // This is an activity because it calls an external payment API
         // Payment operations need careful retry handling to avoid double-charging
-        let paymentId = try await Workflow.executeActivity(
+        let paymentId = try await context.executeActivity(
             MultipleActivitiesActivities.Activities.ProcessPayment.self,
             options: .init(
                 startToCloseTimeout: .seconds(60),
@@ -76,7 +76,7 @@ final class MultipleActivitiesWorkflow {
 
         // Step 3: Reserve inventory after successful payment
         // This is an activity because it updates external inventory database
-        try await Workflow.executeActivity(
+        try await context.executeActivity(
             MultipleActivitiesActivities.Activities.ReserveInventory.self,
             options: .init(
                 startToCloseTimeout: .seconds(30),
@@ -95,7 +95,7 @@ final class MultipleActivitiesWorkflow {
 
         // Step 4: Create shipment and get tracking number
         // This is an activity because it integrates with shipping provider APIs
-        let trackingNumber = try await Workflow.executeActivity(
+        let trackingNumber = try await context.executeActivity(
             MultipleActivitiesActivities.Activities.CreateShipment.self,
             options: .init(
                 startToCloseTimeout: .seconds(45),
@@ -115,7 +115,7 @@ final class MultipleActivitiesWorkflow {
 
         // Step 5: Send confirmation notification to customer
         // This is an activity because it calls external notification service (email/SMS)
-        try await Workflow.executeActivity(
+        try await context.executeActivity(
             MultipleActivitiesActivities.Activities.SendConfirmation.self,
             options: .init(
                 startToCloseTimeout: .seconds(30),
@@ -135,7 +135,7 @@ final class MultipleActivitiesWorkflow {
 
         // Step 6: Update order status in database
         // This is an activity because it performs database I/O
-        try await Workflow.executeActivity(
+        try await context.executeActivity(
             MultipleActivitiesActivities.Activities.UpdateOrderStatus.self,
             options: .init(
                 startToCloseTimeout: .seconds(30),

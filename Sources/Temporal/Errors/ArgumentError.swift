@@ -14,7 +14,7 @@
 
 /// Error that is thrown when an argument is invalid.
 ///
-/// For example ``Workflow/sleep(for:summary:)`` throws this error
+/// For example ``WorkflowContext/sleep(for:summary:)`` throws this error
 /// when a negative duration is passed.
 public struct ArgumentError: TemporalError {
     /// The error's message.

@@ -22,16 +22,16 @@ extension TestServerDependentTests {
     @Suite(.tags(.clientTests))
     struct WorkflowExecutionStatusTests {
         @Workflow
-        final class SimpleStatusWorkflow {
-            func run(input: Void) async -> String {
+        struct SimpleStatusWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async -> String {
                 "done"
             }
         }
 
         @Workflow
-        final class WaitingStatusWorkflow {
-            func run(input: Void) async throws {
-                try await Workflow.condition { false }
+        struct WaitingStatusWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { false }
             }
         }
 

@@ -21,10 +21,10 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct TimeSkippingInterceptorTests {
         @Workflow
-        final class LongTimerWorkflow {
-            func run(input: Void) async throws -> String {
+        struct LongTimerWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> String {
                 // Sleep for 1 hour in workflow time
-                try await Workflow.sleep(for: .seconds(3600))
+                try await context.sleep(for: .seconds(3600))
                 return "completed"
             }
         }

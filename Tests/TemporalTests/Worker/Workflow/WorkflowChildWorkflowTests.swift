@@ -23,7 +23,7 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowChildWorkflowTests {
         @Workflow
-        final class SimpleChildWorkflow {
+        struct SimpleChildWorkflow {
             enum Scenario: Codable {
                 case `return`
                 case fail
@@ -35,22 +35,22 @@ extension TestServerDependentTests {
             }
             var didPay = false
 
-            func run(input: Input) async throws -> String {
+            mutating func run(context: WorkflowContext<Self>, input: Input) async throws -> String {
                 switch input.scenario {
                 case .return:
                     return input.value
                 case .fail:
-                    let detail1 = try Workflow.payloadConverter.convertValue("detail1")
-                    let detail2 = try Workflow.payloadConverter.convertValue("detail2")
+                    let detail1 = try context.payloadConverter.convertValue("detail1")
+                    let detail2 = try context.payloadConverter.convertValue("detail2")
                     throw ApplicationError(message: "Intentional failure", details: [detail1, detail2])
                 case .wait:
-                    try await Workflow.condition { false }
+                    try await context.condition { false }
                     fatalError()
                 }
             }
         }
         @Workflow
-        final class SimpleParentWorkflow {
+        struct SimpleParentWorkflow {
             enum Scenario: Codable {
                 case success
                 case fail
@@ -61,37 +61,37 @@ extension TestServerDependentTests {
                 var value: String
             }
 
-            func run(input: Input) async throws -> [String] {
+            mutating func run(context: WorkflowContext<Self>, input: Input) async throws -> [String] {
                 switch input.scenario {
                 case .success:
-                    let first = try await Workflow.executeChildWorkflow(
+                    let first = try await context.executeChildWorkflow(
                         SimpleChildWorkflow.self,
                         input: .init(scenario: .return, value: input.value)
                     )
-                    let second = try await Workflow.executeChildWorkflow(
+                    let second = try await context.executeChildWorkflow(
                         SimpleChildWorkflow.self,
                         input: .init(scenario: .return, value: input.value)
                     )
-                    let third = try await Workflow.executeChildWorkflow(
+                    let third = try await context.executeChildWorkflow(
                         SimpleChildWorkflow.self,
                         input: .init(scenario: .return, value: input.value)
                     )
                     return [first, second, third]
                 case .fail:
-                    _ = try await Workflow.executeChildWorkflow(
+                    _ = try await context.executeChildWorkflow(
                         SimpleChildWorkflow.self,
                         input: .init(scenario: .fail, value: "")
                     )
                     fatalError()
 
                 case .alreadyExists:
-                    let handle = try await Workflow.startChildWorkflow(
+                    let handle = try await context.startChildWorkflow(
                         SimpleChildWorkflow.self,
                         input: .init(scenario: .wait, value: "")
                     )
                     var options = ChildWorkflowOptions()
                     options.id = handle.id
-                    _ = try await Workflow.startChildWorkflow(
+                    _ = try await context.startChildWorkflow(
                         SimpleChildWorkflow.self,
                         options: options,
                         input: .init(scenario: .wait, value: "")
@@ -102,10 +102,10 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class CancelChildWorkflow {
-            func run(input: Void) async throws -> String {
+        struct CancelChildWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> String {
                 do {
-                    try await Workflow.condition { false }
+                    try await context.condition { false }
                     fatalError()
                 } catch is CanceledError {
                     return "Done"
@@ -116,31 +116,31 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class CancelParentWorkflow {
+        struct CancelParentWorkflow {
             enum Scenario: Codable {
                 case cancelWait
                 case cancelTry
             }
 
-            func run(input: Scenario) async throws -> String {
+            mutating func run(context: WorkflowContext<Self>, input: Scenario) async throws -> String {
                 switch input {
                 case .cancelWait:
-                    let handle = try await Workflow.startChildWorkflow(
+                    let handle = try await context.startChildWorkflow(
                         CancelChildWorkflow.self,
                         options: .init(),
                         input: ()
                     )
-                    return try await Workflow.timeout(for: .seconds(0.1)) {
+                    return try await context.timeout(for: .seconds(0.1)) {
                         try await handle.result()
                     }
 
                 case .cancelTry:
-                    let handle = try await Workflow.startChildWorkflow(
+                    let handle = try await context.startChildWorkflow(
                         CancelChildWorkflow.self,
                         options: .init(cancellationType: .tryCancel),
                         input: ()
                     )
-                    return try await Workflow.timeout(for: .seconds(0.1)) {
+                    return try await context.timeout(for: .seconds(0.1)) {
                         try await handle.result()
                     }
                 }
@@ -250,7 +250,7 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SignalChildWorkflow {
+        struct SignalChildWorkflow {
             enum Scenario: Codable {
                 case wait
                 case finish
@@ -258,10 +258,10 @@ extension TestServerDependentTests {
 
             var signals = [String]()
 
-            func run(input: Scenario) async throws -> String {
+            mutating func run(context: WorkflowContext<Self>, input: Scenario) async throws -> String {
                 switch input {
                 case .wait:
-                    try await Workflow.condition { false }
+                    try await context.condition { false }
                     return "done"
                 case .finish:
                     return "done"
@@ -269,7 +269,7 @@ extension TestServerDependentTests {
             }
 
             @WorkflowSignal
-            func signal(input: String) {
+            mutating func signal(input: String) {
                 self.signals.append(input)
             }
 
@@ -280,17 +280,17 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SignalParentWorkflow {
+        struct SignalParentWorkflow {
             enum Scenario: Codable {
                 case signal
                 case signalButDone
                 case signalThenCancel
             }
 
-            func run(input: Scenario) async throws -> String {
+            mutating func run(context: WorkflowContext<Self>, input: Scenario) async throws -> String {
                 switch input {
                 case .signal:
-                    let handle = try await Workflow.startChildWorkflow(
+                    let handle = try await context.startChildWorkflow(
                         SignalChildWorkflow.self,
                         options: .init(),
                         input: .wait
@@ -305,7 +305,7 @@ extension TestServerDependentTests {
                     )
                     return handle.id
                 case .signalButDone:
-                    let handle = try await Workflow.startChildWorkflow(
+                    let handle = try await context.startChildWorkflow(
                         SignalChildWorkflow.self,
                         options: .init(),
                         input: .finish
@@ -317,7 +317,7 @@ extension TestServerDependentTests {
                     )
                     return handle.id
                 case .signalThenCancel:
-                    let handle = try await Workflow.startChildWorkflow(
+                    let handle = try await context.startChildWorkflow(
                         SignalChildWorkflow.self,
                         options: .init(),
                         input: .finish
@@ -383,45 +383,45 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class ParentClosePolicyChildWorkflow {
+        struct ParentClosePolicyChildWorkflow {
             private var finished = false
 
-            func run(input: Void) async throws {
-                try await Workflow.condition { self.finished }
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { $0.finished }
             }
 
             @WorkflowSignal
-            func signal(input: Void) {
+            mutating func signal(input: Void) {
                 self.finished = true
             }
         }
 
         @Workflow
-        final class ParentClosePolicyParentWorkflow {
+        struct ParentClosePolicyParentWorkflow {
             enum Scenario: Codable {
                 case parentCloseTerminate
                 case parentCloseRequestCancel
                 case parentCloseAbandon
             }
 
-            func run(input: Scenario) async throws -> String {
+            mutating func run(context: WorkflowContext<Self>, input: Scenario) async throws -> String {
                 switch input {
                 case .parentCloseTerminate:
-                    let handle = try await Workflow.startChildWorkflow(
+                    let handle = try await context.startChildWorkflow(
                         ParentClosePolicyChildWorkflow.self,
                         options: .init(),
                         input: ()
                     )
                     return handle.id
                 case .parentCloseRequestCancel:
-                    let handle = try await Workflow.startChildWorkflow(
+                    let handle = try await context.startChildWorkflow(
                         ParentClosePolicyChildWorkflow.self,
                         options: .init(parentClosePolicy: .requestCancel),
                         input: ()
                     )
                     return handle.id
                 case .parentCloseAbandon:
-                    let handle = try await Workflow.startChildWorkflow(
+                    let handle = try await context.startChildWorkflow(
                         ParentClosePolicyChildWorkflow.self,
                         options: .init(parentClosePolicy: .abandon),
                         input: ()
@@ -534,9 +534,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class ChildMemoAndRetryWorkflow {
-            func run(input: Void) async throws {
-                guard let memo = try await Workflow.getMemoValue(for: "hello", as: String.self) else {
+        struct ChildMemoAndRetryWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                guard let memo = try await context.getMemoValue(for: "hello", as: String.self) else {
                     throw ApplicationError(message: "Workflow memo not found!", isNonRetryable: true)
                 }
 
@@ -544,7 +544,7 @@ extension TestServerDependentTests {
                     throw ApplicationError(message: "Workflow memo has invalid value: \(memo)!", isNonRetryable: true)
                 }
 
-                guard let retryPolicy = Workflow.info.retryPolicy,
+                guard let retryPolicy = context.info.retryPolicy,
                     retryPolicy.maximumAttempts == 30
                 else {
                     throw ApplicationError(message: "Retry Policy is not present!", isNonRetryable: true)
@@ -553,9 +553,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class ParentMemoAndRetryWorkflow {
-            func run(input: Void) async throws {
-                try await Workflow.executeChildWorkflow(
+        struct ParentMemoAndRetryWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.executeChildWorkflow(
                     ChildMemoAndRetryWorkflow.self,
                     options: ChildWorkflowOptions(
                         retryPolicy: .init(maximumAttempts: 30),
@@ -574,20 +574,20 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class ChildWorkflow {
+        struct ChildWorkflow {
             struct Input: Codable {
                 let id: Int
             }
 
-            func run(input: Input) async throws {
-                try await Workflow.sleep(for: .seconds(3600))
+            mutating func run(context: WorkflowContext<Self>, input: Input) async throws {
+                try await context.sleep(for: .seconds(3600))
             }
         }
 
         @Workflow
-        final class ParentWorkflow {
-            func run(input: Void) async throws {
-                let logger = Workflow.logger
+        struct ParentWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                let logger = context.logger
                 var ids: [Int] = []
                 ids.reserveCapacity(150)
                 for index in 0..<150 {
@@ -597,11 +597,11 @@ extension TestServerDependentTests {
                 var handles: [ChildWorkflowHandle<ChildWorkflow>] = []
                 handles.reserveCapacity(ids.count)
 
-                _ = Workflow.patch("starting child-workflows ...")
+                _ = context.patch("starting child-workflows ...")
 
                 for id in ids {
                     do {
-                        let handle = try await Workflow.startChildWorkflow(ChildWorkflow.self, input: .init(id: id))
+                        let handle = try await context.startChildWorkflow(ChildWorkflow.self, input: .init(id: id))
                         handles.append(handle)
                     } catch is CanceledError {
                         logger.info("Workflow cancelled skipping start of the other child workflows.")
@@ -612,7 +612,7 @@ extension TestServerDependentTests {
                     }
                 }
 
-                _ = Workflow.patch("started child-workflows")
+                _ = context.patch("started child-workflows")
 
                 var successfulWorkflows = 0
                 var cancelledWorkflows = 0

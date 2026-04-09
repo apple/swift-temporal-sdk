@@ -136,8 +136,8 @@ extension TestServerDependentTests.InterceptedOperationsTests {
     }
 
     @Workflow
-    final class HelloInputScheduleWorkflow {
-        func run(input: String) async -> String {
+    struct HelloInputScheduleWorkflow {
+        mutating func run(context: WorkflowContext<Self>, input: String) async -> String {
             input
         }
     }

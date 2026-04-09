@@ -21,18 +21,18 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowMetadataTests {
         @Workflow
-        final class TestWorkflow {
-            func run(input: Void) async throws {
-                Workflow.currentDetails = "initial current details"
-                try await Workflow.condition { self.shouldContinue }
-                Workflow.currentDetails = "final current details"
+        struct TestWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                context.currentDetails = "initial current details"
+                try await context.condition { $0.shouldContinue }
+                context.currentDetails = "final current details"
             }
 
             @WorkflowSignal
-            func someSignal(input: Void) async throws {}
+            func someSignal(input: Void) {}
 
             @WorkflowSignal(name: "some signal", description: "some signal description")
-            func someOtherSignal(input: Void) async throws {}
+            func someOtherSignal(input: Void) {}
 
             @WorkflowQuery(description: "continue description")
             func `continue`(input: Void) throws -> Bool {
@@ -41,7 +41,7 @@ extension TestServerDependentTests {
             var shouldContinue = false
 
             @WorkflowUpdate(description: "some update description")
-            func someUpdate(input: Void) async throws {
+            mutating func someUpdate(context: WorkflowContext<Self>, input: Void) async throws {
                 self.shouldContinue = true
             }
 

@@ -14,6 +14,9 @@
 
 /// Input structure containing parameters for canceling an external workflow in interceptor chains.
 public struct CancelExternalWorkflowInput: Sendable {
+    /// Information about the current workflow execution.
+    public var info: WorkflowInfo
+
     /// The workflow id of the external workflow to cancel.
     public var id: String
 

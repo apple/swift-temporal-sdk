@@ -25,8 +25,8 @@ import Tracing
 @Suite(.tags(.instrumentationTests))
 struct TemporalClientOutboundTracingInterceptorTests {
     @Workflow
-    final class VoidWorkflow {
-        func run(input: Void) async {}
+    struct VoidWorkflow {
+        mutating func run(context: WorkflowContext<Self>, input: Void) async {}
     }
 
     struct TemporalTraceID: Decodable {

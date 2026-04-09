@@ -63,9 +63,12 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-            throw MacroError(message: "Workflow macro can only be applied to classes")
+        // Only struct declarations are supported
+        let typeName: String
+        guard let structDecl = declaration.as(StructDeclSyntax.self) else {
+            throw MacroError(message: "@Workflow can only be applied to structs")
         }
+        typeName = structDecl.name.text
 
         var signalNames = [String]()
         var queryNames = [String]()
@@ -146,7 +149,7 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
 
                             // Check input type matches
                             let updateParams = functionDecl.signature.parameterClause.parameters
-                            if let updateParam = updateParams.first {
+                            if let updateParam = updateParams.first(where: { $0.firstName.text == "input" }) {
                                 let updateType = updateParam.type.description.trimmingCharacters(in: .whitespaces)
                                 let validatorType = validatorParam.type.description.trimmingCharacters(in: .whitespaces)
                                 if updateType != validatorType {
@@ -166,7 +169,7 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
                         context.diagnose(
                             Diagnostic(
                                 node: Syntax(updateAttribute),
-                                message: ValidatorError(message: "Validator method '\(validatorName)' not found in workflow class")
+                                message: ValidatorError(message: "Validator method '\(validatorName)' not found in workflow")
                             )
                         )
                     }
@@ -180,7 +183,7 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
         if !signalNames.isEmpty {
             messageHandlerDecls.append(
                 """
-                \(accessModifier)static var signals: [any WorkflowSignalDefinition<\(raw: classDecl.name.text)>] {
+                \(accessModifier)static var signals: [any WorkflowSignalDefinition<\(raw: typeName)>] {
                     [\(raw: signalNames.lazy.map { "Self.\($0)" }.joined(separator: ", "))]
                 }
                 """
@@ -189,7 +192,7 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
         if !queryNames.isEmpty {
             messageHandlerDecls.append(
                 """
-                \(accessModifier)static var queries: [any WorkflowQueryDefinition<\(raw: classDecl.name.text)>] {
+                \(accessModifier)static var queries: [any WorkflowQueryDefinition<\(raw: typeName)>] {
                     [\(raw: queryNames.lazy.map { "Self.\($0)" }.joined(separator: ", "))]
                 }
                 """
@@ -198,7 +201,7 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
         if !updateNames.isEmpty {
             messageHandlerDecls.append(
                 """
-                \(accessModifier)static var updates: [any WorkflowUpdateDefinition<\(raw: classDecl.name.text)>] {
+                \(accessModifier)static var updates: [any WorkflowUpdateDefinition<\(raw: typeName)>] {
                     [\(raw: updateNames.lazy.map { "Self.\($0)" }.joined(separator: ", "))]
                 }
                 """
@@ -225,13 +228,10 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
 
         if !hasMatchingInitializer {
             emptyInitDecl = InitializerDeclSyntax(
-                modifiers: (accessModifier) + [
-                    .init(name: .keyword(.required))
-                ],
+                modifiers: accessModifier,
                 signature: .init(
                     parameterClause: .init(parameters: [
                         FunctionParameterSyntax(firstName: .identifier("input"), type: IdentifierTypeSyntax(name: .identifier("Input")))
-                        // .init(firstName: "input", type: "Input")
                     ])
                 ),
                 bodyBuilder: {}

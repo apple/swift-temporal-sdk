@@ -40,14 +40,14 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SimpleWorkflow {
+        struct SimpleWorkflow {
             var signal = 0
-            func run(input: Void) async throws {
-                try await Workflow.sleep(for: .seconds(1))
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.sleep(for: .seconds(1))
             }
 
             @WorkflowSignal
-            func signal(input: Int) async throws {
+            mutating func signal(input: Int) {
                 signal = input
             }
 

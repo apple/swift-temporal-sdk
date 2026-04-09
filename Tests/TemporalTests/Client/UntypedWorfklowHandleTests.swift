@@ -21,16 +21,16 @@ extension TestServerDependentTests {
     @Suite(.tags(.clientTests))
     struct UntypedWorkflowHandleTests {
         @Workflow
-        final class HelloWorldUntypedOperationsWorkflow {
-            func run(input: String) async -> String {
+        struct HelloWorldUntypedOperationsWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async -> String {
                 "Hello World, \(input)!"
             }
         }
 
         @Workflow
-        final class ForeverWaitingWorkflow {
-            func run(input: String) async throws {
-                try await Workflow.condition { false }
+        struct ForeverWaitingWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws {
+                try await context.condition { false }
             }
         }
 
@@ -94,22 +94,22 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SignalUntypedOperationsWorkflow {
+        struct SignalUntypedOperationsWorkflow {
             private var received: String?
 
-            func run(input: Void) async throws -> String {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> String {
                 // wait until a signal sets `received`
-                try await Workflow.condition { self.received != nil }
+                try await context.condition { $0.received != nil }
                 return self.received ?? "no signal received"
             }
 
             @WorkflowSignal
-            func signal(input: String) async throws {
+            mutating func signal(input: String) {
                 self.received = input
             }
 
             @WorkflowSignal(name: "NoInputSignal")
-            func signalNoInput(input: Void) async throws {
+            mutating func signalNoInput(input: Void) {
                 self.received = "No input signal"
             }
         }
@@ -195,12 +195,12 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class QueryUntypedOperationsWorkflow {
+        struct QueryUntypedOperationsWorkflow {
             private var state = "initial"
 
-            func run(input: Void) async throws {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
                 // simulate some work before updating state
-                try await Workflow.sleep(for: .milliseconds(100))
+                try await context.sleep(for: .milliseconds(100))
                 self.state = "finished"
             }
 
@@ -298,22 +298,22 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class UpdateUntypedOperationsWorkflow {
+        struct UpdateUntypedOperationsWorkflow {
             private var state = ""
 
-            func run(input: Void) async throws {
-                try await Workflow.condition { self.state == "updated" }
-                try await Workflow.condition { Workflow.allHandlersFinished }
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { $0.state == "updated" }
+                try await context.condition { context.allHandlersFinished }
             }
 
             @WorkflowUpdate
-            func update(input: String) async throws -> String {
+            mutating func update(input: String) throws -> String {
                 self.state = "updated"
                 return "Hello from update, \(input)"
             }
 
             @WorkflowUpdate(name: "NoInputUpdate")
-            func updateNoInput(input: Void) async throws -> String {
+            mutating func updateNoInput(input: Void) throws -> String {
                 self.state = "updated"
                 return "Hello from update"
             }

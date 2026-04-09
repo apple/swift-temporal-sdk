@@ -20,9 +20,9 @@ import Temporal
 /// - Using signals to control workflow execution (pause/resume/cancel)
 /// - Using queries to inspect workflow state without mutation
 /// - Using updates to modify workflow state synchronously with validation
-/// - Waiting for conditions with Workflow.condition
+/// - Waiting for conditions with context.condition
 @Workflow
-final class SignalWorkflow {
+struct SignalWorkflow {
     // MARK: - Input/Output Types
 
     struct OrderInput: Codable {
@@ -58,12 +58,12 @@ final class SignalWorkflow {
 
     // MARK: - Workflow State
 
-    private var currentState: String = "pending"
-    private var isPaused: Bool = false
-    private var isCancelled: Bool = false
-    private var priority: String = "standard"
-    private var completedSteps: [String] = []
-    private let orderId: String
+    var currentState: String = "pending"
+    var isPaused: Bool = false
+    var isCancelled: Bool = false
+    var priority: String = "standard"
+    var completedSteps: [String] = []
+    var orderId: String = ""
 
     init(input: OrderInput) {
         self.orderId = input.orderId
@@ -71,20 +71,20 @@ final class SignalWorkflow {
 
     // MARK: - Workflow Implementation
 
-    func run(input: OrderInput) async throws -> OrderOutput {
-        currentState = "processing"
+    mutating func run(context: WorkflowContext<Self>, input: OrderInput) async throws -> OrderOutput {
+        self.currentState = "processing"
 
         // Step 1: Process the order
-        completedSteps.append("started")
+        self.completedSteps.append("started")
 
         // Wait if paused
-        try await waitIfPaused()
+        try await context.condition { !$0.isPaused || $0.isCancelled }
         if isCancelled {
             return cancelledOutput()
         }
 
-        currentState = "processing_order"
-        let processedId = try await Workflow.executeActivity(
+        self.currentState = "processing_order"
+        let processedId = try await context.executeActivity(
             SignalActivities.Activities.ProcessOrder.self,
             options: .init(startToCloseTimeout: .seconds(30)),
             input: SignalActivities.ProcessOrderInput(
@@ -92,17 +92,17 @@ final class SignalWorkflow {
                 items: input.items
             )
         )
-        completedSteps.append("order_processed")
+        self.completedSteps.append("order_processed")
 
         // Wait if paused
-        try await waitIfPaused()
+        try await context.condition { !$0.isPaused || $0.isCancelled }
         if isCancelled {
             return cancelledOutput()
         }
 
         // Step 2: Ship the order
-        currentState = "shipping"
-        let trackingNumber = try await Workflow.executeActivity(
+        self.currentState = "shipping"
+        let trackingNumber = try await context.executeActivity(
             SignalActivities.Activities.ShipOrder.self,
             options: .init(startToCloseTimeout: .seconds(30)),
             input: SignalActivities.ShipOrderInput(
@@ -110,24 +110,24 @@ final class SignalWorkflow {
                 priority: priority
             )
         )
-        completedSteps.append("order_shipped")
+        self.completedSteps.append("order_shipped")
 
         // Wait if paused
-        try await waitIfPaused()
+        try await context.condition { !$0.isPaused || $0.isCancelled }
         if isCancelled {
             return cancelledOutput()
         }
 
         // Step 3: Notify customer
-        currentState = "notifying"
-        try await Workflow.executeActivity(
+        self.currentState = "notifying"
+        try await context.executeActivity(
             SignalActivities.Activities.NotifyCustomer.self,
             options: .init(startToCloseTimeout: .seconds(30)),
             input: "Your order \(input.orderId) has shipped! Tracking: \(trackingNumber)"
         )
-        completedSteps.append("customer_notified")
+        self.completedSteps.append("customer_notified")
 
-        currentState = "completed"
+        self.currentState = "completed"
         return OrderOutput(
             orderId: input.orderId,
             status: "completed",
@@ -141,19 +141,19 @@ final class SignalWorkflow {
 
     /// Pauses the workflow execution.
     @WorkflowSignal
-    func pause(input: Void) async throws {
+    mutating func pause(input: Void) {
         isPaused = true
     }
 
     /// Resumes the workflow execution.
     @WorkflowSignal
-    func resume(input: Void) async throws {
+    mutating func resume(input: Void) {
         isPaused = false
     }
 
     /// Cancels the workflow.
     @WorkflowSignal
-    func cancel(input: Void) async throws {
+    mutating func cancel(input: Void) {
         isCancelled = true
         isPaused = false  // Unpause if paused to allow cancellation to proceed
     }
@@ -177,7 +177,7 @@ final class SignalWorkflow {
 
     /// Updates the priority of the order with validation.
     @WorkflowUpdate
-    func setPriority(input: SetPriorityInput) async throws -> String {
+    mutating func setPriority(input: SetPriorityInput) throws -> String {
         // Validate priority value
         let validPriorities = ["standard", "expedited", "overnight"]
         guard validPriorities.contains(input.priority) else {
@@ -206,13 +206,6 @@ final class SignalWorkflow {
     }
 
     // MARK: - Helper Methods
-
-    private func waitIfPaused() async throws {
-        if isPaused {
-            // Wait until either resumed or cancelled
-            try await Workflow.condition { !self.isPaused || self.isCancelled }
-        }
-    }
 
     private func cancelledOutput() -> OrderOutput {
         return OrderOutput(

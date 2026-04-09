@@ -22,9 +22,9 @@ extension TestServerDependentTests {
     @Suite(.tags(.workflowTests))
     struct WorkflowInfoTests {
         @Workflow
-        final class InfoWorkflow {
-            func run(input: Void) async throws -> WorkflowInfo {
-                Workflow.info
+        struct InfoWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> WorkflowInfo {
+                context.info
             }
         }
 

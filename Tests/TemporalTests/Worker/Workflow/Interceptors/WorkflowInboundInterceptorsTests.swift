@@ -22,10 +22,10 @@ extension TestServerDependentTests {
     struct WorkflowInboundInterceptorTests {
         // The intent is to eventually make this use enough features to test all interception methods.
         @Workflow
-        final class InterceptorTestingWorkflow {
-            func run(input: Void) async throws {
+        struct InterceptorTestingWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
                 // ...although currently it doesn't do anything interesting
-                try await Workflow.sleep(for: .seconds(1))
+                try await context.sleep(for: .seconds(1))
             }
         }
 
@@ -43,7 +43,7 @@ extension TestServerDependentTests {
                     input: ExecuteWorkflowInput<Workflow>,
                     next: (ExecuteWorkflowInput<Workflow>) async throws -> Workflow.Output
                 ) async throws -> Workflow.Output {
-                    #expect(Temporal.Workflow.info.workflowName == "\(InterceptorTestingWorkflow.self)")
+                    #expect(Temporal.WorkflowContext<InterceptorTestingWorkflow>.inWorkflow)
                     interceptor.counter.withLock { $0 += 1 }
                     return try await next(input)
                 }

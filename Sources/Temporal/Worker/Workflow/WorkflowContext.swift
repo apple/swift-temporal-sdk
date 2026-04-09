@@ -12,483 +12,1100 @@
 //
 //===----------------------------------------------------------------------===//
 
-package import Logging
+public import Logging
 
-import struct Foundation.Date
+public import struct Foundation.Date
 
-/// The execution context available during workflow execution.
-package struct WorkflowContext: Sendable {
-    /// Internal state machine for workflow execution.
-    private let stateMachine: WorkflowStateMachineStorage
+/// The workflow context providing access to Temporal workflow operations.
+///
+/// `WorkflowContext` is the primary interface through which workflows interact with the
+/// Temporal system. It provides instance methods for all workflow operations including
+/// activity execution, child workflow management, timers, conditions, and workflow state
+/// management.
+///
+/// ## Deterministic execution
+///
+/// All operations performed through the `WorkflowContext` API are deterministic and replay-safe.
+/// The API ensures that workflow executions are consistent across retries and replay scenarios.
+///
+/// ## Usage
+///
+/// The `WorkflowContext` is passed as a parameter to the workflow's `run` method and
+/// signal/update handlers:
+///
+/// ```swift
+/// mutating func run(context: WorkflowContext<Self>, input: MyInput) async throws -> MyOutput {
+///     // Execute an activity
+///     let result = try await context.executeActivity(
+///         MyActivity.self,
+///         options: .init(startToCloseTimeout: .seconds(30)),
+///         input: "hello"
+///     )
+///
+///     // Sleep for a duration
+///     try await context.sleep(for: .seconds(5))
+///
+///     // Wait for a condition
+///     try await context.condition { someState == expectedValue }
+///
+///     return result
+/// }
+/// ```
+///
+/// - Important: This type is only valid for use within the scope of a workflow execution.
+public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable {
+    let internalContext: InternalWorkflowContext
+    let stateBox: ArcBox<Workflow>
 
-    /// Outbound interceptors for workflow operations.
-    private let outboundInterceptors: [any WorkflowOutboundInterceptor]
+    init(internalContext: InternalWorkflowContext, stateBox: ArcBox<Workflow>) {
+        self.internalContext = internalContext
+        self.stateBox = stateBox
+    }
 
-    /// Implementation delegate for interceptor processing.
-    let implementation: Implementation
+    // MARK: - State Access
 
-    /// The logger passed to the workflow execution.
-    let logger: Logger
+    /// Mutates the workflow state using a closure and returns a value.
+    ///
+    /// Normally you can just mutate the state of the workflow by making you run method or the handler
+    /// mutating. However, you cannot capture `self` in escaping closures such as async let's or
+    /// child tasks. This method allows you to mutate the state safely in such closures.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// @WorkflowSignal
+    /// func addItem(context: WorkflowContext<Self>, input: Item) async throws {
+    ///     async let execute = {
+    ///         context.mutateState { workflow in
+    ///             workflow.items.append(input)
+    ///         }
+    ///         try await context.executeActivity(
+    ///             PersistItemActivity.self,
+    ///             options: .init(startToCloseTimeout: .seconds(10)),
+    ///             input: input
+    ///         )
+    ///     }
+    ///     try await execute
+    /// }
+    /// ```
+    ///
+    /// - Parameter mutator: A closure that receives a mutable reference to the workflow struct
+    ///   and returns a value.
+    /// - Returns: The value returned by the closure.
+    public func mutateState<Return>(_ mutator: (inout Workflow) -> Return) -> Return {
+        stateBox.withMutableValue(mutator)
+    }
+
+    /// A boolean value that indicates whether the current code is executing within a workflow context.
+    public static var inWorkflow: Bool {
+        InternalWorkflowContext.current != nil
+    }
+
+    /// Information about the currently executing update, if any.
+    ///
+    /// Returns the update ID and name when called from within an update handler
+    /// or update validator. Returns `nil` when called outside of an update context
+    /// (e.g., from the main workflow run method, signal handlers, or query handlers).
+    public var currentUpdateInfo: WorkflowUpdateInfo? {
+        InternalWorkflowContext.currentUpdateInfo
+    }
+
+    /// The current worker deployment version for this task.
+    ///
+    /// May be unset if the task was completed by a worker without a deployment version or build id.
+    /// If this worker is the one executing this task for the first time and has a deployment version set,
+    /// then its ID will be used. This value may change over the lifetime of the workflow run, but is
+    /// deterministic and safe to use for branching.
+    public var currentDeploymentVersion: DeploymentVersion? {
+        self.internalContext.currentDeploymentVersion
+    }
 
     /// Information about the current workflow execution.
     ///
     /// Provides access to workflow metadata including identifiers, timing information,
     /// configuration, and parent workflow details.
-    let info: WorkflowInfo
+    public var info: WorkflowInfo {
+        self.internalContext.info
+    }
 
     /// The data converter used for payload serialization and deserialization.
     ///
     /// This converter handles the transformation between Swift types and Temporal's
     /// internal payload format.
-    let payloadConverter: any PayloadConverter
+    public var payloadConverter: any PayloadConverter {
+        self.internalContext.payloadConverter
+    }
 
     /// A deterministic random number generator for workflow use.
-    var randomNumberGenerator: any RandomNumberGenerator {
-        WorkflowRandomNumberGenerator(stateMachine: self.stateMachine)
+    ///
+    /// This generator ensures that random number generation is deterministic and replay-safe
+    /// within workflow executions. The same sequence of random numbers will be generated
+    /// during replay.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// var rng = context.randomNumberGenerator
+    /// let randomValue = Int.random(in: 1...100, using: &rng)
+    /// ```
+    public var randomNumberGenerator: any RandomNumberGenerator {
+        self.internalContext.randomNumberGenerator
     }
 
     /// Indicates whether all update and signal handlers have finished executing.
-    var allHandlersFinished: Bool {
-        self.stateMachine.allHandlersFinished()
+    ///
+    /// This property is useful for ensuring that all asynchronous handlers complete
+    /// before the workflow terminates or continues as new. Waiting on this condition
+    /// prevents interruption of in-progress handlers.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+    ///     // Perform workflow logic...
+    ///
+    ///     // Wait for all handlers to finish before returning
+    ///     try await context.condition { context.allHandlersFinished }
+    /// }
+    /// ```
+    ///
+    /// - Returns: `true` if all handlers have finished, `false` otherwise.
+    public var allHandlersFinished: Bool {
+        self.internalContext.allHandlersFinished
+    }
+
+    /// The current date of the workflow.
+    ///
+    /// This value is deterministic and safe for replays.
+    /// Do not use any other sources of system time in workflows.
+    public var now: Date {
+        self.internalContext.now
     }
 
     /// Indicates whether the workflow is currently in replay mode.
     package var isReplaying: Bool {
-        self.stateMachine.isReplaying()
-    }
-
-    var now: Date {
-        self.stateMachine.now()
+        self.internalContext.isReplaying
     }
 
     /// The current search attributes for the workflow.
-    var searchAttributes: SearchAttributeCollection {
-        self.stateMachine.searchAttributes()
-    }
-
-    func upsertSearchAttributes(_ searchAttributes: SearchAttributeCollection) {
-        self.stateMachine.upsertSearchAttributes(searchAttributes)
+    ///
+    /// Search attributes are key-value pairs that can be used to index and query
+    /// workflow executions. They are searchable through Temporal's visibility APIs.
+    ///
+    /// - Returns: A collection of the current search attributes.
+    public var searchAttributes: SearchAttributeCollection {
+        self.internalContext.searchAttributes
     }
 
     /// User specified details for this workflow that may appear in UI/CLI.
-    var currentDetails: String? {
-        get {
-            self.stateMachine.currentDetails()
+    ///
+    /// Unlike static details set at start, this value can be updated throughout the life of the workflow.
+    /// This can be in Temporal markdown format and can span multiple lines.
+    ///
+    /// - Important: This is currently experimental.
+    public var currentDetails: String? {
+        get { self.internalContext.currentDetails }
+        nonmutating set {
+            // Use the internal method since the context struct is immutable
+            self.internalContext.updateCurrentDetails(newValue)
         }
-        set {
-            self.stateMachine.setCurrentDetails(newValue)
-        }
-    }
-
-    func ensureWorkflowStateModificationIsSafe() {
-        self.stateMachine.ensureWorkflowStateModificationIsSafe()
-    }
-
-    /// Internal method to update current details when context is immutable.
-    func updateCurrentDetails(_ newValue: String?) {
-        self.stateMachine.setCurrentDetails(newValue)
     }
 
     /// A boolean value that indicates whether continue as new was suggested.
-    var continueAsNewSuggested: Bool {
-        self.stateMachine.continueAsNewSuggested()
+    public var continueAsNewSuggested: Bool {
+        self.internalContext.continueAsNewSuggested
     }
 
     /// Current number of events in the history.
-    var currentHistoryLength: Int {
-        self.stateMachine.currentHistoryLength()
+    public var currentHistoryLength: Int {
+        self.internalContext.currentHistoryLength
     }
 
     /// Current size of the history in bytes.
-    var currentHistorySize: Int {
-        self.stateMachine.currentHistorySize()
+    public var currentHistorySize: Int {
+        self.internalContext.currentHistorySize
     }
 
-    /// The current worker deployment version for this task.
-    var currentDeploymentVersion: DeploymentVersion? {
-        self.stateMachine.currentDeploymentVersion()
+    /// The logger used for the workflow execution.
+    public var logger: Logger {
+        self.internalContext.logger
     }
 
-    package init(
-        stateMachine: WorkflowStateMachineStorage,
-        workflowInfo: WorkflowInfo,
-        payloadConverter: any PayloadConverter,
-        outboundInterceptors: [any WorkflowOutboundInterceptor],
-        logger: Logger
-    ) {
-        self.stateMachine = stateMachine
-        self.info = workflowInfo
-        self.payloadConverter = payloadConverter
-        self.outboundInterceptors = outboundInterceptors
-        self.implementation = .init(
-            interceptors: outboundInterceptors,
-            stateMachine: stateMachine,
-            payloadConverter: payloadConverter
-        )
-        self.logger = logger
+    /// Updates or inserts the specified search attributes.
+    ///
+    /// Search attributes allow workflows to be indexed and queried through Temporal's
+    /// visibility APIs. This method updates existing attributes or adds new ones.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// var attributes = SearchAttributeCollection()
+    /// attributes[.customStringField("order_status")] = "processing"
+    /// attributes[.customIntField("priority")] = 5
+    /// context.upsertSearchAttributes(attributes)
+    /// ```
+    ///
+    /// - Parameter searchAttributes: The search attributes to update or insert.
+    ///   Specify `nil` for a specific attribute to unset it.
+    public func upsertSearchAttributes(_ searchAttributes: SearchAttributeCollection) {
+        self.internalContext.upsertSearchAttributes(searchAttributes)
     }
 
-    func sleep(for duration: Duration, summary: String? = nil) async throws {
-        try await self.implementation.sleep(
-            input: .init(
-                duration: duration,
-                summary: summary
-            )
-        )
+    /// Updates or inserts search attributes using a builder block.
+    ///
+    /// This convenience method allows for fluent construction of search attribute updates.
+    ///
+    /// - Parameter builder: A closure that receives a mutable search attribute collection
+    ///   to configure. Specify `nil` for specific attributes to unset them.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// context.upsertSearchAttributes { attributes in
+    ///     attributes[.customStringField("status")] = "completed"
+    ///     attributes[.customIntField("score")] = 100
+    ///     attributes[.customStringField("old_field")] = nil // Unset
+    /// }
+    /// ```
+    public func upsertSearchAttributes(builder: (inout SearchAttributeCollection) -> Void) {
+        var searchAttributes = SearchAttributeCollection()
+        builder(&searchAttributes)
+        upsertSearchAttributes(searchAttributes)
     }
 
-    private enum TimeoutResult<Return: Sendable, Failure: Error> {
-        case sleepReturned
-        case sleepThrew
-        case bodyReturned(Return)
-        case bodyThrew(Failure)
+    /// Sleep in a workflow for the given time.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Sleep for 5 seconds
+    /// try await context.sleep(for: .seconds(5))
+    ///
+    /// // Sleep with a summary for debugging
+    /// try await context.sleep(for: .minutes(1), summary: "waiting for external system")
+    /// ```
+    ///
+    /// - Parameter duration: The duration to sleep for.
+    /// - Parameter summary: A simple string identifying this timer.
+    public func sleep(for duration: Duration, summary: String? = nil) async throws {
+        try await self.internalContext.sleep(for: duration, summary: summary)
     }
 
-    func timeout<Return: Sendable, Failure: Error>(
+    /// Runs a closure until a timeout is reached.
+    ///
+    /// This is backed by ``sleep(for:summary:)``. Additionally, this method will always return
+    /// the result of the `body` closure. When the timeout is hit the task in which the body
+    /// closure runs will get cancelled and subsequently awaited until it returns.
+    ///
+    /// This means that whatever error is thrown by the `body` closure on task cancellation will
+    /// be re-thrown by this method.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Run an operation with a 30-second timeout
+    /// let result = try await context.timeout(for: .seconds(30)) {
+    ///     return try await performLongRunningOperation()
+    /// }
+    ///
+    /// // Handle timeout by catching cancellation in the body
+    /// let result = try await context.timeout(for: .minutes(2)) {
+    ///     do {
+    ///         return try await externalServiceCall()
+    ///     } catch is CancellationError {
+    ///         // Handle timeout gracefully
+    ///         return defaultValue
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - duration: The duration for the timeout.
+    ///   - body: The closure to run with a given timeout.
+    /// - Returns: The result of the closure.
+    public func timeout<Return: Sendable, Failure: Error>(
         for duration: Duration,
         body: @Sendable @escaping () async throws(Failure) -> Return
     ) async throws(Failure) -> Return {
-        try await withTaskGroup(of: TimeoutResult<Return, Failure>.self) { group in
-            group.addTask {
-                do {
-                    try await self.sleep(for: duration)
-                    return .sleepReturned
-                } catch {
-                    return .sleepThrew
-                }
-            }
-            group.addTask {
-                do {
-                    return .bodyReturned(try await body())
-                } catch {
-                    // TODO: Investigate why this requires a force cast with the compiler folks
-                    return .bodyThrew(error as! Failure)
-                }
-            }
-
-            // This force unwrap is safe since we have two guaranteed child tasks
-            // If the method below
-            let result = await group.next()!
-            switch result {
-            case .sleepReturned, .sleepThrew:
-                // We either timed out or our parent task got cancelled
-                // so now we have to cancel the body child task and wait for its result
-                group.cancelAll()
-                let nextResult = await group.next()!
-                switch nextResult {
-                case .sleepReturned, .sleepThrew:
-                    fatalError("The sleep child task already returned")
-                case .bodyReturned(let value):
-                    return Result<Return, Failure>.success(value)
-                case .bodyThrew(let error):
-                    return Result<Return, Failure>.failure(error)
-                }
-            case .bodyReturned(let value):
-                // We can cancel the sleep now and ignore any error from it
-                group.cancelAll()
-                _ = await group.next()
-                return Result<Return, Failure>.success(value)
-            case .bodyThrew(let error):
-                // We can cancel the sleep now and ignore any error from it
-                group.cancelAll()
-                _ = await group.next()
-                return Result<Return, Failure>.failure(error)
-            }
-        }.get()
+        try await self.internalContext.timeout(for: duration, body: body)
     }
 
-    func withCancellationShield<Result: Sendable>(_ operation: sending @escaping () async throws -> Result) async throws -> Result {
-        try await self.stateMachine.withCancellationShield(operation)
+    /// Waits for the given closure to return `true`.
+    ///
+    /// The closure receives the current workflow state and is re-evaluated each time the
+    /// executor runs (e.g., after a signal handler mutates state). Since the state is passed
+    /// as a parameter, there is no need to capture `self`.
+    ///
+    /// The closure must be side-effect free since it may be invoked frequently during
+    /// executor iteration.
+    ///
+    /// This is very commonly used to wait on a value to be set by a handler. Special care was taken to only resume a single wait
+    /// condition when it evaluates to true. Therefore if multiple wait conditions are waiting on the same thing, only one
+    /// is resumed at a time, which means the code immediately following that wait condition can change the variable before
+    /// other wait conditions are evaluated. This is a useful property for building mutexes/semaphores.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Wait for a boolean flag to become true
+    /// try await context.condition { $0.approved }
+    ///
+    /// // Wait for a counter to reach a threshold
+    /// try await context.condition { $0.processedItems >= 10 }
+    ///
+    /// // Wait for an optional value to be set
+    /// try await context.condition { $0.result != nil }
+    /// ```
+    ///
+    /// - Parameter condition: A closure that receives the workflow state and returns `true`
+    ///   when the condition is satisfied.
+    /// - Throws: A `CanceledError` if the waiting was cancelled.
+    public func condition(_ condition: @escaping (Workflow) -> Bool) async throws {
+        try await self.internalContext.condition { [stateBox] in
+            stateBox.withValue { condition($0) }
+        }
     }
 
-    func condition(_ condition: @escaping () -> Bool) async throws {
-        try await self.stateMachine.condition(condition)
+    /// Waits for the given closure to return `true`.
+    ///
+    /// Use this overload when the condition does not depend on workflow state properties,
+    /// for example when waiting on a value from the context itself.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Wait for all handlers to finish
+    /// try await context.condition { context.allHandlersFinished }
+    /// ```
+    ///
+    /// - Parameter condition: A closure that returns `true` when the condition is satisfied.
+    /// - Throws: A `CanceledError` if the waiting was cancelled.
+    public func condition(_ condition: @escaping () -> Bool) async throws {
+        try await self.internalContext.condition(condition)
     }
 
-    func patch(_ id: String) -> Bool {
-        self.stateMachine.patch(id)
+    /// Patches a workflow to support versioning and backward compatibility.
+    ///
+    /// When called, this returns `true` if code should take the newer path, which means this is either not replaying
+    /// or is replaying and has seen this patch before. Results for successive calls to this function for the same ID
+    /// and workflow are memoized.
+    ///
+    /// Use ``deprecatePatch(_:)`` when all workflows are done and will never be queried again.
+    /// The old code path can be removed at that time too.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// if context.patch("fix-bug-123") {
+    ///     // New code path with the bug fix
+    ///     return await newImplementation()
+    /// } else {
+    ///     // Old code path for backward compatibility
+    ///     return await oldImplementation()
+    /// }
+    /// ```
+    ///
+    /// - Parameter id: A unique identifier for this patch.
+    /// - Returns: A boolean value that indicates whether this should take the newer patch path.
+    public func patch(_ id: String) -> Bool {
+        self.internalContext.patch(id)
     }
 
-    func deprecatePatch(_ id: String) {
-        self.stateMachine.deprecatePatch(id)
+    /// Marks a patch as deprecated.
+    ///
+    /// This marks a workflow that had ``patch(_:)`` in a previous version of the code as no longer applicable
+    /// because all workflows that use the old code path are done and will never be queried again.
+    /// Therefore the old code path can be removed as well.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// context.deprecatePatch("fix-bug-123")
+    /// // Old code path can now be safely removed
+    /// return await newImplementation()
+    /// ```
+    ///
+    /// - Parameter id: The patch identifier to deprecate.
+    public func deprecatePatch(_ id: String) {
+        self.internalContext.deprecatePatch(id)
     }
 
-    func executeActivity<each Input: Sendable, Output: Sendable>(
+    /// Execute an operation with a cancellation shield.
+    ///
+    /// Use this method to perform operations that should be shielded from Workflow cancellation.
+    /// For example, you can use this to execute an activity as part of a cleanup operation when your Workflow is getting cancelled.
+    ///
+    /// - Parameter operation: The operation that should be executed.
+    public func withCancellationShield<Result: Sendable>(_ operation: sending @escaping () async throws -> Result) async throws -> Result {
+        try await self.internalContext.withCancellationShield(operation)
+    }
+
+    // MARK: - Activity Execution
+
+    /// Executes an activity with the specified type, options, and input.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Execute an activity with input
+    /// let result = try await context.executeActivity(
+    ///     ProcessOrderActivity.self,
+    ///     options: .init(startToCloseTimeout: .seconds(30)),
+    ///     input: OrderRequest(id: "order-123", items: items)
+    /// )
+    ///
+    /// // Execute with retry policy
+    /// let emailResult = try await context.executeActivity(
+    ///     SendEmailActivity.self,
+    ///     options: .init(
+    ///         startToCloseTimeout: .seconds(60),
+    ///         retryPolicy: .init(
+    ///             maximumAttempts: 3,
+    ///             initialInterval: .seconds(1)
+    ///         )
+    ///     ),
+    ///     input: EmailData(to: "user@example.com", subject: "Order Confirmation")
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - activityType: The activity's type.
+    ///   - options: The activity's execution options.
+    ///   - input: The activity's input data.
+    /// - Returns: The activity's output.
+    public func executeActivity<Activity: ActivityDefinition>(
+        _ activityType: Activity.Type = Activity.self,
+        options: ActivityOptions,
+        input: Activity.Input
+    ) async throws -> Activity.Output {
+        try await executeActivity(
+            name: Activity.name,
+            options: options,
+            input: input,
+            outputType: Activity.Output.self
+        )
+    }
+
+    /// Executes an activity with no input.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Execute an activity with no input parameters
+    /// let systemInfo = try await context.executeActivity(
+    ///     GetSystemInfoActivity.self,
+    ///     options: .init(startToCloseTimeout: .seconds(15))
+    /// )
+    ///
+    /// // Health check activity
+    /// let isHealthy = try await context.executeActivity(
+    ///     HealthCheckActivity.self,
+    ///     options: .init(startToCloseTimeout: .seconds(10))
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - activityType: The activity's type.
+    ///   - options: The activity's execution options.
+    /// - Returns: The activity's output.
+    public func executeActivity<Activity: ActivityDefinition>(
+        _ activityType: Activity.Type = Activity.self,
+        options: ActivityOptions
+    ) async throws -> Activity.Output where Activity.Input == Void {
+        try await executeActivity(activityType, options: options, input: ())
+    }
+
+    /// Executes an activity with no input or output.
+    ///
+    /// - Parameters:
+    ///   - activityType: The activity's type.
+    ///   - options: The activity's execution options.
+    public func executeActivity<Activity: ActivityDefinition>(
+        _ activityType: Activity.Type = Activity.self,
+        options: ActivityOptions
+    ) async throws where Activity.Input == Void, Activity.Output == Void {
+        try await executeActivity(activityType, options: options, input: ())
+    }
+
+    /// Executes an activity with no output.
+    ///
+    /// - Parameters:
+    ///   - activityType: The activity's type.
+    ///   - options: The activity's execution options.
+    ///   - input: The activity's input data.
+    public func executeActivity<Activity: ActivityDefinition>(
+        _ activityType: Activity.Type = Activity.self,
+        options: ActivityOptions,
+        input: Activity.Input
+    ) async throws where Activity.Output == Void {
+        let _: Void = try await executeActivity(
+            name: Activity.name,
+            options: options,
+            input: input,
+            outputType: Activity.Output.self
+        )
+    }
+
+    /// Executes an activity by name.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Execute activity by string name
+    /// let result: String = try await context.executeActivity(
+    ///     name: "ProcessPayment",
+    ///     options: .init(startToCloseTimeout: .seconds(45)),
+    ///     input: PaymentRequest(amount: 100.00, currency: "USD"),
+    ///     outputType: PaymentResult.self
+    /// )
+    ///
+    /// // Execute with multiple inputs
+    /// let summary: OrderSummary = try await context.executeActivity(
+    ///     name: "GenerateOrderSummary",
+    ///     options: .init(startToCloseTimeout: .seconds(30)),
+    ///     input: orderID, customerInfo, items,
+    ///     outputType: OrderSummary.self
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - name: The activity's name.
+    ///   - options: The activity's execution options.
+    ///   - input: The activity's input values.
+    ///   - outputType: The activity's output type.
+    /// - Returns: The activity's output.
+    public func executeActivity<each Input: Sendable, Output: Sendable>(
         name: String,
         options: ActivityOptions,
         input: repeat each Input,
         outputType: Output.Type = Output.self
     ) async throws -> Output {
-        try await self.implementation.executeActivity(
-            input: ScheduleActivityInput<repeat each Input>(
-                name: name,
-                options: options,
-                headers: [:],
-                input: (repeat each input)
-            )
-        )
+        try await self.internalContext.executeActivity(name: name, options: options, input: repeat each input, outputType: outputType)
     }
 
     // MARK: Local Activity Execution
 
-    func executeLocalActivity<each Input: Sendable, Output: Sendable>(
+    /// Executes a local activity with the specified type, options, and input.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Execute a local activity with input
+    /// let result = try await context.executeLocalActivity(
+    ///     ProcessOrderActivity.self,
+    ///     options: .init(startToCloseTimeout: .seconds(30)),
+    ///     input: OrderRequest(id: "order-123", items: items)
+    /// )
+    ///
+    /// // Execute with retry policy
+    /// let emailResult = try await context.executeLocalActivity(
+    ///     SendEmailActivity.self,
+    ///     options: .init(
+    ///         startToCloseTimeout: .seconds(60),
+    ///         retryPolicy: .init(
+    ///             maximumAttempts: 3,
+    ///             initialInterval: .seconds(1)
+    ///         )
+    ///     ),
+    ///     input: EmailData(to: "user@example.com", subject: "Order Confirmation")
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - activityType: The activity's type.
+    ///   - options: The activity's execution options.
+    ///   - input: The activity's input data.
+    /// - Returns: The activity's output.
+    public func executeLocalActivity<Activity: ActivityDefinition>(
+        _ activityType: Activity.Type = Activity.self,
+        options: LocalActivityOptions,
+        input: Activity.Input
+    ) async throws -> Activity.Output {
+        try await self.executeLocalActivity(
+            name: activityType.name,
+            options: options,
+            input: input,
+            outputType: Activity.Output.self
+        )
+    }
+
+    /// Executes a local activity with no input.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Execute a local activity with no input parameters
+    /// let systemInfo = try await context.executeLocalActivity(
+    ///     GetSystemInfoActivity.self,
+    ///     options: .init(startToCloseTimeout: .seconds(15))
+    /// )
+    ///
+    /// // Health check local activity
+    /// let isHealthy = try await context.executeLocalActivity(
+    ///     HealthCheckActivity.self,
+    ///     options: .init(startToCloseTimeout: .seconds(10))
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - activityType: The activity's type.
+    ///   - options: The activity's execution options.
+    /// - Returns: The activity's output.
+    public func executeLocalActivity<Activity: ActivityDefinition>(
+        _ activityType: Activity.Type = Activity.self,
+        options: LocalActivityOptions
+    ) async throws -> Activity.Output where Activity.Input == Void {
+        try await self.executeLocalActivity(
+            activityType,
+            options: options,
+            input: ()
+        )
+    }
+
+    /// Executes a local activity with no input or output.
+    ///
+    /// - Parameters:
+    ///   - activityType: The activity's type.
+    ///   - options: The local activity's execution options.
+    public func executeLocalActivity<Activity: ActivityDefinition>(
+        _ activityType: Activity.Type = Activity.self,
+        options: LocalActivityOptions
+    ) async throws where Activity.Input == Void, Activity.Output == Void {
+        try await self.executeLocalActivity(
+            activityType,
+            options: options,
+            input: ()
+        )
+    }
+
+    /// Executes a local activity with no output.
+    ///
+    /// - Parameters:
+    ///   - activityType: The activity's type.
+    ///   - options: The local activity's execution options.
+    ///   - input: The activity's input data.
+    public func executeLocalActivity<Activity: ActivityDefinition>(
+        _ activityType: Activity.Type = Activity.self,
+        options: LocalActivityOptions,
+        input: Activity.Input
+    ) async throws where Activity.Output == Void {
+        try await self.executeLocalActivity(
+            name: activityType.name,
+            options: options,
+            input: input,
+            outputType: Activity.Output.self
+        )
+    }
+
+    /// Executes a local activity by name.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Execute local activity by string name
+    /// let result: String = try await context.executeLocalActivity(
+    ///     name: "ProcessPayment",
+    ///     options: .init(startToCloseTimeout: .seconds(45)),
+    ///     input: PaymentRequest(amount: 100.00, currency: "USD"),
+    ///     outputType: PaymentResult.self
+    /// )
+    ///
+    /// // Execute with multiple inputs
+    /// let summary: OrderSummary = try await context.executeLocalActivity(
+    ///     name: "GenerateOrderSummary",
+    ///     options: .init(startToCloseTimeout: .seconds(30)),
+    ///     input: orderID, customerInfo, items,
+    ///     outputType: OrderSummary.self
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - name: The local activity's name.
+    ///   - options: The local activity's execution options.
+    ///   - input: The local activity's input values.
+    ///   - outputType: The local activity's output type.
+    /// - Returns: The local activity's output.
+    public func executeLocalActivity<each Input: Sendable, Output: Sendable>(
         name: String,
         options: LocalActivityOptions,
         input: repeat each Input,
         outputType: Output.Type = Output.self
     ) async throws -> Output {
-        try await self.implementation.executeLocalActivity(
-            input: ScheduleLocalActivityInput<repeat each Input>(
-                name: name,
-                options: options,
-                headers: [:],
-                input: (repeat each input)
-            )
-        )
-    }
-
-    // MARK: Child workflow
-
-    func startChildWorkflow<Workflow: WorkflowDefinition>(
-        workflowType: Workflow.Type = Workflow.self,
-        options: ChildWorkflowOptions = .init(),
-        input: Workflow.Input
-    ) async throws -> ChildWorkflowHandle<Workflow> {
-        let untypedChildWorkflowHandle = try await self.startChildWorkflow(
-            name: Workflow.name,
+        try await self.internalContext.executeLocalActivity(
+            name: name,
             options: options,
-            inputs: input
+            input: repeat each input,
+            outputType: outputType
         )
-        return ChildWorkflowHandle(untypedWorkflowHandle: untypedChildWorkflowHandle)
     }
 
-    func startChildWorkflow<each Input: Sendable>(
+    // MARK: - External Workflow
+
+    /// Returns a typed handle to an external workflow for type-safe signaling and cancellation.
+    ///
+    /// The external workflow handle allows a workflow to interact with any other workflow by ID,
+    /// regardless of whether it is a child workflow. This typed variant provides compile-time
+    /// safety for signal operations using ``WorkflowSignalDefinition``.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// let handle = context.getExternalWorkflowHandle(
+    ///     ExternalTargetWorkflow.self,
+    ///     id: "other-workflow-id"
+    /// )
+    ///
+    /// // Signal the external workflow with type safety
+    /// try await handle.signal(signalType: ExternalTargetWorkflow.MySignal.self, input: signalData)
+    ///
+    /// // Cancel the external workflow
+    /// try await handle.cancel()
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - type: The workflow type of the external workflow.
+    ///   - id: The workflow ID of the external workflow.
+    ///   - runId: The optional run ID of the external workflow. If `nil`, targets the latest run.
+    /// - Returns: A typed handle to the external workflow.
+    public func getExternalWorkflowHandle<ExternalW: WorkflowDefinition>(
+        _ type: ExternalW.Type,
+        id: String,
+        runId: String? = nil
+    ) -> ExternalWorkflowHandle<ExternalW> {
+        ExternalWorkflowHandle(
+            untypedHandle: self.internalContext.getExternalWorkflowHandle(id: id, runId: runId)
+        )
+    }
+
+    /// Returns an untyped handle to an external workflow for signaling and cancellation.
+    ///
+    /// The external workflow handle allows a workflow to interact with any other workflow by ID,
+    /// regardless of whether it is a child workflow. This is useful for cross-workflow communication
+    /// and coordination when the workflow type is not known at compile time.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// let handle = context.getExternalWorkflowHandle(id: "other-workflow-id")
+    ///
+    /// // Signal the external workflow
+    /// try await handle.signal(signalName: "mySignal", input: signalData)
+    ///
+    /// // Cancel the external workflow
+    /// try await handle.cancel()
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - id: The workflow ID of the external workflow.
+    ///   - runId: The optional run ID of the external workflow. If `nil`, targets the latest run.
+    /// - Returns: An untyped handle to the external workflow.
+    public func getExternalWorkflowHandle(
+        id: String,
+        runId: String? = nil
+    ) -> UntypedExternalWorkflowHandle {
+        self.internalContext.getExternalWorkflowHandle(id: id, runId: runId)
+    }
+
+    // MARK: - Child Workflow
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Start a child workflow and get a handle
+    /// let childHandle = try await context.startChildWorkflow(
+    ///     ProcessOrderWorkflow.self,
+    ///     input: OrderData(id: "order-456", customerID: "customer-789")
+    /// )
+    ///
+    /// // Start with custom task queue
+    /// let reportHandle = try await context.startChildWorkflow(
+    ///     GenerateReportWorkflow.self,
+    ///     options: .init(
+    ///         taskQueue: "reports-task-queue"
+    ///     ),
+    ///     input: ReportRequest(startDate: startDate, endDate: endDate)
+    /// )
+    ///
+    /// // Later, get the result
+    /// let result = try await childHandle.result()
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - workflowType: The workflow's type.
+    ///   - options: The child workflow options.
+    ///   - input: The input to the workflow.
+    /// - Returns: A handle to the child workflow.
+    public func startChildWorkflow<ChildWorkflow: WorkflowDefinition>(
+        _ workflowType: ChildWorkflow.Type = ChildWorkflow.self,
+        options: ChildWorkflowOptions = .init(),
+        input: ChildWorkflow.Input
+    ) async throws -> ChildWorkflowHandle<ChildWorkflow> {
+        try await self.internalContext.startChildWorkflow(workflowType: workflowType, options: options, input: input)
+    }
+
+    /// Starts a child workflow by name.
+    ///
+    /// - Parameters:
+    ///   - name: The type name of the workflow.
+    ///   - options: The child workflow options.
+    ///   - inputs: The inputs to the child workflow.
+    /// - Returns: A handle to the child workflow.
+    public func startChildWorkflow<each Input: Sendable>(
         name: String,
         options: ChildWorkflowOptions = .init(),
         inputs: repeat each Input
     ) async throws -> UntypedChildWorkflowHandle {
-        return try await self.implementation.startChildWorkflow(
-            input: StartChildWorkflowInput<repeat each Input>(
-                name: name,
-                options: options,
-                headers: [:],
-                input: (repeat each inputs)
-            )
-        )
+        try await self.internalContext.startChildWorkflow(name: name, options: options, inputs: repeat each inputs)
     }
 
-    // MARK: External Workflow
-
-    func getExternalWorkflowHandle(
-        id: String,
-        runId: String?
-    ) -> UntypedExternalWorkflowHandle {
-        UntypedExternalWorkflowHandle(
-            id: id,
-            runId: runId,
-            stateMachine: self.stateMachine,
-            interceptors: self.outboundInterceptors,
-            payloadConverter: self.payloadConverter
-        )
+    /// Starts a child workflow and awaits the result.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Execute child workflow and wait for result
+    /// let processedOrder = try await context.executeChildWorkflow(
+    ///     ProcessOrderWorkflow.self,
+    ///     input: OrderData(id: orderID, items: items, customerID: customerID)
+    /// )
+    ///
+    /// // Execute multiple child workflows in parallel
+    /// async let emailResult = context.executeChildWorkflow(
+    ///     SendEmailWorkflow.self,
+    ///     input: EmailNotification(to: customer.email, template: "order-confirmation")
+    /// )
+    /// async let smsResult = context.executeChildWorkflow(
+    ///     SendSmsWorkflow.self,
+    ///     input: SmsNotification(to: customer.phone, message: "Order confirmed")
+    /// )
+    ///
+    /// let (emailSent, smsSent) = try await (emailResult, smsResult)
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - workflowType: The workflow's type.
+    ///   - options: The child workflow options.
+    ///   - input: The input to the workflow.
+    /// - Returns: The child workflow's output.
+    public func executeChildWorkflow<ChildWorkflow: WorkflowDefinition>(
+        _ workflowType: ChildWorkflow.Type = ChildWorkflow.self,
+        options: ChildWorkflowOptions = .init(),
+        input: ChildWorkflow.Input
+    ) async throws -> ChildWorkflow.Output {
+        try await startChildWorkflow(workflowType, options: options, input: input).result()
     }
 
-    // MARK: Memo
-
-    func getMemoValue<T>(for key: String) async throws -> T? {
-        let memo = self.stateMachine.memo()
-        guard let rawValue = memo[key] else {
-            return nil
-        }
-
-        do {
-            return try self.payloadConverter.convertPayloadHandlingVoid(rawValue.payload, as: T.self)
-        } catch {
-            throw ArgumentError(message: "Failed to convert memo value to type \(T.self)")
-        }
+    /// Starts a child workflow by name and awaits the result.
+    ///
+    /// - Parameters:
+    ///   - name: The type name of the workflow.
+    ///   - options: The child workflow options.
+    ///   - inputs: The inputs to the child workflow.
+    ///   - resultType: The type of the workflow's result.
+    /// - Returns: The child workflow's output.
+    public func executeChildWorkflow<each Input: Sendable, Result: Sendable>(
+        name: String,
+        options: ChildWorkflowOptions = .init(),
+        inputs: repeat each Input,
+        resultType: Result.Type = Result.self
+    ) async throws -> Result {
+        try await startChildWorkflow(name: name, options: options, inputs: repeat each inputs).result(resultType: resultType)
     }
 
-    func upsertMemo(_ memo: [String: Any?]) async throws {
-        guard memo.count > 0 else {
-            throw ArgumentError(message: "At least one memo update required")
-        }
+    // MARK: - Memo
 
-        var convertedMemo = [String: TemporalRawValue?]()
-        for (key, value) in memo {
-            guard let value else {
-                convertedMemo[key] = .some(nil)
-                continue
-            }
-
-            do {
-                let payload = try self.payloadConverter.convertValueHandlingVoid(value)
-                convertedMemo[key] = .init(payload)
-            } catch {
-                throw ArgumentError(message: "Failed to convert memo value for key \(key). Underlying error \(type(of: error))")
-            }
-        }
-        self.stateMachine.upsertMemo(convertedMemo)
+    /// Gets the value for a memo key.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Get a string memo value
+    /// let customerType: String? = try await context.getMemoValue(for: "customer_type")
+    ///
+    /// // Get a custom struct memo value
+    /// let config: WorkflowConfig? = try await context.getMemoValue(for: "workflow_config")
+    ///
+    /// // Handle optional memo values
+    /// let priority: Int? = try await context.getMemoValue(for: "priority")
+    /// let effectivePriority = priority ?? 1 // Default if not set
+    ///
+    /// // Check if memo exists and handle accordingly
+    /// if let experimentGroup: String = try await context.getMemoValue(for: "experiment_group") {
+    ///     // Use experiment-specific logic
+    ///     processExperimentalFeature(group: experimentGroup)
+    /// } else {
+    ///     // Use default behavior
+    ///     processStandardFeature()
+    /// }
+    /// ```
+    ///
+    /// - Parameter key: The memo's key.
+    /// - Parameter valueType: The memo's value's type.
+    /// - Returns: The value if present, otherwise `nil`.
+    public func getMemoValue<Value>(
+        for key: String,
+        as valueType: Value.Type = Value.self
+    ) async throws -> Value? {
+        try await self.internalContext.getMemoValue(for: key)
     }
 
-    func memo() -> [String: TemporalRawValue] {
-        self.stateMachine.memo()
+    /// Issues updates to the workflow memo.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Update memo with various data types
+    /// try await context.upsertMemo([
+    ///     "customer_id": "customer-123",
+    ///     "order_total": 150.75,
+    ///     "priority": 2,
+    ///     "is_premium": true
+    /// ])
+    ///
+    /// // Update specific memo fields
+    /// try await context.upsertMemo([
+    ///     "status": "processing",
+    ///     "last_updated": Date().timeIntervalSince1970
+    /// ])
+    ///
+    /// // Remove memo fields by setting to nil
+    /// try await context.upsertMemo([
+    ///     "temporary_flag": nil,  // Remove this field
+    ///     "debug_info": nil       // Remove this field too
+    /// ])
+    ///
+    /// // Store complex objects
+    /// let workflowMetadata = WorkflowMetadata(
+    ///     version: "2.1",
+    ///     feature_flags: ["new_checkout": true]
+    /// )
+    /// try await context.upsertMemo([
+    ///     "metadata": workflowMetadata
+    /// ])
+    /// ```
+    ///
+    /// - Parameter memo: Updates to apply. Value can be `nil` to effectively remove the
+    ///   memo value.
+    public func upsertMemo(_ memo: [String: (any Sendable)?]) async throws {
+        try await self.internalContext.upsertMemo(memo)
     }
 
-    // MARK: ContinueAsNew
+    // MARK: - Continue As New
 
-    func makeContinueAsNewError<each Input: Sendable>(
-        workflowName: String,
+    /// Creates a continue-as-new error to restart the workflow as the same type.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Continue as new with updated input
+    /// if context.continueAsNewSuggested {
+    ///     let continueError = try await context.makeContinueAsNewError(
+    ///         options: .init(),
+    ///         input: WorkflowInput(
+    ///             processedItems: currentState.processedItems,
+    ///             nextBatchStartID: currentState.lastProcessedID + 1
+    ///         )
+    ///     )
+    ///     throw continueError
+    /// }
+    ///
+    /// // Continue with same input but different task queue
+    /// if shouldMigrateToNewTaskQueue {
+    ///     let continueError = try await context.makeContinueAsNewError(
+    ///         options: .init(taskQueue: "new-task-queue-v2"),
+    ///         input: currentInput
+    ///     )
+    ///     throw continueError
+    /// }
+    ///
+    /// // Continue with multiple parameters
+    /// let continueError = try await context.makeContinueAsNewError(
+    ///     options: .init(),
+    ///     input: newUserID, updatedConfig, processedCount
+    /// )
+    /// throw continueError
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - options: The continue-as-new options.
+    ///   - input: The input values for the new workflow execution.
+    /// - Returns: A continue-as-new error.
+    /// - Throws: When the input, headers or memo fails to convert.
+    public func makeContinueAsNewError<each Input: Sendable>(
         options: ContinueAsNewOptions,
         input: repeat each Input
     ) async throws -> ContinueAsNewError {
-        try await self.implementation.makeContinueAsNewError(
-            context: self,
-            input: MakeContinueAsNewErrorInput<repeat each Input>(
-                workflowName: workflowName,
-                options: options,
-                headers: [:],
-                input: (repeat each input)
-            )
+        try await self.internalContext.makeContinueAsNewError(
+            workflowName: self.info.workflowName,
+            options: options,
+            input: repeat each input
         )
     }
-}
 
-extension WorkflowContext {
-    struct Implementation: InterceptorImplementation {
-        let interceptors: [any WorkflowOutboundInterceptor]
-        let stateMachine: WorkflowStateMachineStorage
-        let payloadConverter: any PayloadConverter
-    }
-}
-
-extension WorkflowContext.Implementation {
-    func sleep(
-        input: HandleSleepInput
-    ) async throws {
-        try await intercept(Interceptor.handleSleep, input: input) { input in
-            try await self.stateMachine.sleep(for: input.duration, summary: input.summary)
-        }
-    }
-
-    func executeActivity<each Input: Sendable, Output: Sendable>(
-        input: ScheduleActivityInput<repeat each Input>
-    ) async throws -> Output {
-        try await intercept(Interceptor.executeActivity, input: input) { input in
-            // If payload conversion fails this will potentially bubble up and fail the run/handler method
-            // That's expected and should normally cause a workflow task failure.
-            let inputPayloads = try self.payloadConverter.convertValues(repeat each input.input)
-            let outputPayload = try await self.stateMachine.executeActivity(
-                // TODO: Support dynamic activity
-                activityType: input.name,
-                options: .remote(input.options),
-                workflowTaskQueue: Workflow.info.taskQueue,
-                headers: input.headers,
-                input: inputPayloads
-            )
-            // If payload conversion fails this will potentially bubble up and fail the run/handler method
-            // That's expected and should normally cause a workflow task failure.
-            return try self.payloadConverter.convertPayloadHandlingVoid(
-                outputPayload
-            )
-        }
-    }
-
-    func executeLocalActivity<each Input: Sendable, Output: Sendable>(
-        input: ScheduleLocalActivityInput<repeat each Input>
-    ) async throws -> Output {
-        try await intercept(Interceptor.executeLocalActivity, input: input) { input in
-            // If payload conversion fails this will potentially bubble up and fail the run/handler method
-            // That's expected and should normally cause a workflow task failure.
-            let inputPayloads = try self.payloadConverter.convertValues(repeat each input.input)
-            let outputPayload = try await self.stateMachine.executeActivity(
-                // TODO: Support dynamic activity
-                activityType: input.name,
-                options: .local(input.options),
-                workflowTaskQueue: Workflow.info.taskQueue,
-                headers: input.headers,
-                input: inputPayloads
-            )
-            // If payload conversion fails this will potentially bubble up and fail the run/handler method
-            // That's expected and should normally cause a workflow task failure.
-            return try self.payloadConverter.convertPayloadHandlingVoid(
-                outputPayload
-            )
-        }
-    }
-
-    func startChildWorkflow<each Input: Sendable>(
-        input: StartChildWorkflowInput<repeat each Input>
-    ) async throws -> UntypedChildWorkflowHandle {
-        try await intercept(Interceptor.startChildWorkflow, input: input) { input in
-            // If payload conversion fails this will potentially bubble up and fail the run/handler method
-            // That's expected and should normally cause a workflow task failure.
-            let inputPayloads: [Api.Common.V1.Payload]
-            do {
-                inputPayloads = try self.payloadConverter.convertValues(repeat each input.input)
-            } catch {
-                throw ArgumentError(message: "Failed to convert inputs for child workflow '\(input.name)'. Underlying error \(error)")
-            }
-
-            return try await self.stateMachine.startChildWorkflow(
-                namespace: Workflow.info.namespace,
-                taskQueue: Workflow.info.taskQueue,
-                workflowName: input.name,
-                headers: input.headers,
-                inputs: inputPayloads,
-                childWorkflowOptions: input.options,
-                interceptors: self.interceptors
-            )
-        }
-    }
-
-    func makeContinueAsNewError<each Input: Sendable>(
-        context: WorkflowContext,
-        input: MakeContinueAsNewErrorInput<repeat each Input>
+    /// Creates a continue-as-new error to restart as a different workflow type.
+    ///
+    /// This overload allows continuing execution as a different workflow type.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Continue as a different workflow type
+    /// throw try await context.makeContinueAsNewError(
+    ///     workflowType: ProcessingWorkflowV2.self,
+    ///     options: .init(),
+    ///     input: migratedInput
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - workflowType: The workflow type to continue as.
+    ///   - options: The continue-as-new options.
+    ///   - input: The input values for the new workflow execution.
+    /// - Returns: A continue-as-new error.
+    /// - Throws: When the input, headers or memo fails to convert.
+    public func makeContinueAsNewError<OtherW: WorkflowDefinition, each Input: Sendable>(
+        workflowType: OtherW.Type,
+        options: ContinueAsNewOptions = .init(),
+        input: repeat each Input
     ) async throws -> ContinueAsNewError {
-        try await intercept(Interceptor.makeContinueAsNewError, input: input) { input in
-            let inputPayloads: [Api.Common.V1.Payload]
-            do {
-                inputPayloads = try self.payloadConverter.convertValues(repeat each input.input)
-            } catch {
-                throw ArgumentError(message: "Unable to convert workflow inputs for continue as new error. Underlying error: \\(error)")
-            }
-
-            return try ContinueAsNewError(
-                workflowContext: context,
-                workflowName: input.workflowName,
-                headers: input.headers,
-                inputs: inputPayloads,
-                options: input.options,
-                payloadConverter: self.payloadConverter
-            )
-        }
+        try await self.internalContext.makeContinueAsNewError(
+            workflowName: OtherW.name,
+            options: options,
+            input: repeat each input
+        )
     }
 
-    func signalExternalWorkflow<each Input>(
-        input: SignalExternalWorkflowInput<repeat each Input>
-    ) async throws {
-        try await intercept((any WorkflowOutboundInterceptor).signalExternalWorkflow, input: input) { input in
-            let payloads = try self.payloadConverter.convertValues(repeat each input.input)
-
-            try await self.stateMachine.signalExternalWorkflow(
-                namespace: Workflow.info.namespace,
-                workflowID: input.id,
-                runID: input.runId,
-                signalName: input.name,
-                headers: input.headers,
-                inputs: payloads
-            )
-        }
-    }
-
-    func cancelExternalWorkflow(
-        input: CancelExternalWorkflowInput
-    ) async throws {
-        try await intercept((any WorkflowOutboundInterceptor).cancelExternalWorkflow, input: input) { input in
-            try await self.stateMachine.cancelExternalWorkflow(
-                namespace: Workflow.info.namespace,
-                workflowID: input.id,
-                runID: input.runId
-            )
-        }
+    /// Creates a continue-as-new error to restart as a different workflow by name.
+    ///
+    /// This overload allows continuing execution as a different workflow identified by its
+    /// string name. This is useful when the workflow type is not available at compile time.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Continue as a different workflow by name
+    /// throw try await context.makeContinueAsNewError(
+    ///     workflowName: "ProcessingWorkflowV2",
+    ///     options: .init(),
+    ///     input: migratedInput
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - workflowName: The name of the workflow to continue as.
+    ///   - options: The continue-as-new options.
+    ///   - input: The input values for the new workflow execution.
+    /// - Returns: A continue-as-new error.
+    /// - Throws: When the input, headers or memo fails to convert.
+    public func makeContinueAsNewError<each Input: Sendable>(
+        workflowName: String,
+        options: ContinueAsNewOptions = .init(),
+        input: repeat each Input
+    ) async throws -> ContinueAsNewError {
+        try await self.internalContext.makeContinueAsNewError(
+            workflowName: workflowName,
+            options: options,
+            input: repeat each input
+        )
     }
 }

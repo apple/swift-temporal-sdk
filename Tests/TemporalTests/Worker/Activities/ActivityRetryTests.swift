@@ -46,7 +46,7 @@ extension TestServerDependentTests {
         struct NeverError: Error {}
 
         @Workflow
-        final class RetryTestWorkflow {
+        struct RetryTestWorkflow {
             enum Scenario: String, Codable, Hashable {
                 case defaultRetryPolicy
                 case noRetryPolicy
@@ -54,7 +54,7 @@ extension TestServerDependentTests {
                 case nonRetryableErrorTypesPolicy
             }
 
-            func run(input: Scenario) async throws -> String {
+            mutating func run(context: WorkflowContext<Self>, input: Scenario) async throws -> String {
                 let options: ActivityOptions
                 switch input {
                 case .defaultRetryPolicy:
@@ -86,7 +86,7 @@ extension TestServerDependentTests {
                     )
                 }
 
-                try await Workflow.executeActivity(
+                try await context.executeActivity(
                     RetryTrackingActivity.self,
                     options: options,
                     input: input

@@ -31,7 +31,7 @@ extension TestServerDependentTests {
         static let attributeText = SearchAttributeKey.text("SwiftTemporalTestText")
 
         @Workflow
-        final class SearchAttributesWorkflow {
+        struct SearchAttributesWorkflow {
             static let attributesInitial = SearchAttributeCollection {
                 $0[attributeBool] = true
                 $0[attributeDate] = Calendar.current.startOfDay(for: .now)
@@ -73,24 +73,24 @@ extension TestServerDependentTests {
 
             private var proceed = false
             @WorkflowSignal
-            func proceed(input: Void) async throws {
+            mutating func proceed(input: Void) {
                 proceed = true
             }
 
-            func run(input: Void) async throws {
-                #expect(Workflow.searchAttributes == Self.attributesInitial)
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                #expect(context.searchAttributes == Self.attributesInitial)
 
-                try await Workflow.condition { self.proceed }
-                proceed = false
+                try await context.condition { $0.proceed }
+                self.proceed = false
 
-                Workflow.upsertSearchAttributes(Self.attributeFirstUpdates)
-                #expect(Workflow.searchAttributes == Self.attributeFirstUpdated)
+                context.upsertSearchAttributes(Self.attributeFirstUpdates)
+                #expect(context.searchAttributes == Self.attributeFirstUpdated)
 
-                try await Workflow.condition { self.proceed }
-                proceed = false
+                try await context.condition { $0.proceed }
+                self.proceed = false
 
-                Workflow.upsertSearchAttributes(Self.attributeSecondUpdates)
-                #expect(Workflow.searchAttributes == Self.attributeSecondUpdated)
+                context.upsertSearchAttributes(Self.attributeSecondUpdates)
+                #expect(context.searchAttributes == Self.attributeSecondUpdated)
             }
         }
 
@@ -149,9 +149,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SimpleParentWorkflow {
-            func run(input: Void) async throws -> String {
-                try await Workflow.executeChildWorkflow(
+        struct SimpleParentWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> String {
+                try await context.executeChildWorkflow(
                     SimpleWorkflow.self,
                     options: .init(
                         searchAttributes: .init {
@@ -164,9 +164,9 @@ extension TestServerDependentTests {
         }
 
         @Workflow
-        final class SimpleWorkflow {
-            func run(input: Void) async throws -> String {
-                "\(Workflow.searchAttributes[attributeInt] ?? 0)-\(Workflow.searchAttributes[attributeKeyword] ?? "")-bar"
+        struct SimpleWorkflow {
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> String {
+                "\(context.searchAttributes[attributeInt] ?? 0)-\(context.searchAttributes[attributeKeyword] ?? "")-bar"
             }
         }
 
