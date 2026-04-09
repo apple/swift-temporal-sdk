@@ -4,14 +4,14 @@ Build your first Temporal workflow and activity.
 
 ## Overview
 
-This guide walks you through creating a simple Temporal workflow consisting
-of a single activity, from installation to running your first workflow locally.
-This article shows you how to create an activity, define a workflow that calls it,
-set up a worker, and execute the workflow.
+Create a simple Temporal workflow consisting of a single activity,
+from installation to running your first workflow locally.
+Define an activity, create a workflow that calls it,
+set up a worker, and run the workflow.
 
 ## Add the dependency
 
-Add the Swift Temporal SDK to your package dependencies. Use the command
+Add the Swift Temporal SDK to your package dependencies:
 
 ```sh
 swift package add-dependency \
@@ -19,7 +19,7 @@ swift package add-dependency \
     --from 0.1.0
 ```
 
-Or manually update your project's Package.swift to include the SDK as a dependency:
+Alternatively, update your project's Package.swift to include the SDK as a dependency:
 
 ```swift
 dependencies: [
@@ -34,8 +34,8 @@ dependencies: [
 
 Install the Temporal CLI by visiting the
 [Temporal CLI installation page](https://temporal.io/setup/install-temporal-cli)
-and following the installation instructions for your platform. After the CLI is installed,
-start a development server:
+and following the installation instructions for your platform. After you install
+the CLI, start a development server:
 
 ```sh
 # Start development server
