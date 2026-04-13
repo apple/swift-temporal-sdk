@@ -1,4 +1,4 @@
-# How workflows leverage Swift Concurrency
+# Using Swift Concurrency in workflows
 
 Build deterministic workflows using Swift's async/await and Structured
 Concurrency primitives.
@@ -15,7 +15,7 @@ Workflows can safely use Swift's concurrency primitives, such as `async let`,
 execution guarantees required by Temporal. This enables you to write concurrent
 workflow logic that remains predictable and testable.
 
-### Deterministic execution guarantees
+## Deterministic execution guarantees
 
 Workflows run on a specialized task executor that ensures consistent execution
 order across different runs. This executor processes tasks sequentially by task
@@ -29,7 +29,7 @@ reaches a real suspension point before the executor picks up the next job. This
 approach also ensures that Structured Concurrency patterns like task groups produce
 identical results across workflow replays.
 
-### Use Structured Concurrency patterns
+## Use Structured Concurrency patterns
 
 Workflows support Swift's Structured Concurrency patterns, including task groups
 and async let bindings. These patterns maintain deterministic execution while
@@ -70,7 +70,7 @@ The workflow executor ensures that even though tasks run concurrently, they
 execute in a consistent order during replay. The first task added to the group
 is run first, followed by the second task, maintaining deterministic behavior.
 
-### Use safe APIs for deterministic execution
+## Use safe APIs for deterministic execution
 
 Workflows must maintain deterministic behavior across replays. Use only these
 APIs inside your workflows:
@@ -82,14 +82,14 @@ APIs inside your workflows:
 - Swift's standard Task cancellation primitives.
 
 **Avoid these APIs:**
-- `Task.detached` - Instead use Structured Concurrency alternatives.
+- `Task.detached` - Instead, use Structured Concurrency alternatives.
 - Actor isolation - Introduces potential executor hops.
 - `Task.sleep` or `Clock.sleep` - Instead, use ``WorkflowContext/sleep(for:summary:)``.
 - Direct I/O operations - Instead, use activities for any non-deterministic code.
 - Non-deterministic APIs like `RandomNumberGenerator` - Instead, use
 ``WorkflowContext/randomNumberGenerator``.
 
-### Handle cancellation properly
+## Handle cancellation properly
 
 Workflows support Swift's standard cancellation primitives, enabling graceful
 shutdown and cleanup. Use `Task.isCancelled`, `withTaskCancellationHandler`, and
