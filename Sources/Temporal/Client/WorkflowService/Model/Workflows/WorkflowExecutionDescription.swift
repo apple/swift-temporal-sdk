@@ -17,7 +17,7 @@ public struct WorkflowExecutionDescription: Hashable, Sendable {
     /// Detailed information about the specific workflow execution including status, timing, and configuration.
     public var execution: WorkflowExecution
     /// Information about the currently pending activities of the workflow execution.
-    package var pendingActivities: [Api.Workflow.V1.PendingActivityInfo]
+    public var pendingActivities: [Api.Workflow.V1.PendingActivityInfo]
     /// Single-line fixed summary for this workflow execution that may appear in UI/CLI.
     ///
     /// This can be in single-line Temporal markdown format.
