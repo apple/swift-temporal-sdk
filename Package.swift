@@ -1,7 +1,17 @@
 // swift-tools-version: 6.2
 
 import CompilerPluginSupport
+import Foundation
 import PackageDescription
+
+// Conditionally add the swift-docc plugin only when previewing docs locally.
+// Preview with:
+// ```
+// SWIFT_PREVIEW_DOCS=1 swift package --disable-sandbox preview-documentation --target Temporal
+// ```
+let previewDocs = ProcessInfo.processInfo.environment["SWIFT_PREVIEW_DOCS"] != nil
+let spiGenerateDocs = ProcessInfo.processInfo.environment["SPI_GENERATE_DOCS"] != nil
+let addDoccPlugin = previewDocs || spiGenerateDocs
 
 let package = Package(
     name: "swift-temporal-sdk",
@@ -277,4 +287,10 @@ where [.executable, .test, .regular].contains(
     settings.append(.enableUpcomingFeature("NonIsolatedNonSendingByDefault"))
 
     target.swiftSettings = settings
+}
+
+if addDoccPlugin {
+    package.dependencies.append(
+        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.1.0")
+    )
 }
