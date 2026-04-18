@@ -76,6 +76,17 @@ public struct WorkflowContextView: @unchecked Sendable {
         storage.continueAsNewSuggested()
     }
 
+    /// The reasons why continue-as-new is suggested.
+    ///
+    /// When the server detects that a workflow's state is growing too large,
+    /// it provides one or more reasons indicating why a continue-as-new is recommended.
+    /// This array is empty when ``continueAsNewSuggested`` is `false`.
+    ///
+    /// - Important: This is currently experimental and may be removed or changed in the future.
+    public var suggestContinueAsNewReasons: [SuggestContinueAsNewReason] {
+        storage.suggestContinueAsNewReasons()
+    }
+
     /// Current number of events in the history.
     public var currentHistoryLength: Int {
         storage.currentHistoryLength()

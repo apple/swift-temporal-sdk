@@ -97,6 +97,11 @@ struct InternalWorkflowContext: Sendable {
         self.stateMachine.continueAsNewSuggested()
     }
 
+    /// The reasons why continue as new was suggested.
+    var suggestContinueAsNewReasons: [SuggestContinueAsNewReason] {
+        self.stateMachine.suggestContinueAsNewReasons()
+    }
+
     /// Current number of events in the history.
     var currentHistoryLength: Int {
         self.stateMachine.currentHistoryLength()
