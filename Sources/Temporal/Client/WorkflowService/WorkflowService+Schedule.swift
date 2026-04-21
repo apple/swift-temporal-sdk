@@ -335,7 +335,7 @@ extension TemporalClient.WorkflowService {
 
             return (elements: response.schedules, pageToken: response.nextPageToken)
         }.map { scheduleProto in
-            ScheduleListDescription(proto: scheduleProto)
+            try ScheduleListDescription(proto: scheduleProto)
         }
     }
 }

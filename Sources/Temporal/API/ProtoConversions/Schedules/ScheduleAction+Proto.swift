@@ -17,7 +17,7 @@ import SwiftProtobuf
 extension Api.Schedule.V1.ScheduleAction {
     init<Input: Sendable>(action: ScheduleAction<Input>, dataConverter: DataConverter) async throws {
         guard case .startWorkflow(let scheduleActionStartWorkflow) = action else {
-            fatalError("`ScheduleAction` type not supported.")  // TODO: Improve error
+            throw ArgumentError(message: "Only startWorkflow schedule actions are supported")
         }
 
         // TODO: Introduce additional guards and conversions here once all properties on `WorkflowOptions` are supported, see https://github.com/temporalio/sdk-dotnet/blob/bac42d3db19617fae17bc1965e1a9c33fd517fc1/src/Temporalio/Client/Schedules/ScheduleActionStartWorkflow.cs#L124
@@ -89,7 +89,7 @@ extension ScheduleAction {
                 )
             )
         case .none:
-            fatalError("ScheduleAction(proto:dataConverter:workflowType) unexpected `nil` action.")
+            throw ArgumentError(message: "Schedule action is missing from proto response")
         }
     }
 }

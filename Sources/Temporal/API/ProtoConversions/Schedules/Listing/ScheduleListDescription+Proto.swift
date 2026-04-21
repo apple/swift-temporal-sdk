@@ -13,11 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 extension ScheduleListDescription {
-    init(proto: Api.Schedule.V1.ScheduleListEntry) {
+    init(proto: Api.Schedule.V1.ScheduleListEntry) throws {
         self.id = proto.scheduleID
         self.info = .init(proto: proto.info)
-        self.schedule = .init(proto: proto.info)
-        // TODO: Memo
+        self.schedule = try .init(proto: proto.info)
+        if proto.hasMemo && !proto.memo.fields.isEmpty {
+            self.memo = proto.memo.fields.mapValues { $0 as any Sendable }
+        }
         if proto.hasSearchAttributes && !proto.searchAttributes.indexedFields.isEmpty {
             self.searchAttributes = try? SearchAttributeCollection(proto.searchAttributes)
         }
