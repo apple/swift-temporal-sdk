@@ -102,17 +102,17 @@ public macro WorkflowSignal(name: String? = nil, description: String? = nil, unf
 ///
 /// ## Usage
 ///
+/// Use on a method to define a query with input:
+///
 /// ```swift
 /// @Workflow
-/// final class GreetingWorkflow {
-///     var name: String
+/// struct GreetingWorkflow {
+///     var name: String = ""
 ///
-///     func run(context: WorkflowContext, input: String) async throws -> String {
-///         self.name = name
-///         return try await executeActivity(
-///             GreetingActivity.self,
-///             input: name
-///         )
+///     mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+///         self.name = input
+///         try await context.condition { $0.name == "done" }
+///         return name
 ///     }
 ///
 ///     @WorkflowQuery
@@ -121,7 +121,17 @@ public macro WorkflowSignal(name: String? = nil, description: String? = nil, unf
 ///     }
 /// }
 /// ```
-/// - Parameter name: The name of the query. If not provided, defaults to the function name.
+/// Use on stored or computed properties to directly expose it as a query:
+///
+/// ```swift
+/// @Workflow
+/// struct OrderWorkflow {
+///     @WorkflowQuery
+///     var status: String = "pending"
+/// }
+/// ```
+///
+/// - Parameter name: The name of the query. If not provided, defaults to the function or property name.
 /// - Parameter description: An optional description of the query's purpose.
 @attached(peer, names: arbitrary)
 public macro WorkflowQuery(name: String? = nil, description: String? = nil) = #externalMacro(module: "TemporalMacros", type: "WorkflowQueryMacro")

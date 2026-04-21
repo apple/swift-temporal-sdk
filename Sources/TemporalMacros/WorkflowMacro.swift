@@ -74,106 +74,111 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
         var queryNames = [String]()
         var updateNames = [String]()
         for member in declaration.memberBlock.members {
-            // We need to collect all message handlers
-            guard let functionDecl = member.decl.as(FunctionDeclSyntax.self) else {
-                continue
-            }
+            // Check function declarations for signal/query/update handlers
+            if let functionDecl = member.decl.as(FunctionDeclSyntax.self) {
+                if functionDecl.attributes.contains(where: { element in
+                    element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description == "WorkflowSignal"
+                }) {
+                    signalNames.append(functionDecl.name.text)
+                }
 
-            if functionDecl.attributes.contains(where: { element in
-                element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description == "WorkflowSignal"
-            }) {
-                signalNames.append(functionDecl.name.text)
-            }
+                if functionDecl.attributes.contains(where: { element in
+                    element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description == "WorkflowQuery"
+                }) {
+                    queryNames.append(functionDecl.name.text)
+                }
 
-            if functionDecl.attributes.contains(where: { element in
-                element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description == "WorkflowQuery"
-            }) {
-                queryNames.append(functionDecl.name.text)
-            }
+                if let updateAttribute = functionDecl.attributes.first(where: { element in
+                    element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description == "WorkflowUpdate"
+                })?.as(AttributeSyntax.self) {
+                    updateNames.append(functionDecl.name.text)
 
-            if let updateAttribute = functionDecl.attributes.first(where: { element in
-                element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description == "WorkflowUpdate"
-            })?.as(AttributeSyntax.self) {
-                updateNames.append(functionDecl.name.text)
-
-                // Validate the referenced validator method if specified
-                if let validatorName = updateAttribute.stringValueForArgument(named: "validator") {
-                    let allFunctions = declaration.memberBlock.members.compactMap {
-                        $0.decl.as(FunctionDeclSyntax.self)
-                    }
-                    if let validatorFunc = allFunctions.first(where: { $0.name.text == validatorName }) {
-                        // Validator must not be async
-                        if validatorFunc.signature.effectSpecifiers?.asyncSpecifier?.presence == .present {
-                            context.diagnose(
-                                Diagnostic(
-                                    node: Syntax(validatorFunc),
-                                    message: ValidatorError(message: "Validator method '\(validatorName)' must not be async")
-                                )
-                            )
+                    // Validate the referenced validator method if specified
+                    if let validatorName = updateAttribute.stringValueForArgument(named: "validator") {
+                        let allFunctions = declaration.memberBlock.members.compactMap {
+                            $0.decl.as(FunctionDeclSyntax.self)
                         }
-
-                        // Validator must return Void
-                        if let returnClause = validatorFunc.signature.returnClause,
-                            returnClause.type.as(IdentifierTypeSyntax.self)?.name.text != "Void"
-                        {
-                            context.diagnose(
-                                Diagnostic(
-                                    node: Syntax(returnClause),
-                                    message: ValidatorError(message: "Validator method '\(validatorName)' must return Void")
-                                )
-                            )
-                        }
-
-                        // Validator must have exactly one parameter called 'input'
-                        let validatorParams = validatorFunc.signature.parameterClause.parameters
-                        if validatorParams.count != 1 {
-                            context.diagnose(
-                                Diagnostic(
-                                    node: Syntax(validatorFunc.signature.parameterClause),
-                                    message: ValidatorError(
-                                        message: "Validator method '\(validatorName)' must have exactly one parameter matching the update input"
-                                    )
-                                )
-                            )
-                        } else if let validatorParam = validatorParams.first {
-                            if validatorParam.firstName.text != "input" {
+                        if let validatorFunc = allFunctions.first(where: { $0.name.text == validatorName }) {
+                            // Validator must not be async
+                            if validatorFunc.signature.effectSpecifiers?.asyncSpecifier?.presence == .present {
                                 context.diagnose(
                                     Diagnostic(
-                                        node: Syntax(validatorParam),
-                                        message: ValidatorError(
-                                            message: "Validator method '\(validatorName)' parameter must be called 'input'"
-                                        )
+                                        node: Syntax(validatorFunc),
+                                        message: ValidatorError(message: "Validator method '\(validatorName)' must not be async")
                                     )
                                 )
                             }
 
-                            // Check input type matches
-                            let updateParams = functionDecl.signature.parameterClause.parameters
-                            if let updateParam = updateParams.first(where: { $0.firstName.text == "input" }) {
-                                let updateType = updateParam.type.description.trimmingCharacters(in: .whitespaces)
-                                let validatorType = validatorParam.type.description.trimmingCharacters(in: .whitespaces)
-                                if updateType != validatorType {
+                            // Validator must return Void
+                            if let returnClause = validatorFunc.signature.returnClause,
+                                returnClause.type.as(IdentifierTypeSyntax.self)?.name.text != "Void"
+                            {
+                                context.diagnose(
+                                    Diagnostic(
+                                        node: Syntax(returnClause),
+                                        message: ValidatorError(message: "Validator method '\(validatorName)' must return Void")
+                                    )
+                                )
+                            }
+
+                            // Validator must have exactly one parameter called 'input'
+                            let validatorParams = validatorFunc.signature.parameterClause.parameters
+                            if validatorParams.count != 1 {
+                                context.diagnose(
+                                    Diagnostic(
+                                        node: Syntax(validatorFunc.signature.parameterClause),
+                                        message: ValidatorError(
+                                            message: "Validator method '\(validatorName)' must have exactly one parameter matching the update input"
+                                        )
+                                    )
+                                )
+                            } else if let validatorParam = validatorParams.first {
+                                if validatorParam.firstName.text != "input" {
                                     context.diagnose(
                                         Diagnostic(
-                                            node: Syntax(validatorParam.type),
+                                            node: Syntax(validatorParam),
                                             message: ValidatorError(
-                                                message:
-                                                    "Validator method '\(validatorName)' input type '\(validatorType)' does not match update input type '\(updateType)'"
+                                                message: "Validator method '\(validatorName)' parameter must be called 'input'"
                                             )
                                         )
                                     )
                                 }
+
+                                // Check input type matches
+                                let updateParams = functionDecl.signature.parameterClause.parameters
+                                if let updateParam = updateParams.first(where: { $0.firstName.text == "input" }) {
+                                    let updateType = updateParam.type.description.trimmingCharacters(in: .whitespaces)
+                                    let validatorType = validatorParam.type.description.trimmingCharacters(in: .whitespaces)
+                                    if updateType != validatorType {
+                                        context.diagnose(
+                                            Diagnostic(
+                                                node: Syntax(validatorParam.type),
+                                                message: ValidatorError(
+                                                    message:
+                                                        "Validator method '\(validatorName)' input type '\(validatorType)' does not match update input type '\(updateType)'"
+                                                )
+                                            )
+                                        )
+                                    }
+                                }
                             }
-                        }
-                    } else {
-                        context.diagnose(
-                            Diagnostic(
-                                node: Syntax(updateAttribute),
-                                message: ValidatorError(message: "Validator method '\(validatorName)' not found in workflow")
+                        } else {
+                            context.diagnose(
+                                Diagnostic(
+                                    node: Syntax(updateAttribute),
+                                    message: ValidatorError(message: "Validator method '\(validatorName)' not found in workflow")
+                                )
                             )
-                        )
+                        }
                     }
                 }
+            } else if let variableDecl = member.decl.as(VariableDeclSyntax.self),
+                variableDecl.attributes.contains(where: { element in
+                    element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description == "WorkflowQuery"
+                }),
+                let identifier = variableDecl.identifier
+            {
+                queryNames.append(identifier.text)
             }
         }
 
