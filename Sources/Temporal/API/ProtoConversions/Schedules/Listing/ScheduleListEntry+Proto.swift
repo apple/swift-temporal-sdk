@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 extension ScheduleListEntry {
-    init(proto: Api.Schedule.V1.ScheduleListInfo) {
+    init(proto: Api.Schedule.V1.ScheduleListInfo) throws {
         self.spec = .init(proto: proto.spec)
         self.state = .init(
             note: proto.notes.isEmpty ? nil : proto.notes,
@@ -21,7 +21,7 @@ extension ScheduleListEntry {
         )
 
         guard proto.hasWorkflowType else {
-            fatalError("`ScheduleAction` type not supported.")  // TODO: Improve error
+            throw ArgumentError(message: "Only startWorkflow schedule actions are supported in listing")
         }
         self.action = .init(workflow: proto.workflowType.name)
     }

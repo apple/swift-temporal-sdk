@@ -24,15 +24,9 @@ extension NamespaceArchivalState {
         case .disabled:
             self = .disabled
         case .enabled:
-            // TODO: More graceful error handelling
-            guard let urlString else {
-                fatalError("NamespaceArchivalState(proto:url): When the activation state is enabled, the archival URL must be provided.")
+            guard let urlString, let url = URL(string: urlString) else {
+                return nil
             }
-
-            guard let url = URL(string: urlString) else {
-                fatalError("NamespaceArchivalState(proto:url): When the activation state is enabled, the archival URL must be valid.")
-            }
-
             self = .enabled(url)
         default:
             return nil
