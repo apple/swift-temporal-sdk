@@ -16,7 +16,7 @@
 ///
 /// Versioning intent controls how Temporal routes child workflows and activities to workers with specific build
 /// IDs, enabling safe deployment and rollback strategies in production environments with multiple code versions.
-// TODO: Revisit this before major regarding extensible enums
+@nonexhaustive
 public enum VersioningIntent: Hashable, Sendable {
     /// Allows the system to choose the most appropriate versioning behavior based on command type and context.
     case unspecified

@@ -13,5 +13,4 @@
 //===----------------------------------------------------------------------===//
 
 /// Protocol for all Temporal serializable failures.
-// TODO: Doesn't have to be extensible
 public protocol TemporalFailureError: TemporalError {}
