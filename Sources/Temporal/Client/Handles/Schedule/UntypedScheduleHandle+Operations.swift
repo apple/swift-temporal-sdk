@@ -102,7 +102,7 @@ extension UntypedScheduleHandle {
     /// modifications safely.
     ///
     /// - Parameters:
-    ///   - inputType:The input type of the workflow associated with this schedule update.
+    ///   - inputType: The input type of the workflow associated with this schedule update.
     ///   - update: A closure that receives the current schedule state and returns proposed changes.
     ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
     /// - Throws: An error if the update cannot be applied or validation fails.

@@ -14,14 +14,14 @@
 
 import struct Foundation.Data
 
-/// A binary payload converter can convert `Array<UInt8>` and `Data` values.
+/// A payload converter for `Array<UInt8>` and `Data` values.
 public struct BinaryPayloadConverter: EncodingPayloadConverter {
     private struct EncodingError: Error {}
     private struct DecodingError: Error {}
 
     public static let encoding = Encodings.binaryPlain
 
-    /// Initializes a new binary payload converter.
+    /// Creates a new binary payload converter.
     public init() {}
 
     public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {

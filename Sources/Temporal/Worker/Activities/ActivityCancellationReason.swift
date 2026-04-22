@@ -28,7 +28,7 @@
 ///        let reason = Workflow.cancellationReason {
 ///         // Handle cancellation based on the specific reason
 ///         switch reason {
-///         case.timeout:
+///         case .timeout:
 ///             // Handle timeout-specific cleanup
 ///             break
 ///         case .workerShutdown:

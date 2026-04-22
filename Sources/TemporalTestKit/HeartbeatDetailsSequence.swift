@@ -14,7 +14,7 @@
 
 /// An async sequence of heartbeat details emitted by an activity.
 public struct HeartbeatDetailsSequence: AsyncSequence {
-    /// Iterator implementation for an heartbeat details async sequence.
+    /// Iterator implementation for a heartbeat details async sequence.
     public struct AsyncIterator: AsyncIteratorProtocol {
         private var base: AsyncStream<[any Sendable]>.AsyncIterator
 

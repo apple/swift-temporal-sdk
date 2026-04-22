@@ -18,6 +18,7 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
+/// Macro implementation for the `@WorkflowState` attribute.
 public struct WorkflowStateMacro: AccessorMacro, PeerMacro {
     static let stateMacroName = "_WorkflowState"
 

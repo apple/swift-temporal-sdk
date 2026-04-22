@@ -27,17 +27,15 @@ func randomBytes(count: Int) -> [UInt8] {
     return (0..<count).map { _ in UInt8.random(in: .min ... .max, using: &rng) }
 }
 
-/// Create a new activity test environment to test your Temporal Activity that relies on the `ActivityExecutionContext`.
-///
-/// Use this method to test your Temporal Activity that relies on the `ActivityExecutionContext`.
+/// Creates a new activity test environment to test a Temporal activity that relies on the `ActivityExecutionContext`.
 ///
 /// - Parameters:
 ///   - info: The activity info that should be supplied to your activity.
-///   - cancellationReason: Provide a activity cancellation reason to test the scenario in which your activity was cancelled.
+///   - cancellationReason: Provide an activity cancellation reason to test the scenario in which your activity was cancelled.
 ///   - logger: The logger to use with the activity execution context.
 ///   - body: The body that will be evaluated with the activity test environment set up.
 /// - Throws: Rethrows the error from your body closure.
-/// - Returns: Returns the value returned from your body closure.
+/// - Returns: The value returned from your body closure.
 public func withActivityTestEnvironment<Return>(
     info: ActivityExecutionContext.Info,
     cancellationReason: ActivityCancellationReason? = nil,
@@ -64,18 +62,16 @@ public func withActivityTestEnvironment<Return>(
     }
 }
 
-/// Create a new activity test environment to test your Temporal Activity that relies on the `ActivityExecutionContext`.
-///
-/// Use this method to test your Temporal Activity that relies on the `ActivityExecutionContext`.
+/// Creates a new activity test environment to test a Temporal activity that relies on the `ActivityExecutionContext`.
 ///
 /// - Parameters:
 ///   - info: The activity info that should be supplied to your activity.
-///   - cancellationReason: Provide a activity cancellation reason to test the scenario in which your activity was cancelled.
-///   - body: The body that will be evaluated with the activity test environment set up.
+///   - cancellationReason: Provide an activity cancellation reason to test the scenario in which your activity was cancelled.
 ///   - logger: The logger to use with the activity execution context.
+///   - body: The body that will be evaluated with the activity test environment set up.
 ///   - assertHeartbeatDetails: A closure you can run to concurrently assert heartbeats emitted by the activity while it is running.
 /// - Throws: Rethrows the error from your body closure.
-/// - Returns: Returns the value returned from your body closure.
+/// - Returns: The value returned from your body closure.
 public func withActivityTestEnvironment<Result>(
     info: ActivityExecutionContext.Info,
     cancellationReason: ActivityCancellationReason? = nil,
@@ -119,7 +115,7 @@ public func withActivityTestEnvironment<Result>(
 }
 
 extension ActivityExecutionContext.Info {
-    /// Create a new Activity Information for testing purposes.
+    /// Creates activity information for testing purposes.
     ///
     /// - Parameters:
     ///   - activityID: The unique identifier for this activity instance.

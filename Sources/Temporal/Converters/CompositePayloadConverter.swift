@@ -20,7 +20,7 @@ import struct Foundation.Data
 /// When encoding a value, each converter is tried in sequence until one of
 /// them is able to convert the value to an ``Api/Common/V1/Payload``.
 ///
-/// When decoding the encoding of the payload is examined and the first
+/// When decoding, the encoding of the payload is examined and the first
 /// underlying converter that reports processing that encoding is used for
 /// decoding the payload.
 public struct CompositePayloadConverter<each Converter: EncodingPayloadConverter>: PayloadConverter {
@@ -29,6 +29,7 @@ public struct CompositePayloadConverter<each Converter: EncodingPayloadConverter
 
     private let converter: (repeat each Converter)
 
+    /// Creates a composite payload converter with the given underlying converters.
     public init(_ converter: repeat each Converter) {
         self.converter = (repeat each converter)
     }

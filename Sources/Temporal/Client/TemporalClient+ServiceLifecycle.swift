@@ -22,7 +22,7 @@ extension TemporalClient: Service {
     /// This initializer creates a Temporal client that can be managed as a service within a larger
     /// application lifecycle. Unlike the ``connect(transport:configuration:logger:_:)`` method
     /// which provides automatic lifecycle management, this initializer requires manual management of
-    /// the client's lifecycle through the  `Service` protocol methods.
+    /// the client's lifecycle through the `Service` protocol methods.
     ///
     /// - Important: Simply instantiating the client is not sufficient to perform requests.
     ///   You must call ``run()`` and manage the lifecycle properly for the client to function.

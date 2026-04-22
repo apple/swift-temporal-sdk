@@ -14,7 +14,7 @@
 
 /// A wrapper type to make something `Sendable`.
 ///
-/// This should only be used where currently sending isn't working or the type is not owned by us and we know what we are doing.
+/// This type should only be used where sending is not currently supported or the type is not owned by the SDK and its sendability is manually verified.
 struct UnsafeTransfer<Wrapped>: @unchecked Sendable {
     /// The wrapped value.
     var wrapped: Wrapped

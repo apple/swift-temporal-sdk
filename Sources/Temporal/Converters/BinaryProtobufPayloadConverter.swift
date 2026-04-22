@@ -22,6 +22,7 @@ public struct BinaryProtobufPayloadConverter: EncodingPayloadConverter {
 
     public static let encoding = Encodings.binaryProtobuf
 
+    /// Creates a new binary protobuf payload converter.
     public init() {}
 
     public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {

@@ -140,7 +140,7 @@ package struct BridgeClient: ~Copyable, Sendable {
                                 descriptor,
                                 UInt8ArraySerializer(),
                                 UInt8ArrayDeserializer(),
-                                .defaults,  // No reties, no timeout, as this is solely done by the Core SDK
+                                .defaults,  // No retries, no timeout, as this is solely done by the Core SDK
                                 { $0 }
                             )
                         }
@@ -263,7 +263,7 @@ package struct BridgeClient: ~Copyable, Sendable {
         configuration: TemporalWorker.Configuration,
         _ body: (UnsafePointer<TemporalCoreConnectionOptions>) throws -> T
     ) throws -> T {
-        // Pass in user data fro grpc override
+        // Pass in user data for gRPC override
         let grpcCallbackUserDataPointer = Unmanaged.passUnretained(grpcCallbackUserData).toOpaque()
 
         return try TemporalWorker.Configuration.workerClientName.withByteArrayRef { client_name in

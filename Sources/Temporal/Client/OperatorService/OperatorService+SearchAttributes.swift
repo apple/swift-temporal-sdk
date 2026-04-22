@@ -25,7 +25,7 @@ extension TemporalClient.OperatorService {
     /// the Temporal cluster for use in visibility queries.
     ///
     /// - Parameters:
-    ///   - namespace: The namespace in which to add the search attributes. Uses configuration namespace if nil.
+    ///   - namespace: Currently unused. The configuration namespace is always used.
     ///   - attributes: Variadic parameter pack of strongly-typed search attribute keys to register.
     ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
     /// - Throws: An error if attribute registration fails, names conflict, or access is denied.
@@ -57,7 +57,7 @@ extension TemporalClient.OperatorService {
     /// or when integrating with external systems.
     ///
     /// - Parameters:
-    ///   - namespace: The namespace in which to add the search attributes. Uses configuration namespace if nil.
+    ///   - namespace: Currently unused. The configuration namespace is always used.
     ///   - attributes: Array of type-erased search attribute keys to register.
     ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
     /// - Throws: An error if attribute registration fails, names conflict, or access is denied.
@@ -89,7 +89,7 @@ extension TemporalClient.OperatorService {
     /// existing workflow data may retain indexed values until archival.
     ///
     /// - Parameters:
-    ///   - namespace: The namespace from which to remove the search attributes. Uses configuration namespace if nil.
+    ///   - namespace: Currently unused. The configuration namespace is always used.
     ///   - attributes: Variadic parameter pack of search attribute keys to remove.
     ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
     /// - Throws: An error if removal fails, attributes don't exist, or access is denied.
@@ -121,7 +121,7 @@ extension TemporalClient.OperatorService {
     /// based on configuration or user input.
     ///
     /// - Parameters:
-    ///   - namespace: The namespace from which to remove the search attributes. Uses configuration namespace if nil.
+    ///   - namespace: Currently unused. The configuration namespace is always used.
     ///   - attributes: Array of type-erased search attribute keys to remove.
     ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
     /// - Throws: An error if removal fails, attributes don't exist, or access is denied.
@@ -153,7 +153,7 @@ extension TemporalClient.OperatorService {
     /// and custom attributes that have been added by administrators.
     ///
     /// - Parameters:
-    ///    - namespace: The namespace from which to retrieve search attributes. Uses configuration namespace if `nil`.
+    ///    - namespace: Currently unused. The configuration namespace is always used.
     ///    - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
     /// - Returns: A ``SearchAttributeKeyCollection`` containing comprehensive search attribute information.
     /// - Throws: An error if the operation fails or access is denied.

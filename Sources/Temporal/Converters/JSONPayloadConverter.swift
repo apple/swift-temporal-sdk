@@ -16,7 +16,7 @@ public import struct Foundation.Data
 public import class Foundation.JSONDecoder
 public import class Foundation.JSONEncoder
 
-/// The JSON payload converter can convert any type conforming to `Encodable`/`Decodable`.
+/// A payload converter for types conforming to `Encodable` and `Decodable` using JSON encoding.
 public struct JSONPayloadConverter: EncodingPayloadConverter {
     private struct EncodingError: Error {}
     private struct DecodingError: Error {}

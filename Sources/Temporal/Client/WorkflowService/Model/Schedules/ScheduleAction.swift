@@ -16,7 +16,7 @@
 public enum ScheduleAction<Input: Sendable>: Sendable {
     /// Configuration for scheduling workflow execution actions.
     public struct ActionStartWorkflow: Sendable {
-        /// The name of the to to be scheduled workflow.
+        /// The name of the workflow to be scheduled.
         public var workflowName: String
 
         /// The input data to pass to the scheduled workflow execution.
@@ -47,7 +47,7 @@ public enum ScheduleAction<Input: Sendable>: Sendable {
             self.headers = headers
         }
 
-        /// Creates a schedule action for starting workflow executions with input data.
+        /// Creates a schedule action for starting workflow executions without input data.
         ///
         /// - Parameters:
         ///   - workflowName: The name of the workflow associated with this schedule.

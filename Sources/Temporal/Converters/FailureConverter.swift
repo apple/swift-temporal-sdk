@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// A failure converter transforms between Swift errors and the ``TemporalError``.
+/// A failure converter transforms between Swift errors and Temporal failure representations.
 ///
-/// - Important: Payload converters **must be** deterministic since they are called from within a workflow.
+/// - Important: Failure converters **must be** deterministic since they are called from within a workflow.
 public protocol FailureConverter: Sendable {
     /// Converts the given error to an ``Api/Failure/V1/Failure``.
     ///

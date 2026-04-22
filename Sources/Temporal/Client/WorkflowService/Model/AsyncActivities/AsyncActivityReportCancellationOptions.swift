@@ -18,10 +18,10 @@ public import struct GRPCCore.CallOptions
 public struct AsyncActivityReportCancellationOptions: Sendable {
     /// The details for the cancellation.
     public var details: [any Sendable]
-    /// Optional gRPC call options for customizing the description request.
+    /// Optional gRPC call options for customizing the cancellation report request.
     public var callOptions: CallOptions?
 
-    /// Create options for reporting cancellation of async activities.
+    /// Creates options for reporting cancellation of async activities.
     ///
     /// - Parameters:
     ///   - details: The details for the cancellation.

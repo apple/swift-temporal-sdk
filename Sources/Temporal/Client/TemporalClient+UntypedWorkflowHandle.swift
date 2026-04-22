@@ -43,7 +43,7 @@ extension TemporalClient {
     ///   - name: The workflow name that defines the business logic to execute.
     ///   - options: Configuration options including workflow ID, task queue, and execution policies.
     ///   - input: The input data to pass to the workflow.
-    /// - Returns: A ``WorkflowHandle`` for monitoring and controlling the started workflow.
+    /// - Returns: An ``UntypedWorkflowHandle`` for monitoring and controlling the started workflow.
     /// - Throws: An error if the workflow cannot be started due to validation failures or server issues.
     public func startWorkflow<each Input: Sendable>(
         name: String,
@@ -95,13 +95,13 @@ extension TemporalClient {
     /// Starts a workflow execution with no input and returns a handle for managing the workflow instance.
     ///
     /// This convenience method starts a workflow that requires no input parameters. It provides the same
-    /// functionality as ``startWorkflow(type:options:input:)`` but is specifically designed for workflows
+    /// functionality as ``startWorkflow(name:options:input:)`` but is specifically designed for workflows
     /// that have `Void` as their input type.
     ///
     /// - Parameters:
     ///   - name: The workflow name that defines the business logic to execute.
     ///   - options: Configuration options including workflow ID, task queue, and execution policies.
-    /// - Returns: A ``WorkflowHandle`` for monitoring and controlling the started workflow.
+    /// - Returns: An ``UntypedWorkflowHandle`` for monitoring and controlling the started workflow.
     /// - Throws: An error if the workflow cannot be started due to validation failures or server issues.
     public func startWorkflow(
         name: String,
@@ -150,7 +150,7 @@ extension TemporalClient {
     /// Executes a workflow with no input and waits for its completion, returning the result.
     ///
     /// This convenience method combines workflow starting and result waiting for workflows that require no input.
-    /// It provides the same functionality as ``executeWorkflow(type:options:input:)->_`` but is specifically
+    /// It provides the same functionality as ``executeWorkflow(name:options:input:resultTypes:)`` but is specifically
     /// designed for workflows with `Void` input type.
     ///
     /// - Parameters:
@@ -176,7 +176,7 @@ extension TemporalClient {
     /// Executes a workflow and waits for its completion without returning a result.
     ///
     /// This convenience method combines workflow starting and result waiting for workflows that produce no output.
-    /// It provides the same functionality as ``executeWorkflow(type:options:input:)->_`` but is specifically
+    /// It provides the same functionality as ``executeWorkflow(name:options:input:resultTypes:)`` but is specifically
     /// designed for workflows with `Void` output type.
     ///
     /// - Parameters:
@@ -219,7 +219,7 @@ extension TemporalClient {
     ///   - runID: Run ID of the specific workflow execution or `nil` for the latest execution.
     ///   - firstExecutionRunID: The run ID of the first execution in the workflow chain, used for
     ///   cancellation and termination operations.
-    /// - Returns: A ``WorkflowHandle`` configured for the specified workflow execution.
+    /// - Returns: An ``UntypedWorkflowHandle`` configured for the specified workflow execution.
     public func untypedWorkflowHandle(
         id: String,
         runID: String? = nil,

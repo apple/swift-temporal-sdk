@@ -67,7 +67,7 @@ public struct RetryPolicy: Hashable, Sendable {
     ///   - backoffCoefficient: The exponential backoff multiplier. Defaults to 0 (server default).
     ///   - maximumInterval: The maximum retry interval cap. Defaults to `nil` (100x initial interval).
     ///   - maximumAttempts: The maximum number of retry attempts. Defaults to 0 (unlimited).
-    ///   - nonRetryableErrorTypes: Error types that will prevent further retries. Defaults to none (unlimited).
+    ///   - nonRetryableErrorTypes: Error types that will prevent further retries. Defaults to an empty array (all errors are retryable).
     public init(
         initialInterval: Duration? = nil,
         backoffCoefficient: Double = 0,

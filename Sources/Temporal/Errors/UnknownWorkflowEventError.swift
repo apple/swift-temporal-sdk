@@ -23,7 +23,7 @@ public struct UnknownWorkflowEventError: TemporalError {
     /// The stack trace of the current error.
     public var stackTrace: String
 
-    /// Initializes a new cancel request error.
+    /// Initializes a new unknown workflow event error.
     ///
     /// - Parameters:
     ///   - message: The error's message.

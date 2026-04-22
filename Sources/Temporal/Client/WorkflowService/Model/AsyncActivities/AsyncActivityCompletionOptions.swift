@@ -16,10 +16,10 @@ public import struct GRPCCore.CallOptions
 
 /// Options for completing an async activity.
 public struct AsyncActivityCompleteOptions: Sendable {
-    /// Optional gRPC call options for customizing the description request.
+    /// Optional gRPC call options for customizing the completion request.
     public var callOptions: CallOptions?
 
-    /// Create options for completing an async activity.
+    /// Creates options for completing an async activity.
     ///
     /// - Parameters:
     ///   - callOptions: Optional gRPC call options for customizing the request.

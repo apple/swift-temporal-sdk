@@ -19,8 +19,7 @@ public struct HeartbeatInput<each Detail: Sendable>: Sendable {
 
     /// Creates heartbeat input with the specified progress details.
     ///
-    /// - Parameters:
-    ///   - details: The progress details to include in the heartbeat.
+    /// - Parameter details: The progress details to include in the heartbeat.
     public init(
         details: repeat each Detail
     ) {

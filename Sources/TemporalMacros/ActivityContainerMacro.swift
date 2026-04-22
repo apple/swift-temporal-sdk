@@ -57,6 +57,7 @@ private struct ActivityInfo {
     }
 }
 
+/// Macro implementation for the `@ActivityContainer` attribute.
 public struct ActivityContainerMacro: ExtensionMacro {
     public static func expansion(
         of node: AttributeSyntax,

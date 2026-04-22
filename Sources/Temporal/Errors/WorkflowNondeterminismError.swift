@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Error thrown when workflowdoes something potentially non-deterministic such as making an illegal call.
+/// Error thrown when a workflow does something potentially non-deterministic, such as making an illegal call.
 public struct WorkflowNondeterminismError: TemporalError {
     /// The error message describing the non-determinism.
     public var message: String

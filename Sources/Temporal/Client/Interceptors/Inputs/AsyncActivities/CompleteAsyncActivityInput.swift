@@ -25,7 +25,7 @@ public struct CompleteAsyncActivityInput<Result: Sendable>: Sendable {
     /// Data converter to use.
     public var dataConverter: DataConverter
 
-    /// Create input parameters for completing an async activity in client interceptors.
+    /// Creates input parameters for completing an async activity in client interceptors.
     ///
     /// - Parameters:
     ///   - activity: Activity to complete.

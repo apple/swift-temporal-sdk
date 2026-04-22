@@ -27,6 +27,7 @@ public struct ServerError: TemporalFailureError {
     public var isNonRetryable: Bool
 
     /// Initializes a new server error.
+    ///
     /// - Parameters:
     ///   - message: The error's message.
     ///   - cause: The cause of the current error. Defaults to `nil`.

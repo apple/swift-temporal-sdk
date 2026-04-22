@@ -18,7 +18,7 @@
 public protocol PayloadConverter: Sendable {
     /// Converts the given value to an ``Api/Common/V1/Payload``.
     ///
-    /// If a converter can't convert a type it is expected to throw an error.
+    /// If a converter can't convert a type, it is expected to throw an error.
     ///
     /// - Note: The value type is optional to allow converters to detect optional values.
     ///

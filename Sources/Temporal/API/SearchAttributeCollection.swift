@@ -59,6 +59,7 @@ public struct SearchAttributeCollection: Hashable, Sendable {
         }
     }
 
+    /// The position of a key-value pair within the collection.
     public struct Index: Comparable, Sendable {
         let rawIndex: Storage.Index
 
@@ -76,7 +77,7 @@ public struct SearchAttributeCollection: Hashable, Sendable {
     /// Creates an empty ``SearchAttributeCollection``.
     public init() {}
 
-    /// A convenience to create an ``SearchAttributeCollection`` instance using the given builder closure.
+    /// Creates a ``SearchAttributeCollection`` instance using the given builder closure.
     /// - Parameter builder: The closure to use when creating the instance.
     public init(_ builder: (inout SearchAttributeCollection) throws -> Void) rethrows {
         var instance = SearchAttributeCollection()
@@ -95,26 +96,32 @@ extension SearchAttributeCollection: CustomDebugStringConvertible {
 }
 
 extension SearchAttributeCollection {
+    /// Accesses the Boolean value associated with the given key.
     public subscript(_ key: SearchAttributeKey<Bool>) -> Bool? {
         get { storage[key.storage]?.boolValue }
         set { storage[key.storage] = newValue.flatMap { .bool($0) } ?? .unset }
     }
+    /// Accesses the date value associated with the given key.
     public subscript(_ key: SearchAttributeKey<Date>) -> Date? {
         get { storage[key.storage]?.dateValue }
         set { storage[key.storage] = newValue.flatMap { .date($0) } ?? .unset }
     }
+    /// Accesses the double value associated with the given key.
     public subscript(_ key: SearchAttributeKey<Double>) -> Double? {
         get { storage[key.storage]?.doubleValue }
         set { storage[key.storage] = newValue.flatMap { .double($0) } ?? .unset }
     }
+    /// Accesses the integer value associated with the given key.
     public subscript(_ key: SearchAttributeKey<Int>) -> Int? {
         get { storage[key.storage]?.intValue }
         set { storage[key.storage] = newValue.flatMap { .int($0) } ?? .unset }
     }
+    /// Accesses the string value associated with the given key.
     public subscript(_ key: SearchAttributeKey<String>) -> String? {
         get { storage[key.storage]?.stringValue }
         set { storage[key.storage] = newValue.flatMap { .string($0) } ?? .unset }
     }
+    /// Accesses the string array value associated with the given key.
     public subscript(_ key: SearchAttributeKey<[String]>) -> [String]? {
         get { storage[key.storage]?.stringArrayValue }
         set { storage[key.storage] = newValue.flatMap { .stringArray($0) } ?? .unset }
@@ -130,59 +137,63 @@ extension SearchAttributeCollection: Collection {
     /// A Boolean value that indicates whether the collection is empty.
     public var isEmpty: Bool { storage.isEmpty }
 
+    /// The position of the first element in the collection.
     public var startIndex: Index { .init(storage.startIndex) }
 
+    /// The position one past the last element in the collection.
     public var endIndex: Index { .init(storage.endIndex) }
 
+    /// Returns the position immediately after the given index.
     public func index(after i: Index) -> Index { .init(storage.index(after: i.rawIndex)) }
 
+    /// Accesses the key-value pair at the specified position.
     public subscript(index: Index) -> (AnySearchAttributeKey, Any?) {
         (AnySearchAttributeKey(storage.keys[index.rawIndex]), storage[index.rawIndex].value.value)
     }
 
-    /// Returns and removes the boolean value for the specified key from the collection.
+    /// Removes the Boolean value for the specified key from the collection.
     /// - Parameter key: The key of the value to remove.
     @discardableResult
     public mutating func removeValue(forKey key: SearchAttributeKey<Bool>) -> Bool? {
         removeValue(forKey: key.storage)?.boolValue
     }
 
-    /// Returns and removes the date value for the specified key from the collection.
+    /// Removes the date value for the specified key from the collection.
     /// - Parameter key: The key of the value to remove.
     @discardableResult
     public mutating func removeValue(forKey key: SearchAttributeKey<Date>) -> Date? {
         removeValue(forKey: key.storage)?.dateValue
     }
 
-    /// Returns and removes the double value for the specified key from the collection.
+    /// Removes the double value for the specified key from the collection.
     /// - Parameter key: The key of the value to remove.
     @discardableResult
     public mutating func removeValue(forKey key: SearchAttributeKey<Double>) -> Double? {
         removeValue(forKey: key.storage)?.doubleValue
     }
 
-    /// Returns and removes the integer value for the specified key from the collection.
+    /// Removes the integer value for the specified key from the collection.
     /// - Parameter key: The key of the value to remove.
     @discardableResult
     public mutating func removeValue(forKey key: SearchAttributeKey<Int>) -> Int? {
         removeValue(forKey: key.storage)?.intValue
     }
 
-    /// Returns and removes the string value for the specified key from the collection.
+    /// Removes the string value for the specified key from the collection.
     /// - Parameter key: The key of the value to remove.
     @discardableResult
     public mutating func removeValue(forKey key: SearchAttributeKey<String>) -> String? {
         removeValue(forKey: key.storage)?.stringValue
     }
 
-    /// Returns and removes the string array value for the specified key from the collection.
+    /// Removes the string array value for the specified key from the collection.
     /// - Parameter key: The key of the value to remove.
     @discardableResult
     public mutating func removeValue(forKey key: SearchAttributeKey<[String]>) -> [String]? {
         removeValue(forKey: key.storage)?.stringArrayValue
     }
 
-    /// Returns a new collection containing, the elements of the sequence that satisfy the given predicate.
+    /// Returns a new collection containing the elements of the sequence that satisfy the given predicate.
     /// - Parameter isIncluded: The predicate to test each key-value pair of the collection.
     package func filter(_ isIncluded: ((key: AnySearchAttributeKey, value: Any?)) throws -> Bool) rethrows -> Self {
         try Self { new in
@@ -232,7 +243,7 @@ extension SearchAttributeCollection: Collection {
         return copy
     }
 
-    /// Merges self with the passes in collection, inserting and updating as needed and removing key-value
+    /// Merges self with the passed-in collection, inserting and updating as needed and removing key-value
     /// pairs that are marked as unset.
     /// - Parameter other: The collection of key-value pair updates to be performed.
     mutating func upsert(with other: Self) {

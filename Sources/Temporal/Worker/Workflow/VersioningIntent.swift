@@ -35,12 +35,7 @@ public enum VersioningIntent: Hashable, Sendable {
     /// leverage the most recent code deployments and feature updates.
     case currentDefault
 
-    /// Returns a string description of the versioning intent for debugging and logging purposes.
-    ///
-    /// This property provides human-readable names for each versioning intent, useful for
-    /// logging, debugging, and diagnostic output when tracing workflow routing decisions.
-    ///
-    /// - Returns: A string representation of the versioning intent.
+    /// A string representation of the versioning intent for debugging and logging purposes.
     package var description: String {
         switch self {
         case .unspecified: "unspecified"

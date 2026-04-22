@@ -16,7 +16,7 @@ import SwiftProtobuf
 
 import struct Foundation.Data
 
-/// A payload converter that decodes/encodes only from/to a single encoding kind.
+/// A payload converter that handles a single encoding format.
 public protocol EncodingPayloadConverter: PayloadConverter {
     /// The name of the encoding.
     static var encoding: String { get }

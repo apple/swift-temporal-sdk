@@ -23,6 +23,12 @@ public struct WorkflowQueryFailedError: TemporalError {
     /// The stack trace of the current error.
     public var stackTrace: String
 
+    /// Initializes a new workflow query failed error.
+    ///
+    /// - Parameters:
+    ///   - message: The error's message.
+    ///   - cause: The cause of the current error.
+    ///   - stackTrace: The stack trace of the current error.
     public init(
         message: String,
         cause: (any Error)?,

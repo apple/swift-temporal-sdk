@@ -22,7 +22,7 @@ public struct HandleSleepInput: Sendable {
 
     /// Optional identifier for the sleep operation, potentially visible in monitoring interfaces.
     ///
-    /// While it can be normal text, it is best to treat as a timer ID.
+    /// While it can be normal text, it is best to treat it as a timer ID.
     ///
     /// - Important: This is currently experimental.
     public var summary: String?

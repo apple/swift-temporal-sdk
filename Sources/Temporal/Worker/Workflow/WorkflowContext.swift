@@ -66,7 +66,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
 
     /// Mutates the workflow state using a closure and returns a value.
     ///
-    /// Normally you can just mutate the state of the workflow by making you run method or the handler
+    /// Normally you can just mutate the state of the workflow by making your run method or the handler
     /// mutating. However, you cannot capture `self` in escaping closures such as async let's or
     /// child tasks. This method allows you to mutate the state safely in such closures.
     ///
@@ -169,7 +169,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     /// }
     /// ```
     ///
-    /// - Returns: `true` if all handlers have finished, `false` otherwise.
+    /// `true` if all handlers have finished, `false` otherwise.
     public var allHandlersFinished: Bool {
         self.internalContext.allHandlersFinished
     }
@@ -191,8 +191,6 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     ///
     /// Search attributes are key-value pairs that can be used to index and query
     /// workflow executions. They are searchable through Temporal's visibility APIs.
-    ///
-    /// - Returns: A collection of the current search attributes.
     public var searchAttributes: SearchAttributeCollection {
         self.internalContext.searchAttributes
     }
@@ -443,7 +441,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
 
     /// Execute an operation with a cancellation shield.
     ///
-    /// Use this method to perform operations that should be shielded from Workflow cancellation.
+    /// Use this method to perform operations that should be shielded from workflow cancellation.
     /// For example, you can use this to execute an activity as part of a cleanup operation when your Workflow is getting cancelled.
     ///
     /// - Parameter operation: The operation that should be executed.
@@ -818,6 +816,8 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     }
 
     // MARK: - Child Workflow
+
+    /// Starts a child workflow and returns a handle to track its execution.
     ///
     /// ## Usage
     ///

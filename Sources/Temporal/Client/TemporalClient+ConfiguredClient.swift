@@ -67,7 +67,6 @@ extension TemporalClient {
         ///   - method: The gRPC service method to call.
         ///   - request: The request proto.
         ///   - callOptions: Options of the call, such as retries. Defaults to retry options.
-        /// - Returns: The decoded response proto.
         func unary<Request: SwiftProtobuf.Message>(
             method: GRPCCore.MethodDescriptor,
             request: Request,

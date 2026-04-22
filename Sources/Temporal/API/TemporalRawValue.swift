@@ -17,7 +17,7 @@ public struct TemporalRawValue: Hashable, Sendable {
     /// The raw payload value.
     public let payload: Api.Common.V1.Payload
 
-    /// Initialized a new temporal raw value.
+    /// Creates a new temporal raw value.
     /// - Parameter payload: The raw value's payload.
     public init(_ payload: Api.Common.V1.Payload) {
         self.payload = payload

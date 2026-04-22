@@ -17,7 +17,7 @@ public struct CancelExternalWorkflowInput: Sendable {
     /// Information about the current workflow execution.
     public var info: WorkflowInfo
 
-    /// The workflow id of the external workflow to cancel.
+    /// The workflow ID of the external workflow to cancel.
     public var id: String
 
     /// The run ID of the external workflow.

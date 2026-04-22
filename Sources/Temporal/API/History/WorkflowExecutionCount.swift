@@ -28,12 +28,14 @@ public struct WorkflowExecutionCount: Sendable {
         /// The search attribute values for this group.
         public let values: [any Sendable]
 
+        /// Creates a new aggregation group.
         public init(count: Int, values: [any Sendable]) {
             self.count = count
             self.values = values
         }
     }
 
+    /// Creates a new workflow execution count.
     public init(count: Int, groups: [AggregationGroup]) {
         self.count = count
         self.groups = groups
