@@ -43,7 +43,7 @@
 ///
 /// The default cancellation type is ``waitCancellationCompleted``, which balances reliability
 /// with proper resource cleanup for most use cases.
-// TODO: Revisit this before major regarding extensible enums
+@nonexhaustive
 public enum ChildWorkflowCancellationType: Hashable, Sendable {
     /// Does not request child workflow cancellation and immediately reports cancellation to the parent workflow.
     ///
