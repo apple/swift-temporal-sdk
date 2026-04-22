@@ -116,8 +116,12 @@ extension VariableDeclSyntax {
         let newAttributes = attributes.filter { (attribute: AttributeListSyntax.Element) -> Bool in
             switch attribute {
             case .attribute(let attr):
-                attr.attributeName.identifier != toRemove.attributeName.identifier
-            default: true
+                let name = attr.attributeName.identifier
+                return name != toRemove.attributeName.identifier
+                    && name != "WorkflowQuery"
+                    && name != "WorkflowSignal"
+                    && name != "WorkflowUpdate"
+            default: return true
             }
         }
         return VariableDeclSyntax(

@@ -975,4 +975,252 @@ struct WorkflowMacrosTests {
         // Diagnostic should be on the parameter type
         #expect(diagnostics.first?.node.description.contains("Int") == true)
     }
+
+    // MARK: - Property Query Tests
+
+    @Test(arguments: [nil, "public", "package", "internal", "fileprivate", "private"])
+    func propertyQueryComputed(modifier: String?) throws {
+        let modifierPrefix = modifier.map { "\($0) " } ?? ""
+
+        let (expectedOutput, _) = try parse(
+            """
+            struct FooWorkflow {
+                \(modifierPrefix)var status: String { "pending" }
+
+                \(modifierPrefix)struct Status: WorkflowQueryDefinition {
+                    \(modifierPrefix)typealias Input = Void
+                    \(modifierPrefix)typealias Output = String
+                    \(modifierPrefix)typealias Workflow = FooWorkflow
+
+                    let _run: @Sendable (Workflow, WorkflowContextView, Input) throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContextView, Input) throws -> Output) {
+                        self._run = run
+                    }
+                    \(modifierPrefix)func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output {
+                        try self._run(workflow, view, input)
+                    }
+                    \(modifierPrefix)static var name: String {
+                        "custom_status"
+                    }
+                    \(modifierPrefix)static var description: String? {
+                        "Description"
+                    }
+                }
+
+                static var status: Status {
+                    Status(run: { workflow, _, _ in workflow.status })
+                }
+
+                static var queries: [any WorkflowQueryDefinition<FooWorkflow>] {
+                    [Self.status]
+                }
+
+                init(input: Input) {}
+            }
+
+            extension FooWorkflow: WorkflowDefinition {
+            }
+            """,
+            removeWhitespace: true
+        )
+        let (actualOutput, _) = try parse(
+            """
+            @Workflow
+            struct FooWorkflow {
+                @WorkflowQuery(name: "custom_status", description: "Description") 
+                \(modifierPrefix)var status: String { "pending" }
+            }
+            """,
+            removeWhitespace: true
+        )
+        #expect(expectedOutput == actualOutput)
+    }
+
+    @Test
+    func propertyQueryStored() throws {
+        let (expectedOutput, _) = try parse(
+            """
+            struct FooWorkflow {
+                var status: String {
+                    @storageRestrictions(initializes: _status)
+                    init(initialValue) {
+                        _status = .init(initialValue: initialValue)
+                    }
+                    get {
+                        return _status.value
+                    }
+                    set {
+                        _status.value = newValue
+                    }
+                }
+
+                struct Status: WorkflowQueryDefinition {
+                    typealias Input = Void
+                    typealias Output = String
+                    typealias Workflow = FooWorkflow
+
+                    let _run: @Sendable (Workflow, WorkflowContextView, Input) throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContextView, Input) throws -> Output) {
+                        self._run = run
+                    }
+                    func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output {
+                        try self._run(workflow, view, input)
+                    }
+                }
+
+                static var status: Status {
+                    Status(run: { workflow, _, _ in workflow.status })
+                }
+
+                private nonisolated(unsafe) var _status: _WorkflowState<String> = _WorkflowState(initialValue: "pending")
+
+                static var queries: [any WorkflowQueryDefinition<FooWorkflow>] {
+                    [Self.status]
+                }
+
+                init(input: Input) {}
+            }
+
+            extension FooWorkflow: WorkflowDefinition {
+            }
+            """,
+            removeWhitespace: true
+        )
+        let (actualOutput, _) = try parse(
+            """
+            @Workflow
+            struct FooWorkflow {
+                @WorkflowQuery
+                var status: String = "pending"
+            }
+            """,
+            removeWhitespace: true
+        )
+        #expect(expectedOutput == actualOutput)
+    }
+
+    @Test
+    func propertyQueryWithCustomName() throws {
+        let (expectedOutput, _) = try parse(
+            """
+            struct FooWorkflow {
+                var status: String { "pending" }
+
+                struct Status: WorkflowQueryDefinition {
+                    typealias Input = Void
+                    typealias Output = String
+                    typealias Workflow = FooWorkflow
+
+                    let _run: @Sendable (Workflow, WorkflowContextView, Input) throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContextView, Input) throws -> Output) {
+                        self._run = run
+                    }
+                    func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output {
+                        try self._run(workflow, view, input)
+                    }
+                    static var name: String {
+                        "current_status"
+                    }
+                }
+
+                static var status: Status {
+                    Status(run: { workflow, _, _ in workflow.status })
+                }
+
+                static var queries: [any WorkflowQueryDefinition<FooWorkflow>] {
+                    [Self.status]
+                }
+
+                init(input: Input) {}
+            }
+
+            extension FooWorkflow: WorkflowDefinition {
+            }
+            """,
+            removeWhitespace: true
+        )
+        let (actualOutput, _) = try parse(
+            """
+            @Workflow
+            struct FooWorkflow {
+                @WorkflowQuery(name: "current_status")
+                var status: String { "pending" }
+            }
+            """,
+            removeWhitespace: true
+        )
+        #expect(expectedOutput == actualOutput)
+    }
+
+    @Test
+    func propertyQueryAppearsInQueriesArray() throws {
+        let (expectedOutput, _) = try parse(
+            """
+            struct FooWorkflow {
+                var status: String { "pending" }
+
+                struct Status: WorkflowQueryDefinition {
+                    typealias Input = Void
+                    typealias Output = String
+                    typealias Workflow = FooWorkflow
+
+                    let _run: @Sendable (Workflow, WorkflowContextView, Input) throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContextView, Input) throws -> Output) {
+                        self._run = run
+                    }
+                    func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output {
+                        try self._run(workflow, view, input)
+                    }
+                }
+
+                static var status: Status {
+                    Status(run: { workflow, _, _ in workflow.status })
+                }
+                func getCount(input: Void) -> Int { 0 }
+
+                struct GetCount: WorkflowQueryDefinition {
+                    typealias Input = Void
+                    typealias Output = Int
+                    typealias Workflow = FooWorkflow
+
+                    let _run: @Sendable (Workflow, WorkflowContextView, Input) throws -> Output
+                    init(run: @Sendable @escaping (Workflow, WorkflowContextView, Input) throws -> Output) {
+                        self._run = run
+                    }
+                    func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output {
+                        try self._run(workflow, view, input)
+                    }
+                }
+
+                static var getCount: GetCount {
+                    GetCount(run: { workflow, _, input in workflow.getCount(input: input) })
+                }
+
+                static var queries: [any WorkflowQueryDefinition<FooWorkflow>] {
+                    [Self.status, Self.getCount]
+                }
+
+                init(input: Input) {}
+            }
+
+            extension FooWorkflow: WorkflowDefinition {
+            }
+            """,
+            removeWhitespace: true
+        )
+        let (actualOutput, _) = try parse(
+            """
+            @Workflow
+            struct FooWorkflow {
+                @WorkflowQuery
+                var status: String { "pending" }
+
+                @WorkflowQuery
+                func getCount(input: Void) -> Int { 0 }
+            }
+            """,
+            removeWhitespace: true
+        )
+        #expect(expectedOutput == actualOutput)
+    }
 }

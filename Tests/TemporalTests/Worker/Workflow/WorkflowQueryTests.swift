@@ -302,5 +302,97 @@ extension TestServerDependentTests {
             }
         }
 
+        // MARK: - Property Query Tests
+
+        @Workflow
+        struct PropertyQueryWorkflow {
+            @WorkflowQuery
+            var status: String = "pending"
+
+            @WorkflowQuery
+            var itemCount: Int { items.count }
+
+            private var items: [String] = []
+
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                try await context.condition { $0.status == "done" }
+            }
+
+            @WorkflowSignal
+            mutating func addItem(input: String) {
+                items.append(input)
+            }
+
+            @WorkflowSignal
+            mutating func complete(input: Void) {
+                status = "done"
+            }
+        }
+
+        @Test
+        func propertyQueryStoredProperty() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [PropertyQueryWorkflow.self]
+            ) { taskQueue, client in
+                let handle = try await client.startWorkflow(
+                    type: PropertyQueryWorkflow.self,
+                    options: .init(id: UUID().uuidString, taskQueue: taskQueue)
+                )
+
+                let status = try await handle.query(
+                    queryType: PropertyQueryWorkflow.Status.self
+                )
+                #expect(status == "pending")
+
+                try await handle.signal(
+                    signalType: PropertyQueryWorkflow.Complete.self
+                )
+
+                try await handle.result()
+
+                let finalStatus = try await handle.query(
+                    queryType: PropertyQueryWorkflow.Status.self
+                )
+                #expect(finalStatus == "done")
+            }
+        }
+
+        @Test
+        func propertyQueryComputedProperty() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [PropertyQueryWorkflow.self]
+            ) { taskQueue, client in
+                let handle = try await client.startWorkflow(
+                    type: PropertyQueryWorkflow.self,
+                    options: .init(id: UUID().uuidString, taskQueue: taskQueue)
+                )
+
+                let count = try await handle.query(
+                    queryType: PropertyQueryWorkflow.ItemCount.self
+                )
+                #expect(count == 0)
+
+                try await handle.signal(
+                    signalType: PropertyQueryWorkflow.AddItem.self,
+                    input: "item1"
+                )
+                try await handle.signal(
+                    signalType: PropertyQueryWorkflow.AddItem.self,
+                    input: "item2"
+                )
+
+                let updatedCount = try await handle.query(
+                    queryType: PropertyQueryWorkflow.ItemCount.self
+                )
+                #expect(updatedCount == 2)
+
+                try await handle.signal(
+                    signalType: PropertyQueryWorkflow.Complete.self
+                )
+
+                try await handle.result()
+            }
+        }
+
     }
 }

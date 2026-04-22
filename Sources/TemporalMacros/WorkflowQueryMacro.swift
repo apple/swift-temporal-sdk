@@ -37,11 +37,30 @@ public struct WorkflowQueryMacro: PeerMacro {
         }
         parentName = structDecl.name.text
 
-        // Only methods can be queries
-        guard let functionDecl = declaration.as(FunctionDeclSyntax.self) else {
-            throw MacroError(message: "@WorkflowQuery can only be applied to methods")
+        if let functionDecl = declaration.as(FunctionDeclSyntax.self) {
+            return try expandMethodQuery(
+                node: node,
+                functionDecl: functionDecl,
+                parentName: parentName
+            )
+        } else if let variableDecl = declaration.as(VariableDeclSyntax.self) {
+            return try expandPropertyQuery(
+                node: node,
+                variableDecl: variableDecl,
+                parentName: parentName
+            )
+        } else {
+            throw MacroError(message: "@WorkflowQuery can only be applied to methods or properties")
         }
+    }
 
+    // MARK: - Method Queries
+
+    private static func expandMethodQuery(
+        node: AttributeSyntax,
+        functionDecl: FunctionDeclSyntax,
+        parentName: String
+    ) throws -> [DeclSyntax] {
         // Queries must return something
         guard let returnClause = functionDecl.signature.returnClause,
             returnClause.type.as(IdentifierTypeSyntax.self)?.name.text != "Void"
@@ -55,26 +74,37 @@ public struct WorkflowQueryMacro: PeerMacro {
         let hasContextParam: Bool
         if parameters.count == 2 {
             guard parameters.first?.firstName.text == "context" else {
-                throw MacroError(message: "Workflow query first parameter must be called 'context' with type 'WorkflowContextView'")
+                throw MacroError(
+                    message: "Workflow query first parameter must be called 'context' with type 'WorkflowContextView'"
+                )
             }
             guard parameters.dropFirst().first?.firstName.text == "input" else {
-                throw MacroError(message: "Workflow query second parameter must be called 'input' with a Sendable type")
+                throw MacroError(
+                    message: "Workflow query second parameter must be called 'input' with a Sendable type"
+                )
             }
             hasContextParam = true
         } else if parameters.count == 1 {
             guard parameters.first?.firstName.text == "input" else {
-                throw MacroError(message: "Workflow query parameter must be called 'input' with a Sendable type")
+                throw MacroError(
+                    message: "Workflow query parameter must be called 'input' with a Sendable type"
+                )
             }
             hasContextParam = false
         } else {
-            throw MacroError(message: "Workflow queries must have one parameter 'input' or two parameters 'context' and 'input'")
+            throw MacroError(
+                message: "Workflow queries must have one parameter 'input' or two parameters 'context' and 'input'"
+            )
         }
 
         let input = hasContextParam ? parameters.dropFirst().first! : parameters.first!
 
-        let throwingQuery = functionDecl.signature.effectSpecifiers?.throwsClause?.throwsSpecifier.presence == .present
+        let throwingQuery =
+            functionDecl.signature.effectSpecifiers?.throwsClause?.throwsSpecifier.presence == .present
 
-        let rawAccessModifier = functionDecl.modifiers.accessModifierPrefix(supportedModifiers: .allAccessModifiers)
+        let rawAccessModifier = functionDecl.modifiers.accessModifierPrefix(
+            supportedModifiers: .allAccessModifiers
+        )
 
         var nameDecl: DeclSyntax?
         var descriptionDecl: DeclSyntax?
@@ -82,16 +112,19 @@ public struct WorkflowQueryMacro: PeerMacro {
             nameDecl = "\(raw: rawAccessModifier)static var name: String { \(name) }"
         }
         if let description = node.stringLiteralValueForArgument(named: "description") {
-            descriptionDecl = "\(raw: rawAccessModifier)static var description: String? { \(description) }"
+            descriptionDecl =
+                "\(raw: rawAccessModifier)static var description: String? { \(description) }"
         }
 
         let queryName = functionDecl.name.text.capitalizingFirst()
 
         let closureBody: String
         if hasContextParam {
-            closureBody = "{ workflow, view, input in \(throwingQuery ? "try" : "") workflow.\(functionDecl.name.text)(context: view, input: input) }"
+            closureBody =
+                "{ workflow, view, input in \(throwingQuery ? "try" : "") workflow.\(functionDecl.name.text)(context: view, input: input) }"
         } else {
-            closureBody = "{ workflow, _, input in \(throwingQuery ? "try" : "") workflow.\(functionDecl.name.text)(input: input) }"
+            closureBody =
+                "{ workflow, _, input in \(throwingQuery ? "try" : "") workflow.\(functionDecl.name.text)(input: input) }"
         }
 
         return [
@@ -115,6 +148,68 @@ public struct WorkflowQueryMacro: PeerMacro {
             """
             static var \(raw: functionDecl.name.text): \(raw: queryName) {
                 \(raw: queryName)(run: \(raw: closureBody))
+            }
+            """,
+        ]
+    }
+
+    // MARK: - Property Queries
+
+    private static func expandPropertyQuery(
+        node: AttributeSyntax,
+        variableDecl: VariableDeclSyntax,
+        parentName: String
+    ) throws -> [DeclSyntax] {
+        guard let binding = variableDecl.bindings.first,
+            let identifierPattern = binding.pattern.as(IdentifierPatternSyntax.self)
+        else {
+            throw MacroError(message: "@WorkflowQuery property must have an identifier")
+        }
+
+        let propertyName = identifierPattern.identifier.text
+
+        guard let typeAnnotation = binding.typeAnnotation else {
+            throw MacroError(message: "@WorkflowQuery property must have an explicit type annotation")
+        }
+        let propertyType = typeAnnotation.type
+
+        let accessModifier = variableDecl.modifiers.accessModifierPrefix(
+            supportedModifiers: .allAccessModifiers
+        )
+
+        var nameDecl: DeclSyntax?
+        var descriptionDecl: DeclSyntax?
+        if let name = node.stringLiteralValueForArgument(named: "name") {
+            nameDecl = "\(accessModifier)static var name: String { \(name) }"
+        }
+        if let description = node.stringLiteralValueForArgument(named: "description") {
+            descriptionDecl =
+                "\(accessModifier)static var description: String? { \(description) }"
+        }
+
+        let queryName = propertyName.capitalizingFirst()
+
+        return [
+            """
+            \(accessModifier)struct \(raw: queryName): WorkflowQueryDefinition {
+                \(accessModifier)typealias Input = Void
+                \(accessModifier)typealias Output = \(propertyType)
+                \(accessModifier)typealias Workflow = \(raw: parentName)
+
+                let _run: @Sendable (Workflow, WorkflowContextView, Input) throws -> Output
+                init(run: @Sendable @escaping (Workflow, WorkflowContextView, Input) throws -> Output) {
+                    self._run = run
+                }
+                \(accessModifier)func run(workflow: Workflow, view: WorkflowContextView, input: Input) throws -> Output {
+                    try self._run(workflow, view, input)
+                }
+                \(nameDecl)
+                \(descriptionDecl)
+            }
+            """,
+            """
+            static var \(raw: propertyName): \(raw: queryName) {
+                \(raw: queryName)(run: { workflow, _, _ in workflow.\(raw: propertyName) })
             }
             """,
         ]
