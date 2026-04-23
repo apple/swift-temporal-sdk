@@ -23,7 +23,7 @@ public struct ServerError: TemporalFailureError {
     /// The stack trace of the current error.
     public var stackTrace: String
 
-    /// Boolean indicating whether the error was set as non-retry.
+    /// A Boolean value that indicates whether the error is nonretryable.
     public var isNonRetryable: Bool
 
     /// Initializes a new server error.

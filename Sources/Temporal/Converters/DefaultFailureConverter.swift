@@ -22,7 +22,7 @@ import SwiftProtobuf
 /// into the ``Api/Failure/V1/Failure/encodedAttributes`` field.
 /// This behavior is configured via the ``DefaultFailureConverter/encodeCommonAttributes`` property.
 public struct DefaultFailureConverter: FailureConverter {
-    /// Indicates whether the common attributes should be encoded.
+    /// A Boolean value that indicates whether the common attributes should be encoded.
     ///
     /// When set to `true`, the `message` and `stackTrace` fields are converted and encoded using the payload converter.
     public var encodeCommonAttributes: Bool = false

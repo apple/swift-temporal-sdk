@@ -52,7 +52,7 @@ public struct ApplicationError: TemporalFailureError {
     ///   - stackTrace: The stack trace of the current error.
     ///   - details: The details of the error. Defaults to empty details.
     ///   - type: The string type of the error if any. Defaults to `nil`.
-    ///   - isNonRetryable: Boolean indicating whether the error was set as non-retry. Defaults to `false`.
+    ///   - isNonRetryable: A Boolean value that indicates whether the error is nonretryable. Defaults to `false`.
     ///   - nextRetryDelay: Delay duration before the next retry attempt. Defaults to `nil`.
     ///   - category: The error category. Defaults to `.unspecified`.
     public init(

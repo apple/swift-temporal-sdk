@@ -20,7 +20,7 @@
 /// - ``JSONProtobufPayloadConverter``
 /// - ``JSONPayloadConverter``
 ///
-/// When converting payloads to values the converter retrieves the `encoding` value
+/// When converting payloads to values, the converter retrieves the `encoding` value
 /// of the payloads ``Api/Common/V1/Payload/metadata``.
 /// Then it tries to convert the payload using the matching payload converter.
 public struct DefaultPayloadConverter: PayloadConverter {

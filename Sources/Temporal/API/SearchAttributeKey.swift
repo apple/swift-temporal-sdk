@@ -74,7 +74,7 @@ extension SearchAttributeKey where Value == Bool {
     /// - Parameter name: The name of the attribute. Must be unique across all attributes.
     public static func bool(_ name: String) -> Self { .init(name: name, type: .bool) }
 
-    /// Indicates whether a Temporal schedule is paused.
+    /// A Boolean value that indicates whether a Temporal schedule is paused.
     public static let temporalSchedulePaused = Self.bool("TemporalSchedulePaused")
 }
 
