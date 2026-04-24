@@ -35,7 +35,7 @@ Workflows support Swift's Structured Concurrency patterns, including task groups
 and async let bindings. These patterns maintain deterministic execution while
 enabling concurrent operations.
 
-Here's an example using a task group to run two child tasks concurrently:
+The following example uses a task group to run two child tasks concurrently:
 
 ```swift
 @Workflow
@@ -95,9 +95,9 @@ Workflows support Swift's standard cancellation primitives, enabling graceful
 shutdown and cleanup. Use `Task.isCancelled`, `withTaskCancellationHandler`, and
 other cancellation APIs as you would in regular Swift code.
 
-When a workflow is cancelled, many ``WorkflowContext`` operations throw
+When Temporal cancels a workflow, many ``WorkflowContext`` operations throw
 `CancellationError`, allowing your workflow to detect cancellation and perform
 cleanup. Cancellation propagates through structured concurrency patterns, such as
-task groups, ensuring that all child tasks are properly cancelled when the workflow
-is cancelled.
+task groups, ensuring that all child tasks cancel when the workflow
+cancels.
 

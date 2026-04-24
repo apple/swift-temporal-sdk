@@ -19,8 +19,8 @@ systems.
 
 Use the `@Workflow` macro on a `struct` to create a ``WorkflowDefinition``.
 The main entry point for a workflow is the `run(context:input:)` method, which
-receives a ``WorkflowContext`` and returns the workflow result. Errors thrown from
-the `run` method are treated as workflow failures.
+receives a ``WorkflowContext`` and returns the workflow result. The `run` method
+treats thrown errors as workflow failures.
 
 The struct-based design provides compile-time safety guarantees: query handlers
 cannot mutate workflow state, and update validators cannot mutate state either.
@@ -195,13 +195,13 @@ struct RegisterUserWorkflow {
 }
 ```
 
-Signal handlers that modify workflow state are declared as `mutating func`.
+Declare signal handlers that modify workflow state as `mutating func`.
 Because workflows are value types, signal handlers that only mutate state
 do not need to be `async throws`. Follow the same best practice of using custom
 input types for signal handlers as you do for workflows to support backward
 compatibility.
 
-By default the signal name is the unqualified capitalized method name.
+By default, the signal name matches the unqualified capitalized method name.
 You can customize the signal name using the `name` parameter, for example:
 
 ```swift
@@ -274,7 +274,7 @@ query handlers provide compile-time safety: they are non-mutating by default,
 guaranteeing they cannot modify workflow state. Use custom input and output types
 for queries to maintain backward compatibility.
 
-By default, the query name is the unqualified capitalized method name.
+By default, the query name matches the unqualified capitalized method name.
 You can customize the query name using the `name` parameter, for example:
 
 ```swift
@@ -338,7 +338,7 @@ values. Unlike queries, updates can modify workflow state and execute
 activities. Use custom input and output types for updates to maintain backward
 compatibility.
 
-By default the update name is the unqualified
+By default, the update name matches the unqualified
 capitalized method name. You can customize the update name using the
 `name` parameter, for example:
 
