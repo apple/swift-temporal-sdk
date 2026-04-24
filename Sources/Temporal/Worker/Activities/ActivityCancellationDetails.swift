@@ -14,21 +14,21 @@
 
 /// Details about why an activity was cancelled, paused, or reset.
 public struct ActivityCancellationDetails: Sendable, Hashable {
-    /// Whether the activity was explicitly cancelled.
+    /// A Boolean value that indicates whether the activity was explicitly canceled.
     public var cancelRequested: Bool
 
-    /// Whether the activity was explicitly paused.
+    /// A Boolean value that indicates whether the activity was explicitly paused.
     public var paused: Bool
 
-    /// Whether the activity was explicitly reset.
+    /// A Boolean value that indicates whether the activity was explicitly reset.
     public var reset: Bool
 
     /// Creates cancellation details.
     ///
     /// - Parameters:
-    ///   - cancelRequested: Whether the activity was explicitly cancelled.
-    ///   - paused: Whether the activity was explicitly paused.
-    ///   - reset: Whether the activity was explicitly reset.
+    ///   - cancelRequested: A Boolean value that indicates whether the activity was explicitly canceled.
+    ///   - paused: A Boolean value that indicates whether the activity was explicitly paused.
+    ///   - reset: A Boolean value that indicates whether the activity was explicitly reset.
     public init(cancelRequested: Bool, paused: Bool, reset: Bool) {
         self.cancelRequested = cancelRequested
         self.paused = paused

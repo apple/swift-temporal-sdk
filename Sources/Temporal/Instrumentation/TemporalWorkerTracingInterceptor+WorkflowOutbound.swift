@@ -19,7 +19,7 @@ extension TemporalWorkerTracingInterceptor {
     public struct WorkflowOutbound: WorkflowOutboundInterceptor {
         private let traceRecording: TemporalTraceRecording
 
-        /// Create the worker workflow outbound interceptor.
+        /// Creates the worker workflow outbound interceptor.
         /// - Parameters:
         ///    - tracer: The `Tracer` instance to use for creating spans.
         ///    - tracingHeaderKey: The name of the Temporal tracing header key.

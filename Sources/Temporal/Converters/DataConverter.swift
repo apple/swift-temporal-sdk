@@ -17,7 +17,7 @@ import SwiftProtobuf
 /// A data converter encodes data from your application to an ``Api/Common/V1/Payload`` before sending it
 /// to the Temporal server.
 ///
-/// When the server sends data back to a worker the data converter decodes it before
+/// When the server sends data back to a worker, the data converter decodes it before
 /// passing it to your activity/workflow.
 public struct DataConverter: Sendable {
     /// The default data converter.

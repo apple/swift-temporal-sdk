@@ -172,7 +172,7 @@ extension TemporalClient.WorkflowService {
     /// Initiates a workflow update by name and returns the update ID along with any known outcome.
     ///
     /// This is an internal variant that also captures the outcome payloads from the response
-    /// when the update completes during the start call (e.g., when ``waitForStage`` is
+    /// when the update completes during the start call (for example, when ``waitForStage`` is
     /// ``WorkflowUpdateStage/completed``). The captured outcome can be used to avoid
     /// redundant RPCs when retrieving the update result.
     package func startWorkflowUpdateWithOutcome<each Input: Sendable>(

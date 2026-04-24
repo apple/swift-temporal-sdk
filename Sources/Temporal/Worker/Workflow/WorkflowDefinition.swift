@@ -78,7 +78,7 @@ public protocol WorkflowDefinition: Sendable {
 
     /// Creates a new workflow instance.
     ///
-    /// This initializer is called by the Temporal SDK when a new workflow execution is started.
+    /// The Temporal SDK calls this initializer when starting a new workflow execution.
     /// Use this method to set up initial workflow state based on the provided input.
     ///
     /// - Parameter input: The input data for the workflow execution.

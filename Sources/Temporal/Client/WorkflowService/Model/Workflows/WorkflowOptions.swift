@@ -78,7 +78,7 @@ public struct WorkflowOptions: Sendable {
     /// The cron schedule expression for the workflow.
     ///
     /// When set, the workflow will be executed on the specified cron schedule. Uses standard cron
-    /// expression syntax (e.g. `"0 * * * *"` for every hour).
+    /// expression syntax (for example, `"0 * * * *"` for every hour).
     ///
     /// - Note: Deprecated in favor of Temporal Schedules, but still supported for backward compatibility.
     /// - Note: Cannot be used with ``startDelay``.

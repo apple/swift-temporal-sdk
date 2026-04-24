@@ -56,7 +56,7 @@ public struct WorkflowContextView: @unchecked Sendable {
         storage.now()
     }
 
-    /// Indicates whether the workflow is currently in replay mode.
+    /// A Boolean value that indicates whether the workflow is currently in replay mode.
     public var isReplaying: Bool {
         storage.isReplaying()
     }
@@ -97,7 +97,7 @@ public struct WorkflowContextView: @unchecked Sendable {
         storage.currentHistorySize()
     }
 
-    /// Indicates whether all update and signal handlers have finished executing.
+    /// A Boolean value that indicates whether all update and signal handlers have finished executing.
     public var allHandlersFinished: Bool {
         storage.allHandlersFinished()
     }

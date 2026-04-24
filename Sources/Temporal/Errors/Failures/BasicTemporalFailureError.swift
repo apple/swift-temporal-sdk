@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// A basic temporal failure.
+/// A basic Temporal failure error.
 public struct BasicTemporalFailureError: TemporalFailureError {
     /// The error's message.
     public var message: String
@@ -23,6 +23,12 @@ public struct BasicTemporalFailureError: TemporalFailureError {
     /// The stack trace of the current error.
     public var stackTrace: String
 
+    /// Creates a new basic Temporal failure error.
+    ///
+    /// - Parameters:
+    ///   - message: The error's message.
+    ///   - cause: The cause of the current error. Defaults to `nil`.
+    ///   - stackTrace: The stack trace of the current error.
     public init(
         message: String,
         cause: (any Error)? = nil,

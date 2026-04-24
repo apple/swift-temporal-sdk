@@ -24,7 +24,7 @@ extension TemporalClient {
     /// Creates a handle for performing asynchronous completion operations on an existing activity.
     ///
     /// Use this method when you have a reference to an activity that will be completed asynchronously
-    /// (i.e., outside of its original execution context) and you need to send heartbeats, complete it
+    /// (that is, outside of its original execution context) and you need to send heartbeats, complete it
     /// with a result, fail it with an error, or report it as cancelled.
     ///
     /// The returned ``AsyncActivityHandle`` provides methods that map directly to Temporal's server-side
