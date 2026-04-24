@@ -415,7 +415,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     /// ```
     ///
     /// - Parameter id: A unique identifier for this patch.
-    /// - Returns: A boolean value that indicates whether this should take the newer patch path.
+    /// - Returns: A Boolean value that indicates whether this should take the newer patch path.
     public func patch(_ id: String) -> Bool {
         self.internalContext.patch(id)
     }

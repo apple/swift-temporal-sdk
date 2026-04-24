@@ -26,7 +26,7 @@ public struct WorkflowQueryRejectedError: TemporalError {
     /// The workflow's execution status.
     public var workflowExecutionStatus: Api.Enums.V1.WorkflowExecutionStatus
 
-    /// Initializes a new workflow query rejected error.
+    /// Creates a new workflow query rejected error.
     ///
     /// - Parameters:
     ///   - stackTrace: The stack trace of the current error.

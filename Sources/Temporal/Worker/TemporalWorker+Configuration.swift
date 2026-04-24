@@ -22,9 +22,9 @@ extension TemporalWorker {
     /// The configuration defines how the worker connects to the Temporal server, manages task execution,
     /// and handles various operational aspects like concurrency limits, timeouts, and versioning.
     ///
-    /// ## Creating a Configuration
+    /// ## Creating a configuration
     ///
-    /// Initialize with required parameters:
+    /// Create a configuration with the required parameters:
     ///
     /// ```swift
     /// let config = TemporalWorker.Configuration(
@@ -42,7 +42,7 @@ extension TemporalWorker {
     /// )
     /// ```
     ///
-    /// ## Customizing Behavior
+    /// ## Customizing behavior
     ///
     /// Adjust operational settings after initialization:
     ///

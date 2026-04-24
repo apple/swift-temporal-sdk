@@ -23,7 +23,7 @@ public struct UnknownError: TemporalError {
     /// The stack trace of the current error.
     public var stackTrace: String
 
-    /// Initializes a new unknown error.
+    /// Creates a new unknown error.
     ///
     /// - Parameters:
     ///   - message: The error's message.

@@ -23,7 +23,7 @@ public struct InvalidOperationError: TemporalError {
     /// The stack trace of the current error.
     public var stackTrace: String
 
-    /// Initializes an invalid operation error.
+    /// Creates an invalid operation error.
     ///
     /// - Parameters:
     ///   - message: The error's message.

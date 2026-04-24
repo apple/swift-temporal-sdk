@@ -26,7 +26,7 @@ public struct CanceledError: TemporalFailureError {
     /// The details of the error.
     public var details: [Api.Common.V1.Payload]
 
-    /// Initializes a new canceled error.
+    /// Creates a new canceled error.
     ///
     /// - Parameters:
     ///   - message: The error's message.

@@ -22,7 +22,7 @@ extension TemporalClient {
         let client: AnyUInt8GRPCClient
         private let metadata: GRPCCore.Metadata
 
-        /// Initialize a new type-erased configured gRPC client for performing RPCs.
+        /// Creates a new type-erased configured gRPC client for performing RPCs.
         ///
         /// - Parameters:
         ///   - client: The `GRPCClient` to use.

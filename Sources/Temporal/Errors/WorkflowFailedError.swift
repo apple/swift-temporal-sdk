@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Error that is returned when a workflow execution is unsuccessful.
+/// An error that represents an unsuccessful workflow execution.
 public struct WorkflowFailedError: TemporalError {
     /// The error's message.
     public var message: String = "Workflow execution failed"
@@ -23,7 +23,7 @@ public struct WorkflowFailedError: TemporalError {
     /// The stack trace of the current error.
     public var stackTrace: String
 
-    /// Initializes a new workflow failed error.
+    /// Creates a new workflow failed error.
     ///
     /// - Parameters:
     ///   - cause: The cause of the current error. Defaults to `nil`.

@@ -27,7 +27,7 @@ public struct DefaultFailureConverter: FailureConverter {
     /// When set to `true`, the `message` and `stackTrace` fields are converted and encoded using the payload converter.
     public var encodeCommonAttributes: Bool = false
 
-    /// Initializes a new default failure converter.
+    /// Creates a new default failure converter.
     public init() {}
 
     public func convertError(

@@ -23,7 +23,7 @@ public struct WorkflowRemovedFromCacheError: TemporalError {
     /// The stack trace of the current error.
     public var stackTrace: String
 
-    /// Initializes a new workflow removed from cache error.
+    /// Creates a new workflow-removed-from-cache error.
     ///
     /// - Parameters:
     ///   - cause: The cause of the current error. Defaults to `nil`.

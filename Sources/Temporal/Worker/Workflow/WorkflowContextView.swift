@@ -71,7 +71,7 @@ public struct WorkflowContextView: @unchecked Sendable {
         storage.currentDeploymentVersion()
     }
 
-    /// A boolean value that indicates whether continue as new was suggested.
+    /// A Boolean value that indicates whether continue as new was suggested.
     public var continueAsNewSuggested: Bool {
         storage.continueAsNewSuggested()
     }

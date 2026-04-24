@@ -92,7 +92,7 @@ struct InternalWorkflowContext: Sendable {
         self.stateMachine.setCurrentDetails(newValue)
     }
 
-    /// A boolean value that indicates whether continue as new was suggested.
+    /// A Boolean value that indicates whether continue as new was suggested.
     var continueAsNewSuggested: Bool {
         self.stateMachine.continueAsNewSuggested()
     }

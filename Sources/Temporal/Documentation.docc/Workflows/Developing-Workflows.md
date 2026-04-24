@@ -11,8 +11,9 @@ long-running processes. Workflows must be deterministic to ensure reliable
 replay and recovery.
 
 This article shows you how to define workflows, coordinate activities, handle
-signals and queries, and implement complex orchestration patterns. You'll learn
-to build workflows that survive failures and scale across distributed systems.
+signals and queries, and implement complex orchestration patterns. Use these
+patterns to build workflows that survive failures and scale across distributed
+systems.
 
 ## Define a workflow with the Workflow macro
 

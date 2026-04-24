@@ -76,7 +76,7 @@ public protocol WorkflowDefinition: Sendable {
     /// Defaults to an empty array.
     static var updates: [any WorkflowUpdateDefinition<Self>] { get }
 
-    /// Initializes a new workflow instance.
+    /// Creates a new workflow instance.
     ///
     /// This initializer is called by the Temporal SDK when a new workflow execution is started.
     /// Use this method to set up initial workflow state based on the provided input.

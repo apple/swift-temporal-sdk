@@ -23,7 +23,7 @@ public struct WorkflowUpdateFailedError: TemporalError {
     /// The stack trace of the current error.
     public var stackTrace: String
 
-    /// Initializes a new workflow update failed error.
+    /// Creates a new workflow update failed error.
     ///
     /// - Parameters:
     ///   - cause: The cause of the current error. Defaults to `nil`.

@@ -37,7 +37,7 @@ public struct DataConverter: Sendable {
     /// The payload codec.
     public let payloadCodec: (any PayloadCodec)?
 
-    /// Initializes a new data converter.
+    /// Creates a new data converter.
     ///
     /// - Parameters:
     ///   - payloadConverter: The payload converter.

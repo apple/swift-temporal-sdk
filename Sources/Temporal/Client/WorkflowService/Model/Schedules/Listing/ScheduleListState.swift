@@ -17,14 +17,14 @@ public struct ScheduleListState: Hashable, Sendable {
     /// A human-readable note describing the current state of the schedule.
     public var note: String?
 
-    /// A boolean value that indicates whether the schedule is currently paused.
+    /// A Boolean value that indicates whether the schedule is currently paused.
     public var isPaused: Bool
 
     /// Creates a new schedule list state with the specified configuration.
     ///
     /// - Parameters:
     ///   - note: An optional descriptive message about the schedule state.
-    ///   - isPaused: A Boolean value indicating whether the schedule is paused.
+    ///   - isPaused: A Boolean value that indicates whether the schedule is paused.
     package init(note: String? = nil, isPaused: Bool = false) {
         self.note = note
         self.isPaused = isPaused
