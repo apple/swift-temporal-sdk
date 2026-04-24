@@ -15,7 +15,7 @@ Workflows can safely use Swift's concurrency primitives, such as `async let`,
 execution guarantees required by Temporal. This enables you to write concurrent
 workflow logic that remains predictable and testable.
 
-## Deterministic execution guarantees
+## Understand deterministic execution guarantees
 
 Workflows run on a specialized task executor that ensures consistent execution
 order across different runs. This executor processes tasks sequentially by task
