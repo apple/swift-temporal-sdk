@@ -21,7 +21,7 @@ public struct ReportCancellationAsyncActivityInput: Sendable {
     /// Data converter to use.
     public var dataConverter: DataConverter
 
-    /// Create input parameters for reporting cancellation of an async activity in client interceptors.
+    /// Creates input parameters for reporting cancellation of an async activity in client interceptors.
     ///
     /// - Parameters:
     ///   - activity: Activity to report cancellation for.

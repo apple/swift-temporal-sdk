@@ -218,7 +218,7 @@ struct WorkflowInstance: Sendable {
         }
     }
 
-    /// Intializes the workflow.
+    /// Initializes the workflow.
     private func initializeWorkflow<Workflow: WorkflowDefinition>(
         _ activation: Coresdk.WorkflowActivation.WorkflowActivation,
         workflowType: Workflow.Type

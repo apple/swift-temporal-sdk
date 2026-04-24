@@ -26,6 +26,6 @@ public struct NamespaceUpdatedDescription: Hashable, Sendable {
     /// The current failover version number for this namespace.
     public var failoverVersion: Int
 
-    /// A boolean value indicating whether this namespace operates across multiple clusters.
+    /// A Boolean value that indicates whether this namespace operates across multiple clusters.
     public var isGlobalNamespace: Bool
 }

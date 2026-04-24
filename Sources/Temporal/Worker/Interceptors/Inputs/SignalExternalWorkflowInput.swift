@@ -17,7 +17,7 @@ public struct SignalExternalWorkflowInput<each Input: Sendable>: Sendable {
     /// Information about the current workflow execution.
     public var info: WorkflowInfo
 
-    /// The workfliw id of the external workflow to signal.
+    /// The workflow ID of the external workflow to signal.
     public var id: String
 
     /// The run ID of the external workflow.

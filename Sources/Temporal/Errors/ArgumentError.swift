@@ -26,6 +26,12 @@ public struct ArgumentError: TemporalError {
     /// The stack trace of the current error.
     public var stackTrace: String
 
+    /// Initializes a new argument error.
+    ///
+    /// - Parameters:
+    ///   - message: The error's message.
+    ///   - cause: The cause of the current error. Defaults to `nil`.
+    ///   - stackTrace: The stack trace of the current error.
     public init(
         message: String,
         cause: (any Error)? = nil,

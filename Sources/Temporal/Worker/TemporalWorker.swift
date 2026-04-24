@@ -105,6 +105,9 @@ public final class TemporalWorker: Service, Sendable {
         )
     }
 
+    /// Starts the worker and begins polling for workflow and activity tasks.
+    ///
+    /// This method suspends indefinitely until the worker is shut down or an error occurs.
     public func run() async throws {
         try await self.implementation.run()
     }

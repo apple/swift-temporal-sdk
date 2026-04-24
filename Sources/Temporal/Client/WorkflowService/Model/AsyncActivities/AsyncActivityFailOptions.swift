@@ -14,14 +14,14 @@
 
 public import struct GRPCCore.CallOptions
 
-/// Options  for failing async activities.
+/// Options for failing async activities.
 public struct AsyncActivityFailOptions: Sendable {
     /// The details to record as the last heartbeat details.
     public var lastHeartbeatDetails: [any Sendable]
-    /// Optional gRPC call options for customizing the description request.
+    /// Optional gRPC call options for customizing the fail request.
     public var callOptions: CallOptions?
 
-    /// Create options  for failing async activities.
+    /// Creates options for failing async activities.
     ///
     /// - Parameters:
     ///   - lastHeartbeatDetails: The details to record as the last heartbeat details.

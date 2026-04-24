@@ -63,7 +63,7 @@ extension TemporalWorker {
                 /// A unique identifier for this Version within the Deployment it is a part of.
                 ///
                 /// Not necessarily unique within the namespace.
-                /// The combination of `deployment_name` and `build_id` uniquely identifies this
+                /// The combination of ``deploymentName`` and ``buildId`` uniquely identifies this
                 /// Version within the namespace, because Deployment names are unique within a namespace.
                 public var buildId: String
 
@@ -268,13 +268,12 @@ extension TemporalWorker {
         public var taskQueue: String
         /// Configuration settings for instrumentation including tracing, metrics, and logging.
         public var instrumentation: Instrumentation
-        /// A human-readable identifier for this worker client instance.
-        ///
-        /// This identifier appears in server logs and monitoring tools to help distinguish between
-        /// different worker instances.
         /// Versioning strategy of the worker.
         public var versioningStrategy: VersioningStrategy
         /// A human-readable string that identifies the worker client.
+        ///
+        /// This identifier appears in server logs and monitoring tools to help distinguish between
+        /// different worker instances.
         public var clientIdentity: String
 
         /// An optional override for the default worker identity string.
@@ -357,7 +356,7 @@ extension TemporalWorker {
         /// heartbeats (default `.zero`).
         public var workerHeartbeatInterval: Duration = .zero
 
-        /// Milliseconds to wait for in-flight tasks on shutdown before force exit (default `0 sec`).
+        /// Duration to wait for in-flight tasks on shutdown before force exit (default `0 sec`).
         public var gracefulShutdownPeriod: Duration = .seconds(0)
         /// Polling behavior for nexus tasks (default max `5`).
         public var nexusTaskPollerBehavior: PollerBehavior = .simpleMaximum(maximum: 5)
@@ -375,7 +374,7 @@ extension TemporalWorker {
         ///   - instrumentation: The worker client's instrumentation configuration.
         ///   - versioningStrategy: Versioning strategy of the worker, defaults to none.
         ///   - clientIdentity: A human-readable string that identifies the worker client. By default, it is set to the SDK name and version followed by a randomly generated ID.
-        ///   - dataConverter: Converts to encode and decode payloads before sending it.
+        ///   - dataConverter: The converter used to encode and decode payloads.
         ///   - interceptors: Interceptors of the worker, earlier ones wrap later ones. Defaults to a tracing interceptor.
         ///   - apiKey: The API key to use for authenticating with a Temporal Cloud instance. Defaults to none.
         public init(

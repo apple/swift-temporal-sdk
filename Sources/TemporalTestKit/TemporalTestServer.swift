@@ -35,7 +35,7 @@ public import Foundation
 /// standard real-time execution and time-skipping capabilities for accelerated testing
 /// of time-dependent workflow behaviors.
 ///
-/// To support high throughput during parallel testing while avoiding “resource exhausted” error, the Temporal test server
+/// To support high throughput during parallel testing while avoiding “resource exhausted” errors, the Temporal test server
 /// is launched with optimized dynamic configuration settings. These values increase request-per-second limits for key services:
 /// - `frontend.namespaceRPS` = 5800
 /// - `matching.rps` = 5000

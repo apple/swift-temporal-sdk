@@ -41,7 +41,7 @@ public struct ActivityError: TemporalFailureError {
     /// The retry state of the failed activity.
     public var retryState: Api.Enums.V1.RetryState
 
-    /// Initializes a new application error.
+    /// Initializes a new activity error.
     ///
     /// - Parameters:
     ///   - message: The error's message.

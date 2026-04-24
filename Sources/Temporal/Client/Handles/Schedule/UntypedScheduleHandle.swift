@@ -16,14 +16,14 @@ import GRPCCore
 
 /// A handle for managing and interacting with Temporal workflow schedules without a concrete ``WorkflowDefinition``.
 ///
-/// ``ScheduleHandle`` provides an interface for managing workflow schedules after
+/// ``UntypedScheduleHandle`` provides an interface for managing workflow schedules after
 /// they have been created. It supports retrieving schedule information, updating configurations,
 /// controlling schedule execution, and performing administrative operations, without encapsulating
 /// the actual type of the triggered ``WorkflowDefinition``, making it easier to schedule
 /// workflows that are not written in Swift and/or do not share the ``WorkflowDefinition``.
 ///
-/// - Note: ``ScheduleHandle`` binds to a specific ``WorkflowDefinition`` for simplified API
-/// and compile-time type safety.
+/// - Note: ``ScheduleHandle`` binds to a specific ``WorkflowDefinition`` for a simplified API
+/// with compile-time type safety.
 public struct UntypedScheduleHandle: Sendable {
     /// The Temporal interceptor used for all schedule operations.
     package let interceptor: TemporalClient.Interceptor

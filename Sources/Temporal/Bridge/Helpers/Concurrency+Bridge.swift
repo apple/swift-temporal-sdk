@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Helper type for holding a continuation in a reference counted object.
+/// Helper type for holding a continuation in a reference-counted object.
 ///
-/// Convenient for manually retaining a reference and passing an Unmanaged pointer
+/// Use this type to manually retain a reference and pass an Unmanaged pointer
 /// into various C callbacks in the bridge layer.
 final class ContinuationHolder<T> {
     let continuation: CheckedContinuation<T, any Error>

@@ -16,6 +16,7 @@ import Foundation
 import SwiftSyntax
 import SwiftSyntaxMacros
 
+/// Macro implementation for the `@WorkflowUpdate` attribute.
 public struct WorkflowUpdateMacro: PeerMacro {
     public static func expansion(
         of node: AttributeSyntax,

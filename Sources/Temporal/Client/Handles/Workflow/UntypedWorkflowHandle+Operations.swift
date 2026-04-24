@@ -97,7 +97,7 @@ extension UntypedWorkflowHandle {
     ///   - eventFilterType: The type of events to include in the response.
     ///   - skipArchival: Whether to skip archived history events for performance.
     ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
-    /// - Returns: An array of history events representing the workflow's execution timeline.
+    /// - Returns: The workflow history containing the execution timeline.
     /// - Throws: An error if the history cannot be retrieved or the workflow doesn't exist.
     public func fetchHistory(
         waitNewEvent: Bool = false,
@@ -333,7 +333,7 @@ extension UntypedWorkflowHandle {
     /// gracefully. The workflow can handle the cancellation request through cancellation handlers
     /// and perform cleanup operations before terminating.
     ///
-    ///- Parameter callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
+    /// - Parameter callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
     /// - Throws: An error if the cancellation request cannot be sent.
     public func cancel(callOptions: CallOptions? = nil) async throws {
         try await self.interceptor.cancelWorkflow(

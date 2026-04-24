@@ -82,7 +82,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     ///   - input: The input passed to start workflow updates.
     ///   - next: A closure that forwards the operation to the next interceptor.
     /// - Returns: An untyped workflow update handle for the started workflow update.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during update processing or forwarding.
     func startWorkflowUpdate<each Input>(
         input: StartWorkflowUpdateInput<repeat each Input>,
         next: (StartWorkflowUpdateInput<repeat each Input>) async throws -> UntypedWorkflowUpdateHandle
@@ -109,7 +109,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     ///   - input: The input passed to describe the workflow.
     ///   - next: A closure that forwards the operation to the next interceptor.
     /// - Returns: The description of the workflow execution.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during describe processing or forwarding.
     func describeWorkflow(
         input: DescribeWorkflowInput,
         next: (DescribeWorkflowInput) async throws -> (WorkflowExecutionDescription)
@@ -120,7 +120,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     /// - Parameters:
     ///   - input: The input passed to cancel the workflow.
     ///   - next: A closure that forwards the operation to the next interceptor.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during cancel processing or forwarding.
     func cancelWorkflow(
         input: CancelWorkflowInput,
         next: (CancelWorkflowInput) async throws -> Void
@@ -131,7 +131,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     /// - Parameters:
     ///   - input: The input passed to terminate the workflow.
     ///   - next: A closure that forwards the operation to the next interceptor.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during terminate processing or forwarding.
     func terminateWorkflow<each Detail>(
         input: TerminateWorkflowInput<repeat each Detail>,
         next: (TerminateWorkflowInput<repeat each Detail>) async throws -> Void
@@ -143,7 +143,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     ///   - input: The input passed to fetch workflow history event page calls.
     ///   - next: A closure that forwards the operation to the next interceptor.
     /// - Returns: The fetched event history of the workflow.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during history fetch processing or forwarding.
     func fetchWorkflowHistoryEvents(
         input: FetchWorkflowHistoryEventsInput,
         next: (FetchWorkflowHistoryEventsInput) async throws -> [Api.History.V1.HistoryEvent]
@@ -155,7 +155,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     ///   - input: The input passed to list workflows.
     ///   - next: A closure that forwards the operation to the next interceptor.
     /// - Returns: A sequence of all fetched workflows fitting the query.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during list processing or forwarding.
     func listWorkflows<Sequence: AsyncSequence<WorkflowExecution, any Error> & Sendable>(
         input: ListWorkflowsInput,
         next: (ListWorkflowsInput) async throws -> Sequence
@@ -171,7 +171,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     ///   - input: The input passed to fetch a single page of workflow executions.
     ///   - next: A closure that forwards the operation to the next interceptor.
     /// - Returns: A single page of workflow executions.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during page list processing or forwarding.
     func listWorkflowsPage(
         input: ListWorkflowsPageInput,
         next: (ListWorkflowsPageInput) async throws -> WorkflowListPage
@@ -183,7 +183,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     ///   - input: The input passed to count workflows.
     ///   - next: A closure that forwards the operation to the next interceptor.
     /// - Returns: The execution count of workflows fitting the query.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during count processing or forwarding.
     func countWorkflows(
         input: CountWorkflowsInput,
         next: (CountWorkflowsInput) async throws -> WorkflowExecutionCount
@@ -197,7 +197,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     ///   - input: The input passed to create schedules.
     ///   - next: A closure that forwards the operation to the next interceptor.
     /// - Returns: An untyped schedule handle for the created schedule.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during schedule creation or forwarding.
     func createSchedule<Input>(
         input: CreateScheduleInput<Input>,
         next: (CreateScheduleInput<Input>) async throws -> UntypedScheduleHandle
@@ -209,7 +209,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     ///   - input: The input passed to list schedules.
     ///   - next: A closure that forwards the operation to the next interceptor.
     /// - Returns: A sequence of all fetched schedules fitting the query.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during schedule list processing or forwarding.
     func listSchedules<Sequence: AsyncSequence<ScheduleListDescription, any Error> & Sendable>(
         input: ListSchedulesInput,
         next: (ListSchedulesInput) async throws -> Sequence
@@ -220,7 +220,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     /// - Parameters:
     ///   - input: The input passed to backfill a schedule.
     ///   - next: A closure that forwards the operation to the next interceptor.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during backfill processing or forwarding.
     func backfillSchedule(
         input: BackfillScheduleInput,
         next: (BackfillScheduleInput) async throws -> Void
@@ -231,19 +231,19 @@ public protocol ClientOutboundInterceptor: Sendable {
     /// - Parameters:
     ///   - input: The input passed to delete a schedule.
     ///   - next: A closure that forwards the operation to the next interceptor.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during delete processing or forwarding.
     func deleteSchedule(
         input: DeleteScheduleInput,
         next: (DeleteScheduleInput) async throws -> Void
     ) async throws
 
-    /// Intercept calls to describe a schedule.
+    /// Intercepts schedule describe operations.
     ///
     /// - Parameters:
     ///   - input: The input passed to describe a schedule.
     ///   - next: A closure that forwards the operation to the next interceptor.
     /// - Returns: The description of the schedule.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during describe processing or forwarding.
     func describeSchedule<Input>(
         input: DescribeScheduleInput,
         next: (DescribeScheduleInput) async throws -> ScheduleDescription<Input>
@@ -254,7 +254,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     /// - Parameters:
     ///   - input: The input passed to pause a schedule.
     ///   - next: A closure that forwards the operation to the next interceptor.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during pause processing or forwarding.
     func pauseSchedule(
         input: PauseScheduleInput,
         next: (PauseScheduleInput) async throws -> Void
@@ -265,7 +265,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     /// - Parameters:
     ///   - input: The input passed to trigger a schedule.
     ///   - next: A closure that forwards the operation to the next interceptor.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during trigger processing or forwarding.
     func triggerSchedule(
         input: TriggerScheduleInput,
         next: (TriggerScheduleInput) async throws -> Void
@@ -276,7 +276,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     /// - Parameters:
     ///   - input: The input passed to unpause a schedule.
     ///   - next: A closure that forwards the operation to the next interceptor.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during unpause processing or forwarding.
     func unpauseSchedule(
         input: UnpauseScheduleInput,
         next: (UnpauseScheduleInput) async throws -> Void
@@ -287,7 +287,7 @@ public protocol ClientOutboundInterceptor: Sendable {
     /// - Parameters:
     ///   - input: The input passed to update a schedule.
     ///   - next: A closure that forwards the operation to the next interceptor.
-    /// - Throws: Any error encountered during query processing or forwarding.
+    /// - Throws: Any error encountered during update processing or forwarding.
     func updateSchedule<Input>(
         input: UpdateScheduleInput<Input>,
         next: (UpdateScheduleInput<Input>) async throws -> Void

@@ -21,14 +21,14 @@ public protocol PayloadCodec: Sendable {
     /// Encode the given payloads into a new set of payloads.
     ///
     /// - Parameter payloads: The input payloads to encode.
-    /// - Returns: The encoded payloads. Note, this does not have to be the same number as
+    /// - Returns: The encoded payloads. Note: this does not have to be the same number as
     /// payloads given, but it must be at least one and cannot be more than was given.
     func encode(payloads: some Collection<Api.Common.V1.Payload>) async throws -> [Api.Common.V1.Payload]
 
     /// Decode the given payloads into a new set of payloads.
     ///
     /// - Parameter payloads: The input payloads to decode.
-    /// - Returns: The decoded payloads. Note, this does not have to be the same number as
+    /// - Returns: The decoded payloads. Note: this does not have to be the same number as
     /// payloads given, but it must be at least one and cannot be more than was given.
     func decode(payloads: some Collection<Api.Common.V1.Payload>) async throws -> [Api.Common.V1.Payload]
 }

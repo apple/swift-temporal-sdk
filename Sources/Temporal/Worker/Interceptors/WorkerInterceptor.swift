@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Protocol for a worker interceptor that process workflows and activities within worker execution contexts.
+/// Protocol for a worker interceptor that processes workflows and activities within worker execution contexts.
 public protocol WorkerInterceptor: Sendable {
     /// The type of workflow inbound interceptor for processing incoming workflow requests.
     associatedtype WorkflowInboundInterceptorType: WorkflowInboundInterceptor = ForwardingWorkflowInboundInterceptor

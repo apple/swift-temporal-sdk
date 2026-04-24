@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Error thrown during workflow/activity cancellation.
+/// Error thrown during workflow or activity cancellation.
 public struct CanceledError: TemporalFailureError {
     /// The error's message.
     public var message: String
@@ -26,7 +26,7 @@ public struct CanceledError: TemporalFailureError {
     /// The details of the error.
     public var details: [Api.Common.V1.Payload]
 
-    /// Initializes a new application error.
+    /// Initializes a new canceled error.
     ///
     /// - Parameters:
     ///   - message: The error's message.

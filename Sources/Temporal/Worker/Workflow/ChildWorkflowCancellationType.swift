@@ -73,9 +73,7 @@ public enum ChildWorkflowCancellationType: Hashable, Sendable {
     /// It provides a middle ground between immediate continuation and full completion waiting.
     case waitCancellationRequested
 
-    /// Returns a string description of the cancellation type for debugging and logging purposes.
-    ///
-    /// - Returns: A string representation of the cancellation type.
+    /// A string representation of the cancellation type for debugging and logging purposes.
     var description: String {
         switch self {
         case .abandon: "abandon"

@@ -66,7 +66,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
 
     /// Mutates the workflow state using a closure and returns a value.
     ///
-    /// Normally you can just mutate the state of the workflow by making you run method or the handler
+    /// Normally you can just mutate the state of the workflow by making your run method or the handler
     /// mutating. However, you cannot capture `self` in escaping closures such as async let's or
     /// child tasks. This method allows you to mutate the state safely in such closures.
     ///
@@ -96,7 +96,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
         stateBox.withMutableValue(mutator)
     }
 
-    /// A boolean value that indicates whether the current code is executing within a workflow context.
+    /// A Boolean value that indicates whether the current code is executing within a workflow context.
     public static var inWorkflow: Bool {
         InternalWorkflowContext.current != nil
     }
@@ -169,7 +169,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     /// }
     /// ```
     ///
-    /// - Returns: `true` if all handlers have finished, `false` otherwise.
+    /// A Boolean value that indicates whether all handlers have finished.
     public var allHandlersFinished: Bool {
         self.internalContext.allHandlersFinished
     }
@@ -191,8 +191,6 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     ///
     /// Search attributes are key-value pairs that can be used to index and query
     /// workflow executions. They are searchable through Temporal's visibility APIs.
-    ///
-    /// - Returns: A collection of the current search attributes.
     public var searchAttributes: SearchAttributeCollection {
         self.internalContext.searchAttributes
     }
@@ -211,7 +209,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
         }
     }
 
-    /// A boolean value that indicates whether continue as new was suggested.
+    /// A Boolean value that indicates whether continue as new was suggested.
     public var continueAsNewSuggested: Bool {
         self.internalContext.continueAsNewSuggested
     }
@@ -441,10 +439,10 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
         self.internalContext.deprecatePatch(id)
     }
 
-    /// Execute an operation with a cancellation shield.
+    /// Executes an operation with a cancellation shield.
     ///
-    /// Use this method to perform operations that should be shielded from Workflow cancellation.
-    /// For example, you can use this to execute an activity as part of a cleanup operation when your Workflow is getting cancelled.
+    /// Use this method to perform operations that should be shielded from workflow cancellation.
+    /// For example, you can use this to execute an activity as part of a cleanup operation when your workflow is getting canceled.
     ///
     /// - Parameter operation: The operation that should be executed.
     public func withCancellationShield<Result: Sendable>(_ operation: sending @escaping () async throws -> Result) async throws -> Result {
@@ -818,6 +816,8 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     }
 
     // MARK: - Child Workflow
+
+    /// Starts a child workflow and returns a handle to track its execution.
     ///
     /// ## Usage
     ///

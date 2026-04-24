@@ -23,7 +23,7 @@ public struct FailAsyncActivityInput: Sendable {
     /// Data converter to use.
     public var dataConverter: DataConverter
 
-    /// Create input parameters for failing an async activity in client interceptors.
+    /// Creates input parameters for failing an async activity in client interceptors.
     ///
     /// - Parameters:
     ///   - activity: Activity to fail.

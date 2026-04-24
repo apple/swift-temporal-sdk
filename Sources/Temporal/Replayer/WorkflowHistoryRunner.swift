@@ -38,7 +38,7 @@ package final class WorkflowHistoryRunner: Sendable {
         )
     }
 
-    /// Replays a single workflow history..
+    /// Replays a single workflow history.
     func replayWorkflow(
         history: WorkflowHistory,
         throwOnReplayFailure: Bool

@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Error thrown during workflow/activity execution.
+/// Error thrown during workflow or activity execution.
 ///
 /// For workflows, users should throw this error to signal a workflow failure.
 /// Other non-``TemporalFailureError``s will not fail the workflow.
 ///
-/// In activities, all non-``TemporalError``s are translated to this error as retryable with the tyoe
+/// In activities, all non-``TemporalError``s are translated to this error as retryable with the type
 /// as the unqualified error class name.
 public struct ApplicationError: TemporalFailureError {
     /// The error's message.
@@ -52,7 +52,7 @@ public struct ApplicationError: TemporalFailureError {
     ///   - stackTrace: The stack trace of the current error.
     ///   - details: The details of the error. Defaults to empty details.
     ///   - type: The string type of the error if any. Defaults to `nil`.
-    ///   - isNonRetryable: Boolean indicating wehter the error was set as non-retry. Defaults to `false`.
+    ///   - isNonRetryable: A Boolean value that indicates whether the error is nonretryable. Defaults to `false`.
     ///   - nextRetryDelay: Delay duration before the next retry attempt. Defaults to `nil`.
     ///   - category: The error category. Defaults to `.unspecified`.
     public init(

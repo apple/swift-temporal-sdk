@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// The binary nil payload converter can convert `nil` (`Optional<T>.none`) values.
+/// A payload converter that handles `nil` (`Optional<T>.none`) values.
 public struct BinaryNilPayloadConverter: EncodingPayloadConverter {
     private struct EncodingError: Error {}
     private struct DecodingError: Error {}

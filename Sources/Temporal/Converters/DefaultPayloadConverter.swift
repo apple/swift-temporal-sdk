@@ -20,7 +20,7 @@
 /// - ``JSONProtobufPayloadConverter``
 /// - ``JSONPayloadConverter``
 ///
-/// When converting payloads to values the converter retrives the `encoding` value
+/// When converting payloads to values, the converter retrieves the `encoding` value
 /// of the payloads ``Api/Common/V1/Payload/metadata``.
 /// Then it tries to convert the payload using the matching payload converter.
 public struct DefaultPayloadConverter: PayloadConverter {
@@ -37,7 +37,7 @@ public struct DefaultPayloadConverter: PayloadConverter {
         JSONPayloadConverter()
     )
 
-    /// Initializes a new default payload converter.
+    /// Creates a new default payload converter.
     public init() {}
 
     public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {

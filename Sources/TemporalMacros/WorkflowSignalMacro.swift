@@ -16,6 +16,7 @@ import Foundation
 import SwiftSyntax
 import SwiftSyntaxMacros
 
+/// Macro implementation for the `@WorkflowSignal` attribute.
 public struct WorkflowSignalMacro: PeerMacro {
     public static func expansion(
         of node: AttributeSyntax,

@@ -18,10 +18,10 @@ public import struct GRPCCore.CallOptions
 public struct AsyncActivityHeartbeatOptions: Sendable {
     /// The details for the heartbeat.
     public var details: [any Sendable]
-    /// Optional gRPC call options for customizing the description request.
+    /// Optional gRPC call options for customizing the heartbeat request.
     public var callOptions: CallOptions?
 
-    /// Create options for heartbeats in async activities.
+    /// Creates options for heartbeats in async activities.
     ///
     /// - Parameters:
     ///   - details: The details for the heartbeat.

@@ -152,7 +152,7 @@ public final class TemporalClient: Sendable {
     /// This throttling mechanism works in conjunction with the retry logic implemented in ``TemporalClient`` and can help reduce server load during periods of high request failure rates.
     ///
     /// The Temporal Rust SDK uses retry throttling specifically for the `RESOURCE_EXHAUSTED` status code, but the Swift implementation applies throttling uniformly across all retryable status codes.
-    /// Note that users are not expected to configure a custom retry throttle in most cases, as the ``TemporalClient``already applies a conservative retry attempt count (max is 5), in contrast to the potentially unlimited retries in the Rust SDK.
+    /// Note that users are not expected to configure a custom retry throttle in most cases, as the ``TemporalClient`` already applies a conservative retry attempt count (max is 5), in contrast to the potentially unlimited retries in the Rust SDK.
     ///
     /// - Note: The tracing of the ``TemporalClient`` via ``TemporalClientTracingInterceptor`` is enabled by default, overwrite ``TemporalClient/Configuration-swift.struct/interceptors`` to disable.
     ///

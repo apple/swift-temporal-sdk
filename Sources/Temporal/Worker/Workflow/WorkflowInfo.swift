@@ -26,7 +26,7 @@ public import Foundation
 /// Workflow info is accessed through the workflow context:
 ///
 /// ```swift
-/// func run(context: WorkflowContext, input: MyInput) async throws -> MyOutput {
+/// func run(context: WorkflowContext<Self>, input: MyInput) async throws -> MyOutput {
 ///     let info = context.info
 ///     print("Workflow ID: \(info.workflowID)")
 ///     print("Attempt: \(info.attempt)")

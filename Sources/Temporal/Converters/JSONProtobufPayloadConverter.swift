@@ -15,13 +15,14 @@
 import Foundation
 import SwiftProtobuf
 
-/// The JSON payload converter can convert any type conforming to `SwiftProtobuf.Message`.
+/// A payload converter for types conforming to `SwiftProtobuf.Message` using JSON protobuf encoding.
 public struct JSONProtobufPayloadConverter: EncodingPayloadConverter {
     private struct EncodingError: Error {}
     private struct DecodingError: Error {}
 
     public static let encoding = Encodings.jsonProtobuf
 
+    /// Creates a new JSON protobuf payload converter.
     public init() {}
 
     public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {

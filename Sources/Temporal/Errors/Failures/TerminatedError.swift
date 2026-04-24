@@ -26,7 +26,7 @@ public struct TerminatedError: TemporalFailureError {
     /// The details of the error.
     public var details: [Api.Common.V1.Payload]
 
-    /// Initializes a new application error.
+    /// Initializes a new terminated error.
     ///
     /// - Parameters:
     ///   - message: The error's message.

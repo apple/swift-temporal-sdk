@@ -15,6 +15,7 @@
 import SwiftSyntax
 import SwiftSyntaxMacros
 
+/// Macro implementation for the `@Activity` attribute.
 public struct ActivityMacro: PeerMacro {
     public static func expansion(
         of node: AttributeSyntax,

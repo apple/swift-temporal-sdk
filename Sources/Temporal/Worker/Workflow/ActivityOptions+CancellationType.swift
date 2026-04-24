@@ -73,9 +73,7 @@ extension ActivityOptions {
         /// - Warning: Do not use this case directly. It exists only for future extensibility.
         case DO_NOT_EXHAUSTIVELY_MATCH_OVER_THIS_ENUM
 
-        /// Returns a string description of the cancellation type for debugging and logging purposes.
-        ///
-        /// - Returns: A string representation of the cancellation type.
+        /// A string representation of the cancellation type for debugging and logging purposes.
         package var description: String {
             switch self {
             case .tryCancel:

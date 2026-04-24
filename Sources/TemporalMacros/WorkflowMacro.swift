@@ -17,6 +17,7 @@ import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxMacros
 
+/// Macro implementation for the `@Workflow` attribute.
 public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
     struct UnexpectedInitWarning: DiagnosticMessage {
         var message: String {
