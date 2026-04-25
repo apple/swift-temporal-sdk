@@ -31,7 +31,7 @@ Learn the fundamentals of building Temporal applications.
 - <doc:GettingStarted>
 - <doc:Connecting-to-Temporal>
 
-### Core development
+### Building activities and workflows
 
 Build activities and workflows.
 
@@ -40,7 +40,7 @@ Build activities and workflows.
 - <doc:Workflow-Concurrency>
 - <doc:Working-with-Data>
 
-### Workflow development
+### Developing workflows
 
 Create workflows that orchestrate business logic and coordinate activities.
 
@@ -49,7 +49,7 @@ Create workflows that orchestrate business logic and coordinate activities.
 - ``WorkflowOptions``
 - ``WorkflowHandle``
 
-### Activity development
+### Implementing activities
 
 Implement activities that perform the actual work in your workflows.
 
@@ -57,7 +57,7 @@ Implement activities that perform the actual work in your workflows.
 - ``ActivityOptions``
 - ``ActivityContainer``
 
-### Configuration and deployment
+### Configuring and deploying
 
 Configure workers and clients for different environments.
 

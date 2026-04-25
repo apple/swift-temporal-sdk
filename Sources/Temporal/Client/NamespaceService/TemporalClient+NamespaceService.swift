@@ -26,7 +26,7 @@ extension TemporalClient {
         /// Metadata applied to all namespace service requests.
         let metadata: GRPCCore.Metadata
 
-        /// Initializes a new Temporal namespace service client.
+        /// Creates a new Temporal namespace service client.
         ///
         /// - Parameters:
         ///   - client: A configured gRPC client for performing namespace operations.

@@ -25,7 +25,7 @@ public struct RetryPolicy: Hashable, Sendable {
     ///
     /// Each retry interval is calculated by multiplying the previous interval by this coefficient.
     /// For example, with an initial interval of 1 second and a coefficient of 2.0, subsequent
-    /// retries will occur after 1s, 2s, 4s, 8s, etc. Must be 1.0 or greater. A value of 1.0
+    /// retries will occur after 1s, 2s, 4s, 8s, and so on. Must be 1.0 or greater. A value of 1.0
     /// results in fixed intervals with no exponential growth.
     public var backoffCoefficient: Double
 

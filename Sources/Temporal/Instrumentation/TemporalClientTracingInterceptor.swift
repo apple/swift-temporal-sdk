@@ -56,7 +56,7 @@ public struct TemporalClientTracingInterceptor: ClientInterceptor {
         )
     }
 
-    /// Create the interceptor with a custom `Tracer`, useful for testing.
+    /// Creates the interceptor with a custom `Tracer`, useful for testing.
     ///
     /// - Parameters:
     ///    - tracer: Custom `Tracer` passed in.

@@ -25,14 +25,14 @@ package struct ClientOTelLoggingInterceptor: ClientInterceptor {
     private var includeRequestMetadata: Bool
     private var includeResponseMetadata: Bool
 
-    /// Initialize an OTel logging interceptor for the gRPC client.
+    /// Creates an OTel logging interceptor for the gRPC client.
     ///
     /// - Parameters:
-    ///   - logger: The `Logger` instance to-be-used in the interceptor. The `Logger.Metadata` should include trace and span IDs for log correlation.
-    ///   - severHostname: The hostname of the RPC server. This will be the value for the `server.address` attribute in spans.
-    ///   - networkTransportMethod: The transport in use (e.g. "tcp", "unix"). This will be the value for the `network.transport` attribute in spans.
-    ///   - includeRequestMetadata: if `true`, **all** metadata keys with string values included in the request will be added to the logger metadata.
-    ///   - includeResponseMetadata: if `true`, **all** metadata keys with string values included in the response will be added to the logger metadata.
+    ///   - logger: The `Logger` instance used by the interceptor. The `Logger.Metadata` should include trace and span IDs for log correlation.
+    ///   - serverHostname: The hostname of the RPC server. This will be the value for the `server.address` attribute in spans.
+    ///   - networkTransportMethod: The transport in use (for example, "tcp" or "unix"). This will be the value for the `network.transport` attribute in spans.
+    ///   - includeRequestMetadata: If `true`, all metadata keys with string values included in the request are added to the logger metadata.
+    ///   - includeResponseMetadata: If `true`, all metadata keys with string values included in the response are added to the logger metadata.
     package init(
         logger: Logger,
         serverHostname: String,
@@ -94,7 +94,7 @@ package struct ClientOTelLoggingInterceptor: ClientInterceptor {
 
         switch response.accepted {
         case .success:
-            // An "accepted" request is one where the the server responds with initial metadata and attempts to process the request.
+            // An "accepted" request is one where the server responds with initial metadata and attempts to process the request.
             // Does NOT guarantee that the request will be processed successfully, server could fail to complete processing the request.
             self.logger.trace("Accepted RPC", metadata: metadata)
         case .failure(let rpcError):

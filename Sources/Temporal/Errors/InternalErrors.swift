@@ -19,7 +19,7 @@ struct TemporalSDKError: TemporalError {
     var cause: (any Error)?
     /// The stack trace of the current error.
     var stackTrace: String
-    /// Indicates if the error is retryable.
+    /// A Boolean value that indicates whether the error is retryable.
     let nonRetryable: Bool
 
     init(

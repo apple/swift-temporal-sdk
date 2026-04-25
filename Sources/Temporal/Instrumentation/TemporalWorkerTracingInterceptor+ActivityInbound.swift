@@ -19,7 +19,7 @@ extension TemporalWorkerTracingInterceptor {
     public struct ActivityInbound: ActivityInboundInterceptor {
         private let traceRecording: TemporalTraceRecording
 
-        /// Create the worker activity inbound interceptor.
+        /// Creates the worker activity inbound interceptor.
         ///
         /// - Parameters:
         ///    - tracer: The `Tracer` instance to use for creating spans.

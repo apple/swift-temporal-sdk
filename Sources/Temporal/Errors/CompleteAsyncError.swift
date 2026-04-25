@@ -48,6 +48,6 @@ public struct CompleteAsyncError: TemporalError {
     /// The stack trace of the current error.
     public var stackTrace: String = ""
 
-    /// Create a new error that signals that the activity will be completed asynchronously.
+    /// Creates a new error that signals that the activity completes asynchronously.
     public init() {}
 }

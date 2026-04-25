@@ -23,7 +23,7 @@ public struct WorkflowHistoryEmptyError: TemporalError {
     /// The stack trace of the current error.
     public var stackTrace: String
 
-    /// Initializes a new workflow history empty error.
+    /// Creates a new workflow history empty error.
     ///
     /// - Parameters:
     ///   - message: The error's message.

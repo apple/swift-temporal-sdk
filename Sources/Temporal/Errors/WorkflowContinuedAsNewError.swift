@@ -26,7 +26,7 @@ public struct WorkflowContinuedAsNewError: TemporalError {
     /// New execution run ID the workflow continued to.
     public var newRunID: String
 
-    /// Initializes a new workflow continued-as-new error.
+    /// Creates a new workflow continued-as-new error.
     ///
     /// - Parameters:
     ///   - stackTrace: The stack trace of the current error.

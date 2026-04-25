@@ -42,7 +42,7 @@ public struct UntypedChildWorkflowHandle: Sendable {
             ///   successful completion, failure, or cancellation.
             case resolved(result: Coresdk.ChildWorkflow.ChildWorkflowResult)
 
-            /// A boolean value that indicates whether the child workflow has completed execution.
+            /// A Boolean value that indicates whether the child workflow has completed execution.
             var isResolved: Bool {
                 switch self {
                 case .unresolved:

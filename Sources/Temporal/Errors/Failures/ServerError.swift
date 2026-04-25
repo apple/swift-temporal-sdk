@@ -26,13 +26,13 @@ public struct ServerError: TemporalFailureError {
     /// A Boolean value that indicates whether the error is nonretryable.
     public var isNonRetryable: Bool
 
-    /// Initializes a new server error.
+    /// Creates a new server error.
     ///
     /// - Parameters:
     ///   - message: The error's message.
     ///   - cause: The cause of the current error. Defaults to `nil`.
     ///   - stackTrace: The stack trace of the current error.
-    ///   - isNonRetryable: Boolean indicating whether the error was set as non-retry.
+    ///   - isNonRetryable: A Boolean value that indicates whether the error is nonretryable.
     public init(
         message: String,
         cause: (any Error)? = nil,

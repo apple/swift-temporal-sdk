@@ -29,9 +29,9 @@ import TemporalInstrumentation
 /// You can manage the worker's lifetime as a `swift-service-lifecycle` `Service` within a
 /// `ServiceGroup` for structured concurrency and graceful shutdown handling.
 ///
-/// ## Creating a Worker
+/// ## Creating a worker
 ///
-/// Initialize a worker with configuration, transport, activities, workflows, and a logger:
+/// Create a worker with configuration, transport, activities, workflows, and a logger:
 ///
 /// ```swift
 /// let temporalWorker = TemporalWorker(
@@ -50,7 +50,7 @@ import TemporalInstrumentation
 /// )
 /// ```
 ///
-/// ## Running the Worker
+/// ## Running the worker
 ///
 /// Start processing tasks by calling the `run()` method:
 ///
@@ -60,7 +60,7 @@ import TemporalInstrumentation
 ///
 /// The worker runs indefinitely until cancelled or gracefully shut down.
 ///
-/// ## Lifecycle Management
+/// ## Lifecycle management
 ///
 /// The worker supports graceful shutdown through the `Service` protocol. When shutdown is initiated,
 /// the worker stops polling for new tasks, completes running tasks, and releases resources.

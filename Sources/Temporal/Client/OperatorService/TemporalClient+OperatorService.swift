@@ -28,7 +28,7 @@ extension TemporalClient {
         let client: TemporalClient.ConfiguredClient
         let metadata: GRPCCore.Metadata
 
-        /// Initializes a new Temporal operator client for accessing operator services.
+        /// Creates a new Temporal operator client for accessing operator services.
         ///
         /// - Parameters:
         ///   - client: A type-erased, configured `GRPCClient` used for performing RPCs.

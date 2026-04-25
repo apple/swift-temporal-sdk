@@ -11,15 +11,16 @@ long-running processes. Workflows must be deterministic to ensure reliable
 replay and recovery.
 
 This article shows you how to define workflows, coordinate activities, handle
-signals and queries, and implement complex orchestration patterns. You'll learn
-to build workflows that survive failures and scale across distributed systems.
+signals and queries, and implement complex orchestration patterns. Use these
+patterns to build workflows that survive failures and scale across distributed
+systems.
 
 ## Define a workflow with the Workflow macro
 
 Use the `@Workflow` macro on a `struct` to create a ``WorkflowDefinition``.
 The main entry point for a workflow is the `run(context:input:)` method, which
-receives a ``WorkflowContext`` and returns the workflow result. Errors thrown from
-the `run` method are treated as workflow failures.
+receives a ``WorkflowContext`` and returns the workflow result. The `run` method
+treats thrown errors as workflow failures.
 
 The struct-based design provides compile-time safety guarantees: query handlers
 cannot mutate workflow state, and update validators cannot mutate state either.
@@ -78,13 +79,13 @@ struct RegisterUserWorkflow {
 }
 ```
 
-### Best practices for workflow definitions
+### Follow best practices for workflow definitions
 
 Workflows should define custom input and output types rather than using basic
 types. This allows adding optional fields to input or output structures without
 breaking existing workflows.
 
-### Customizing workflow names
+### Customize workflow names
 
 By default, workflows use their struct name as the workflow type. You can
 customize this by providing a `name` parameter in the `@Workflow` macro:
@@ -96,7 +97,7 @@ struct RegisterUserWorkflow {
 }
 ```
 
-### Initializing state
+### Initialize state
 
 Define an optional `init(input:)` initializer to set up the workflow state from
 input parameters, eliminating the need for optional properties or
@@ -130,7 +131,7 @@ Use the `@WorkflowSignal`, `@WorkflowQuery`, and `@WorkflowUpdate` macros
 inside a type annotated with the `@Workflow` macro to define those respective
 handlers.
 
-### Signal handlers
+### Define signal handlers
 
 Signal handlers allow external systems to send information to running workflows.
 They're ideal for handling approvals, cancellations, or status updates.
@@ -194,20 +195,20 @@ struct RegisterUserWorkflow {
 }
 ```
 
-Signal handlers that modify workflow state are declared as `mutating func`.
+Declare signal handlers that modify workflow state as `mutating func`.
 Because workflows are value types, signal handlers that only mutate state
 do not need to be `async throws`. Follow the same best practice of using custom
 input types for signal handlers as you do for workflows to support backward
 compatibility.
 
-By default the signal name is the unqualified capitalized method name.
+By default, the signal name matches the unqualified capitalized method name.
 You can customize the signal name using the `name` parameter, for example:
 
 ```swift
 @WorkflowSignal(name: "CustomApproveRegistration")
 ```
 
-### Query handlers
+### Define query handlers
 
 Queries allow external systems to retrieve information synchronously from running workflows.
 They're useful for getting the current state of a workflow without modifying it.
@@ -273,14 +274,14 @@ query handlers provide compile-time safety: they are non-mutating by default,
 guaranteeing they cannot modify workflow state. Use custom input and output types
 for queries to maintain backward compatibility.
 
-By default, the query name is the unqualified capitalized method name.
+By default, the query name matches the unqualified capitalized method name.
 You can customize the query name using the `name` parameter, for example:
 
 ```swift
 @WorkflowQuery(name: "CustomGetRegistrationState")
 ```
 
-### Update handlers
+### Define update handlers
 
 Updates combine aspects of both signals and queries - they can modify a workflow's
 state and return values asynchronously.
@@ -337,7 +338,7 @@ values. Unlike queries, updates can modify workflow state and execute
 activities. Use custom input and output types for updates to maintain backward
 compatibility.
 
-By default the update name is the unqualified
+By default, the update name matches the unqualified
 capitalized method name. You can customize the update name using the
 `name` parameter, for example:
 

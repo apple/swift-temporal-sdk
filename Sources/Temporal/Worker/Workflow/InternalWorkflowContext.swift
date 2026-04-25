@@ -54,12 +54,12 @@ struct InternalWorkflowContext: Sendable {
         WorkflowRandomNumberGenerator(stateMachine: self.stateMachine)
     }
 
-    /// Indicates whether all update and signal handlers have finished executing.
+    /// A Boolean value that indicates whether all update and signal handlers have finished executing.
     var allHandlersFinished: Bool {
         self.stateMachine.allHandlersFinished()
     }
 
-    /// Indicates whether the workflow is currently in replay mode.
+    /// A Boolean value that indicates whether the workflow is currently in replay mode.
     package var isReplaying: Bool {
         self.stateMachine.isReplaying()
     }
@@ -92,7 +92,7 @@ struct InternalWorkflowContext: Sendable {
         self.stateMachine.setCurrentDetails(newValue)
     }
 
-    /// A boolean value that indicates whether continue as new was suggested.
+    /// A Boolean value that indicates whether continue as new was suggested.
     var continueAsNewSuggested: Bool {
         self.stateMachine.continueAsNewSuggested()
     }

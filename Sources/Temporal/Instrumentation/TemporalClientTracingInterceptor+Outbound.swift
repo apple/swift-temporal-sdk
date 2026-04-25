@@ -20,7 +20,7 @@ extension TemporalClientTracingInterceptor {
     public struct Outbound: ClientOutboundInterceptor {
         private let traceRecording: TemporalTraceRecording
 
-        /// Create the client outbound interceptor.
+        /// Creates the client outbound interceptor.
         ///
         /// - Parameters:
         ///    - tracer: The `Tracer` instance to use for creating spans.

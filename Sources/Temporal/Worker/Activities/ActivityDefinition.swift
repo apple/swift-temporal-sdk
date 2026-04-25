@@ -57,7 +57,7 @@ public protocol ActivityDefinition: Sendable {
     /// Defaults to the string representation of the conforming type.
     static var name: String { get }
 
-    /// Whether this activity is a dynamic activity that handles unregistered activity types.
+    /// A Boolean value that indicates whether this activity is a dynamic activity that handles unregistered activity types.
     ///
     /// Dynamic activities act as catch-all handlers for activity types that are not explicitly registered
     /// with the worker. When the worker receives a task for an unregistered activity type and a dynamic

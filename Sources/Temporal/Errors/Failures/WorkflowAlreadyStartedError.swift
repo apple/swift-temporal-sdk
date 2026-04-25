@@ -32,7 +32,7 @@ public struct WorkflowAlreadyStartedError: TemporalFailureError {
     /// Name of the already-started workflow.
     public var workflowName: String
 
-    /// Initializes a new workflow already started error.
+    /// Creates a new workflow-already-started error.
     ///
     /// - Parameters:
     ///   - cause: The error's cause.

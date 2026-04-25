@@ -29,7 +29,7 @@ public struct TimeoutError: TemporalFailureError {
     /// The details of the last heartbeat.
     public var lastHeartbeatDetails: [Api.Common.V1.Payload]
 
-    /// Initializes a new timed out error.
+    /// Creates a new timeout error.
     ///
     /// - Parameters:
     ///   - message: The error's message.

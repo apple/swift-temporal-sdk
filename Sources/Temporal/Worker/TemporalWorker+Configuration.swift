@@ -22,9 +22,9 @@ extension TemporalWorker {
     /// The configuration defines how the worker connects to the Temporal server, manages task execution,
     /// and handles various operational aspects like concurrency limits, timeouts, and versioning.
     ///
-    /// ## Creating a Configuration
+    /// ## Creating a configuration
     ///
-    /// Initialize with required parameters:
+    /// Create a configuration with the required parameters:
     ///
     /// ```swift
     /// let config = TemporalWorker.Configuration(
@@ -42,7 +42,7 @@ extension TemporalWorker {
     /// )
     /// ```
     ///
-    /// ## Customizing Behavior
+    /// ## Customizing behavior
     ///
     /// Adjust operational settings after initialization:
     ///
@@ -247,12 +247,12 @@ extension TemporalWorker {
 
         /// The name of the SDK being implemented on top of the Core SDK.
         ///
-        /// Is set as `client-name` header in all RPC calls.
+        /// Sent as the `client-name` header in all RPC calls.
         static let workerClientName: String = "swift-temporal"
 
         /// The version of the SDK being implemented on top of the Core SDK.
         ///
-        /// Is set as `client-version` header in all RPC calls. The server decides if the client is supported based on this.
+        /// Sent as the `client-version` header in all RPC calls. The server uses this to decide whether the client is supported.
         static let workerClientVersion: String = Constants.sdkVersion  // derived from current git tag / commit
 
         /// The namespace where this worker polls for tasks.
@@ -360,7 +360,7 @@ extension TemporalWorker {
         public var gracefulShutdownPeriod: Duration = .seconds(0)
         /// Polling behavior for nexus tasks (default max `5`).
         public var nexusTaskPollerBehavior: PollerBehavior = .simpleMaximum(maximum: 5)
-        /// Skip fetching server system info on startup (default `false`).
+        /// A Boolean value that indicates whether to skip fetching server system info on startup (default `false`).
         public var skipGetSystemInfo: Bool = false
 
         /// Creates a Temporal worker configuration with the specified parameters.

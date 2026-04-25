@@ -25,7 +25,7 @@ public struct ScheduleUpdate<Input: Sendable>: Sendable {
     /// - If `nil`, the search attributes will not be updated.
     /// - If present but empty, the search attributes will be cleared.
     /// - If present and non-empty, all search attributes will be updated to the provided
-    ///   collection. This means existing attributes which do not exist in the provided collection
+    ///   collection. This means existing attributes that do not exist in the provided collection
     ///   will be removed. You can copy attributes from the existing ``ScheduleDescription``
     ///   to avoid this.
     public var searchAttributes: SearchAttributeCollection?

@@ -105,7 +105,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     ///
     /// Returns the update ID and name when called from within an update handler
     /// or update validator. Returns `nil` when called outside of an update context
-    /// (e.g., from the main workflow run method, signal handlers, or query handlers).
+    /// (for example, from the main workflow run method, signal handlers, or query handlers).
     public var currentUpdateInfo: WorkflowUpdateInfo? {
         InternalWorkflowContext.currentUpdateInfo
     }
@@ -182,7 +182,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
         self.internalContext.now
     }
 
-    /// Indicates whether the workflow is currently in replay mode.
+    /// A Boolean value that indicates whether the workflow is currently in replay mode.
     package var isReplaying: Bool {
         self.internalContext.isReplaying
     }
@@ -415,7 +415,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     /// ```
     ///
     /// - Parameter id: A unique identifier for this patch.
-    /// - Returns: A boolean value that indicates whether this should take the newer patch path.
+    /// - Returns: A Boolean value that indicates whether this should take the newer patch path.
     public func patch(_ id: String) -> Bool {
         self.internalContext.patch(id)
     }

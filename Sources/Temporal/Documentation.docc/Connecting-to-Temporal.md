@@ -10,8 +10,8 @@ Use it to start workflows, query workflow state,
 send signals, and manage workflow lifecycles across different environments.
 
 This article shows you how to establish connections to local development
-and production instances. You'll learn to configure authentication and
-handle connection lifecycle.
+and production instances, configure authentication,
+and handle connection lifecycle.
 
 ## Connect to a local development server
 
@@ -39,7 +39,7 @@ try await client.run()
 ```
 
 A development server typically runs on `localhost:7233` with a plaintext
-transport. This configuration provides no encryption — never use it
+transport. This configuration provides no encryption. Don't use it
 in production environments.
 
 ## Connect to Temporal with mTLS

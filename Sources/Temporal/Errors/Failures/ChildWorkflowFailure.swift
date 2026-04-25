@@ -38,7 +38,7 @@ public struct ChildWorkflowError: TemporalFailureError {
     /// The child workflow's retry state.
     public var retryState: Api.Enums.V1.RetryState
 
-    /// Initializes a new child workflow error.
+    /// Creates a new child workflow error.
     ///
     /// - Parameters:
     ///   - message: The error's message.

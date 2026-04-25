@@ -89,7 +89,7 @@ extension RPCAttributes {
         package struct NestedSpanAttributes: NestedSpanAttributesProtocol {
             /// The [numeric status code](https://github.com/grpc/grpc/blob/v1.33.2/doc/statuscodes.md) of the gRPC request.
             ///
-            /// E.g. ``RPCAttributes/GRPCAttributes/StatusCode/ok``.
+            /// For example, ``RPCAttributes/GRPCAttributes/StatusCode/ok``.
             package var statusCode: Key<String> {
                 "rpc.grpc.status_code"
             }

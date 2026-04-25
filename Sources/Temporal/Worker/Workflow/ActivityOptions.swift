@@ -66,7 +66,7 @@ public struct ActivityOptions: Hashable, Sendable {
     ///   setting this value, as incorrect usage can lead to unexpected behavior.
     public var activityID: String?
 
-    /// A boolean value that indicates whether eager activity execution is disabled for this activity.
+    /// A Boolean value that indicates whether eager activity execution is disabled for this activity.
     ///
     /// Eager activity execution is a server optimization that sends activities back to the same worker
     /// as the calling workflow if the worker has available capacity. When `false` (the default),

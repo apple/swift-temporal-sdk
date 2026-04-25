@@ -12,8 +12,8 @@ workflows coordinate.
 
 This article shows you how to define activities using macros, organize them in
 containers, handle cancellation and timeouts, and implement proper error
-handling patterns. You'll learn to build robust activities that integrate
-seamlessly with your workflow orchestration.
+handling patterns. Use these patterns to build robust activities that integrate
+with your workflow orchestration.
 
 ## Define activities with the Activity macro
 

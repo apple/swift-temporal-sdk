@@ -23,7 +23,7 @@ public struct ScheduleAlreadyRunningError: TemporalError {
     /// The stack trace of the current error.
     public var stackTrace: String
 
-    /// Initializes a new schedule already running error.
+    /// Creates a new schedule-already-running error.
     ///
     /// - Parameters:
     ///   - cause: The error's cause.
