@@ -92,7 +92,7 @@ extension TestServerDependentTests {
 
                 #expect(warningEntry != nil, "Expected an unfinished handler warning at info level")
                 if let entry = warningEntry, let metadata = entry.metadata {
-                    let signalMeta = metadata["temporal.workflow.unfinished.signals"]
+                    let signalMeta = metadata["temporal.workflow.unfinished-signals"]
                     #expect(signalMeta != nil, "Expected signal metadata key")
                     if let signalMeta {
                         #expect("\(signalMeta)".contains("WarnSignal"), "Expected metadata to mention WarnSignal")
@@ -162,7 +162,7 @@ extension TestServerDependentTests {
 
                 #expect(warningEntry != nil, "Expected an unfinished handler warning at info level")
                 if let entry = warningEntry, let metadata = entry.metadata {
-                    let updateMeta = metadata["temporal.workflow.unfinished.updates"]
+                    let updateMeta = metadata["temporal.workflow.unfinished-updates"]
                     #expect(updateMeta != nil, "Expected update metadata key")
                     if let updateMeta {
                         #expect("\(updateMeta)".contains("WarnUpdate"), "Expected metadata to mention WarnUpdate")

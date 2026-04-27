@@ -13,23 +13,23 @@
 //===----------------------------------------------------------------------===//
 
 struct LoggingKeys {
-    static let taskToken = "temporal.task.token"
-    static let activityCancellationReason = "temporal.activity.cancellation.reason"
+    static let taskToken = TemporalTracingKeys.activityTaskToken
+    static let activityCancellationReason = TemporalTracingKeys.activityCancellationReason
     static let errorType = "error.type"
     static let errorMessage = "error.message"
-    static let taskQueue = "temporal.taskQueue"
+    static let taskQueue = TemporalTracingKeys.workflowTaskQueue
     static let workflowID = TemporalTracingKeys.workflowId
     static let workflowRunID = TemporalTracingKeys.workflowRunId
     static let workflowType = TemporalTracingKeys.workflowType
     static let workflowNamespace = TemporalTracingKeys.workflowNamespace
-    static let workflowSignalName = "temporal.workflow.signal.name"
-    static let workflowQueryID = "temporal.workflow.query.id"
-    static let workflowQueryName = "temporal.workflow.query.name"
-    static let workflowUpdateID = "temporal.workflow.update.id"
-    static let workflowUpdateName = "temporal.workflow.update.name"
-    static let activityID = TemporalTracingKeys.activityID
-    static let activityName = "temporal.activity.name"
-    static let activityAttempt = "temporal.activity.attempt"
-    static let unfinishedSignalHandlers = "temporal.workflow.unfinished.signals"
-    static let unfinishedUpdateHandlers = "temporal.workflow.unfinished.updates"
+    static let workflowSignalName = TemporalTracingKeys.workflowSignalName
+    static let workflowQueryID = TemporalTracingKeys.workflowQueryId
+    static let workflowQueryName = TemporalTracingKeys.workflowQueryName
+    static let workflowUpdateID = TemporalTracingKeys.workflowUpdateId
+    static let workflowUpdateName = TemporalTracingKeys.workflowUpdateName
+    static let activityID = TemporalTracingKeys.activityId
+    static let activityName = TemporalTracingKeys.activityName
+    static let activityAttempt = TemporalTracingKeys.activityAttempt
+    static let unfinishedSignalHandlers = TemporalTracingKeys.unfinishedSignalHandlers
+    static let unfinishedUpdateHandlers = TemporalTracingKeys.unfinishedUpdateHandlers
 }

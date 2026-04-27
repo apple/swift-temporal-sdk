@@ -119,7 +119,7 @@ extension Span {
 
         // Activity ID, if provided
         if let actId = activityOptions.activityID {
-            self.attributes[TemporalTracingKeys.activityID] = actId
+            self.attributes[TemporalTracingKeys.activityId] = actId
         }
 
         // Disable eager execution flag
