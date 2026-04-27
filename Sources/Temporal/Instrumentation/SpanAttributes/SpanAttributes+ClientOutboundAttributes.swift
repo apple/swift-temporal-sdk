@@ -598,7 +598,7 @@ extension Span {
         case .id(let workflowId, let runId, let activityId):
             self.attributes[TemporalTracingKeys.workflowId] = workflowId
             self.attributes[TemporalTracingKeys.workflowRunId] = runId
-            self.attributes[TemporalTracingKeys.activityID] = activityId
+            self.attributes[TemporalTracingKeys.activityId] = activityId
         case .taskToken(let taskToken):
             self.attributes[TemporalTracingKeys.activityTaskToken] = String(bytes: taskToken.bytes, encoding: .utf8)
         }
