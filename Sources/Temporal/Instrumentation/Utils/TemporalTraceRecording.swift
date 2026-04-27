@@ -145,8 +145,7 @@ struct TemporalTraceRecording {
     }
 
     /// Extracts the trace context carried on a Temporal request header into a
-    /// `ServiceContext` suitable for attaching as a ``SpanLink``. Returns
-    /// `nil` when no tracing header is present.
+    /// `ServiceContext` suitable for attaching as a ``SpanLink``.
     private func extractLinkContext(
         headers: [String: Api.Common.V1.Payload]
     ) throws -> ServiceContext? {
