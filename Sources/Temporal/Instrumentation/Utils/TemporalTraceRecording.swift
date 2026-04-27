@@ -93,13 +93,16 @@ struct TemporalTraceRecording {
         setSpanAttributes: (any Span) -> Void,
         next: () async throws -> R
     ) async throws -> R {
-        let serviceContext = try makeInboundServiceContext(headers: headers)
+        let linkContext = try extractLinkContext(headers: headers)
 
         return try await self.tracer.withSpan(
             spanName,
-            context: serviceContext,
+            context: .topLevel,
             ofKind: .server  // matches C#
         ) { span in
+            if let linkContext {
+                span.addLink(SpanLink(context: linkContext, attributes: [:]))
+            }
             setSpanAttributes(span)
 
             do {
@@ -119,13 +122,16 @@ struct TemporalTraceRecording {
         setSpanAttributes: (any Span) -> Void,
         next: () throws -> R
     ) throws -> R {
-        let serviceContext = try makeInboundServiceContext(headers: headers)
+        let linkContext = try extractLinkContext(headers: headers)
 
         return try self.tracer.withSpan(
             spanName,
-            context: serviceContext,
+            context: .topLevel,
             ofKind: .server  // matches C#
         ) { span in
+            if let linkContext {
+                span.addLink(SpanLink(context: linkContext, attributes: [:]))
+            }
             setSpanAttributes(span)
 
             do {
@@ -138,15 +144,14 @@ struct TemporalTraceRecording {
         }
     }
 
-    /// Extracts raw Temporal tracing header into a new `ServiceContext`.
-    private func makeInboundServiceContext(
+    /// Extracts the trace context carried on a Temporal request header into a
+    /// `ServiceContext` suitable for attaching as a ``SpanLink``.
+    private func extractLinkContext(
         headers: [String: Api.Common.V1.Payload]
-    ) throws -> ServiceContext {
-        var serviceContext = ServiceContext.topLevel
-
+    ) throws -> ServiceContext? {
         // Check if header with tracer key exists
         guard let tracerPayload = headers[self.tracingHeaderKey] else {
-            return serviceContext
+            return nil
         }
 
         // Like C#, use default sync payload converters and bubble up conversion errors
@@ -156,13 +161,12 @@ struct TemporalTraceRecording {
             .payloadConverter
             .convertPayloadHandlingVoid(tracerPayload)
 
-        // Set extracted tracer header as context.
+        var linkContext = ServiceContext.topLevel
         self.tracer.extract(
             convertedTracerPayload,
-            into: &serviceContext,
+            into: &linkContext,
             using: self.extractor
         )
-
-        return serviceContext
+        return linkContext
     }
 }

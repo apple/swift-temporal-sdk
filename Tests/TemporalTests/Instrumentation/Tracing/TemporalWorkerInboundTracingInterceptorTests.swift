@@ -76,8 +76,9 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 input: ()
             )
         ) { input in
-            // Make sure we get the metadata injected into our service context
-            #expect(ServiceContext.current?.traceID == traceID.uuidString)
+            // With span links, the inbound trace becomes a link on the span
+            // rather than the parent context, so it's not on `current`.
+            #expect(ServiceContext.current?.traceID == nil)
         }
 
         assertTestSpanComponents(
@@ -100,6 +101,11 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         } assertErrors: { errors in
             #expect(errors == [])
         }
+
+        // Inbound trace context is attached as a span link.
+        let links = tracer.getSpan(ofOperation: "RunWorkflow:\(Self.workflowName)")?.context.spanLinks ?? []
+        #expect(links.count == 1)
+        #expect(links.first?.context.traceID == traceID.uuidString)
     }
 
     @Test
@@ -128,8 +134,9 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                     input: ()
                 )
             ) { input in
-                // Make sure we get the metadata injected into our service context
-                #expect(ServiceContext.current?.traceID == traceID.uuidString)
+                // With span links, the inbound trace becomes a link on the span
+                // rather than the parent context, so it's not on `current`.
+                #expect(ServiceContext.current?.traceID == nil)
 
                 // Simulates an error within the RPC
                 throw TracingInterceptorTestError.testError
@@ -150,6 +157,11 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             } assertErrors: { errors in
                 #expect(errors == [.testError])
             }
+
+            // Inbound trace context is attached as a span link.
+            let links = tracer.getSpan(ofOperation: "RunWorkflow:\(Self.workflowName)")?.context.spanLinks ?? []
+            #expect(links.count == 1)
+            #expect(links.first?.context.traceID == traceID.uuidString)
         }
     }
 
@@ -182,8 +194,9 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 input: ()
             )
         ) { input in
-            // Make sure we get the metadata injected into our service context
-            #expect(ServiceContext.current?.traceID == traceID.uuidString)
+            // With span links, the inbound trace becomes a link on the span
+            // rather than the parent context, so it's not on `current`.
+            #expect(ServiceContext.current?.traceID == nil)
 
             return ()
         }
@@ -201,6 +214,11 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         } assertErrors: { errors in
             #expect(errors == [])
         }
+
+        // Inbound trace context is attached as a span link.
+        let links = tracer.getSpan(ofOperation: "RunActivity:\(TestActivityName.name)")?.context.spanLinks ?? []
+        #expect(links.count == 1)
+        #expect(links.first?.context.traceID == traceID.uuidString)
     }
 
     @Test
@@ -229,8 +247,9 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                     input: ()
                 )
             ) { input in
-                // Make sure we get the metadata injected into our service context
-                #expect(ServiceContext.current?.traceID == traceID.uuidString)
+                // With span links, the inbound trace becomes a link on the span
+                // rather than the parent context, so it's not on `current`.
+                #expect(ServiceContext.current?.traceID == nil)
 
                 // Simulates an error within the RPC
                 throw TracingInterceptorTestError.testError
@@ -251,6 +270,11 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             } assertErrors: { errors in
                 #expect(errors == [.testError])
             }
+
+            // Inbound trace context is attached as a span link.
+            let links = tracer.getSpan(ofOperation: "RunActivity:\(TestActivityName.name)")?.context.spanLinks ?? []
+            #expect(links.count == 1)
+            #expect(links.first?.context.traceID == traceID.uuidString)
         }
     }
 }

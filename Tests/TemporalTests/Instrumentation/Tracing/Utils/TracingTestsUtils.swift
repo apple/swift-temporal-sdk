@@ -144,7 +144,9 @@ final class TestSpan: Span, Sendable {
 
     func addLink(_ link: Tracing.SpanLink) {
         self.state.withLock {
-            $0.context.spanLinks?.append(link)
+            var links = $0.context.spanLinks ?? []
+            links.append(link)
+            $0.context.spanLinks = links
         }
     }
 
