@@ -50,7 +50,7 @@ extension Span {
         // swift-format-ignore: ReplaceForEachWithForLoop
         input.options.searchAttributes?.forEach { key, value in
             if let value {
-                self.attributes["\(TemporalTracingKeys.workflowSearchAttributesPrefix)\(key.name) (\(key.type.indexedValueTypeString))"] = "\(value)"
+                self.attributes["\(TemporalTracingKeys.workflowSearchAttributesPrefix)\(key.name) (\(String(describing: key.type)))"] = "\(value)"
             }
         }
         // The workflow's memo.
@@ -383,7 +383,7 @@ extension Span {
             // swift-format-ignore: ReplaceForEachWithForLoop
             options.searchAttributes?.forEach { key, value in
                 if let value {
-                    self.attributes["\(TemporalTracingKeys.scheduleSearchAttributesPrefix)\(key.name) (\(key.type.indexedValueTypeString))"] =
+                    self.attributes["\(TemporalTracingKeys.scheduleSearchAttributesPrefix)\(key.name) (\(String(describing: key.type)))"] =
                         "\(value)"
                 }
             }
@@ -413,7 +413,7 @@ extension Span {
             // swift-format-ignore: ReplaceForEachWithForLoop
             workflow.options.searchAttributes?.forEach { key, value in
                 if let value {
-                    self.attributes["\(TemporalTracingKeys.workflowSearchAttributesPrefix)\(key.name) (\(key.type.indexedValueTypeString))"] =
+                    self.attributes["\(TemporalTracingKeys.workflowSearchAttributesPrefix)\(key.name) (\(String(describing: key.type)))"] =
                         "\(value)"
                 }
             }
@@ -489,7 +489,7 @@ extension Span {
             // swift-format-ignore: ReplaceForEachWithForLoop
             workflow.options.searchAttributes?.forEach { key, value in
                 if let value {
-                    self.attributes["\(TemporalTracingKeys.workflowSearchAttributesPrefix)\(key.name) (\(key.type.indexedValueTypeString))"] =
+                    self.attributes["\(TemporalTracingKeys.workflowSearchAttributesPrefix)\(key.name) (\(String(describing: key.type)))"] =
                         "\(value)"
                 }
             }
@@ -499,7 +499,7 @@ extension Span {
         // swift-format-ignore: ReplaceForEachWithForLoop
         response.searchAttributes?.forEach { key, value in
             if let value {
-                self.attributes["\(TemporalTracingKeys.scheduleSearchAttributesPrefix)\(key.name) (\(key.type.indexedValueTypeString))"] = "\(value)"
+                self.attributes["\(TemporalTracingKeys.scheduleSearchAttributesPrefix)\(key.name) (\(String(describing: key.type)))"] = "\(value)"
             }
         }
 
