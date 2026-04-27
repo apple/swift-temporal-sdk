@@ -204,9 +204,6 @@ struct MyApp {
 
 ## 🧰 Release Info
 
-> [!NOTE]
-> This SDK is currently under active development.
-
 - Release Cadence: Ad-hoc whenever changes land on `main`
 - Version Compatibility: Swift 6.2+ and macOS 15.0+ only
 
