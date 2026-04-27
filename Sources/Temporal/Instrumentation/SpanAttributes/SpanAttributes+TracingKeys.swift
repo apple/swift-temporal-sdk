@@ -34,7 +34,7 @@ package enum TemporalTracingKeys: Hashable, Sendable {
     package static let workflowParentId = "temporal.workflow.parent.id"
     package static let workflowParentRunId = "temporal.workflow.parent.run-id"
     package static let workflowStartTime = "temporal.workflow.start-time"
-    package static let workflowTerminationReason = "temporal.workflow.termination.reason"
+    package static let workflowTerminationReason = "temporal.workflow.termination-reason"
 
     package static let workflowSearchAttributesPrefix = "temporal.workflow.search-attributes."
     package static let workflowMemoPrefix = "temporal.workflow.memo."
@@ -54,14 +54,14 @@ package enum TemporalTracingKeys: Hashable, Sendable {
     package static let workflowIdReusePolicy = "temporal.workflow.id-reuse-policy"
     package static let workflowCancellationType = "temporal.workflow.cancellation-type"
     package static let workflowVersioningIntent = "temporal.workflow.versioning-intent"
-    package static let workflowSleepDuration = "temporal.workflow.sleep.duration"
-    package static let workflowSleepSummary = "temporal.workflow.sleep.summary"
+    package static let workflowSleepDuration = "temporal.workflow.sleep-duration"
+    package static let workflowSleepSummary = "temporal.workflow.sleep-summary"
 
-    package static let workflowCountQuery = "temporal.workflow.count.query"
+    package static let workflowCountQuery = "temporal.workflow.count-query"
     package static let workflowCountNumber = "temporal.workflow.count"
 
-    package static let workflowListQuery = "temporal.workflow.list.query"
-    package static let workflowListLimit = "temporal.workflow.list.limit"
+    package static let workflowListQuery = "temporal.workflow.list-query"
+    package static let workflowListLimit = "temporal.workflow.list-limit"
 
     package static let workflowEventHistoryCount = "temporal.workflow.event-history.count"
     package static let workflowEventHistorySkipArchival = "temporal.workflow.event-history.skip-archival"
@@ -79,7 +79,7 @@ package enum TemporalTracingKeys: Hashable, Sendable {
     package static let activityAttempt = "temporal.activity.attempt"
     package static let unfinishedSignalHandlers = "temporal.workflow.unfinished-signals"
     package static let unfinishedUpdateHandlers = "temporal.workflow.unfinished-updates"
-    package static let activityHeartbeatTimeout = "temporal.activity.heartbeat-timeout"
+    package static let activityHeartbeatTimeout = "temporal.activity.heartbeat.timeout"
     package static let activityScheduleToCloseTimeout = "temporal.activity.schedule-to-close-timeout"
     package static let activityScheduleToStartTimeout = "temporal.activity.schedule-to-start-timeout"
     package static let activityStartToCloseTimeout = "temporal.activity.start-to-close-timeout"
@@ -125,5 +125,5 @@ package enum TemporalTracingKeys: Hashable, Sendable {
     package static let activityId = "temporal.activity.id"
     package static let activityHeartbeatDetails = "temporal.activity.heartbeat.details"
     package static let activityHeartbeatLastDetails = "temporal.activity.heartbeat.last-details"
-    package static let activityFailCause = "temporal.activity.fail.cause"
+    package static let activityFailCause = "temporal.activity.fail-cause"
 }
