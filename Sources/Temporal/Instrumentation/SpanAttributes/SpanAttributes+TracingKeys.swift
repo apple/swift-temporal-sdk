@@ -79,7 +79,7 @@ package enum TemporalTracingKeys: Hashable, Sendable {
     package static let activityAttempt = "temporal.activity.attempt"
     package static let unfinishedSignalHandlers = "temporal.workflow.unfinished-signals"
     package static let unfinishedUpdateHandlers = "temporal.workflow.unfinished-updates"
-    package static let activityHeartbeatTimeout = "temporal.activity.heartbeat.timeout"
+    package static let activityHeartbeatTimeout = "temporal.activity.heartbeat-timeout"
     package static let activityScheduleToCloseTimeout = "temporal.activity.schedule-to-close-timeout"
     package static let activityScheduleToStartTimeout = "temporal.activity.schedule-to-start-timeout"
     package static let activityStartToCloseTimeout = "temporal.activity.start-to-close-timeout"
