@@ -153,14 +153,16 @@ public struct UntypedChildWorkflowHandle: Sendable {
     /// - Parameter resultType: The expected result type for the child workflow output.
     /// - Returns: The child workflow's output value.
     /// - Throws: Errors from child workflow execution, including business logic errors,
-    ///   system failures, timeouts, and cancellation errors.
+    ///   system failures, timeouts, and cancellation errors. Also throws
+    ///   `WorkflowRemovedFromCacheError` if the parent workflow is evicted from the worker's
+    ///   cache while waiting for the child to resolve (e.g. during worker shutdown).
     public func result<Result: Sendable>(
         resultType: Result.Type = Result.self
     ) async throws -> Result {
-        await withTaskCancellationHandler {
+        try await withTaskCancellationHandler {
             // We need to shield for cancellation here to avoid
             // the condition from automatically cancelling itself
-            await self.stateMachine.uncancellableCondition { self.state.resolutionState.isResolved }
+            try await self.stateMachine.uncancellableCondition { self.state.resolutionState.isResolved }
         } onCancel: {
             switch self.state.resolutionState {
             case .resolved:
