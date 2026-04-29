@@ -40,6 +40,13 @@ Build activities and workflows.
 - <doc:Workflow-Concurrency>
 - <doc:Working-with-Data>
 
+### Testing
+
+Test your workflows and activities.
+
+- <doc:Testing-Workflows>
+- <doc:Testing-Activities>
+
 ### Developing workflows
 
 Create workflows that orchestrate business logic and coordinate activities.
