@@ -23,9 +23,10 @@ extension TestServerDependentTests {
     /// down while a workflow was parked inside `try await childHandle.result()`.
     ///
     /// Before the fix, `WorkflowStateMachineStorage.uncancellableCondition` did
-    /// `try! await withCheckedThrowingContinuation { … }`. When the worker's cache evicted
-    /// the parked workflow, the continuation was resumed with `WorkflowRemovedFromCacheError`,
-    /// the `try!` re-raised, and the worker thread died — causing tests to hang indefinitely.
+    /// `try! await withCheckedThrowingContinuation { … }`. When the worker's
+    /// cache evicted the parked workflow, the continuation was resumed with
+    /// `WorkflowRemovedFromCacheError`, the `try!` re-raised, and the worker
+    /// thread terminated fatally — causing tests to hang indefinitely.
     ///
     /// After the fix, eviction surfaces as a regular thrown error from the workflow code.
     /// The worker shuts down cleanly and the test completes.
@@ -82,8 +83,10 @@ extension TestServerDependentTests {
         }
 
         /// Returning from the worker body while the parent is parked inside
-        /// `try await childHandle.result()` used to crash the worker thread. With the fix,
-        /// the eviction surfaces as a thrown error and the test completes cleanly.
+        /// `try await childHandle.result()` used to crash the worker thread.
+        ///
+        /// With the fix, the eviction surfaces as a thrown error and the test
+        /// completes cleanly.
         @Test
         func workerTeardownWhileParentAwaitsChildDoesNotFatal() async throws {
             try await withTestWorkerAndClient(
