@@ -39,7 +39,7 @@ extension TestServerDependentTests {
             func run(context: WorkflowContext<Self>, input: Input) async throws {
                 // Long enough that the parent is guaranteed to still be awaiting this when
                 // the test body returns and the worker tears down.
-                try await context.sleep(for: .seconds(2))
+                try await context.sleep(for: .seconds(300))
             }
         }
 
@@ -69,7 +69,7 @@ extension TestServerDependentTests {
             }
 
             mutating func run(context: WorkflowContext<Self>, input: Input) async throws {
-                try await context.condition { (wf: Self) in wf.shutdownRequested }
+                try await context.condition { $0.shutdownRequested }
 
                 let childHandle = try await context.startChildWorkflow(
                     ChildWorkflow.self,
