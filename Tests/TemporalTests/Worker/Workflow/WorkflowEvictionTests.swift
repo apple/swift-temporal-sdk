@@ -26,7 +26,7 @@ extension TestServerDependentTests {
     /// `try! await withCheckedThrowingContinuation { … }`. When the worker's
     /// cache evicted the parked workflow, the continuation was resumed with
     /// `WorkflowRemovedFromCacheError`, the `try!` re-raised, and the worker
-    /// thread terminated fatally — causing tests to hang indefinitely.
+    /// thread crashed — causing tests to block indefinitely.
     ///
     /// After the fix, eviction surfaces as a regular thrown error from the workflow code.
     /// The worker shuts down cleanly and the test completes.
