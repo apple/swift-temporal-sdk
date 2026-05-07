@@ -162,10 +162,12 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         stateMachine.forceCancelOutstandingContinuations()
     }
 
-    func uncancellableCondition(_ condition: @escaping () -> Bool) async {
+    func uncancellableCondition(_ condition: @escaping () -> Bool) async throws {
         let id = self.stateMachine.condition(condition)
-        // This force unwrap is safe since the continuation for this condition cannot be cancelled.
-        try! await withCheckedThrowingContinuation { continuation in
+        // The continuation cannot be cancelled by Task cancellation, but it can be terminated
+        // by workflow eviction (`forceCancelOutstandingContinuations`), which resumes pending
+        // continuations with `WorkflowRemovedFromCacheError`. Callers must handle that error.
+        try await withCheckedThrowingContinuation { continuation in
             let continuation = self.stateMachine.storeConditionContinuation(id: id, continuation: continuation)
             precondition(continuation == nil, "The continuation is uncancellable so it must not be returned here")
         }
