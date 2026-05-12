@@ -11,7 +11,7 @@ business logic in a scalable and resilient way.
 - 🚀 Swift package for authoring Temporal workflows and activities
 - 📦 Compatible with Swift Package Manager
 - 📱 Supports Linux (including the static SDK), macOS, iOS 
-- 🔧 Built with Swift 6.2+ and Xcode 26+
+- 🔧 Built with Swift 6.2.3 and Xcode 26.2+
 
 🔗 Jump to:
 - 📖 [Overview](#-overview)
