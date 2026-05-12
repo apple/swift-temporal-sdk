@@ -171,3 +171,5 @@ func longRunningCalculation(input: Int) async throws -> Int {
     return result
 }
 ```
+
+To learn how to test your activities, see <doc:Testing-Activities>.

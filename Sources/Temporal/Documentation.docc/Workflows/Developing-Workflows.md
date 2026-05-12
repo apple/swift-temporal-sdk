@@ -345,3 +345,5 @@ capitalized method name. You can customize the update name using the
 ```swift
 @WorkflowUpdate(name: "CustomUpdateUserName")
 ```
+
+To learn how to test your workflows, see <doc:Testing-Workflows>.
