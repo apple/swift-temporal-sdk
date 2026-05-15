@@ -22,12 +22,11 @@ changes stay deterministic with replay testing. There are two main approaches:
 ### Integration testing a workflow
 
 Apply the `.temporalTestServer` test trait to start a local Temporal server.
-Use `TemporalTestServer.withConnectedWorker` and
-`TemporalTestServer.withConnectedClient` to set up a worker and client
-connected to the test server:
+Use `TemporalTestServer.withWorkerAndClient` to set up a worker and client
+connected to the test server in a single call:
 
 ```swift
-import Logging
+import Foundation
 import Temporal
 import TemporalTestKit
 import Testing
@@ -37,34 +36,18 @@ struct GreetingWorkflowTests {
     @Test
     func greetingReturnsHello() async throws {
         let testServer = TemporalTestServer.testServer!
-        let taskQueue = "test-\(UUID())"
-        let logger = Logger(label: "test")
 
-        let config = TemporalWorker.Configuration(
-            namespace: "default",
-            taskQueue: taskQueue,
-            instrumentation: .init(serverHostname: "localhost")
-        )
-
-        try await testServer.withConnectedWorker(
-            configuration: config,
+        try await testServer.withWorkerAndClient(
             activities: GreetingActivities().allActivities,
             workflows: [GreetingWorkflow.self]
-        ) { _ in
-            try await testServer.withConnectedClient(
-                logger: logger
-            ) { client in
-                let handle = try await client.startWorkflow(
-                    type: GreetingWorkflow.self,
-                    options: .init(
-                        id: "wf-\(UUID())",
-                        taskQueue: taskQueue
-                    ),
-                    input: "World"
-                )
-                let result = try await handle.result()
-                #expect(result == "Hello, World!")
-            }
+        ) { taskQueue, client in
+            let handle = try await client.startWorkflow(
+                type: GreetingWorkflow.self,
+                options: .init(id: "wf-\(UUID())", taskQueue: taskQueue),
+                input: "World"
+            )
+            let result = try await handle.result()
+            #expect(result == "Hello, World!")
         }
     }
 }
@@ -167,44 +150,28 @@ struct TimeSkippingTests {
     @Test
     func delayedGreetingCompletesQuickly() async throws {
         let testServer = TemporalTestServer.timeSkippingTestServer!
-        let taskQueue = "test-\(UUID())"
-        let logger = Logger(label: "test")
 
-        let config = TemporalWorker.Configuration(
-            namespace: "default",
-            taskQueue: taskQueue,
-            instrumentation: .init(serverHostname: "localhost")
-        )
-
-        try await testServer.withConnectedWorker(
-            configuration: config,
+        try await testServer.withWorkerAndClient(
             workflows: [DelayedGreetingWorkflow.self]
-        ) { _ in
-            try await testServer.withConnectedClient(
-                logger: logger
-            ) { client in
-                let start = ContinuousClock.now
-                let handle = try await client.startWorkflow(
-                    type: DelayedGreetingWorkflow.self,
-                    options: .init(
-                        id: "wf-\(UUID())",
-                        taskQueue: taskQueue
-                    ),
-                    input: "World"
-                )
-                let result = try await handle.result()
-                #expect(result == "Hello, World!")
+        ) { taskQueue, client in
+            let start = ContinuousClock.now
+            let handle = try await client.startWorkflow(
+                type: DelayedGreetingWorkflow.self,
+                options: .init(id: "wf-\(UUID())", taskQueue: taskQueue),
+                input: "World"
+            )
+            let result = try await handle.result()
+            #expect(result == "Hello, World!")
 
-                let elapsed = ContinuousClock.now - start
-                #expect(elapsed < .seconds(30))
-            }
+            let elapsed = ContinuousClock.now - start
+            #expect(elapsed < .seconds(30))
         }
     }
 }
 ```
 
-> Tip: `TemporalTestServer.withConnectedClient` installs the
-> time-skipping interceptor for you.
+> Tip: `TemporalTestServer.withWorkerAndClient` installs the time-skipping
+> interceptor for you when used with the time-skipping test server.
 
 ### Replay testing with WorkflowReplayer
 
