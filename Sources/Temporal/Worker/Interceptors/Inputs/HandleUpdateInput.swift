@@ -31,4 +31,29 @@ public struct HandleUpdateInput<Update: WorkflowUpdateDefinition>: Sendable {
 
     /// The input parameters to be passed to the update handler for execution.
     public var input: Update.Input
+
+    /// Creates a new handle update input.
+    ///
+    /// - Parameters:
+    ///   - info: Information about the current workflow execution.
+    ///   - id: The unique identifier for this specific update request.
+    ///   - name: The name identifying the type of update being executed.
+    ///   - definition: The update definition containing type information and execution metadata.
+    ///   - headers: Headers containing metadata and context information for update execution.
+    ///   - input: The input parameters to be passed to the update handler for execution.
+    public init(
+        info: WorkflowInfo,
+        id: String,
+        name: String,
+        definition: Update,
+        headers: [String: Api.Common.V1.Payload],
+        input: Update.Input
+    ) {
+        self.info = info
+        self.id = id
+        self.name = name
+        self.definition = definition
+        self.headers = headers
+        self.input = input
+    }
 }

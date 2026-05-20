@@ -33,4 +33,29 @@ public struct SignalExternalWorkflowInput<each Input: Sendable>: Sendable {
 
     /// The input parameters to be passed to the external workflow signal handler for processing.
     public var input: (repeat each Input)
+
+    /// Creates a new signal external workflow input.
+    ///
+    /// - Parameters:
+    ///   - info: Information about the current workflow execution.
+    ///   - id: The workflow ID of the external workflow to signal.
+    ///   - runId: The run ID of the external workflow. If `nil`, targets the latest run.
+    ///   - name: The name identifying the type of signal being sent to the external workflow.
+    ///   - headers: Headers containing metadata and context information for external workflow signal execution.
+    ///   - input: The input parameters to be passed to the external workflow signal handler for processing.
+    public init(
+        info: WorkflowInfo,
+        id: String,
+        runId: String? = nil,
+        name: String,
+        headers: [String: Api.Common.V1.Payload],
+        input: repeat each Input
+    ) {
+        self.info = info
+        self.id = id
+        self.runId = runId
+        self.name = name
+        self.headers = headers
+        self.input = (repeat each input)
+    }
 }

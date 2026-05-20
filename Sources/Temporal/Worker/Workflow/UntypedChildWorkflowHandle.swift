@@ -237,7 +237,7 @@ public struct UntypedChildWorkflowHandle: Sendable {
                 id: self.id,
                 name: signalName,
                 headers: [:],
-                input: (repeat each input)
+                input: repeat each input
             )
         )
     }

@@ -26,4 +26,16 @@ public struct HandleSleepInput: Sendable {
     ///
     /// - Important: This is currently experimental.
     public var summary: String?
+
+    /// Creates a new handle sleep input.
+    ///
+    /// - Parameters:
+    ///   - info: Information about the current workflow execution.
+    ///   - duration: The duration of the sleep operation.
+    ///   - summary: Optional identifier for the sleep operation.
+    public init(info: WorkflowInfo, duration: Duration, summary: String? = nil) {
+        self.info = info
+        self.duration = duration
+        self.summary = summary
+    }
 }

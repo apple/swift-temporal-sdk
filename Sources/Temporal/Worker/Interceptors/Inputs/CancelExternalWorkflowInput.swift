@@ -24,4 +24,16 @@ public struct CancelExternalWorkflowInput: Sendable {
     ///
     /// If `nil`, targets the latest run.
     public var runId: String?
+
+    /// Creates a new cancel external workflow input.
+    ///
+    /// - Parameters:
+    ///   - info: Information about the current workflow execution.
+    ///   - id: The workflow ID of the external workflow to cancel.
+    ///   - runId: The run ID of the external workflow. If `nil`, targets the latest run.
+    public init(info: WorkflowInfo, id: String, runId: String? = nil) {
+        self.info = info
+        self.id = id
+        self.runId = runId
+    }
 }

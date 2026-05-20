@@ -23,13 +23,13 @@ public struct ExecuteWorkflowInput<Workflow: WorkflowDefinition>: Sendable {
     /// The input parameters to be passed to the workflow for execution.
     public var input: Workflow.Input
 
-    /// Creates workflow execution input with the specified information, headers, and parameters.
+    /// Creates a new execute workflow input.
     ///
     /// - Parameters:
     ///   - info: Information about the current workflow execution.
     ///   - headers: The headers containing metadata and context for execution.
     ///   - input: The input parameters for workflow execution.
-    package init(info: WorkflowInfo, headers: [String: Api.Common.V1.Payload], input: Workflow.Input) {
+    public init(info: WorkflowInfo, headers: [String: Api.Common.V1.Payload], input: Workflow.Input) {
         self.info = info
         self.headers = headers
         self.input = input

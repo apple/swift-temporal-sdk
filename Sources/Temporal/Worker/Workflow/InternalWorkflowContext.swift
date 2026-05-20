@@ -234,7 +234,7 @@ struct InternalWorkflowContext: Sendable {
                 name: name,
                 options: options,
                 headers: [:],
-                input: (repeat each input)
+                input: repeat each input
             )
         )
     }
@@ -253,7 +253,7 @@ struct InternalWorkflowContext: Sendable {
                 name: name,
                 options: options,
                 headers: [:],
-                input: (repeat each input)
+                input: repeat each input
             )
         )
     }
@@ -284,7 +284,7 @@ struct InternalWorkflowContext: Sendable {
                 name: name,
                 options: options,
                 headers: [:],
-                input: (repeat each inputs)
+                input: repeat each inputs
             )
         )
     }
@@ -361,7 +361,7 @@ struct InternalWorkflowContext: Sendable {
                 workflowName: workflowName,
                 options: options,
                 headers: [:],
-                input: (repeat each input)
+                input: repeat each input
             )
         )
     }

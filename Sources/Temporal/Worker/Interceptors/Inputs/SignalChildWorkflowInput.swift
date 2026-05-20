@@ -25,4 +25,23 @@ public struct SignalChildWorkflowInput<each Input: Sendable>: Sendable {
 
     /// The input parameters to be passed to the child workflow signal handler for processing.
     public var input: (repeat each Input)
+
+    /// Creates a new signal child workflow input.
+    ///
+    /// - Parameters:
+    ///   - id: The unique identifier of the child workflow to signal.
+    ///   - name: The name identifying the type of signal being sent to the child workflow.
+    ///   - headers: Headers containing metadata and context information for child workflow signal execution.
+    ///   - input: The input parameters to be passed to the child workflow signal handler for processing.
+    public init(
+        id: String,
+        name: String,
+        headers: [String: Api.Common.V1.Payload],
+        input: repeat each Input
+    ) {
+        self.id = id
+        self.name = name
+        self.headers = headers
+        self.input = (repeat each input)
+    }
 }
