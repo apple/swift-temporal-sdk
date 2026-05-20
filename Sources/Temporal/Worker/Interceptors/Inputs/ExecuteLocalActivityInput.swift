@@ -29,25 +29,25 @@ public struct ScheduleLocalActivityInput<each Input: Sendable>: Sendable {
     /// The input parameters to be passed to the activity for execution.
     public var input: (repeat each Input)
 
-    /// Creates a new activity scheduling input with the specified parameters.
+    /// Creates a new schedule local activity input.
     ///
     /// - Parameters:
     ///   - info: Information about the current workflow execution.
     ///   - name: The activity name identifying the activity type to execute.
     ///   - options: The configuration options controlling activity execution behavior.
     ///   - headers: The metadata and context headers for activity execution.
-    ///   - input: The input parameters to pass to the activity, of varying types and counts.
-    package init(
+    ///   - input: The input parameters to pass to the activity.
+    public init(
         info: WorkflowInfo,
         name: String,
         options: LocalActivityOptions,
         headers: [String: Api.Common.V1.Payload],
-        input: (repeat each Input)
+        input: repeat each Input
     ) {
         self.info = info
         self.name = name
         self.options = options
         self.headers = headers
-        self.input = input
+        self.input = (repeat each input)
     }
 }

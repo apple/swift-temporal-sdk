@@ -23,13 +23,13 @@ public struct ExecuteActivityInput<Activity: ActivityDefinition>: Sendable {
     /// The input parameters to be passed to the activity for execution.
     public var input: Activity.Input
 
-    /// Creates activity execution input with the specified definition, headers, and parameters.
+    /// Creates a new execute activity input.
     ///
     /// - Parameters:
     ///   - definition: The activity definition containing type and execution information.
     ///   - headers: The headers containing metadata and context for execution.
     ///   - input: The input parameters for activity execution.
-    package init(definition: Activity, headers: [String: Api.Common.V1.Payload], input: Activity.Input) {
+    public init(definition: Activity, headers: [String: Api.Common.V1.Payload], input: Activity.Input) {
         self.definition = definition
         self.headers = headers
         self.input = input

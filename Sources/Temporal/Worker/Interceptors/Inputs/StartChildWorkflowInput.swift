@@ -28,4 +28,26 @@ public struct StartChildWorkflowInput<each Input: Sendable>: Sendable {
 
     /// The input parameters to be passed to the child workflow for execution.
     public var input: (repeat each Input)
+
+    /// Creates a new start child workflow input.
+    ///
+    /// - Parameters:
+    ///   - info: Information about the current workflow execution.
+    ///   - name: The name identifying the type of child workflow to be started.
+    ///   - options: The configuration options controlling how the child workflow should be executed.
+    ///   - headers: Headers containing metadata and context information for child workflow startup and execution.
+    ///   - input: The input parameters to be passed to the child workflow for execution.
+    public init(
+        info: WorkflowInfo,
+        name: String,
+        options: ChildWorkflowOptions,
+        headers: [String: Api.Common.V1.Payload],
+        input: repeat each Input
+    ) {
+        self.info = info
+        self.name = name
+        self.options = options
+        self.headers = headers
+        self.input = (repeat each input)
+    }
 }

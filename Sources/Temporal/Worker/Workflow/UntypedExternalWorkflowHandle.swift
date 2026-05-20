@@ -103,7 +103,7 @@ public struct UntypedExternalWorkflowHandle: Sendable {
                 runId: self.runId,
                 name: signalName,
                 headers: [:],
-                input: (repeat each input)
+                input: repeat each input
             )
         )
     }

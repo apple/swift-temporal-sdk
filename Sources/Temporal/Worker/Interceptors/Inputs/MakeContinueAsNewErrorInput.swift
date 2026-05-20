@@ -28,4 +28,26 @@ public struct MakeContinueAsNewErrorInput<each Input: Sendable>: Sendable {
 
     /// The input parameters to be passed to the restarted workflow for execution.
     public var input: (repeat each Input)
+
+    /// Creates a new make continue-as-new error input.
+    ///
+    /// - Parameters:
+    ///   - info: Information about the current workflow execution.
+    ///   - workflowName: The workflow name to continue as.
+    ///   - options: The configuration options for the continue-as-new workflow execution.
+    ///   - headers: Headers containing metadata and context information for continue-as-new execution.
+    ///   - input: The input parameters to be passed to the restarted workflow for execution.
+    public init(
+        info: WorkflowInfo,
+        workflowName: String,
+        options: ContinueAsNewOptions,
+        headers: [String: Api.Common.V1.Payload],
+        input: repeat each Input
+    ) {
+        self.info = info
+        self.workflowName = workflowName
+        self.options = options
+        self.headers = headers
+        self.input = (repeat each input)
+    }
 }
