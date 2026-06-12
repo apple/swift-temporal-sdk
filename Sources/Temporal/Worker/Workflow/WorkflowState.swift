@@ -18,7 +18,8 @@
 /// the workflow's execution context. It enforces that state can only be accessed and
 /// modified on the workflow's dedicated executor, preventing race conditions and ensuring
 /// deterministic execution during workflow replay.
-public struct _WorkflowState<Value: Sendable>: @unchecked Sendable {
+// @unchecked Sendable is safe since we dynamically ensure that the state is only accessed on the workflow executor.
+public struct _WorkflowState<Value>: @unchecked Sendable {
     /// The reference-backed box holding the value.
     private let box: ArcBox<Value>
 
@@ -60,7 +61,7 @@ public struct _WorkflowState<Value: Sendable>: @unchecked Sendable {
     /// Creates a new workflow state wrapper with the specified initial value.
     ///
     /// - Parameter initialValue: The initial value to be wrapped and managed by the workflow state.
-    public init(initialValue: Value) {
+    public init(initialValue: sending Value) {
         self.box = ArcBox(initialValue)
     }
 }
