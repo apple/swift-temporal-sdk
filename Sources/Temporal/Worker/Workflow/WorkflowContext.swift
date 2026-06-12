@@ -334,7 +334,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     /// - Returns: The result of the closure.
     public func timeout<Return: Sendable, Failure: Error>(
         for duration: Duration,
-        body: @Sendable @escaping () async throws(Failure) -> Return
+        body: () async throws(Failure) -> Return
     ) async throws(Failure) -> Return {
         try await self.internalContext.timeout(for: duration, body: body)
     }
