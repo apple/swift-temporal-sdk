@@ -215,7 +215,7 @@ struct InternalWorkflowContext: Sendable {
         try await self.stateMachine.withCancellationShield(operation)
     }
 
-    func condition(_ condition: @escaping () -> Bool) async throws {
+    func condition(_ condition: () -> Bool) async throws {
         try await self.stateMachine.condition(condition)
     }
 
