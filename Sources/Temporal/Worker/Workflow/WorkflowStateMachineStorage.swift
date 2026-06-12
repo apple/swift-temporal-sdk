@@ -137,8 +137,11 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         return self.stateMachine.allHandlersFinished()
     }
 
-    func withCancellationShield<Result: Sendable>(_ operation: sending @escaping () async throws -> Result) async throws -> Result {
-        try await Task(executorPreference: self.executor, operation: operation).value
+    func withCancellationShield<Result: Sendable>(_ operation: () async throws -> Result) async throws -> Result {
+        try await withoutActuallyEscaping(operation) { escapingOperation in
+            nonisolated(unsafe) let unsafeEscapingOperation = escapingOperation
+            return try await Task(executorPreference: self.executor, operation: unsafeEscapingOperation).value
+        }
     }
 
     func condition(_ condition: () -> Bool) async throws {

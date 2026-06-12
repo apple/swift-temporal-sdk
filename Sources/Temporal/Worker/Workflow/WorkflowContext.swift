@@ -447,7 +447,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     /// For example, you can use this to execute an activity as part of a cleanup operation when your workflow is getting canceled.
     ///
     /// - Parameter operation: The operation that should be executed.
-    public func withCancellationShield<Result: Sendable>(_ operation: sending @escaping () async throws -> Result) async throws -> Result {
+    public func withCancellationShield<Result: Sendable>(_ operation: () async throws -> Result) async throws -> Result {
         try await self.internalContext.withCancellationShield(operation)
     }
 
