@@ -53,6 +53,8 @@ public import struct Foundation.Date
 /// ```
 ///
 /// - Important: This type is only valid for use within the scope of a workflow execution.
+// Disable AmbiguousTrailingClosureOverload for the two overloads of `condition(_:)`
+// swift-format-ignore: AmbiguousTrailingClosureOverload
 public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable {
     let internalContext: InternalWorkflowContext
     let stateBox: ArcBox<Workflow>
@@ -334,7 +336,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     /// - Returns: The result of the closure.
     public func timeout<Return: Sendable, Failure: Error>(
         for duration: Duration,
-        body: @Sendable @escaping () async throws(Failure) -> Return
+        body: () async throws(Failure) -> Return
     ) async throws(Failure) -> Return {
         try await self.internalContext.timeout(for: duration, body: body)
     }
@@ -369,7 +371,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     /// - Parameter condition: A closure that receives the workflow state and returns `true`
     ///   when the condition is satisfied.
     /// - Throws: A `CanceledError` if the waiting was cancelled.
-    public func condition(_ condition: @escaping (Workflow) -> Bool) async throws {
+    public func condition(_ condition: (Workflow) -> Bool) async throws {
         try await self.internalContext.condition { [stateBox] in
             stateBox.withValue { condition($0) }
         }
@@ -389,7 +391,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     ///
     /// - Parameter condition: A closure that returns `true` when the condition is satisfied.
     /// - Throws: A `CanceledError` if the waiting was cancelled.
-    public func condition(_ condition: @escaping () -> Bool) async throws {
+    public func condition(_ condition: () -> Bool) async throws {
         try await self.internalContext.condition(condition)
     }
 
@@ -445,7 +447,7 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     /// For example, you can use this to execute an activity as part of a cleanup operation when your workflow is getting canceled.
     ///
     /// - Parameter operation: The operation that should be executed.
-    public func withCancellationShield<Result: Sendable>(_ operation: sending @escaping () async throws -> Result) async throws -> Result {
+    public func withCancellationShield<Result: Sendable>(_ operation: () async throws -> Result) async throws -> Result {
         try await self.internalContext.withCancellationShield(operation)
     }
 

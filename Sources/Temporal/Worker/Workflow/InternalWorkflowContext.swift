@@ -155,62 +155,67 @@ struct InternalWorkflowContext: Sendable {
 
     func timeout<Return: Sendable, Failure: Error>(
         for duration: Duration,
-        body: @Sendable @escaping () async throws(Failure) -> Return
+        body: () async throws(Failure) -> Return
     ) async throws(Failure) -> Return {
-        try await withTaskGroup(of: TimeoutResult<Return, Failure>.self) { group in
-            group.addTask {
-                do {
-                    try await self.sleep(for: duration)
-                    return .sleepReturned
-                } catch {
-                    return .sleepThrew
+        try await withoutActuallyEscaping(body) { escapingBody async throws(Failure) in
+            try await withTaskGroup(of: TimeoutResult<Return, Failure>.self) { group in
+                group.addTask {
+                    do {
+                        try await self.sleep(for: duration)
+                        return .sleepReturned
+                    } catch {
+                        return .sleepThrew
+                    }
                 }
-            }
-            group.addTask {
-                do {
-                    return .bodyReturned(try await body())
-                } catch {
-                    // TODO: Investigate why this requires a force cast with the compiler folks
-                    return .bodyThrew(error as! Failure)
-                }
-            }
 
-            // This force unwrap is safe since we have two guaranteed child tasks
-            // If the method below
-            let result = await group.next()!
-            switch result {
-            case .sleepReturned, .sleepThrew:
-                // We either timed out or our parent task got cancelled
-                // so now we have to cancel the body child task and wait for its result
-                group.cancelAll()
-                let nextResult = await group.next()!
-                switch nextResult {
+                // `addTask(_:)` will enqueue on the serial workflow executor, therefore, this is actually not sending anything
+                // and we can pass this as nonisolated(unsafe)
+                nonisolated(unsafe) let unsafeEscapingBody = escapingBody
+                group.addTask { @Sendable in
+                    do throws(Failure) {
+                        return .bodyReturned(try await unsafeEscapingBody())
+                    } catch {
+                        return .bodyThrew(error)
+                    }
+                }
+
+                // This force unwrap is safe since we have two guaranteed child tasks
+                // If the method below
+                let result = await group.next()!
+                switch result {
                 case .sleepReturned, .sleepThrew:
-                    fatalError("The sleep child task already returned")
+                    // We either timed out or our parent task got cancelled
+                    // so now we have to cancel the body child task and wait for its result
+                    group.cancelAll()
+                    let nextResult = await group.next()!
+                    switch nextResult {
+                    case .sleepReturned, .sleepThrew:
+                        fatalError("The sleep child task already returned")
+                    case .bodyReturned(let value):
+                        return Result<Return, Failure>.success(value)
+                    case .bodyThrew(let error):
+                        return Result<Return, Failure>.failure(error)
+                    }
                 case .bodyReturned(let value):
+                    // We can cancel the sleep now and ignore any error from it
+                    group.cancelAll()
+                    _ = await group.next()
                     return Result<Return, Failure>.success(value)
                 case .bodyThrew(let error):
+                    // We can cancel the sleep now and ignore any error from it
+                    group.cancelAll()
+                    _ = await group.next()
                     return Result<Return, Failure>.failure(error)
                 }
-            case .bodyReturned(let value):
-                // We can cancel the sleep now and ignore any error from it
-                group.cancelAll()
-                _ = await group.next()
-                return Result<Return, Failure>.success(value)
-            case .bodyThrew(let error):
-                // We can cancel the sleep now and ignore any error from it
-                group.cancelAll()
-                _ = await group.next()
-                return Result<Return, Failure>.failure(error)
-            }
-        }.get()
+            }.get()
+        }
     }
 
-    func withCancellationShield<Result: Sendable>(_ operation: sending @escaping () async throws -> Result) async throws -> Result {
+    func withCancellationShield<Result: Sendable>(_ operation: () async throws -> Result) async throws -> Result {
         try await self.stateMachine.withCancellationShield(operation)
     }
 
-    func condition(_ condition: @escaping () -> Bool) async throws {
+    func condition(_ condition: () -> Bool) async throws {
         try await self.stateMachine.condition(condition)
     }
 

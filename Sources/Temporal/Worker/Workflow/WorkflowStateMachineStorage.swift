@@ -137,24 +137,29 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         return self.stateMachine.allHandlersFinished()
     }
 
-    func withCancellationShield<Result: Sendable>(_ operation: sending @escaping () async throws -> Result) async throws -> Result {
-        try await Task(executorPreference: self.executor, operation: operation).value
+    func withCancellationShield<Result: Sendable>(_ operation: () async throws -> Result) async throws -> Result {
+        try await withoutActuallyEscaping(operation) { escapingOperation in
+            nonisolated(unsafe) let unsafeEscapingOperation = escapingOperation
+            return try await Task(executorPreference: self.executor, operation: unsafeEscapingOperation).value
+        }
     }
 
-    func condition(_ condition: @escaping () -> Bool) async throws {
-        let id = self.stateMachine.condition(condition)
-        try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { continuation in
-                let continuation = self.stateMachine.storeConditionContinuation(id: id, continuation: continuation)
+    func condition(_ condition: () -> Bool) async throws {
+        try await withoutActuallyEscaping(condition) { escapingCondition in
+            let id = self.stateMachine.condition(escapingCondition)
+            try await withTaskCancellationHandler {
+                try await withCheckedThrowingContinuation { continuation in
+                    let continuation = self.stateMachine.storeConditionContinuation(id: id, continuation: continuation)
 
-                // We use the same error message, we cannot predict which resume comes first due to an expected race condition,
-                // where the onCancel removes the condition but this resume is scheduled first.
+                    // We use the same error message, we cannot predict which resume comes first due to an expected race condition,
+                    // where the onCancel removes the condition but this resume is scheduled first.
+                    continuation?.resume(throwing: CanceledError(message: "Wait condition cancelled"))
+                }
+            } onCancel: {
+                // We should ensure this during runtime by giving the instance a separate executor which we can assert on.
+                let continuation = self.stateMachine.cancelConditionContinuation(id: id)
                 continuation?.resume(throwing: CanceledError(message: "Wait condition cancelled"))
             }
-        } onCancel: {
-            // We should ensure this during runtime by giving the instance a separate executor which we can assert on.
-            let continuation = self.stateMachine.cancelConditionContinuation(id: id)
-            continuation?.resume(throwing: CanceledError(message: "Wait condition cancelled"))
         }
     }
 
