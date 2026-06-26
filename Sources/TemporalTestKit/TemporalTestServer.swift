@@ -170,7 +170,7 @@ public struct TemporalTestServer: Sendable {
     ///   - body: An async closure that receives the test server instance and performs test operations.
     /// - Returns: The result value returned by the closure.
     /// - Throws: Any errors thrown by the closure or during server lifecycle management.
-    public static func withTestServer<Result: Sendable>(
+    public static func withTestServer<Result>(
         searchAttributes: [AnySearchAttributeKey] = [],
         extraArguments: [String] = [],
         _ body: (borrowing TemporalTestServer) async throws -> Result
@@ -464,6 +464,80 @@ public struct TemporalTestServer: Sendable {
         }
     }
 
+    // MARK: - Worker and Client Convenience
+
+    /// Starts a connected worker and client for integration testing, then executes your closure.
+    ///
+    /// This convenience combines `withConnectedWorker` and `withConnectedClient` into a single
+    /// call. It creates a worker configuration with a unique task queue, starts the worker,
+    /// connects a client, and passes both the task queue name and client to your closure.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// let testServer = TemporalTestServer.testServer!
+    /// try await testServer.withWorkerAndClient(
+    ///     activities: GreetingActivities().allActivities,
+    ///     workflows: [GreetingWorkflow.self]
+    /// ) { taskQueue, client in
+    ///     let handle = try await client.startWorkflow(
+    ///         type: GreetingWorkflow.self,
+    ///         options: .init(id: "wf-\(UUID())", taskQueue: taskQueue),
+    ///         input: "World"
+    ///     )
+    ///     let result = try await handle.result()
+    ///     #expect(result == "Hello, World!")
+    /// }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - activities: Activity implementations to register on the worker.
+    ///   - workflows: Workflow types to register on the worker.
+    ///   - namespace: The Temporal namespace to use. Defaults to `"default"`.
+    ///   - workerInterceptors: Worker interceptors to apply.
+    ///   - clientInterceptors: Client interceptors to apply.
+    ///   - logger: Logger used by both the worker and client. Defaults to a stdout `Logger` at `.info`.
+    ///   - body: An async closure that receives the task queue name and a connected client.
+    /// - Returns: The value returned by `body`.
+    /// - Throws: Any error thrown while creating the worker, connecting the client, or by the `body` closure.
+    public func withWorkerAndClient<Result: Sendable>(
+        activities: [any ActivityDefinition] = [],
+        workflows: [any WorkflowDefinition.Type] = [],
+        namespace: String = "default",
+        workerInterceptors: [any WorkerInterceptor] = [],
+        clientInterceptors: [any Temporal.ClientInterceptor] = [],
+        logger: Logger = {
+            var logger = Logger(label: "TestWorker", factory: { StreamLogHandler.standardOutput(label: $0) })
+            logger.logLevel = .info
+            return logger
+        }(),
+        body: sending @escaping (String, TemporalClient) async throws -> Result
+    ) async throws -> sending Result {
+        let (host, _) = self.hostAndPort()
+        let taskQueue = UUID().uuidString
+
+        var config = TemporalWorker.Configuration(
+            namespace: namespace,
+            taskQueue: taskQueue,
+            instrumentation: .init(serverHostname: host)
+        )
+        config.interceptors = workerInterceptors
+
+        return try await self.withConnectedWorker(
+            configuration: config,
+            activities: activities,
+            workflows: workflows,
+            logger: logger
+        ) { _ in
+            try await self.withConnectedClient(
+                logger: logger,
+                interceptors: clientInterceptors
+            ) { client, _, _ in
+                try await body(taskQueue, client)
+            }
+        }
+    }
+
     // MARK: - Time Control
 
     /// Advances the test server time by the specified duration.
@@ -526,7 +600,7 @@ public struct TemporalTestServer: Sendable {
     ///
     /// This is used internally by ``TimeSkippingClientInterceptor`` to allow time to
     /// advance while waiting for workflow results.
-    func withTimeSkippingUnlocked<Result: Sendable>(
+    func withTimeSkippingUnlocked<Result>(
         _ body: () async throws -> Result
     ) async throws -> Result {
         guard let testServiceClient else {
