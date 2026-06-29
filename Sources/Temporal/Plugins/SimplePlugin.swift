@@ -49,6 +49,17 @@
 ///     dataConverter: { existing in EncryptingDataConverter(wrapping: existing) }
 /// )
 /// ```
+///
+/// ## Bracketing the connect, run, and replay lifetimes
+///
+/// To run setup or teardown around the connected-client, worker-run, or replay lifetimes, pass the
+/// matching `before`/`after` closures. The before closure runs immediately before the wrapped
+/// work, the after closure immediately after it returns successfully; if the wrapped work throws,
+/// the after closure does not run. If the before closure itself throws, the error propagates and
+/// neither the wrapped work nor the after closure runs. For full wrap semantics, such as
+/// short-circuiting or mapping errors, conform to ``ClientPlugin`` or ``WorkerPlugin`` directly
+/// and override the `connectClient(configuration:next:)`, `runWorker(configuration:next:)`, or
+/// `runReplayer(configuration:next:)` method.
 public struct SimplePlugin: ClientPlugin, WorkerPlugin {
     /// A human-readable name used in diagnostics and ordering.
     public let name: String
@@ -68,6 +79,30 @@ public struct SimplePlugin: ClientPlugin, WorkerPlugin {
     /// Workflows the plugin registers with the worker and replayer.
     public let workflows: [any WorkflowDefinition.Type]
 
+    /// A closure invoked immediately before the inner work inside ``connectClient(configuration:next:)``.
+    public let beforeConnect: (@Sendable (TemporalClient.Configuration) async throws -> Void)?
+
+    /// A closure invoked immediately after the inner work inside ``connectClient(configuration:next:)``.
+    ///
+    /// Does not run if the inner work throws.
+    public let afterConnect: (@Sendable (TemporalClient.Configuration) async throws -> Void)?
+
+    /// A closure invoked immediately before the inner work inside ``runWorker(configuration:next:)``.
+    public let beforeRunWorker: (@Sendable (TemporalWorker.Configuration) async throws -> Void)?
+
+    /// A closure invoked immediately after the inner work inside ``runWorker(configuration:next:)``.
+    ///
+    /// Does not run if the inner work throws.
+    public let afterRunWorker: (@Sendable (TemporalWorker.Configuration) async throws -> Void)?
+
+    /// A closure invoked immediately before the inner work inside ``runReplayer(configuration:next:)``.
+    public let beforeRunReplayer: (@Sendable (WorkflowReplayer.Configuration) async throws -> Void)?
+
+    /// A closure invoked immediately after the inner work inside ``runReplayer(configuration:next:)``.
+    ///
+    /// Does not run if the inner work throws.
+    public let afterRunReplayer: (@Sendable (WorkflowReplayer.Configuration) async throws -> Void)?
+
     /// Creates a new simple plugin.
     ///
     /// - Parameters:
@@ -80,13 +115,28 @@ public struct SimplePlugin: ClientPlugin, WorkerPlugin {
     ///     Defaults to empty.
     ///   - activities: Activities registered with the worker. Defaults to empty.
     ///   - workflows: Workflows registered with the worker and replayer. Defaults to empty.
+    ///   - beforeConnect: An optional closure run immediately before the connected-client work.
+    ///   - afterConnect: An optional closure run immediately after the connected-client work
+    ///     returns successfully.
+    ///   - beforeRunWorker: An optional closure run immediately before the worker's run loop.
+    ///   - afterRunWorker: An optional closure run immediately after the worker's run loop returns
+    ///     successfully.
+    ///   - beforeRunReplayer: An optional closure run immediately before a single replay.
+    ///   - afterRunReplayer: An optional closure run immediately after a single replay returns
+    ///     successfully.
     public init(
         name: String,
         dataConverter: (@Sendable (DataConverter) -> DataConverter)? = nil,
         clientInterceptors: [any ClientInterceptor] = [],
         workerInterceptors: [any WorkerInterceptor] = [],
         activities: [any ActivityDefinition] = [],
-        workflows: [any WorkflowDefinition.Type] = []
+        workflows: [any WorkflowDefinition.Type] = [],
+        beforeConnect: (@Sendable (TemporalClient.Configuration) async throws -> Void)? = nil,
+        afterConnect: (@Sendable (TemporalClient.Configuration) async throws -> Void)? = nil,
+        beforeRunWorker: (@Sendable (TemporalWorker.Configuration) async throws -> Void)? = nil,
+        afterRunWorker: (@Sendable (TemporalWorker.Configuration) async throws -> Void)? = nil,
+        beforeRunReplayer: (@Sendable (WorkflowReplayer.Configuration) async throws -> Void)? = nil,
+        afterRunReplayer: (@Sendable (WorkflowReplayer.Configuration) async throws -> Void)? = nil
     ) {
         self.name = name
         self.dataConverter = dataConverter
@@ -94,6 +144,12 @@ public struct SimplePlugin: ClientPlugin, WorkerPlugin {
         self.workerInterceptors = workerInterceptors
         self.activities = activities
         self.workflows = workflows
+        self.beforeConnect = beforeConnect
+        self.afterConnect = afterConnect
+        self.beforeRunWorker = beforeRunWorker
+        self.afterRunWorker = afterRunWorker
+        self.beforeRunReplayer = beforeRunReplayer
+        self.afterRunReplayer = afterRunReplayer
     }
 
     public func configure(_ configuration: inout TemporalClient.Configuration) {
@@ -115,5 +171,34 @@ public struct SimplePlugin: ClientPlugin, WorkerPlugin {
             configuration.dataConverter = dataConverter(configuration.dataConverter)
         }
         configuration.interceptors.append(contentsOf: workerInterceptors)
+    }
+
+    public func connectClient<R: Sendable>(
+        configuration: TemporalClient.Configuration,
+        next: () async throws -> sending R
+    ) async throws -> sending R {
+        try await beforeConnect?(configuration)
+        let result = try await next()
+        try await afterConnect?(configuration)
+        return result
+    }
+
+    public func runWorker(
+        configuration: TemporalWorker.Configuration,
+        next: () async throws -> Void
+    ) async throws {
+        try await beforeRunWorker?(configuration)
+        try await next()
+        try await afterRunWorker?(configuration)
+    }
+
+    public func runReplayer<R: Sendable>(
+        configuration: WorkflowReplayer.Configuration,
+        next: () async throws -> sending R
+    ) async throws -> sending R {
+        try await beforeRunReplayer?(configuration)
+        let result = try await next()
+        try await afterRunReplayer?(configuration)
+        return result
     }
 }

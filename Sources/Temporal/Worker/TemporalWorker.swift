@@ -73,6 +73,15 @@ public final class TemporalWorker: Service, Sendable {
             AnyUInt8GRPCClient
         >
 
+    /// The merged worker configuration after plugins have applied.
+    ///
+    /// Held for the lifecycle hook chain on ``run()`` so plugins observe the post-merge state.
+    private let configuration: Configuration
+
+    /// Snapshot from ``Configuration/applyPlugins(logger:)`` so the run-loop hook chain sees the
+    /// post-merge state even if `configuration.plugins` is mutated afterward.
+    private let plugins: [any WorkerPlugin]
+
     /// Creates a Temporal worker with the specified configuration and registrations.
     ///
     /// The worker automatically sets up gRPC client interceptors for tracing, metrics, and logging.
@@ -108,6 +117,8 @@ public final class TemporalWorker: Service, Sendable {
         let combinedActivities = activities + plugins.flatMap(\.activities)
         let combinedWorkflows = workflows + plugins.flatMap(\.workflows)
 
+        self.configuration = configuration
+        self.plugins = plugins
         self.implementation = GenericTemporalWorker(
             configuration: configuration,
             transport: transport,
@@ -121,8 +132,16 @@ public final class TemporalWorker: Service, Sendable {
     /// Starts the worker and begins polling for workflow and activity tasks.
     ///
     /// This method suspends indefinitely until the worker is shut down or an error occurs.
+    /// Plugins set on ``Configuration/plugins`` wrap the run via
+    /// ``WorkerPlugin/runWorker(configuration:next:)``, with the first plugin in the array as the
+    /// outermost wrap.
     public func run() async throws {
-        try await self.implementation.run()
+        try await applyWorkerRunChain(
+            plugins: self.plugins[...],
+            configuration: self.configuration
+        ) {
+            try await self.implementation.run()
+        }
     }
 
     package func run(bridgeRuntime: BridgeRuntime) async throws {
