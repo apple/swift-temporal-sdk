@@ -36,6 +36,9 @@ extension TemporalClient: Service {
         configuration: TemporalClient.Configuration,
         logger: Logger = Logger(label: "NoOpLogger", factory: { _ in SwiftLogNoOpLogHandler() })
     ) {
+        var configuration = configuration
+        configuration.applyPlugins(logger: logger)
+
         let grpcClient = GRPCClient(
             transport: transport,
             interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger)
