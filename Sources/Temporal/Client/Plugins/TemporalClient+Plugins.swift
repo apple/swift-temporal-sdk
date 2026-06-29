@@ -39,3 +39,26 @@ extension TemporalClient.Configuration {
         }
     }
 }
+
+/// Runs `body` wrapped by each plugin's ``ClientPlugin/connectClient(configuration:next:)``.
+///
+/// The first plugin in `plugins` is the outermost wrap and the last plugin is the innermost.
+/// When `plugins` is empty, `body` runs directly. The helper is recursive so that `body` can be
+/// passed through as a non-escaping closure, which lets callers forward a non-`@escaping` body
+/// parameter from a public connect entry point.
+package func applyClientConnectChain<R: Sendable>(
+    plugins: ArraySlice<any ClientPlugin>,
+    configuration: TemporalClient.Configuration,
+    body: () async throws -> sending R
+) async throws -> sending R {
+    guard let plugin = plugins.first else {
+        return try await body()
+    }
+    return try await plugin.connectClient(configuration: configuration) {
+        try await applyClientConnectChain(
+            plugins: plugins.dropFirst(),
+            configuration: configuration,
+            body: body
+        )
+    }
+}

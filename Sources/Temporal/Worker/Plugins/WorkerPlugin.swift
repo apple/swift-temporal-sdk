@@ -38,6 +38,17 @@
 ///
 /// The same plugin can customize a ``WorkflowReplayer`` via ``configureReplayer(_:)``. Use it for
 /// instrumentation that should also run during replay, such as logging or metrics.
+///
+/// ## Wrapping worker and replayer lifetimes
+///
+/// A plugin can also observe and surround the lifetime of a running worker by overriding
+/// ``runWorker(configuration:next:)``, and the lifetime of a replay invocation by overriding
+/// ``runReplayer(configuration:next:)``. Both methods receive the merged configuration and a
+/// continuation closure, and are expected to invoke the continuation as part of their body.
+/// Wrapping is useful for emitting telemetry around startup and shutdown, mapping errors, or
+/// running setup and teardown that should bracket the worker's or replayer's run. When plugins
+/// compose, the first plugin in ``TemporalWorker/Configuration/plugins`` (or
+/// ``WorkflowReplayer/Configuration/plugins``) is the outermost wrap.
 public protocol WorkerPlugin: Sendable {
     /// A human-readable name used in diagnostics and ordering.
     ///
@@ -78,6 +89,55 @@ public protocol WorkerPlugin: Sendable {
     ///
     /// - Parameter configuration: The replayer configuration to customize.
     func configureReplayer(_ configuration: inout WorkflowReplayer.Configuration)
+
+    /// Wraps the lifetime of a running worker.
+    ///
+    /// The default implementation forwards through to `next`, so plugins that do not need to
+    /// surround the worker run can omit this method. Override to bracket the worker with custom
+    /// logic, such as logging, metrics, or error mapping. Implementations must invoke `next`
+    /// exactly once. Calling `next` zero times or more than once is undefined behavior; the SDK
+    /// reserves the right to detect and reject it in a future release.
+    ///
+    /// When the configuration carries multiple plugins, the first plugin in
+    /// ``TemporalWorker/Configuration/plugins`` is the outermost wrap and the last plugin is the
+    /// innermost. The continuation closure invokes the next plugin in the chain, and ultimately
+    /// the worker's underlying poll-and-execute loop.
+    ///
+    /// - Parameters:
+    ///   - configuration: The merged configuration the worker is using. Plugins receive the
+    ///     configuration after every plugin's ``configure(_:)`` has run.
+    ///   - next: A continuation that, when invoked, runs the rest of the plugin chain and the
+    ///     worker's underlying run loop.
+    func runWorker(
+        configuration: TemporalWorker.Configuration,
+        next: () async throws -> Void
+    ) async throws
+
+    /// Wraps the lifetime of a workflow replay invocation.
+    ///
+    /// The default implementation forwards through to `next`, so plugins that do not need to
+    /// surround replays can omit this method. Override to bracket replays with custom logic,
+    /// such as logging or error mapping. Implementations must invoke `next` exactly once and
+    /// return whatever value it produces, so the value returned by the public replay API is
+    /// preserved. Calling `next` zero times or more than once is undefined behavior; the SDK
+    /// reserves the right to detect and reject it in a future release.
+    ///
+    /// When the configuration carries multiple plugins, the first plugin in
+    /// ``WorkflowReplayer/Configuration/plugins`` is the outermost wrap and the last plugin is the
+    /// innermost. The continuation closure invokes the next plugin in the chain, and ultimately
+    /// the replayer's underlying replay invocation.
+    ///
+    /// - Parameters:
+    ///   - configuration: The merged configuration the replayer is using. Plugins receive the
+    ///     configuration after every plugin's ``configureReplayer(_:)`` has run.
+    ///   - next: A continuation that, when invoked, runs the rest of the plugin chain and the
+    ///     replayer's underlying invocation. Returns the value produced by the public replay
+    ///     entry point.
+    /// - Returns: The value produced by `next`, optionally transformed by the plugin.
+    func runReplayer<R: Sendable>(
+        configuration: WorkflowReplayer.Configuration,
+        next: () async throws -> sending R
+    ) async throws -> sending R
 }
 
 extension WorkerPlugin {
@@ -92,4 +152,18 @@ extension WorkerPlugin {
     public func configure(_ configuration: inout TemporalWorker.Configuration) {}
 
     public func configureReplayer(_ configuration: inout WorkflowReplayer.Configuration) {}
+
+    public func runWorker(
+        configuration: TemporalWorker.Configuration,
+        next: () async throws -> Void
+    ) async throws {
+        try await next()
+    }
+
+    public func runReplayer<R: Sendable>(
+        configuration: WorkflowReplayer.Configuration,
+        next: () async throws -> sending R
+    ) async throws -> sending R {
+        try await next()
+    }
 }

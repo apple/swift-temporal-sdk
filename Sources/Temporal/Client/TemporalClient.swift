@@ -173,13 +173,19 @@ public final class TemporalClient: Sendable {
     ) async throws -> sending Result {
         var configuration = configuration
         configuration.applyPlugins(logger: logger)
-        return try await withGRPCClient(
-            transport: transport,
-            interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger),
-            isolation: #isolation
-        ) { client in
-            let temporalClient = Self.init(client: client, configuration: configuration)
-            return try await body(temporalClient)
+        let plugins = configuration.plugins
+        return try await applyClientConnectChain(
+            plugins: plugins[...],
+            configuration: configuration
+        ) {
+            try await withGRPCClient(
+                transport: transport,
+                interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger),
+                isolation: #isolation
+            ) { client in
+                let temporalClient = Self.init(client: client, configuration: configuration)
+                return try await body(temporalClient)
+            }
         }
     }
 }
