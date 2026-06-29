@@ -35,6 +35,12 @@ extension WorkflowReplayer {
         /// A logger for diagnostic output during replay.
         public var logger: Logger
 
+        /// The plugins that customize this replayer before it starts replaying.
+        ///
+        /// Each plugin's ``WorkerPlugin/configureReplayer(_:)`` runs against this configuration,
+        /// in array order, when the replayer is initialized.
+        public var plugins: [any WorkerPlugin]
+
         /// Creates a new replayer configuration.
         ///
         /// - Parameters:
@@ -48,13 +54,16 @@ extension WorkflowReplayer {
         ///     array (no interceptors).
         ///   - logger: The logger for diagnostic output. Defaults to a logger with label
         ///     `"WorkflowReplayer"`.
+        ///   - plugins: The plugins to apply to this configuration when the replayer is
+        ///     initialized. Defaults to none.
         public init(
             workflows: [any WorkflowDefinition.Type] = [],
             namespace: String = "ReplayNamespace",
             taskQueue: String = "ReplayTaskQueue",
             dataConverter: DataConverter = .default,
             interceptors: [any WorkerInterceptor] = [],
-            logger: Logger = Logger(label: "WorkflowReplayer")
+            logger: Logger = Logger(label: "WorkflowReplayer"),
+            plugins: [any WorkerPlugin] = []
         ) {
             self.workflows = workflows
             self.namespace = namespace
@@ -62,6 +71,7 @@ extension WorkflowReplayer {
             self.dataConverter = dataConverter
             self.interceptors = interceptors
             self.logger = logger
+            self.plugins = plugins
         }
     }
 }
