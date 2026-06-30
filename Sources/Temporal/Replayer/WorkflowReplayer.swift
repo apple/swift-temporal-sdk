@@ -44,7 +44,9 @@ public final class WorkflowReplayer: Sendable {
 
     /// Creates a new workflow replayer with the given configuration.
     ///
-    /// At least one workflow must be registered in the configuration.
+    /// At least one workflow must be registered in the configuration. Plugins set on
+    /// ``Configuration/plugins`` can contribute additional workflows, which are appended to
+    /// ``Configuration/workflows`` before this check is enforced.
     ///
     /// - Parameter configuration: The configuration specifying which workflows to replay
     ///   and how to process them.
