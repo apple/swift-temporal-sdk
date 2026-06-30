@@ -44,6 +44,21 @@ public protocol WorkerPlugin: Sendable {
     /// Defaults to the conforming type's name.
     var name: String { get }
 
+    /// Activity definitions this plugin contributes to the worker.
+    ///
+    /// Plugin-contributed activities are appended to the activities supplied to
+    /// ``TemporalWorker/init(configuration:transport:activityContainers:activities:workflows:logger:)``
+    /// before the worker registers them. Defaults to an empty array, so plugins that customize
+    /// the worker without registering activities do not need to override this property.
+    var activities: [any ActivityDefinition] { get }
+
+    /// Workflow types this plugin contributes to the worker.
+    ///
+    /// Plugin-contributed workflows are appended to the workflows supplied to
+    /// ``TemporalWorker/init(configuration:transport:activityContainers:activities:workflows:logger:)``
+    /// before the worker registers them. Defaults to an empty array.
+    var workflows: [any WorkflowDefinition.Type] { get }
+
     /// Customizes a worker configuration before the worker starts.
     ///
     /// Implementations mutate `configuration` in place to adjust fields such as
@@ -69,6 +84,10 @@ extension WorkerPlugin {
     public var name: String {
         String(describing: Self.self)
     }
+
+    public var activities: [any ActivityDefinition] { [] }
+
+    public var workflows: [any WorkflowDefinition.Type] { [] }
 
     public func configure(_ configuration: inout TemporalWorker.Configuration) {}
 
