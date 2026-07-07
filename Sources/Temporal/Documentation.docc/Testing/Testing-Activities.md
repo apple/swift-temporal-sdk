@@ -123,5 +123,4 @@ through ``ActivityExecutionContext/cancellationReason``. See
 
 For end-to-end testing of activities as part of a workflow execution, see
 <doc:Testing-Workflows>. The integration test pattern is the same: apply a test
-trait, register your activities with `TemporalTestServer.withConnectedWorker`,
-and start the workflow through a connected client.
+trait and pass your activities to `TemporalTestServer.withWorkerAndClient`.
