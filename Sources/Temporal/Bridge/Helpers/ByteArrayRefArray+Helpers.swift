@@ -32,13 +32,16 @@ extension Array where Element == String {
             }
         }
 
-        // Memory valid for duration of body
-        return try refs.withUnsafeBufferPointer { refBP throws(Failure) in
-            let refArray = TemporalCoreByteArrayRefArray(
-                data: refBP.baseAddress!,
-                size: refBP.count
-            )
-            return try body(refArray)
+        // Keep `buffers` alive for the duration of body, `refs` holds raw pointers into it.
+        return try withExtendedLifetime(buffers) {
+            // Memory valid for duration of body
+            try refs.withUnsafeBufferPointer { refBP throws(Failure) in
+                let refArray = TemporalCoreByteArrayRefArray(
+                    data: refBP.baseAddress!,
+                    size: refBP.count
+                )
+                return try body(refArray)
+            }
         }
     }
 }
