@@ -32,13 +32,17 @@ package protocol BridgeWorkerProtocol: Sendable {
     func pollActivityTask() async throws -> Coresdk.ActivityTask.ActivityTask
     func completeActivityTask(_ completion: Coresdk.ActivityTaskCompletion) async throws
     func recordActivityHeartbeat(_ heartbeat: Coresdk.ActivityHeartbeat) throws
+
+    /// Runs any long-lived consumer tasks for user-supplied slot suppliers. Returns when the
+    /// surrounding task is cancelled or all reserve streams have finished.
+    func runSlotSupplierLoops() async
 }
 
 package final class BridgeWorker: BridgeWorkerProtocol {
     private nonisolated(unsafe) let worker: OpaquePointer
 
-    /// Custom slot suppliers retained for the worker's lifetime. Their reserve loops are wired
-    /// into the worker's task tree by the following commit.
+    /// Custom slot suppliers retained for the worker's lifetime. Their reserve loops are
+    /// driven by ``runSlotSupplierLoops()``.
     private let customSlotSuppliers: [BridgeCustomSlotSupplier]
 
     init(
@@ -170,8 +174,24 @@ package final class BridgeWorker: BridgeWorkerProtocol {
         temporal_core_worker_free(self.worker)
     }
 
+    package func runSlotSupplierLoops() async {
+        guard !self.customSlotSuppliers.isEmpty else { return }
+        await withDiscardingTaskGroup { group in
+            for supplier in self.customSlotSuppliers {
+                group.addTask {
+                    await supplier.runReserveLoop()
+                }
+            }
+        }
+    }
+
     package func initiateShutdown() {
         temporal_core_worker_initiate_shutdown(self.worker)
+        // Finish the reserve streams so each consumer's `for await` exits and the inner discarding
+        // task group can drain in-flight reservations as Rust issues their `cancel_reserve` callbacks.
+        for supplier in self.customSlotSuppliers {
+            supplier.markShutdown()
+        }
     }
 
     package func finalizeShutdown() async throws {

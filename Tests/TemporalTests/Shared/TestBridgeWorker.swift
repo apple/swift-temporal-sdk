@@ -54,4 +54,8 @@ extension BridgeWorkerForwarding {
     ) throws {
         try self.base.recordActivityHeartbeat(heartbeat)
     }
+
+    func runSlotSupplierLoops() async {
+        await self.base.runSlotSupplierLoops()
+    }
 }
