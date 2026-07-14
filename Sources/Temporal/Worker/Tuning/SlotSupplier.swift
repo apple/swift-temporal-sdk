@@ -20,6 +20,7 @@ public struct SlotSupplier: Sendable {
     package enum Kind: Sendable {
         case fixedSize(FixedSizeSlotSupplierOptions)
         case resourceBased(options: ResourceBasedSlotSupplierOptions, tunerOptions: ResourceBasedTunerOptions)
+        case custom(any CustomSlotSupplier)
     }
 
     package let kind: Kind
@@ -53,5 +54,16 @@ public struct SlotSupplier: Sendable {
         tunerOptions: ResourceBasedTunerOptions
     ) -> SlotSupplier {
         .init(.resourceBased(options: options, tunerOptions: tunerOptions))
+    }
+
+    /// Delegates slot allocation to a user-provided `CustomSlotSupplier`.
+    ///
+    /// The worker will call into `supplier` to reserve, mark, and release slots. See
+    /// ``CustomSlotSupplier`` for threading and cancellation requirements.
+    ///
+    /// - Parameter supplier: The custom slot supplier implementation.
+    /// - Returns: A slot supplier backed by `supplier`.
+    public static func custom<S: CustomSlotSupplier>(_ supplier: S) -> SlotSupplier {
+        .init(.custom(supplier))
     }
 }
