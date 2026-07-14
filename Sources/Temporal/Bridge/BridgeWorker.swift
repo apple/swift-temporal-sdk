@@ -37,6 +37,10 @@ package protocol BridgeWorkerProtocol: Sendable {
 package final class BridgeWorker: BridgeWorkerProtocol {
     private nonisolated(unsafe) let worker: OpaquePointer
 
+    /// Custom slot suppliers retained for the worker's lifetime. Their reserve loops are wired
+    /// into the worker's task tree by the following commit.
+    private let customSlotSuppliers: [BridgeCustomSlotSupplier]
+
     init(
         client: borrowing BridgeClient,
         namespace: String,
@@ -65,47 +69,68 @@ package final class BridgeWorker: BridgeWorkerProtocol {
         nexusTaskPollerBehavior: TemporalWorker.Configuration.PollerBehavior,
         gracefulShutdownPeriodMs: UInt64
     ) throws {
+        let workflowBridged = TemporalCoreSlotSupplier.bridge(tuner.workflowSlotSupplier)
+        let activityBridged = TemporalCoreSlotSupplier.bridge(tuner.activitySlotSupplier)
+        let localActivityBridged = TemporalCoreSlotSupplier.bridge(tuner.localActivitySlotSupplier)
+
         var bridgeTuner = TemporalCoreTunerHolder()
-        bridgeTuner.workflow_slot_supplier = .init(tuner.workflowSlotSupplier)
-        bridgeTuner.activity_slot_supplier = .init(tuner.activitySlotSupplier)
-        bridgeTuner.local_activity_slot_supplier = .init(tuner.localActivitySlotSupplier)
+        bridgeTuner.workflow_slot_supplier = workflowBridged.coreSupplier
+        bridgeTuner.activity_slot_supplier = activityBridged.coreSupplier
+        bridgeTuner.local_activity_slot_supplier = localActivityBridged.coreSupplier
 
-        self.worker = try Self.withWorkerOptions(
-            namespace: namespace,
-            taskQueue: taskQueue,
-            identity: identityOverride ?? "",
-            hasActivities: hasActivities,
-            hasWorkflows: hasWorkflows,
-            versioningStrategy: versioningStrategy,
-            tuner: bridgeTuner,
-            maxCachedWorkflows: maxCachedWorkflows,
-            stickyQueueTimeoutMs: stickyQueueScheduleToStartTimeoutMs,
-            maxHeartbeatThrottleIntervalMs: maxHeartbeatThrottleIntervalMs,
-            defaultHeartbeatThrottleIntervalMs: defaultHeartbeatThrottleIntervalMs,
-            maxActivitiesPerSecond: maxActivitiesPerSecond,
-            maxTaskQueueActivitiesPerSecond: maxTaskQueueActivitiesPerSecond,
-            gracefulShutdownMs: gracefulShutdownPeriodMs,
-            workflowTaskPollerBehavior: workflowTaskPollerBehavior,
-            nonstickyToStickyRatio: nonstickyToStickyPollRatio,
-            activityTaskPollerBehavior: activityTaskPollerBehavior,
-            nexusTaskPollerBehavior: nexusTaskPollerBehavior,
-            nondeterminismAsWorkflowFail: nondeterminismAsWorkflowFail,
-            nondeterminismTypes: nondeterminismAsWorkflowFailForTypes
-        ) { workerOptions in
-            let maybeWorker = temporal_core_worker_new(
-                client.client,
-                workerOptions
-            )
+        let customSlotSuppliers = [
+            workflowBridged.customBridge,
+            activityBridged.customBridge,
+            localActivityBridged.customBridge,
+        ].compactMap { $0 }
+        self.customSlotSuppliers = customSlotSuppliers
 
-            if let fail = maybeWorker.fail {
-                throw BridgeError(messagePointer: fail)
+        do {
+            self.worker = try Self.withWorkerOptions(
+                namespace: namespace,
+                taskQueue: taskQueue,
+                identity: identityOverride ?? "",
+                hasActivities: hasActivities,
+                hasWorkflows: hasWorkflows,
+                versioningStrategy: versioningStrategy,
+                tuner: bridgeTuner,
+                maxCachedWorkflows: maxCachedWorkflows,
+                stickyQueueTimeoutMs: stickyQueueScheduleToStartTimeoutMs,
+                maxHeartbeatThrottleIntervalMs: maxHeartbeatThrottleIntervalMs,
+                defaultHeartbeatThrottleIntervalMs: defaultHeartbeatThrottleIntervalMs,
+                maxActivitiesPerSecond: maxActivitiesPerSecond,
+                maxTaskQueueActivitiesPerSecond: maxTaskQueueActivitiesPerSecond,
+                gracefulShutdownMs: gracefulShutdownPeriodMs,
+                workflowTaskPollerBehavior: workflowTaskPollerBehavior,
+                nonstickyToStickyRatio: nonstickyToStickyPollRatio,
+                activityTaskPollerBehavior: activityTaskPollerBehavior,
+                nexusTaskPollerBehavior: nexusTaskPollerBehavior,
+                nondeterminismAsWorkflowFail: nondeterminismAsWorkflowFail,
+                nondeterminismTypes: nondeterminismAsWorkflowFailForTypes
+            ) { workerOptions in
+                let maybeWorker = temporal_core_worker_new(
+                    client.client,
+                    workerOptions
+                )
+
+                if let fail = maybeWorker.fail {
+                    throw BridgeError(messagePointer: fail)
+                }
+
+                guard let worker = maybeWorker.worker else {
+                    throw BridgeError(message: "`temporal_core_worker_new()` from Rust Bridge returned nil, but no error")
+                }
+
+                return worker
             }
-
-            guard let worker = maybeWorker.worker else {
-                throw BridgeError(message: "`temporal_core_worker_new()` from Rust Bridge returned nil, but no error")
+        } catch {
+            // The Rust core never took ownership of the callbacks, so their `free` callback
+            // will never fire. Reclaim the heap allocation and the self-retain here to avoid
+            // leaking each `BridgeCustomSlotSupplier` wrapper.
+            for supplier in customSlotSuppliers {
+                supplier.tearDownWithoutCore()
             }
-
-            return worker
+            throw error
         }
     }
 
