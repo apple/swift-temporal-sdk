@@ -318,10 +318,10 @@ jobs:
           mkdir -p temp_catalyst/Headers
 
           # Copy libraries and headers to each platform directory
-          cp "libtemporal_fat.a" "temp_macos/libTemporal.a"
-          cp "libtemporal_ios.a" "temp_ios/libTemporal.a"
-          cp "libtemporal_ios_sim.a" "temp_ios_sim/libTemporal.a"
-          cp "libtemporal_catalyst.a" "temp_catalyst/libTemporal.a"
+          cp "libtemporal_fat.a" "temp_macos/libTemporalBridge.a"
+          cp "libtemporal_ios.a" "temp_ios/libTemporalBridge.a"
+          cp "libtemporal_ios_sim.a" "temp_ios_sim/libTemporalBridge.a"
+          cp "libtemporal_catalyst.a" "temp_catalyst/libTemporalBridge.a"
 
           # Copy headers to all platform directories
           for dir in temp_*/Headers; do
@@ -337,10 +337,10 @@ jobs:
 
           # Create XCFramework using xcodebuild
           xcodebuild -create-xcframework \
-              -library "temp_macos/libTemporal.a" -headers "temp_macos/Headers" \
-              -library "temp_ios/libTemporal.a" -headers "temp_ios/Headers" \
-              -library "temp_ios_sim/libTemporal.a" -headers "temp_ios_sim/Headers" \
-              -library "temp_catalyst/libTemporal.a" -headers "temp_catalyst/Headers" \
+              -library "temp_macos/libTemporalBridge.a" -headers "temp_macos/Headers" \
+              -library "temp_ios/libTemporalBridge.a" -headers "temp_ios/Headers" \
+              -library "temp_ios_sim/libTemporalBridge.a" -headers "temp_ios_sim/Headers" \
+              -library "temp_catalyst/libTemporalBridge.a" -headers "temp_catalyst/Headers" \
               -output "${{ env.XCFRAMEWORK_NAME }}"
 
           # Clean up temporary files
