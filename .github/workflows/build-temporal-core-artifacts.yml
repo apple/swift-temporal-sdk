@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 env:
-  RUST_VERSION: "1.88"
+  RUST_VERSION: "1.94"
   ARTIFACT_BUNDLE_NAME: "temporal.artifactbundle"
   XCFRAMEWORK_NAME: "temporal.xcframework"
   HEADER_SOURCE: "dependencies/sdk-core/crates/sdk-core-c-bridge/include/temporal-sdk-core-c-bridge.h"
