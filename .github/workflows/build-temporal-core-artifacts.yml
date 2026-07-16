@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 env:
-  RUST_VERSION: "1.88"
+  RUST_VERSION: "1.94"
   ARTIFACT_BUNDLE_NAME: "temporal.artifactbundle"
   XCFRAMEWORK_NAME: "temporal.xcframework"
   HEADER_SOURCE: "dependencies/sdk-core/crates/sdk-core-c-bridge/include/temporal-sdk-core-c-bridge.h"
@@ -157,9 +157,6 @@ jobs:
           . "$HOME/.cargo/env"
           cd ${{ env.RUST_WORKSPACE_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
-          IPHONEOS_DEPLOYMENT_TARGET="18" \
-          TVOS_DEPLOYMENT_TARGET="18" \
-          WATCHOS_DEPLOYMENT_TARGET="11" \
           cargo rustc \
             --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
@@ -173,9 +170,6 @@ jobs:
           . "$HOME/.cargo/env"
           cd ${{ env.RUST_WORKSPACE_DIR }}
           MACOSX_DEPLOYMENT_TARGET="15" \
-          IPHONEOS_DEPLOYMENT_TARGET="18" \
-          TVOS_DEPLOYMENT_TARGET="18" \
-          WATCHOS_DEPLOYMENT_TARGET="11" \
           cargo rustc \
             --manifest-path crates/sdk-core-c-bridge/Cargo.toml \
             --release \
