@@ -17,29 +17,32 @@ import Bridge
 extension Array where Element == String {
     func withByteArrayRefArray<Return, Failure: Error>(
         body: (TemporalCoreByteArrayRefArray) throws(Failure) -> Return
-    ) rethrows -> Return {
-        // Swift-managed [UInt8] buffer
-        let buffers: [[UInt8]] = self.map { [UInt8]($0.utf8) }
+    ) throws(Failure) -> Return {
+        var refs: [TemporalCoreByteArrayRef] = []
+        refs.reserveCapacity(count)
 
-        // Build the ByteArrayRef array
-        let refs: [TemporalCoreByteArrayRef] = .init(unsafeUninitializedCapacity: buffers.count) { refBuffer, initializedCount in
-            for i in 0..<buffers.count {
-                // Capture pointer and length of each [UInt8]
-                buffers[i].withUnsafeBufferPointer { bp in
-                    refBuffer[i] = TemporalCoreByteArrayRef(data: bp.baseAddress!, size: bp.count)
+        // Recurse pinning each string to `refs`, then hand it to `body`
+        func iterate(iterator: inout Iterator) throws(Failure) -> Return {
+            // All strings are pinned, call `body` with the assembled `refs`
+            guard let buffer = iterator.next() else {
+                return try refs.withUnsafeBufferPointer { refsBuffer throws(Failure) in
+                    let refArray = TemporalCoreByteArrayRefArray(
+                        data: refsBuffer.baseAddress,
+                        size: refsBuffer.count
+                    )
+                    return try body(refArray)
                 }
-                initializedCount += 1
+            }
+
+            // Pin the string and recurse into the next one
+            return try buffer.withByteArrayRef { ref throws(Failure) in
+                refs.append(ref)
+                return try iterate(iterator: &iterator)
             }
         }
 
-        // Memory valid for duration of body
-        return try refs.withUnsafeBufferPointer { refBP throws(Failure) in
-            let refArray = TemporalCoreByteArrayRefArray(
-                data: refBP.baseAddress!,
-                size: refBP.count
-            )
-            return try body(refArray)
-        }
+        var iterator = makeIterator()
+        return try iterate(iterator: &iterator)
     }
 }
 
