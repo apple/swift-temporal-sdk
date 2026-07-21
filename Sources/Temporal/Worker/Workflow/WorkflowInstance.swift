@@ -228,15 +228,10 @@ struct WorkflowInstance: Sendable {
                 message: "Expected first job to be initialize workflow job"
             )
         }
-        let input: Workflow.Input
-        if Workflow.Input.self == Void.self {
-            input = () as! Workflow.Input
-        } else {
-            input = try self.payloadConverter.convertPayloads(
-                initializeWorkflow.arguments,
-                as: (Workflow.Input).self
-            )
-        }
+        let input = try self.payloadConverter.convertPayloads(
+            initializeWorkflow.arguments,
+            as: (Workflow.Input).self
+        )
 
         // Initially setting memo, search attributes and random seed.
         try Self.$isOnWorkflowInstance.withValue(true) {
