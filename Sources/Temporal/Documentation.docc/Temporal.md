@@ -71,6 +71,14 @@ Configure workers and clients for different environments.
 - ``TemporalWorker/Configuration``
 - ``TemporalClient/Configuration``
 
+### Extending with plugins
+
+Customize clients, workers, and replayers with reusable plugins.
+
+- ``ClientPlugin``
+- ``WorkerPlugin``
+- ``SimplePlugin``
+
 ## See Also
 
 - [Temporal Documentation - Complete platform documentation](https://docs.temporal.io)

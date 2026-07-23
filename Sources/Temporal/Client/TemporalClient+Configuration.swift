@@ -67,6 +67,14 @@ extension TemporalClient {
         /// Individual query calls can override this default by passing a specific ``Api/Enums/V1/QueryRejectCondition``.
         public var queryRejectCondition: Api.Enums.V1.QueryRejectCondition?
 
+        /// The plugins that customize this client before it connects.
+        ///
+        /// Each plugin's ``ClientPlugin/configure(_:)`` runs against this configuration, in array
+        /// order, when the client is connected via ``TemporalClient/connect(transport:configuration:logger:_:)``.
+        /// Plugins typically append interceptors, swap the data converter, or stamp configuration
+        /// from external sources. See ``ClientPlugin`` for details.
+        public var plugins: [any ClientPlugin]
+
         /// The SDK name identifier sent in all RPC calls to identify the client implementation.
         ///
         /// This constant value identifies this SDK implementation to the Temporal server and appears in
@@ -108,6 +116,7 @@ extension TemporalClient {
         ///   - interceptors: Request processing interceptors applied in the specified order. Defaults to the tracing interceptor.
         ///   - apiKey: The API key to use for authenticating with a Temporal Cloud instance. Defaults to none.
         ///   - queryRejectCondition: The default query rejection condition for all query operations. Defaults to none.
+        ///   - plugins: The plugins to apply to this configuration when the client connects. Defaults to none.
         public init(
             instrumentation: Instrumentation,
             namespace: String = "default",
@@ -115,7 +124,8 @@ extension TemporalClient {
             dataConverter: DataConverter = DataConverter.default,
             interceptors: [any ClientInterceptor] = [TemporalClientTracingInterceptor()],
             apiKey: String? = nil,
-            queryRejectCondition: Api.Enums.V1.QueryRejectCondition? = nil
+            queryRejectCondition: Api.Enums.V1.QueryRejectCondition? = nil,
+            plugins: [any ClientPlugin] = []
         ) {
             self.instrumentation = instrumentation
             self.namespace = namespace
@@ -124,6 +134,7 @@ extension TemporalClient {
             self.interceptors = interceptors
             self.apiKey = apiKey
             self.queryRejectCondition = queryRejectCondition
+            self.plugins = plugins
         }
 
         /// Creates a Temporal client configuration from external configuration data.
@@ -150,11 +161,13 @@ extension TemporalClient {
         ///   - dataConverter: The converter for encoding and decoding payloads. Defaults to the
         ///   standard converter.
         ///   - interceptors: A collection of client interceptors. Defaults to tracing interceptor only.
+        ///   - plugins: The plugins to apply to this configuration when the client connects. Defaults to none.
         /// - Throws: Configuration errors if required keys are missing or invalid.
         public init(
             configReader: ConfigReader,
             dataConverter: DataConverter = DataConverter.default,
-            interceptors: [any ClientInterceptor] = [TemporalClientTracingInterceptor()]
+            interceptors: [any ClientInterceptor] = [TemporalClientTracingInterceptor()],
+            plugins: [any ClientPlugin] = []
         ) throws {
             let snapshot = configReader.snapshot()
             let namespace = snapshot.string(forKey: .clientNamespace, default: "default")
@@ -167,7 +180,8 @@ extension TemporalClient {
                 identity: identity,
                 dataConverter: dataConverter,
                 interceptors: interceptors,
-                apiKey: apiKey
+                apiKey: apiKey,
+                plugins: plugins
             )
         }
     }
