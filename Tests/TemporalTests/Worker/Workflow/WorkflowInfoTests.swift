@@ -36,6 +36,8 @@ extension TestServerDependentTests {
             let info = try await executeWorkflow(
                 InfoWorkflow.self,
                 input: (),
+                // Assert the unset default; opt out of the helper's safety timeout.
+                workflowExecutionTimeout: nil,
                 taskQueue: taskQueue,
                 id: id
             )
