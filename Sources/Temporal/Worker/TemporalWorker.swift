@@ -175,7 +175,7 @@ where
         self.init(
             configuration: configuration,
             client: Client(
-                run: client.run,
+                run: client.runConnections,
                 unary: client.unary,
                 beginGracefulShutdown: client.beginGracefulShutdown
             ),
