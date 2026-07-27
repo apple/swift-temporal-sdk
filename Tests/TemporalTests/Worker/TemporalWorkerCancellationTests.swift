@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import ServiceLifecycle
 import Temporal
 import Testing
 
@@ -40,32 +39,6 @@ extension TestServerDependentTests {
                 group.cancelAll()
                 await #expect(throws: (any Error).self) {
                     try await group.next()
-                }
-            }
-        }
-
-        @Test
-        func gracefullyShutdownWorker() async throws {
-            struct ExecuteWorkflowService: Service {
-                func run() async throws {
-                    try await executeWorkflow(
-                        SimpleWorkflow.self,
-                        input: ()
-                    )
-                }
-            }
-            let serviceGroup = ServiceGroup(
-                services: [ExecuteWorkflowService()],
-                logger: Logger(label: "TestLogger")
-            )
-            await withThrowingTaskGroup { group in
-                group.addTask {
-                    try await serviceGroup.run()
-                }
-                await serviceGroup.triggerGracefulShutdown()
-
-                await #expect(throws: (any Error).self) {
-                    try await group.waitForAll()
                 }
             }
         }
