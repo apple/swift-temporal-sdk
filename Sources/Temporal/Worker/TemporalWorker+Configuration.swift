@@ -13,7 +13,12 @@
 //===----------------------------------------------------------------------===//
 
 public import Configuration
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension TemporalWorker {
     /// Configuration settings for the Temporal worker controlling operational behavior and connection

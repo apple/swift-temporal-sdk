@@ -12,9 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
-
 import struct SwiftProtobuf.Google_Protobuf_Timestamp
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension Coresdk.WorkflowCommands.ScheduleLocalActivity {
     init(

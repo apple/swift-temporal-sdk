@@ -12,10 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftParser
 import SwiftSyntax
 import SwiftSyntaxBuilder
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 // Swift reserved keywords that need to be escaped with backticks
 let swiftReservedKeywords: Set<String> = [

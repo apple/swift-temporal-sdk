@@ -13,12 +13,16 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncAlgorithms
-import Foundation
 import Synchronization
 import Temporal
 import Testing
-
 import struct GRPCCore.RPCError
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension TestServerDependentTests {
     @Suite(.tags(.clientTests))

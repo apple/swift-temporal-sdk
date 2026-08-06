@@ -12,8 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftProtobuf
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// A payload converter for types conforming to `SwiftProtobuf.Message` using JSON protobuf encoding.
 public struct JSONProtobufPayloadConverter: EncodingPayloadConverter {

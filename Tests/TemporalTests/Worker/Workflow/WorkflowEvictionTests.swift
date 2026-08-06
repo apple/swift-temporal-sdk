@@ -12,11 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import Logging
 import Temporal
 import TemporalTestKit
 import Testing
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension TestServerDependentTests {
     /// Regression tests for the fatal crash that previously occurred when a worker was torn
