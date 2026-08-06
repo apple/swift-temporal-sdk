@@ -17,9 +17,6 @@ import SwiftProtobuf
 
 /// A payload converter for types conforming to `SwiftProtobuf.Message` using JSON protobuf encoding.
 public struct JSONProtobufPayloadConverter: EncodingPayloadConverter {
-    private struct EncodingError: Error {}
-    private struct DecodingError: Error {}
-
     public static let encoding = Encodings.jsonProtobuf
 
     /// Creates a new JSON protobuf payload converter.
@@ -27,7 +24,10 @@ public struct JSONProtobufPayloadConverter: EncodingPayloadConverter {
 
     public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {
         guard let value = value as? any Message else {
-            throw EncodingError()
+            throw PayloadConverterError.encodingFailed(
+                converter: "JSONProtobufPayloadConverter",
+                reason: "value of type '\(type(of: value))' does not conform to 'SwiftProtobuf.Message'"
+            )
         }
 
         return createPayload(
@@ -43,7 +43,10 @@ public struct JSONProtobufPayloadConverter: EncodingPayloadConverter {
         as valueType: Value.Type
     ) throws -> Value {
         guard let messageType = Value.self as? any Message.Type else {
-            throw DecodingError()
+            throw PayloadConverterError.decodingFailed(
+                converter: "JSONProtobufPayloadConverter",
+                reason: "requested type '\(valueType)' does not conform to 'SwiftProtobuf.Message'"
+            )
         }
 
         let message = try { try self.convertPayload(payload, as: messageType) }()
@@ -56,7 +59,10 @@ public struct JSONProtobufPayloadConverter: EncodingPayloadConverter {
         as valueType: Value.Type
     ) throws -> Value {
         guard let jsonString = String(data: payload.data, encoding: .utf8) else {
-            throw DecodingError()
+            throw PayloadConverterError.decodingFailed(
+                converter: "JSONProtobufPayloadConverter",
+                reason: "payload data is not valid UTF-8 and cannot be decoded as protobuf JSON"
+            )
         }
 
         return try .init(jsonString: jsonString)
