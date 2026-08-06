@@ -12,8 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftProtobuf
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 struct TestMessage: Message, _MessageImplementationBase, _ProtoNameProviding, Sendable {
     var seconds: Int64 = 0

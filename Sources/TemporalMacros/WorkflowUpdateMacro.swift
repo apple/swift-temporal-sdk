@@ -12,9 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftSyntax
 import SwiftSyntaxMacros
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Macro implementation for the `@WorkflowUpdate` attribute.
 public struct WorkflowUpdateMacro: PeerMacro {
