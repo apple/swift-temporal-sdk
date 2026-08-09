@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift Temporal SDK open source project
 //
-// Copyright (c) 2025 Apple Inc. and the Swift Temporal SDK project authors
+// Copyright (c) 2026 Apple Inc. and the Swift Temporal SDK project authors
 // Licensed under MIT License
 //
 // See LICENSE.txt for license information
