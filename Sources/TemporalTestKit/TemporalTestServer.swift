@@ -236,8 +236,9 @@ public struct TemporalTestServer: Sendable {
         _ body: (borrowing TemporalTestServer) async throws -> Void
     ) async throws {
         #if canImport(Subprocess)
-        let executablePath = try await ensureTestServerDownloaded(options: .default)
-        try await withRunningTestServer(executablePath: executablePath, extraArguments: []) { target in
+        let options = TimeSkippingTestServerOptions.default
+        let executablePath = try await ensureTestServerDownloaded(options: options)
+        try await withRunningTestServer(executablePath: executablePath, extraArguments: options.extraArguments) { target in
             let parts = target.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
             guard let host = parts.first.map(String.init),
                 parts.count > 1,
@@ -272,7 +273,7 @@ public struct TemporalTestServer: Sendable {
             }
         }
         #else
-        fatalError("The time-skipping test server requires swift-subprocess, which is unavailable on this platform.")
+        throw TestServerProcessError.unavailableOnPlatform
         #endif
     }
 

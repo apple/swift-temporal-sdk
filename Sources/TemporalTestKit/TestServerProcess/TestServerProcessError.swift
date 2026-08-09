@@ -12,8 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if canImport(Subprocess)
 package enum TestServerProcessError: Error, Sendable, CustomStringConvertible {
+    /// The time-skipping test server was requested on a platform swift-subprocess doesn't support.
+    case unavailableOnPlatform
+    #if canImport(Subprocess)
     case invalidDownloadResponse(statusCode: Int)
     case downloadResolutionFailed(underlying: String)
     case archiveDownloadFailed(url: String, underlying: String)
@@ -21,9 +23,13 @@ package enum TestServerProcessError: Error, Sendable, CustomStringConvertible {
     case lockTimedOut(path: String)
     case processFailedToStart(underlying: String)
     case reachabilityTimeout(target: String)
+    #endif
 
     package var description: String {
         switch self {
+        case .unavailableOnPlatform:
+            "The time-skipping test server requires swift-subprocess, which is unavailable on this platform."
+        #if canImport(Subprocess)
         case .invalidDownloadResponse(let statusCode):
             "Test server download resolution returned an unexpected status code \(statusCode)."
         case .downloadResolutionFailed(let underlying):
@@ -38,7 +44,7 @@ package enum TestServerProcessError: Error, Sendable, CustomStringConvertible {
             "Failed to start the test server process: \(underlying)"
         case .reachabilityTimeout(let target):
             "Test server did not become reachable at \(target) in time."
+        #endif
         }
     }
 }
-#endif

@@ -110,6 +110,7 @@ private func downloadTestServerIfNeeded(
         return try await waitForConcurrentDownload(lockPath: lockPath, destination: destination)
     }
 
+    var lockFileClosed = false
     do {
         let info = try await resolveTestServerDownload(
             downloadVersion: options.downloadVersion,
@@ -118,6 +119,7 @@ private func downloadTestServerIfNeeded(
         )
         try await downloadArchive(from: info.archiveUrl, extracting: info.fileToExtract, into: lockFile)
         try lockFile.close()
+        lockFileClosed = true
         guard rename(lockPath.string, destination.string) == 0 else {
             throw TestServerProcessError.archiveDownloadFailed(
                 url: info.archiveUrl,
@@ -125,7 +127,9 @@ private func downloadTestServerIfNeeded(
             )
         }
     } catch {
-        try? lockFile.close()
+        if !lockFileClosed {
+            try? lockFile.close()
+        }
         try? FileManager.default.removeItem(atPath: lockPath.string)
         throw error
     }
