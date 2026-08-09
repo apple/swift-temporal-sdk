@@ -235,7 +235,9 @@ public struct TemporalTestServer: Sendable {
     public static func withTimeSkippingTestServer(
         _ body: (borrowing TemporalTestServer) async throws -> Void
     ) async throws {
-        try await BridgeTestServer.withBridgeTestServer { bridgeTestServer, target in
+        #if canImport(Subprocess)
+        let executablePath = try await ensureTestServerDownloaded(options: .default)
+        try await withRunningTestServer(executablePath: executablePath, extraArguments: []) { target in
             let parts = target.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
             guard let host = parts.first.map(String.init),
                 parts.count > 1,
@@ -255,7 +257,7 @@ public struct TemporalTestServer: Sendable {
                 )
             )
 
-            return try await withThrowingTaskGroup(of: Void.self) { group in
+            try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
                     try await grpcClient.run()
                 }
@@ -269,6 +271,9 @@ public struct TemporalTestServer: Sendable {
                 grpcClient.beginGracefulShutdown()
             }
         }
+        #else
+        fatalError("The time-skipping test server requires swift-subprocess, which is unavailable on this platform.")
+        #endif
     }
 
     /// Creates a connected Temporal client for testing operations against the test server.
