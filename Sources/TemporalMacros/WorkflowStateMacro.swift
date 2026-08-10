@@ -17,12 +17,6 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-
 /// Macro implementation for the `@WorkflowState` attribute.
 public struct WorkflowStateMacro: AccessorMacro, PeerMacro {
     static let stateMacroName = "_WorkflowState"
