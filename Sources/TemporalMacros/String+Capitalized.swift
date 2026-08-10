@@ -14,17 +14,13 @@
 
 extension String {
     func capitalizingFirst() -> String {
-        let capitalized = capitalized
-        guard count > 1 else { return capitalized }
-
-        // The string may already be capitalized.
-        let prefix = capitalized.commonPrefix(with: self)
-        guard prefix.rangeOfCharacter(from: .letters) == nil else {
-            return self
-        }
-
-        // There may be backticks at the start / end of string.
-        // `capitalized` handles that automatically
-        return String(capitalized.prefix(prefix.count + 1) + dropFirst(prefix.count + 1))
+        guard let firstLetterIndex = firstIndex(where: \.isLetter) else { return self }
+        guard self[firstLetterIndex].isLowercase else { return self }
+        var result = self
+        result.replaceSubrange(
+            firstLetterIndex...firstLetterIndex,
+            with: self[firstLetterIndex].uppercased()
+        )
+        return result
     }
 }
