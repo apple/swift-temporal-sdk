@@ -18,9 +18,6 @@ public import class Foundation.JSONEncoder
 
 /// A payload converter for types conforming to `Encodable` and `Decodable` using JSON encoding.
 public struct JSONPayloadConverter: EncodingPayloadConverter {
-    private struct EncodingError: Error {}
-    private struct DecodingError: Error {}
-
     public static let encoding = Encodings.jsonPlain
 
     private let jsonEncoder: JSONEncoder
@@ -55,7 +52,10 @@ public struct JSONPayloadConverter: EncodingPayloadConverter {
 
     public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {
         guard let encodable = value as? any Encodable else {
-            throw EncodingError()
+            throw PayloadConverterError.encodingFailed(
+                converter: "JSONPayloadConverter",
+                reason: "value of type '\(type(of: value))' does not conform to 'Encodable'"
+            )
         }
 
         let encodedValue = try self.jsonEncoder.encode(encodable)
@@ -68,7 +68,10 @@ public struct JSONPayloadConverter: EncodingPayloadConverter {
         as valueType: Value.Type
     ) throws -> Value {
         guard let decodableType = Value.self as? any Decodable.Type else {
-            throw DecodingError()
+            throw PayloadConverterError.decodingFailed(
+                converter: "JSONPayloadConverter",
+                reason: "requested type '\(valueType)' does not conform to 'Decodable'"
+            )
         }
 
         let decoded = try self.jsonDecoder.decode(decodableType, from: payload.data)

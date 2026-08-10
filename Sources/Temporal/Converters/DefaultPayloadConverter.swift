@@ -24,9 +24,6 @@
 /// of the payloads ``Api/Common/V1/Payload/metadata``.
 /// Then it tries to convert the payload using the matching payload converter.
 public struct DefaultPayloadConverter: PayloadConverter {
-    private struct EncodingError: Error {}
-    private struct DecodingError: Error {}
-
     private let converter = CompositePayloadConverter(
         BinaryNilPayloadConverter(),
         BinaryPayloadConverter(),

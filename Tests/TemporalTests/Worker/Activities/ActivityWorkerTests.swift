@@ -884,10 +884,11 @@ struct ActivityWorkerTests {
             let completion = try await activityTaskCompletionIterator.next()
             let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
-                $0.result.failed.failure.message = "EncodingError()"
+                $0.result.failed.failure.message =
+                    "CompositePayloadConverter could not encode value: none of the configured converters could encode a value of type \'Optional<RandomType>\'."
                 $0.result.failed.failure.source = "swift-temporal-sdk"
                 $0.result.failed.failure.stackTrace = ""
-                $0.result.failed.failure.applicationFailureInfo.type = "EncodingError"
+                $0.result.failed.failure.applicationFailureInfo.type = "PayloadConverterError"
             }
             #expect(completion == expectedCompletion)
             group.cancelAll()

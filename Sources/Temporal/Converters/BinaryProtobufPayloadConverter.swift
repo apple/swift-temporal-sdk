@@ -17,9 +17,6 @@ import SwiftProtobuf
 
 /// Converts any type conforming to `SwiftProtobuf.Message` into binary protobuf encoding.
 public struct BinaryProtobufPayloadConverter: EncodingPayloadConverter {
-    private struct EncodingError: Error {}
-    private struct DecodingError: Error {}
-
     public static let encoding = Encodings.binaryProtobuf
 
     /// Creates a new binary protobuf payload converter.
@@ -27,7 +24,10 @@ public struct BinaryProtobufPayloadConverter: EncodingPayloadConverter {
 
     public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {
         guard let value = value as? any Message else {
-            throw EncodingError()
+            throw PayloadConverterError.encodingFailed(
+                converter: "BinaryProtobufPayloadConverter",
+                reason: "value of type '\(type(of: value))' does not conform to 'SwiftProtobuf.Message'"
+            )
         }
 
         return createPayload(
@@ -43,7 +43,10 @@ public struct BinaryProtobufPayloadConverter: EncodingPayloadConverter {
         as valueType: Value.Type
     ) throws -> Value {
         guard let messageType = Value.self as? any Message.Type else {
-            throw DecodingError()
+            throw PayloadConverterError.decodingFailed(
+                converter: "BinaryProtobufPayloadConverter",
+                reason: "requested type '\(valueType)' does not conform to 'SwiftProtobuf.Message'"
+            )
         }
 
         let message = try { try self.convertPayload(payload, as: messageType) }()
