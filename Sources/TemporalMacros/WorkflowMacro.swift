@@ -16,12 +16,6 @@ import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxMacros
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-
 /// Macro implementation for the `@Workflow` attribute.
 public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
     struct UnexpectedInitWarning: DiagnosticMessage {
@@ -153,8 +147,8 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
                                 // Check input type matches
                                 let updateParams = functionDecl.signature.parameterClause.parameters
                                 if let updateParam = updateParams.first(where: { $0.firstName.text == "input" }) {
-                                    let updateType = updateParam.type.description.trimmingCharacters(in: .whitespaces)
-                                    let validatorType = validatorParam.type.description.trimmingCharacters(in: .whitespaces)
+                                    let updateType = updateParam.type.trimmedDescription
+                                    let validatorType = validatorParam.type.trimmedDescription
                                     if updateType != validatorType {
                                         context.diagnose(
                                             Diagnostic(
