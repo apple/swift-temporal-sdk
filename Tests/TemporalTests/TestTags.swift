@@ -19,4 +19,5 @@ extension Tag {
     @Tag static var workflowTests: Self
     @Tag static var instrumentationTests: Self
     @Tag static var clientTests: Self
+    @Tag static var pluginTests: Self
 }
