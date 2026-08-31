@@ -41,13 +41,13 @@ package final class BridgeReplayer: Sendable {
         self.runtime = runtime
 
         var tuner = TemporalCoreTunerHolder()
-        tuner.workflow_slot_supplier.tag = FixedSize
+        tuner.workflow_slot_supplier.tag = TemporalCoreSlotSupplier_FixedSize
         tuner.workflow_slot_supplier.fixed_size.num_slots = 1
-        tuner.activity_slot_supplier.tag = FixedSize
+        tuner.activity_slot_supplier.tag = TemporalCoreSlotSupplier_FixedSize
         tuner.activity_slot_supplier.fixed_size.num_slots = 0
-        tuner.local_activity_slot_supplier.tag = FixedSize
+        tuner.local_activity_slot_supplier.tag = TemporalCoreSlotSupplier_FixedSize
         tuner.local_activity_slot_supplier.fixed_size.num_slots = 0
-        tuner.nexus_task_slot_supplier.tag = FixedSize
+        tuner.nexus_task_slot_supplier.tag = TemporalCoreSlotSupplier_FixedSize
         tuner.nexus_task_slot_supplier.fixed_size.num_slots = 0
 
         let result = Self.withReplayerOptions(
@@ -198,7 +198,7 @@ package final class BridgeReplayer: Sendable {
                 // Create a minimal versioning strategy (none)
                 try "".withByteArrayRef { emptyRef in
                     var versioningStrategy = TemporalCoreWorkerVersioningStrategy()
-                    versioningStrategy.tag = None
+                    versioningStrategy.tag = TemporalCoreWorkerVersioningStrategy_None
                     versioningStrategy.none = TemporalCoreWorkerVersioningNone(build_id: emptyRef)
 
                     // Create simple maximum poller behavior
@@ -236,7 +236,12 @@ package final class BridgeReplayer: Sendable {
                             nondeterminism_as_workflow_fail: true,
                             nondeterminism_as_workflow_fail_for_types: .init(),
                             plugins: .init(),
-                            storage_drivers: .init()
+                            storage_drivers: .init(),
+                            // NOTE: Mirrors the Core SDK defaults (`WorkerConfig::disable_payload_error_limit`
+                            // and `WorkerConfig::max_eager_activity_reservations_per_workflow_task`) until
+                            // these are exposed as configurable options.
+                            disable_payload_error_limit: false,
+                            max_eager_activity_reservations_per_workflow_task: 3
                         )
 
                         return try body(&opts)
