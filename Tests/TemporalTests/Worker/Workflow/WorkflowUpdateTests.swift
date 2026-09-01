@@ -361,5 +361,66 @@ extension TestServerDependentTests {
                 #expect(workflowResult == "untyped-hello")
             }
         }
+
+        @Workflow
+        struct VoidInputUpdateWorkflow {
+            var ready = false
+
+            mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+                try await context.condition { $0.ready }
+                return "done"
+            }
+
+            @WorkflowUpdate
+            mutating func markReady(input: Void) async -> String {
+                self.ready = true
+                return "marked"
+            }
+        }
+
+        @Test
+        func updateWithStartVoidInput() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [VoidInputUpdateWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = "wf-\(UUID().uuidString)"
+                let options = WorkflowOptions(id: workflowID, taskQueue: taskQueue)
+
+                let updateResult = try await client.executeUpdateWithStartWorkflow(
+                    type: VoidInputUpdateWorkflow.self,
+                    input: "initial",
+                    options: options,
+                    updateType: VoidInputUpdateWorkflow.MarkReady.self
+                )
+                #expect(updateResult == "marked")
+
+                let workflowHandle = client.workflowHandle(
+                    type: VoidInputUpdateWorkflow.self,
+                    id: workflowID
+                )
+                let workflowResult = try await workflowHandle.result()
+                #expect(workflowResult == "done")
+            }
+        }
+
+        @Test
+        func updateWithStartVoidInputZeroPayloads() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [VoidInputUpdateWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = "wf-\(UUID().uuidString)"
+                let options = WorkflowOptions(id: workflowID, taskQueue: taskQueue)
+
+                let updateHandle = try await client.startUpdateWithStartWorkflow(
+                    name: VoidInputUpdateWorkflow.name,
+                    input: "initial",
+                    options: options,
+                    updateName: VoidInputUpdateWorkflow.MarkReady.name,
+                    waitForStage: .completed
+                )
+                let updateResult: String = try await updateHandle.result(resultTypes: String.self)
+                #expect(updateResult == "marked")
+            }
+        }
     }
 }
