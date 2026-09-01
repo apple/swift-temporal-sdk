@@ -12,8 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(Darwin)
+import Foundation
+#endif
+
 extension String {
     func capitalizingFirst() -> String {
+        #if canImport(Darwin)
         let capitalized = capitalized
         guard count > 1 else { return capitalized }
 
@@ -26,5 +31,15 @@ extension String {
         // There may be backticks at the start / end of string.
         // `capitalized` handles that automatically
         return String(capitalized.prefix(prefix.count + 1) + dropFirst(prefix.count + 1))
+        #else
+        guard let firstLetterIndex = firstIndex(where: \.isLetter) else { return self }
+        guard self[firstLetterIndex].isLowercase else { return self }
+        var result = self
+        result.replaceSubrange(
+            firstLetterIndex...firstLetterIndex,
+            with: self[firstLetterIndex].uppercased()
+        )
+        return result
+        #endif
     }
 }

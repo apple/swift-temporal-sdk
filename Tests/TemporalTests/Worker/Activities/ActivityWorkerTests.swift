@@ -12,12 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import Logging
 import SwiftProtobuf
 import Synchronization
 import Temporal
 import Testing
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 private final class MockBridgeWorker: BridgeWorkerProtocol {
     private let activityTaskStream: AsyncThrowingStream<Coresdk.ActivityTask.ActivityTask, any Error>

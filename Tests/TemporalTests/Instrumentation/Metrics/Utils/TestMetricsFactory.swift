@@ -13,9 +13,14 @@
 //===----------------------------------------------------------------------===//
 
 import CoreMetrics
-import Foundation
 import Metrics
 import Synchronization
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Taken and adjusted from `swift-cluster-memberships`s own test target package.
 ///
