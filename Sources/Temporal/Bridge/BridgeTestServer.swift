@@ -15,6 +15,11 @@
 import Bridge
 
 package struct BridgeTestServer: ~Copyable, Sendable {
+    /// Options embedded into ``DevServerOptions`` for the dev server's download/spawn FFI call.
+    ///
+    /// The time-skipping test server no longer goes through this FFI bridge (see
+    /// `TemporalTestKit`'s `TestServerProcess` implementation), so this type now only
+    /// serves the dev server path.
     package struct TestServerOptions: Hashable, Sendable {
         /// The existing path of the downloaded test server.
         var existingPath: String
@@ -192,54 +197,6 @@ package struct BridgeTestServer: ~Copyable, Sendable {
     // only use one runtime for all test servers
     package static let bridgeRuntime = try! BridgeRuntime()
     private nonisolated(unsafe) let serverPointer: OpaquePointer
-
-    package static func withBridgeTestServer<Result>(
-        testServerOptions: BridgeTestServer.TestServerOptions = .default,
-        _ body: (borrowing BridgeTestServer, String) async throws -> Result
-    ) async throws -> Result {
-        let (serverPointer, connectTarget): (UnsafeTransfer<OpaquePointer>, String) = try await withCheckedThrowingContinuation { continuation in
-            testServerOptions.withBridgeTestServerOptions { testServerOptions in
-                withUnsafePointer(to: testServerOptions) { testServerOptionsPointer in
-                    let continuationHolder = ContinuationHolder(continuation)
-                    let opaqueContinuationHolder = Unmanaged.passRetained(continuationHolder).toOpaque()
-                    temporal_core_ephemeral_server_start_test_server(
-                        Self.bridgeRuntime.runtime,
-                        testServerOptionsPointer,
-                        opaqueContinuationHolder
-                    ) { userData, success, successTarget, fail in
-                        let continuation = Unmanaged<ContinuationHolder<(UnsafeTransfer<OpaquePointer>, String)>>
-                            .fromOpaque(userData!).takeRetainedValue().continuation
-                        if let fail {
-                            continuation.resume(throwing: BridgeError(messagePointer: fail))
-                        } else if let success, let successTarget {
-                            continuation.resume(
-                                returning: (
-                                    .init(wrapped: success),
-                                    String(byteArray: successTarget.pointee)
-                                )
-                            )
-                        } else {
-                            fatalError("Temporal Core SDK bug: No success or fail")
-                        }
-                    }
-                }
-            }
-        }
-
-        let bridgeTestServer = BridgeTestServer(
-            serverPointer: serverPointer.wrapped
-        )
-
-        let result: Result
-        do {
-            result = try await body(bridgeTestServer, connectTarget)
-        } catch {
-            try await bridgeTestServer.shutdown()
-            throw error
-        }
-        try await bridgeTestServer.shutdown()
-        return result
-    }
 
     package static func withBridgeDevServer<Result>(
         devServerOptions: BridgeTestServer.DevServerOptions = .default,
