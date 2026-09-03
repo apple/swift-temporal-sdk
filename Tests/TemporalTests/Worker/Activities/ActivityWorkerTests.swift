@@ -76,6 +76,8 @@ private final class MockBridgeWorker: BridgeWorkerProtocol {
     func recordActivityHeartbeat(_ heartbeat: Coresdk.ActivityHeartbeat) throws {
         self.heartbeatContinuation.yield(heartbeat)
     }
+
+    func runSlotSupplierLoops() async {}
 }
 
 private struct VoidActivity: ActivityDefinition {

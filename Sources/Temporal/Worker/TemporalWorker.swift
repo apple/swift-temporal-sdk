@@ -321,16 +321,22 @@ where
             try await withTaskCancellationHandler {
                 // Block cancellation from propagating inwards.
                 try await Task {
-                    try await withThrowingTaskGroup(of: Void.self) { group in
+                    try await withThrowingTaskGroup(of: WorkerRunTaskKind.self) { group in
                         if let activityWorker {
                             group.addTask {
                                 try await activityWorker.run()
+                                return .poller
                             }
                         }
                         if let workflowWorker {
                             group.addTask {
                                 try await workflowWorker.run()
+                                return .poller
                             }
+                        }
+                        group.addTask {
+                            await worker.runSlotSupplierLoops()
+                            return .slotSupplier
                         }
 
                         if isRunningForShutdown {
@@ -339,7 +345,19 @@ where
                             // Wait for one of the tasks to fail and then initiate shutdown.
                             self.logger.debug("Waiting for cancellation or graceful shutdown of Temporal worker")
                             do {
-                                try await group.next()
+                                while let kind = try await group.next() {
+                                    switch kind {
+                                    case .poller:
+                                        fatalError("Activity / workflow worker run method unexpectedly exited cleanly.")
+                                    case .slotSupplier:
+                                        // The slot supplier loop finishes when shutdown drains
+                                        // its in-flight reservations. Keep waiting for a poller
+                                        // to error so we can enter the shutdown path.
+                                        continue
+                                    }
+                                }
+                                // Group emptied without a poller ever running (e.g. a worker with
+                                // no activities and no workflows). Nothing more to do.
                             } catch {
                                 self.logger.debug(
                                     "Initiating shut down of Temporal worker due to temporal activity / workflow worker error",
@@ -370,8 +388,6 @@ where
                                 )
                                 throw error
                             }
-
-                            fatalError("Activity / workflow worker run method unexpectedly exited cleanly.")
                         }
                     }
                 }.value
@@ -381,4 +397,12 @@ where
             }
         }
     }
+}
+
+/// Tags each task added to `GenericTemporalWorker`'s run group so a clean return from the slot
+/// supplier loop (which exits after shutdown drains its in-flight reservations) is
+/// distinguishable from a clean return of a poller — the latter is a bug.
+private enum WorkerRunTaskKind: Sendable {
+    case poller
+    case slotSupplier
 }
