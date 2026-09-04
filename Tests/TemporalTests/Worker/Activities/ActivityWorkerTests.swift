@@ -669,7 +669,11 @@ struct ActivityWorkerTests {
             let completion = try await activityTaskCompletionIterator.next()
             let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
                 $0.taskToken = Data([1])
+                #if compiler(>=6.5)
+                $0.result.failed.failure.message = "CancellationError(reason: unspecified)"
+                #else
                 $0.result.failed.failure.message = "CancellationError()"
+                #endif
                 $0.result.failed.failure.source = "swift-temporal-sdk"
                 $0.result.failed.failure.stackTrace = ""
                 $0.result.failed.failure.applicationFailureInfo.type = "CancellationError"
