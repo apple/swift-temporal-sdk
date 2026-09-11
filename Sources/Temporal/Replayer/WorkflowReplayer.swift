@@ -44,11 +44,15 @@ public final class WorkflowReplayer: Sendable {
 
     /// Creates a new workflow replayer with the given configuration.
     ///
-    /// At least one workflow must be registered in the configuration.
+    /// At least one workflow must be registered in the configuration. Plugins set on
+    /// ``Configuration/plugins`` can contribute additional workflows, which are appended to
+    /// ``Configuration/workflows`` before this check is enforced.
     ///
     /// - Parameter configuration: The configuration specifying which workflows to replay
     ///   and how to process them.
     public init(configuration: Configuration) {
+        var configuration = configuration
+        configuration.applyPlugins()
         precondition(
             !configuration.workflows.isEmpty,
             "At least one workflow must be registered with the replayer"
@@ -57,6 +61,10 @@ public final class WorkflowReplayer: Sendable {
     }
 
     /// Replays a single workflow history.
+    ///
+    /// Plugins set on ``Configuration/plugins`` wrap each replay invocation via
+    /// ``WorkerPlugin/runReplayer(configuration:next:)``, with the first plugin in the array as the
+    /// outermost wrap.
     ///
     /// - Parameters:
     ///   - history: The workflow history to replay.
@@ -71,14 +79,24 @@ public final class WorkflowReplayer: Sendable {
         history: WorkflowHistory,
         throwOnReplayFailure: Bool = true
     ) async throws -> WorkflowReplayResult {
-        let runner = try WorkflowHistoryRunner(configuration: self.configuration)
-        return try await runner.replayWorkflow(
-            history: history,
-            throwOnReplayFailure: throwOnReplayFailure
-        )
+        try await applyReplayerRunChain(
+            plugins: self.configuration.plugins[...],
+            configuration: self.configuration
+        ) {
+            let runner = try WorkflowHistoryRunner(configuration: self.configuration)
+            return try await runner.replayWorkflow(
+                history: history,
+                throwOnReplayFailure: throwOnReplayFailure
+            )
+        }
     }
 
     /// Replays multiple workflow histories.
+    ///
+    /// Each history is replayed by delegating to ``replayWorkflow(history:throwOnReplayFailure:)``,
+    /// so the plugin chain wraps each replay individually rather than the batch as a whole. A
+    /// plugin that records latency in ``WorkerPlugin/runReplayer(configuration:next:)`` therefore
+    /// observes one sample per history.
     ///
     /// - Parameters:
     ///   - histories: The workflow histories to replay.
