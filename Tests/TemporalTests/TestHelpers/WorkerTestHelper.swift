@@ -12,14 +12,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import Logging
 import ServiceLifecycle
 import Temporal
 import TemporalTestKit
 import Testing
-
 import protocol GRPCCore.ClientTransport
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 // Serialized: Makes it easier to understand which test fails and doesn't overwhelm the Temporal test server
 // TimeLimit: Ensures that nothing gets stuck forever

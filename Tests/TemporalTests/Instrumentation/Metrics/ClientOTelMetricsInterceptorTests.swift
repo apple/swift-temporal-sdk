@@ -12,12 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import GRPCCore
 import Metrics
 import OTelSemanticConventions
 import TemporalInstrumentation
 import Testing
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 @Suite(.tags(.instrumentationTests))
 struct GRPCClientMetricsInterceptorTests {
