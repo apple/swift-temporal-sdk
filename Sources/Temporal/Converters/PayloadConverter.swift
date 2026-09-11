@@ -71,6 +71,12 @@ extension PayloadConverter {
         // swift-format-ignore: NoAssignmentInExpressions
         _ = (repeat (nil as (each Value)?, requestedCount += 1))
 
+        // Older Swift clients / workers incorrectly send `Void` input as a JSON payload in certain
+        // cases; like the other SDKs, ignore extra input payloads for a lone `Void`.
+        if requestedCount == 1, (repeat each Value).self == Void.self {
+            payloads = [.init()]
+        }
+
         guard requestedCount == payloads.count else {
             throw ArgumentError(
                 message: "Mismatched number of values and payloads"
