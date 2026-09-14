@@ -244,8 +244,6 @@ extension Span {
     }
 
     func setDescribeWorkflowResponseSpanAttributes(response: WorkflowExecutionDescription) {
-        // Update ID recorded in request
-
         // The name of the workflow type for this workflow execution.
         self.attributes[TemporalTracingKeys.workflowType] = response.execution.workflowType
 
