@@ -600,7 +600,7 @@ extension Span {
             self.attributes[TemporalTracingKeys.workflowRunId] = runId
             self.attributes[TemporalTracingKeys.activityId] = activityId
         case .taskToken(let taskToken):
-            self.attributes[TemporalTracingKeys.activityTaskToken] = String(bytes: taskToken.bytes, encoding: .utf8)
+            self.attributes[TemporalTracingKeys.activityTaskToken] = Data(taskToken.bytes).base64EncodedString()
         }
     }
 }
