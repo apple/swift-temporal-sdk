@@ -93,16 +93,13 @@ struct TemporalTraceRecording {
         setSpanAttributes: (any Span) -> Void,
         next: () async throws -> R
     ) async throws -> R {
-        let linkContext = try extractLinkContext(headers: headers)
+        let parentContext = try extractParentContext(headers: headers)
 
         return try await self.tracer.withSpan(
             spanName,
-            context: .topLevel,
+            context: parentContext ?? .topLevel,
             ofKind: .server  // matches C#
         ) { span in
-            if let linkContext {
-                span.addLink(SpanLink(context: linkContext, attributes: [:]))
-            }
             setSpanAttributes(span)
 
             do {
@@ -122,16 +119,13 @@ struct TemporalTraceRecording {
         setSpanAttributes: (any Span) -> Void,
         next: () throws -> R
     ) throws -> R {
-        let linkContext = try extractLinkContext(headers: headers)
+        let parentContext = try extractParentContext(headers: headers)
 
         return try self.tracer.withSpan(
             spanName,
-            context: .topLevel,
+            context: parentContext ?? .topLevel,
             ofKind: .server  // matches C#
         ) { span in
-            if let linkContext {
-                span.addLink(SpanLink(context: linkContext, attributes: [:]))
-            }
             setSpanAttributes(span)
 
             do {
@@ -144,9 +138,9 @@ struct TemporalTraceRecording {
         }
     }
 
-    /// Extracts the trace context carried on a Temporal request header into a
-    /// `ServiceContext` suitable for attaching as a ``SpanLink``.
-    private func extractLinkContext(
+    /// Extracts the trace context carried on a Temporal request header, to be used as the parent of the
+    /// span recorded for the inbound operation.
+    private func extractParentContext(
         headers: [String: Api.Common.V1.Payload]
     ) throws -> ServiceContext? {
         // Check if header with tracer key exists
@@ -161,12 +155,12 @@ struct TemporalTraceRecording {
             .payloadConverter
             .convertPayloadHandlingVoid(tracerPayload)
 
-        var linkContext = ServiceContext.topLevel
+        var parentContext = ServiceContext.topLevel
         self.tracer.extract(
             convertedTracerPayload,
-            into: &linkContext,
+            into: &parentContext,
             using: self.extractor
         )
-        return linkContext
+        return parentContext
     }
 }

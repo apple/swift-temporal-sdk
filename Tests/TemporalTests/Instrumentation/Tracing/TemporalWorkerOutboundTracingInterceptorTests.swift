@@ -57,8 +57,6 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
         headers: [:]
     )
 
-    // Attributes of the workflows targeted by the outbound operations, deliberately distinct from the
-    // calling workflow's attributes above.
     private static let childWorkflowName = "TestChildWorkflow"
     private static let childWorkflowID = UUID().uuidString
     private static let childTaskQueue = "TestChildTaskQueue"
@@ -66,8 +64,6 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
     private static let externalRunID = UUID().uuidString
     private static let signalName = "TestSignal"
 
-    // the trace recording plumbing is shared across the outbound interceptors, so assert it in depth on one
-    // of them only; the per-operation span names and attributes are covered by the tests further below
     @Test
     func outboundTracingWorkflowWorker() async throws {
         let tracer = TestTracer()
