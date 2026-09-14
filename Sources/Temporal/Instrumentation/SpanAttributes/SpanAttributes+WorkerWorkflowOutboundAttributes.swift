@@ -121,7 +121,7 @@ extension Span {
         }
     }
 
-    func setWorkerHandleSleepSpanAttributes(sleepInput: HandleSleepInput) {
+    func setWorkerStartTimerSpanAttributes(sleepInput: HandleSleepInput) {
         self.attributes[TemporalTracingKeys.workflowSleepDuration] = sleepInput.duration.description
         if let summary = sleepInput.summary {
             self.attributes[TemporalTracingKeys.workflowSleepSummary] = summary
