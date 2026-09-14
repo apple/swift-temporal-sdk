@@ -21,7 +21,28 @@ extension Span {
         self.attributes[TemporalTracingKeys.workflowSignalName] = signalName
     }
 
+    func setWorkerSignalExternalWorkflowSpanAttributes(
+        workflowInfo: WorkflowInfo,
+        workflowID: String,
+        runID: String?,
+        signalName: String
+    ) {
+        self.setWorkerExecuteWorkflowSpanAttributes(info: workflowInfo)
+
+        // The signalled workflow is the subject of this span, so its identifiers take precedence over
+        // those of the signalling workflow recorded above. The run ID is cleared when the signal targets
+        // the latest run, rather than left pointing at the signalling workflow's run.
+        self.attributes[TemporalTracingKeys.workflowId] = workflowID
+        self.attributes[TemporalTracingKeys.workflowRunId] = runID
+        self.attributes[TemporalTracingKeys.workflowSignalName] = signalName
+    }
+
     func setWorkerStartChildWorkflowRequestSpanAttributes(workflowInfo: WorkflowInfo, options: ChildWorkflowOptions) {
+        self.setWorkerExecuteWorkflowSpanAttributes(info: workflowInfo)
+
+        // The child workflow is the subject of this span, so its options take precedence over the parent
+        // attributes recorded above. This matches what `setWorkerStartChildWorkflowResponseSpanAttributes`
+        // records once the child has started.
         if let childId = options.id {
             self.attributes[TemporalTracingKeys.workflowId] = childId
         }
@@ -60,8 +81,6 @@ extension Span {
         }
         self.attributes[TemporalTracingKeys.workflowCancellationType] = options.cancellationType.description
         self.attributes[TemporalTracingKeys.workflowVersioningIntent] = options.versioningIntent.description
-
-        self.setWorkerExecuteWorkflowSpanAttributes(info: workflowInfo)
     }
 
     func setWorkerStartChildWorkflowResponseSpanAttributes(childHandle: UntypedChildWorkflowHandle) {
@@ -102,7 +121,7 @@ extension Span {
         }
     }
 
-    func setWorkerHandleSleepSpanAttributes(sleepInput: HandleSleepInput) {
+    func setWorkerStartTimerSpanAttributes(sleepInput: HandleSleepInput) {
         self.attributes[TemporalTracingKeys.workflowSleepDuration] = sleepInput.duration.description
         if let summary = sleepInput.summary {
             self.attributes[TemporalTracingKeys.workflowSleepSummary] = summary
