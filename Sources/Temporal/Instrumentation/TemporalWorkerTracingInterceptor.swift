@@ -38,10 +38,6 @@ package import Tracing
 ///
 /// - Note: For comprehensive tracing coverage, ensure this interceptor is the last in your interceptor chain.
 public struct TemporalWorkerTracingInterceptor: WorkerInterceptor {
-    /// `Injector` injecting the context into the Temporal request headers.
-    private let injector: TemporalHeaderInjector = .init()
-    /// `Extractor` extracting the context from the Temporal response headers.
-    private let extractor: TemporalHeaderExtractor = .init()
     /// `Tracer` that creates the new trace spans.
     private let tracer: any Tracer
     /// The name of the Temporal tracing header key.
