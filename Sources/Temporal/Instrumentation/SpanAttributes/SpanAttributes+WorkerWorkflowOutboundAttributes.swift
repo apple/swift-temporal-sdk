@@ -38,6 +38,11 @@ extension Span {
     }
 
     func setWorkerStartChildWorkflowRequestSpanAttributes(workflowInfo: WorkflowInfo, options: ChildWorkflowOptions) {
+        self.setWorkerExecuteWorkflowSpanAttributes(info: workflowInfo)
+
+        // The child workflow is the subject of this span, so its options take precedence over the parent
+        // attributes recorded above. This matches what `setWorkerStartChildWorkflowResponseSpanAttributes`
+        // records once the child has started.
         if let childId = options.id {
             self.attributes[TemporalTracingKeys.workflowId] = childId
         }
@@ -76,8 +81,6 @@ extension Span {
         }
         self.attributes[TemporalTracingKeys.workflowCancellationType] = options.cancellationType.description
         self.attributes[TemporalTracingKeys.workflowVersioningIntent] = options.versioningIntent.description
-
-        self.setWorkerExecuteWorkflowSpanAttributes(info: workflowInfo)
     }
 
     func setWorkerStartChildWorkflowResponseSpanAttributes(childHandle: UntypedChildWorkflowHandle) {
