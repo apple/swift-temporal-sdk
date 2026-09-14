@@ -140,8 +140,44 @@ extension TestServerDependentTests {
             }
         }
 
-        // MARK: - Non-determinism Detection Tests
+        // MARK: - Tracing
 
+        /// Workflow code re-executes from the beginning on every replay.
+        ///
+        /// An outbound operation is therefore reached once per replayed workflow task, and recording it
+        /// again would emit a duplicate span for work that happened once. The workflow's own span is still
+        /// recorded, because it covers the whole execution and a workflow resumed after a cache miss
+        /// starts on a replayed task.
+        @Test
+        func replayDoesNotRecordOutboundSpansAgain() async throws {
+            try await withTestWorkerAndClient(
+                activities: [ReplayActivity()],
+                workflows: [SayHelloWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = "replayer-test-tracing-\(UUID().uuidString)"
+                let handle = try await client.startWorkflow(
+                    type: SayHelloWorkflow.self,
+                    options: .init(id: workflowID, taskQueue: taskQueue),
+                    input: ReplayParams(name: "Temporal")
+                )
+                _ = try await handle.result()
+
+                let history = try await handle.fetchHistory()
+
+                let tracer = TestTracer()
+                var config = WorkflowReplayer.Configuration()
+                config.workflows.append(SayHelloWorkflow.self)
+                config.interceptors.append(TemporalWorkerTracingInterceptor(tracer: tracer))
+
+                let replayResult = try await WorkflowReplayer(configuration: config).replayWorkflow(history: history)
+                #expect(replayResult.replayFailure == nil)
+
+                #expect(tracer.getSpan(ofOperation: "RunWorkflow:\(SayHelloWorkflow.name)") != nil)
+                #expect(tracer.getSpan(ofOperation: "StartActivity:ReplayActivity") == nil)
+            }
+        }
+
+        // MARK: - Non-determinism Detection Tests
         @Test
         func replayNondeterministicWorkflowFails() async throws {
             try await withTestWorkerAndClient(

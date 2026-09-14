@@ -36,6 +36,7 @@ extension TemporalWorkerTracingInterceptor {
         ) async throws {
             try await self.traceRecording.recordOutbound(
                 spanName: "StartTimer",
+                suppressDuringReplay: true,
                 setRequestAttributes: { span in
                     span.setWorkerStartTimerSpanAttributes(sleepInput: input)
                 },
@@ -52,6 +53,7 @@ extension TemporalWorkerTracingInterceptor {
             try await self.traceRecording.recordOutbound(
                 spanName: "StartActivity:\(input.name)",
                 headers: input.headers,
+                suppressDuringReplay: true,
                 setRequestAttributes: { span in
                     span.setWorkerExecuteActivityRequestSpanAttributes(
                         workflowInfo: input.info,
@@ -74,6 +76,7 @@ extension TemporalWorkerTracingInterceptor {
             try await self.traceRecording.recordOutbound(
                 spanName: "StartLocalActivity:\(input.name)",
                 headers: input.headers,
+                suppressDuringReplay: true,
                 setRequestAttributes: { span in
                     span.setWorkerExecuteLocalActivityRequestSpanAttributes(
                         workflowInfo: input.info,
@@ -122,6 +125,7 @@ extension TemporalWorkerTracingInterceptor {
             try await self.traceRecording.recordOutbound(
                 spanName: "StartChildWorkflow:\(input.name)",
                 headers: input.headers,
+                suppressDuringReplay: true,
                 setRequestAttributes: { span in
                     span.setWorkerStartChildWorkflowRequestSpanAttributes(
                         workflowInfo: input.info,
@@ -148,6 +152,7 @@ extension TemporalWorkerTracingInterceptor {
             try await self.traceRecording.recordOutbound(
                 spanName: "SignalChildWorkflow:\(input.name)",
                 headers: input.headers,
+                suppressDuringReplay: true,
                 setRequestAttributes: { span in
                     span.setWorkerSignalWorkflowSpanAttributes(
                         workflowID: input.id,
@@ -169,6 +174,7 @@ extension TemporalWorkerTracingInterceptor {
             try await self.traceRecording.recordOutbound(
                 spanName: "SignalExternalWorkflow:\(input.name)",
                 headers: input.headers,
+                suppressDuringReplay: true,
                 setRequestAttributes: { span in
                     span.setWorkerSignalExternalWorkflowSpanAttributes(
                         workflowInfo: input.info,
