@@ -400,8 +400,8 @@ extension Span {
                 self.attributes[TemporalTracingKeys.workflowExecutionTimeout] = executionTimeout.description
             }
             if let retryPolicy = workflow.options.retryPolicy {
-                self.attributes[TemporalTracingKeys.workflowRetryPolicyMaximumAttempts] = retryPolicy.maximumAttempts
-                self.attributes[TemporalTracingKeys.workflowRetryPolicyBackOffCoefficient] = retryPolicy.backoffCoefficient
+                self.attributes[TemporalTracingKeys.workflowRetryPolicyMaximumAttempts] = retryPolicy.maximumAttempts.description
+                self.attributes[TemporalTracingKeys.workflowRetryPolicyBackOffCoefficient] = retryPolicy.backoffCoefficient.description
                 if let initialInterval = retryPolicy.initialInterval {
                     self.attributes[TemporalTracingKeys.workflowRetryPolicyInitialInterval] = initialInterval.description
                 }
@@ -476,8 +476,8 @@ extension Span {
                 self.attributes[TemporalTracingKeys.workflowExecutionTimeout] = executionTimeout.description
             }
             if let retryPolicy = workflow.options.retryPolicy {
-                self.attributes[TemporalTracingKeys.workflowRetryPolicyMaximumAttempts] = retryPolicy.maximumAttempts
-                self.attributes[TemporalTracingKeys.workflowRetryPolicyBackOffCoefficient] = retryPolicy.backoffCoefficient
+                self.attributes[TemporalTracingKeys.workflowRetryPolicyMaximumAttempts] = retryPolicy.maximumAttempts.description
+                self.attributes[TemporalTracingKeys.workflowRetryPolicyBackOffCoefficient] = retryPolicy.backoffCoefficient.description
                 if let initialInterval = retryPolicy.initialInterval {
                     self.attributes[TemporalTracingKeys.workflowRetryPolicyInitialInterval] = initialInterval.description
                 }
