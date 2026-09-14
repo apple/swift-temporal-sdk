@@ -38,10 +38,15 @@ struct TemporalTraceRecording {
     func recordOutbound<R: Sendable>(
         spanName: String,
         headers: [String: Api.Common.V1.Payload] = [:],
+        suppressDuringReplay: Bool = true,
         setRequestAttributes: (any Span) -> Void,
         setResponseAttributes: ((any Span, R) -> Void)? = nil,
         next: (_ headers: [String: Api.Common.V1.Payload]) async throws -> R
     ) async throws -> R {
+        if suppressDuringReplay, Self.isReplaying {
+            return try await next(headers)
+        }
+
         let serviceContext = ServiceContext.current ?? .topLevel
 
         // This works around a compiler crash on 6.2+ by defining a separate closure
@@ -90,9 +95,14 @@ struct TemporalTraceRecording {
     func recordInbound<R: Sendable>(
         spanName: String,
         headers: [String: Api.Common.V1.Payload],
+        suppressDuringReplay: Bool = true,
         setSpanAttributes: (any Span) -> Void,
         next: () async throws -> R
     ) async throws -> R {
+        if suppressDuringReplay, Self.isReplaying {
+            return try await next()
+        }
+
         let parentContext = try extractParentContext(headers: headers)
 
         return try await self.tracer.withSpan(
@@ -116,9 +126,14 @@ struct TemporalTraceRecording {
     func recordInbound<R: Sendable>(
         spanName: String,
         headers: [String: Api.Common.V1.Payload],
+        suppressDuringReplay: Bool = true,
         setSpanAttributes: (any Span) -> Void,
         next: () throws -> R
     ) throws -> R {
+        if suppressDuringReplay, Self.isReplaying {
+            return try next()
+        }
+
         let parentContext = try extractParentContext(headers: headers)
 
         return try self.tracer.withSpan(
@@ -136,6 +151,18 @@ struct TemporalTraceRecording {
                 throw error
             }
         }
+    }
+
+    /// A Boolean value that indicates whether the calling code is re-executing during a workflow replay.
+    ///
+    /// Workflow code runs again from the beginning on every replay, so an operation instrumented here is
+    /// reached once per replayed workflow task. Recording each of those produces a duplicate span for work
+    /// that happened only once, which is why recording is suppressed on replay by default and an operation
+    /// has to opt out of that.
+    ///
+    /// This is always `false` outside a workflow, so the client interceptor is unaffected by the default.
+    private static var isReplaying: Bool {
+        InternalWorkflowContext.current?.isReplaying ?? false
     }
 
     /// Extracts the trace context carried on a Temporal request header, to be used as the parent of the
