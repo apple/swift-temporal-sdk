@@ -321,7 +321,7 @@ extension Span {
     // MARK: List Workflows
 
     func setListWorkflowsRequestSpanAttributes(query: String, limit: Int?) {
-        self.attributes[TemporalTracingKeys.scheduleListQuery] = query
+        self.attributes[TemporalTracingKeys.workflowListQuery] = query
 
         if let limit {
             self.attributes[TemporalTracingKeys.workflowListLimit] = limit
@@ -341,7 +341,7 @@ extension Span {
     // MARK: List Workflows Page
 
     func setListWorkflowsPageRequestSpanAttributes(query: String, pageSize: Int?) {
-        self.attributes[TemporalTracingKeys.scheduleListQuery] = query
+        self.attributes[TemporalTracingKeys.workflowListQuery] = query
 
         if let pageSize {
             self.attributes[TemporalTracingKeys.workflowListLimit] = pageSize
