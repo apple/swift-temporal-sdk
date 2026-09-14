@@ -62,7 +62,7 @@ struct TemporalTraceRecording {
 
                 // Inject context into tracer payload
                 var tracerPayload = [String: String]()
-                self.tracer.inject(serviceContext, into: &tracerPayload, using: self.injector)
+                self.tracer.inject(span.context, into: &tracerPayload, using: self.injector)
                 let convertedTracerPayload =
                     try DataConverter
                     .default
