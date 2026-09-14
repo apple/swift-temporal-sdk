@@ -60,9 +60,10 @@ struct TemporalTraceRecording {
             ) { span in
                 setRequestAttributes(span)
 
-                // Inject context into tracer payload
+                // Inject the span that was just started, not the context it was started from, so that the
+                // remote side parents onto this operation rather than onto the caller's caller.
                 var tracerPayload = [String: String]()
-                self.tracer.inject(serviceContext, into: &tracerPayload, using: self.injector)
+                self.tracer.inject(span.context, into: &tracerPayload, using: self.injector)
                 let convertedTracerPayload =
                     try DataConverter
                     .default
