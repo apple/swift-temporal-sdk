@@ -59,7 +59,9 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
 
     // Attributes of the workflows targeted by the outbound operations, deliberately distinct from the
     // calling workflow's attributes above.
+    private static let childWorkflowName = "TestChildWorkflow"
     private static let childWorkflowID = UUID().uuidString
+    private static let childTaskQueue = "TestChildTaskQueue"
     private static let externalWorkflowID = UUID().uuidString
     private static let externalRunID = UUID().uuidString
     private static let signalName = "TestSignal"
@@ -265,6 +267,52 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
         // A child signal and an external signal must remain distinguishable, as they are in the other SDKs.
         #expect(tracer.getSpan(ofOperation: "SignalChildWorkflow:\(Self.signalName)") != nil)
         #expect(tracer.getSpan(ofOperation: "SignalExternalWorkflow:\(Self.signalName)") != nil)
+    }
+
+    @Test
+    func outboundStartChildWorkflowRecordsChildIdentity() async throws {
+        let tracer = TestTracer()
+        let interceptor = try #require(
+            TemporalWorkerTracingInterceptor(
+                tracer: tracer
+            ).workflowOutboundInterceptor
+        )
+
+        do {
+            _ = try await interceptor.startChildWorkflow(
+                input: StartChildWorkflowInput<Void>(
+                    info: Self.testWorkflowInfo,
+                    name: Self.childWorkflowName,
+                    options: ChildWorkflowOptions(
+                        id: Self.childWorkflowID,
+                        taskQueue: Self.childTaskQueue
+                    ),
+                    headers: [:],
+                    input: ()
+                ),
+                next: { _ in
+                    throw TracingInterceptorTestError.testError
+                }
+            )
+            Issue.record("Should have thrown")
+        } catch {
+            assertTestSpanComponents(
+                forSpan: "StartChildWorkflow:\(Self.childWorkflowName)",
+                tracer: tracer
+            ) { events in
+                #expect(events.isEmpty)
+            } assertAttributes: { attributes in
+                #expect(attributes[TemporalTracingKeys.workflowId]?.toSpanAttribute() == .string(Self.childWorkflowID))
+                #expect(attributes[TemporalTracingKeys.workflowTaskQueue]?.toSpanAttribute() == .string(Self.childTaskQueue))
+                // The calling workflow is still recorded for context.
+                #expect(attributes[TemporalTracingKeys.workflowName]?.toSpanAttribute() == .string(Self.workflowName))
+                #expect(attributes[TemporalTracingKeys.workflowRunId]?.toSpanAttribute() == .string(Self.runID))
+            } assertStatus: { status in
+                #expect(status == .some(.init(code: .error)))
+            } assertErrors: { errors in
+                #expect(errors == [.testError])
+            }
+        }
     }
 
     @Test
