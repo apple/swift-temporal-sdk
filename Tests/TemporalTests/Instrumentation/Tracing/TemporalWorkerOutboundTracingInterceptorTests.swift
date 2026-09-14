@@ -262,7 +262,7 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
             next: { _ in }
         )
 
-        #expect(tracer.getSpan(ofOperation: "HandleSleep") != nil)
+        #expect(tracer.getSpan(ofOperation: "StartTimer") != nil)
         #expect(tracer.getSpan(ofOperation: "StartLocalActivity:\(Self.activityInfo.name)") != nil)
         // A child signal and an external signal must remain distinguishable, as they are in the other SDKs.
         #expect(tracer.getSpan(ofOperation: "SignalChildWorkflow:\(Self.signalName)") != nil)

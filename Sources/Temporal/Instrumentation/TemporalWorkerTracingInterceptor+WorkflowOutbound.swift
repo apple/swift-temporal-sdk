@@ -35,9 +35,9 @@ extension TemporalWorkerTracingInterceptor {
             next: (HandleSleepInput) async throws -> Void
         ) async throws {
             try await self.traceRecording.recordOutbound(
-                spanName: "HandleSleep",
+                spanName: "StartTimer",
                 setRequestAttributes: { span in
-                    span.setWorkerHandleSleepSpanAttributes(sleepInput: input)
+                    span.setWorkerStartTimerSpanAttributes(sleepInput: input)
                 },
                 next: { _ in
                     try await next(input)
