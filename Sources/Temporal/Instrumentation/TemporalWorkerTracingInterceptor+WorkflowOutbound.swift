@@ -161,5 +161,28 @@ extension TemporalWorkerTracingInterceptor {
                 }
             )
         }
+
+        public func signalExternalWorkflow<each Input>(
+            input: SignalExternalWorkflowInput<repeat each Input>,
+            next: (SignalExternalWorkflowInput<repeat each Input>) async throws -> Void
+        ) async throws {
+            try await self.traceRecording.recordOutbound(
+                spanName: "SignalExternalWorkflow:\(input.name)",
+                headers: input.headers,
+                setRequestAttributes: { span in
+                    span.setWorkerSignalExternalWorkflowSpanAttributes(
+                        workflowInfo: input.info,
+                        workflowID: input.id,
+                        runID: input.runId,
+                        signalName: input.name
+                    )
+                },
+                next: { headers in
+                    var input = input
+                    input.headers = headers
+                    return try await next(input)
+                }
+            )
+        }
     }
 }

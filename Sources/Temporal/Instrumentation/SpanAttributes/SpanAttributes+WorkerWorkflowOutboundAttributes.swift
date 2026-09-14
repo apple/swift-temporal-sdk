@@ -21,6 +21,22 @@ extension Span {
         self.attributes[TemporalTracingKeys.workflowSignalName] = signalName
     }
 
+    func setWorkerSignalExternalWorkflowSpanAttributes(
+        workflowInfo: WorkflowInfo,
+        workflowID: String,
+        runID: String?,
+        signalName: String
+    ) {
+        self.setWorkerExecuteWorkflowSpanAttributes(info: workflowInfo)
+
+        // The signalled workflow is the subject of this span, so its identifiers take precedence over
+        // those of the signalling workflow recorded above. The run ID is cleared when the signal targets
+        // the latest run, rather than left pointing at the signalling workflow's run.
+        self.attributes[TemporalTracingKeys.workflowId] = workflowID
+        self.attributes[TemporalTracingKeys.workflowRunId] = runID
+        self.attributes[TemporalTracingKeys.workflowSignalName] = signalName
+    }
+
     func setWorkerStartChildWorkflowRequestSpanAttributes(workflowInfo: WorkflowInfo, options: ChildWorkflowOptions) {
         if let childId = options.id {
             self.attributes[TemporalTracingKeys.workflowId] = childId
