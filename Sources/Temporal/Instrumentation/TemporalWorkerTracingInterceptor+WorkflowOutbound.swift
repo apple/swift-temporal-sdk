@@ -146,7 +146,7 @@ extension TemporalWorkerTracingInterceptor {
             next: (SignalChildWorkflowInput<repeat each Input>) async throws -> Void
         ) async throws {
             try await self.traceRecording.recordOutbound(
-                spanName: "SignalExternalWorkflow:\(input.name)",
+                spanName: "SignalChildWorkflow:\(input.name)",
                 headers: input.headers,
                 setRequestAttributes: { span in
                     span.setWorkerSignalWorkflowSpanAttributes(
