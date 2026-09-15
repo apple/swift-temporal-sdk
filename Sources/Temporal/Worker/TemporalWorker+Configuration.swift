@@ -317,6 +317,12 @@ extension TemporalWorker {
         public var nonstickyToStickyPollRatio: Double = 0.2
         /// Timeout for a sticky workflow task from schedule to start before falling back (default `10 sec`).
         public var stickyQueueScheduleToStartTimeout: Duration = .seconds(10)
+        /// Whether Workflow Logger keeps emitting records while a workflow is replaying (default `false`).
+        ///
+        /// Workflow code runs again from the beginning on every replay, so leaving this disabled avoids a
+        /// duplicate record for every log statement in each replayed workflow task. Enable it to follow a
+        /// replay when debugging. See ``WorkflowContext/logger``.
+        public var enableLoggingInReplay: Bool = false
 
         // –– Activities ––
         /// Polling behavior for activities (default max `5`).

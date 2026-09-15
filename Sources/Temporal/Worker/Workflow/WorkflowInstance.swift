@@ -62,6 +62,8 @@ struct WorkflowInstance: Sendable {
     private let outboundInterceptors: [any WorkflowOutboundInterceptor]
     /// The workflow instance logger.
     private let logger: Logger
+    /// The logger handed to workflow code, which drops records while replaying.
+    private let workflowLogger: Logger
 
     init<WorkflowWorker: WorkflowWorkerProtocol>(
         workflowWorker: WorkflowWorker,
@@ -69,7 +71,8 @@ struct WorkflowInstance: Sendable {
         namespace: String,
         payloadConverter: any PayloadConverter,
         failureConverter: any FailureConverter,
-        logger: Logger
+        logger: Logger,
+        enableLoggingInReplay: Bool = false
     ) {
         self.workflowWorkerCompleteWorkflowActivation = workflowWorker.completeWorkflowActivation
         self.taskQueue = taskQueue
@@ -95,6 +98,12 @@ struct WorkflowInstance: Sendable {
         self.implementation = .init(interceptors: inboundInterceptors, executor: self.executor)
         self.outboundInterceptors = outboundInterceptors
         self.logger = logger
+
+        var workflowLogger = logger
+        if !enableLoggingInReplay {
+            workflowLogger.handler = ReplayAwareLogHandler(underlying: logger.handler)
+        }
+        self.workflowLogger = workflowLogger
     }
 
     func run<Workflow: WorkflowDefinition>(
@@ -257,7 +266,7 @@ struct WorkflowInstance: Sendable {
             ),
             payloadConverter: self.payloadConverter,
             outboundInterceptors: self.outboundInterceptors,
-            logger: self.logger,
+            logger: self.workflowLogger,
         )
 
         let workflowStateBox = ArcBox(Workflow(input: input))

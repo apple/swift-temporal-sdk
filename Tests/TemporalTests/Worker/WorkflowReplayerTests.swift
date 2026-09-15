@@ -14,6 +14,7 @@
 
 import Foundation
 import Logging
+import Synchronization
 import Temporal
 import TemporalTestKit
 import Testing
@@ -82,6 +83,15 @@ extension TestServerDependentTests {
             }
         }
 
+        @Workflow
+        struct LoggingWorkflow {
+            static let logMessage: Logger.Message = "workflow-log-record"
+
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                context.logger.info(Self.logMessage)
+            }
+        }
+
         // MARK: - Simple Replay Tests
 
         @Test
@@ -138,6 +148,58 @@ extension TestServerDependentTests {
                 let replayResult = try await replayer.replayWorkflow(history: history)
                 #expect(replayResult.replayFailure == nil)
             }
+        }
+
+        // MARK: - Logging
+
+        @Test
+        func replayDoesNotEmitWorkflowLogsByDefault() async throws {
+            let handler = try await Self.replayLoggingWorkflow(enableLoggingInReplay: false)
+
+            let entries = handler.entries.withLock { $0 }
+            #expect(
+                !entries.contains(where: { event in
+                    event.message == LoggingWorkflow.logMessage
+                })
+            )
+        }
+
+        @Test
+        func replayEmitsWorkflowLogsWhenEnabled() async throws {
+            let handler = try await Self.replayLoggingWorkflow(enableLoggingInReplay: true)
+
+            let entries = handler.entries.withLock { $0 }
+            #expect(
+                entries.contains(where: { event in
+                    event.message == LoggingWorkflow.logMessage
+                })
+            )
+        }
+
+        private static func replayLoggingWorkflow(enableLoggingInReplay: Bool) async throws -> InMemoryLogHandler {
+            let history = try await withTestWorkerAndClient(workflows: [LoggingWorkflow.self]) { taskQueue, client in
+                let handle = try await client.startWorkflow(
+                    type: LoggingWorkflow.self,
+                    options: .init(id: "replayer-test-logging-\(UUID().uuidString)", taskQueue: taskQueue),
+                    input: ()
+                )
+                try await handle.result()
+
+                return try await handle.fetchHistory()
+            }
+
+            let handler = InMemoryLogHandler()
+            let configuration = WorkflowReplayer.Configuration(
+                workflows: [LoggingWorkflow.self],
+                logger: Logger(label: "WorkflowReplayer") { _ in handler },
+                enableLoggingInReplay: enableLoggingInReplay
+            )
+
+            let replayer = WorkflowReplayer(configuration: configuration)
+            let result = try await replayer.replayWorkflow(history: history)
+            #expect(result.replayFailure == nil)
+
+            return handler
         }
 
         // MARK: - Non-determinism Detection Tests
