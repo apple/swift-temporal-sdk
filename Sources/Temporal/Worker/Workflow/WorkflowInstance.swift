@@ -1049,9 +1049,11 @@ extension WorkflowInstance.Implementation {
     ) async throws -> Workflow.Output {
         try await Temporal.InternalWorkflowContext.$currentExecutor.withValue(self.executor) {
             try await Temporal.InternalWorkflowContext.$current.withValue(context) {
-                try await intercept((any WorkflowInboundInterceptor).executeWorkflow, input: input) { input in
-                    var workflow = workflow
-                    return try await workflow.run(context: publicContext, input: input.input)
+                try await withLogger(context.logger) { _ in
+                    try await intercept((any WorkflowInboundInterceptor).executeWorkflow, input: input) { input in
+                        var workflow = workflow
+                        return try await workflow.run(context: publicContext, input: input.input)
+                    }
                 }
             }
         }
@@ -1065,12 +1067,14 @@ extension WorkflowInstance.Implementation {
     ) async throws {
         try await Temporal.InternalWorkflowContext.$currentExecutor.withValue(self.executor) {
             try await Temporal.InternalWorkflowContext.$current.withValue(context) {
-                try await intercept((any WorkflowInboundInterceptor).handleSignal, input: input) { input in
-                    try await input.definition.run(
-                        workflow: workflow,
-                        context: publicContext,
-                        input: input.input
-                    )
+                try await withLogger(context.logger) { _ in
+                    try await intercept((any WorkflowInboundInterceptor).handleSignal, input: input) { input in
+                        try await input.definition.run(
+                            workflow: workflow,
+                            context: publicContext,
+                            input: input.input
+                        )
+                    }
                 }
             }
         }
@@ -1083,12 +1087,14 @@ extension WorkflowInstance.Implementation {
     ) throws -> Query.Output {
         try Temporal.InternalWorkflowContext.$currentExecutor.withValue(self.executor) {
             try Temporal.InternalWorkflowContext.$current.withValue(context) {
-                try intercept((any WorkflowInboundInterceptor).handleQuery, input: input) { input in
-                    try input.definition.run(
-                        workflow: workflow,
-                        view: WorkflowContextView(storage: context.stateMachine, info: context.info),
-                        input: input.input
-                    )
+                try withLogger(context.logger) { _ in
+                    try intercept((any WorkflowInboundInterceptor).handleQuery, input: input) { input in
+                        try input.definition.run(
+                            workflow: workflow,
+                            view: WorkflowContextView(storage: context.stateMachine, info: context.info),
+                            input: input.input
+                        )
+                    }
                 }
             }
         }
@@ -1105,12 +1111,14 @@ extension WorkflowInstance.Implementation {
                 try await Temporal.InternalWorkflowContext.$currentUpdateInfo.withValue(
                     WorkflowUpdateInfo(id: input.id, name: input.name)
                 ) {
-                    try await intercept((any WorkflowInboundInterceptor).handleUpdate, input: input) { input in
-                        try await input.definition.run(
-                            workflow: workflow,
-                            context: publicContext,
-                            input: input.input
-                        )
+                    try await withLogger(context.logger) { _ in
+                        try await intercept((any WorkflowInboundInterceptor).handleUpdate, input: input) { input in
+                            try await input.definition.run(
+                                workflow: workflow,
+                                context: publicContext,
+                                input: input.input
+                            )
+                        }
                     }
                 }
             }
@@ -1127,8 +1135,10 @@ extension WorkflowInstance.Implementation {
                 try Temporal.InternalWorkflowContext.$currentUpdateInfo.withValue(
                     WorkflowUpdateInfo(id: input.id, name: input.name)
                 ) {
-                    try intercept((any WorkflowInboundInterceptor).validateUpdate, input: input) { input in
-                        try input.definition.validateInput(workflow: workflow, input.input)
+                    try withLogger(context.logger) { _ in
+                        try intercept((any WorkflowInboundInterceptor).validateUpdate, input: input) { input in
+                            try input.definition.validateInput(workflow: workflow, input.input)
+                        }
                     }
                 }
             }
