@@ -23,20 +23,15 @@ import struct Foundation.Date
 // This is fine though since we manually run the jobs of the executor so no
 // concurrent access can happen.
 package final class WorkflowStateMachineStorage: @unchecked Sendable {
-    private enum Access {
-        case reading
-        case mutating
-    }
-
     private var stateMachine: WorkflowStateMachine {
         _read {
             // Read-only access is allowed in frozen state, therefore, impose a more lenient check here.
-            self.ensureOnExecutor(access: .reading)
+            self.ensureOnExecutor()
             yield self._stateMachine
         }
         _modify {
             // mutating methods might add commands which is not allowed when context is frozen.
-            self.ensureOnExecutor(access: .mutating)
+            self.ensureOnExecutor()
             yield &self._stateMachine
         }
     }
@@ -620,21 +615,28 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         return self.stateMachine.commands()
     }
 
-    private func ensureOnExecutor(access: Access) {
+    func isOnExecutor() -> Bool {
+        // This is using custom logic instead of preconditionIsolated to ensure
+        // the error messages are printed on crash.
+        return withUnsafeCurrentTask { currentTask in
+            guard let currentTask else {
+                fatalError("Current task not found")
+            }
+            guard currentTask.unownedTaskExecutor == executor.asUnownedTaskExecutor() else {
+                return false
+            }
+            return true
+        }
+    }
+
+    private func ensureOnExecutor() {
         // Allow access if the workflow instance itself is modifying the state
         if WorkflowInstance.isOnWorkflowInstance {
             return
         }
 
-        // This is using custom logic instead of preconditionIsolated to ensure
-        // the error messages are printed on crash.
-        withUnsafeCurrentTask { currentTask in
-            guard let currentTask else {
-                fatalError("Current task not found")
-            }
-            guard currentTask.unownedTaskExecutor == executor.asUnownedTaskExecutor() else {
-                fatalError("Current task executor mismatch")
-            }
+        guard self.isOnExecutor() else {
+            fatalError("Current task executor mismatch")
         }
     }
 }
