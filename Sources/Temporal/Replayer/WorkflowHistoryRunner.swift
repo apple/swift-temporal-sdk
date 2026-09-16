@@ -260,6 +260,10 @@ package final class ReplayBridgeWorker: BridgeWorkerProtocol {
         throw InvalidOperationError(message: "Activities are not supported during replay")
     }
 
+    package func runSlotSupplierLoops() async {
+        // custom slot suppliers are not supported during replay
+    }
+
     /// Converts an eviction reason to an appropriate error.
     private func failureFromEvictionReason(
         reason: Coresdk.WorkflowActivation.RemoveFromCache.EvictionReason,
