@@ -35,6 +35,12 @@ extension WorkflowReplayer {
         /// A logger for diagnostic output during replay.
         public var logger: Logger
 
+        /// Whether ``WorkflowContext/logger`` keeps emitting records during replay (default `false`).
+        ///
+        /// Everything a replayer runs is a replay, so leaving this disabled means workflow log statements
+        /// produce nothing. Enable it to follow a workflow's own logging through the replay.
+        public var enableLoggingInReplay: Bool
+
         /// Creates a new replayer configuration.
         ///
         /// - Parameters:
@@ -48,13 +54,16 @@ extension WorkflowReplayer {
         ///     array (no interceptors).
         ///   - logger: The logger for diagnostic output. Defaults to a logger with label
         ///     `"WorkflowReplayer"`.
+        ///   - enableLoggingInReplay: Whether the workflow logger keeps emitting records during replay.
+        ///     Defaults to `false`.
         public init(
             workflows: [any WorkflowDefinition.Type] = [],
             namespace: String = "ReplayNamespace",
             taskQueue: String = "ReplayTaskQueue",
             dataConverter: DataConverter = .default,
             interceptors: [any WorkerInterceptor] = [],
-            logger: Logger = Logger(label: "WorkflowReplayer")
+            logger: Logger = Logger(label: "WorkflowReplayer"),
+            enableLoggingInReplay: Bool = false
         ) {
             self.workflows = workflows
             self.namespace = namespace
@@ -62,6 +71,7 @@ extension WorkflowReplayer {
             self.dataConverter = dataConverter
             self.interceptors = interceptors
             self.logger = logger
+            self.enableLoggingInReplay = enableLoggingInReplay
         }
     }
 }

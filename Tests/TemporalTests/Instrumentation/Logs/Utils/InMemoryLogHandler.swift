@@ -17,17 +17,7 @@ import Synchronization
 
 /// A simple in‐memory `LogHandler` for testing.
 final class InMemoryLogHandler: LogHandler {
-    struct LogEntry: Sendable {
-        let level: Logger.Level
-        let message: Logger.Message
-        let metadata: Logger.Metadata?
-        let source: String
-        let file: String
-        let function: String
-        let line: UInt
-    }
-
-    let entries = Mutex<[LogEntry]>([])
+    let entries = Mutex<[LogEvent]>([])
 
     private let _logLevel: Mutex<Logger.Level> = .init(.trace)  // collect all logs
     var logLevel: Logger.Level {
@@ -57,15 +47,7 @@ final class InMemoryLogHandler: LogHandler {
         self.metadataProvider = metadataProvider
     }
 
-    func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata explicitMetadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
+    func log(event: LogEvent) {
         var mergedMetadata = self._metadata.withLock { $0 }
 
         if let provider = self.metadataProvider {
@@ -75,22 +57,15 @@ final class InMemoryLogHandler: LogHandler {
             }
         }
 
-        if let explicitMetadata {
+        if let explicitMetadata = event.metadata {
             mergedMetadata.merge(explicitMetadata) { _, new in new }
         }
 
-        let entry = LogEntry(
-            level: level,
-            message: message,
-            metadata: mergedMetadata,
-            source: source,
-            file: file,
-            function: function,
-            line: line
-        )
+        var event = event
+        event.metadata = mergedMetadata
 
         self.entries.withLock {
-            $0.append(entry)
+            $0.append(event)
         }
     }
 
