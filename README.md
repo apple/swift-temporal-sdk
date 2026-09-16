@@ -82,7 +82,7 @@ your `Package.swift` file:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/apple/swift-temporal-sdk.git", .upToNextMinor(from: "0.6.0"))
+    .package(url: "https://github.com/apple/swift-temporal-sdk.git", from: "1.0.0")
 ]
 ```
 
