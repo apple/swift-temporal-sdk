@@ -93,9 +93,13 @@ extension TemporalWorkerTracingInterceptor {
             input: MakeContinueAsNewErrorInput<repeat each Input>,
             next: (MakeContinueAsNewErrorInput<repeat each Input>) async throws -> ContinueAsNewError
         ) async throws -> ContinueAsNewError {
+            // Not suppressed during replay: the headers written here carry the trace context into the next
+            // run, so they have to be produced whenever the error is created. Go and .NET always write them
+            // for the same reason.
             try await self.traceRecording.recordOutbound(
                 spanName: "CreateContinuedAsNewError:\(input.info.workflowName)",
                 headers: input.headers,
+                suppressDuringReplay: false,
                 setRequestAttributes: { span in
                     span.setWorkerContinueAsNewRequestSpanAttributes(
                         workflowInfo: input.info,

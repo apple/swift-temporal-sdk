@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Synchronization
 import Testing
 import Tracing
@@ -47,6 +48,9 @@ final class TestTracer: Tracer {
         if let traceID = context.traceID {
             injector.inject(traceID, forKey: TraceID.keyName, into: &carrier)
         }
+        if let spanID = context.spanID {
+            injector.inject(spanID, forKey: SpanID.keyName, into: &carrier)
+        }
     }
 
     func forceFlush() {
@@ -63,7 +67,11 @@ final class TestTracer: Tracer {
         line: UInt
     ) -> TestSpan where Instant: TracerInstant {
         return self.testSpans.withLock { testSpans in
-            let span = TestSpan(context: context(), operationName: operationName)
+            // Give every span its own identity while inheriting the trace, so that tests can tell which
+            // span a propagated context actually refers to.
+            var context = context()
+            context.spanID = UUID().uuidString
+            let span = TestSpan(context: context, operationName: operationName)
             testSpans[operationName] = span
             return span
         }
@@ -161,6 +169,12 @@ enum TraceID: ServiceContextModule.ServiceContextKey {
     static let keyName = "traceparent"  // matches default Temporal tracing key
 }
 
+enum SpanID: ServiceContextModule.ServiceContextKey {
+    typealias Value = String
+
+    static let keyName = "spanid"
+}
+
 enum ServiceContextSpanLinksKey: ServiceContextModule.ServiceContextKey {
     typealias Value = [SpanLink]
 
@@ -174,6 +188,15 @@ extension ServiceContext {
         }
         set {
             self[TraceID.self] = newValue
+        }
+    }
+
+    var spanID: String? {
+        get {
+            self[SpanID.self]
+        }
+        set {
+            self[SpanID.self] = newValue
         }
     }
 

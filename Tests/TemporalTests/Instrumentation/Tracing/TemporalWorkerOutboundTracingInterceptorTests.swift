@@ -15,6 +15,7 @@
 import Foundation
 import Logging
 import SwiftProtobuf
+import Synchronization
 import Temporal
 import Testing
 import Tracing
@@ -28,6 +29,12 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
 
     struct TemporalTraceID: Decodable {
         let traceparent: UUID  // matches default Temporal tracing payload key
+    }
+
+    /// The full context the interceptor writes onto the Temporal headers.
+    struct PropagatedContext: Decodable {
+        let traceparent: String
+        let spanid: String
     }
 
     // Test attributes
@@ -57,8 +64,6 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
         headers: [:]
     )
 
-    // Attributes of the workflows targeted by the outbound operations, deliberately distinct from the
-    // calling workflow's attributes above.
     private static let childWorkflowName = "TestChildWorkflow"
     private static let childWorkflowID = UUID().uuidString
     private static let childTaskQueue = "TestChildTaskQueue"
@@ -66,8 +71,6 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
     private static let externalRunID = UUID().uuidString
     private static let signalName = "TestSignal"
 
-    // the trace recording plumbing is shared across the outbound interceptors, so assert it in depth on one
-    // of them only; the per-operation span names and attributes are covered by the tests further below
     @Test
     func outboundTracingWorkflowWorker() async throws {
         let tracer = TestTracer()
@@ -368,6 +371,49 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
             } assertErrors: { errors in
                 #expect(errors == [])
             }
+        }
+    }
+
+    @Test
+    func outboundPropagatesItsOwnSpanContext() async throws {
+        let tracer = TestTracer()
+        var serviceContext = ServiceContext.topLevel
+        serviceContext.traceID = UUID().uuidString
+        serviceContext.spanID = UUID().uuidString
+        let callerSpanID = try #require(serviceContext.spanID)
+
+        try await ServiceContext.withValue(serviceContext) {
+            let interceptor = try #require(
+                TemporalWorkerTracingInterceptor(
+                    tracer: tracer
+                ).workflowOutboundInterceptor
+            )
+
+            let propagated: Mutex<PropagatedContext?> = .init(nil)
+
+            try await interceptor.signalExternalWorkflow(
+                input: SignalExternalWorkflowInput<Void>(
+                    info: Self.testWorkflowInfo,
+                    id: Self.externalWorkflowID,
+                    name: Self.signalName,
+                    headers: [:],
+                    input: ()
+                ),
+                next: { input in
+                    let payload = try #require(input.headers["_tracer-data"])
+                    propagated.withLock {
+                        $0 = try? DataConverter.default.payloadConverter.convertPayloadHandlingVoid(payload)
+                    }
+                }
+            )
+
+            let span = try #require(tracer.getSpan(ofOperation: "SignalExternalWorkflow:\(Self.signalName)"))
+            let propagatedContext = try #require(propagated.withLock { $0 })
+
+            #expect(propagatedContext.spanid == span.context.spanID)
+            #expect(propagatedContext.spanid != callerSpanID)
+            // The trace is continued either way.
+            #expect(propagatedContext.traceparent == serviceContext.traceID)
         }
     }
 }
