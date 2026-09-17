@@ -140,8 +140,38 @@ extension TestServerDependentTests {
             }
         }
 
-        // MARK: - Non-determinism Detection Tests
+        // MARK: - Tracing
 
+        @Test
+        func replayDoesNotRecordOutboundSpansAgain() async throws {
+            try await withTestWorkerAndClient(
+                activities: [ReplayActivity()],
+                workflows: [SayHelloWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = "replayer-test-tracing-\(UUID().uuidString)"
+                let handle = try await client.startWorkflow(
+                    type: SayHelloWorkflow.self,
+                    options: .init(id: workflowID, taskQueue: taskQueue),
+                    input: ReplayParams(name: "Temporal")
+                )
+                _ = try await handle.result()
+
+                let history = try await handle.fetchHistory()
+
+                let tracer = TestTracer()
+                var config = WorkflowReplayer.Configuration()
+                config.workflows.append(SayHelloWorkflow.self)
+                config.interceptors.append(TemporalWorkerTracingInterceptor(tracer: tracer))
+
+                let replayResult = try await WorkflowReplayer(configuration: config).replayWorkflow(history: history)
+                #expect(replayResult.replayFailure == nil)
+
+                #expect(tracer.getSpan(ofOperation: "RunWorkflow:\(SayHelloWorkflow.name)") != nil)
+                #expect(tracer.getSpan(ofOperation: "StartActivity:ReplayActivity") == nil)
+            }
+        }
+
+        // MARK: - Non-determinism Detection Tests
         @Test
         func replayNondeterministicWorkflowFails() async throws {
             try await withTestWorkerAndClient(

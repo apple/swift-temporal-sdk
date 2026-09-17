@@ -35,9 +35,9 @@ extension TemporalWorkerTracingInterceptor {
             next: (HandleSleepInput) async throws -> Void
         ) async throws {
             try await self.traceRecording.recordOutbound(
-                spanName: "HandleSleep",
+                spanName: "StartTimer",
                 setRequestAttributes: { span in
-                    span.setWorkerHandleSleepSpanAttributes(sleepInput: input)
+                    span.setWorkerStartTimerSpanAttributes(sleepInput: input)
                 },
                 next: { _ in
                     try await next(input)
@@ -93,9 +93,13 @@ extension TemporalWorkerTracingInterceptor {
             input: MakeContinueAsNewErrorInput<repeat each Input>,
             next: (MakeContinueAsNewErrorInput<repeat each Input>) async throws -> ContinueAsNewError
         ) async throws -> ContinueAsNewError {
+            // Not suppressed during replay: the headers written here carry the trace context into the next
+            // run, so they have to be produced whenever the error is created. Go and .NET always write them
+            // for the same reason.
             try await self.traceRecording.recordOutbound(
                 spanName: "CreateContinuedAsNewError:\(input.info.workflowName)",
                 headers: input.headers,
+                suppressDuringReplay: false,
                 setRequestAttributes: { span in
                     span.setWorkerContinueAsNewRequestSpanAttributes(
                         workflowInfo: input.info,
@@ -120,7 +124,7 @@ extension TemporalWorkerTracingInterceptor {
             next: (StartChildWorkflowInput<repeat each Input>) async throws -> UntypedChildWorkflowHandle
         ) async throws -> UntypedChildWorkflowHandle {
             try await self.traceRecording.recordOutbound(
-                spanName: "SignalChildWorkflow:\(input.name)",
+                spanName: "StartChildWorkflow:\(input.name)",
                 headers: input.headers,
                 setRequestAttributes: { span in
                     span.setWorkerStartChildWorkflowRequestSpanAttributes(
@@ -146,11 +150,34 @@ extension TemporalWorkerTracingInterceptor {
             next: (SignalChildWorkflowInput<repeat each Input>) async throws -> Void
         ) async throws {
             try await self.traceRecording.recordOutbound(
-                spanName: "SignalExternalWorkflow:\(input.name)",
+                spanName: "SignalChildWorkflow:\(input.name)",
                 headers: input.headers,
                 setRequestAttributes: { span in
                     span.setWorkerSignalWorkflowSpanAttributes(
                         workflowID: input.id,
+                        signalName: input.name
+                    )
+                },
+                next: { headers in
+                    var input = input
+                    input.headers = headers
+                    return try await next(input)
+                }
+            )
+        }
+
+        public func signalExternalWorkflow<each Input>(
+            input: SignalExternalWorkflowInput<repeat each Input>,
+            next: (SignalExternalWorkflowInput<repeat each Input>) async throws -> Void
+        ) async throws {
+            try await self.traceRecording.recordOutbound(
+                spanName: "SignalExternalWorkflow:\(input.name)",
+                headers: input.headers,
+                setRequestAttributes: { span in
+                    span.setWorkerSignalExternalWorkflowSpanAttributes(
+                        workflowInfo: input.info,
+                        workflowID: input.id,
+                        runID: input.runId,
                         signalName: input.name
                     )
                 },

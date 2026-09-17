@@ -38,10 +38,15 @@ struct TemporalTraceRecording {
     func recordOutbound<R: Sendable>(
         spanName: String,
         headers: [String: Api.Common.V1.Payload] = [:],
+        suppressDuringReplay: Bool = true,
         setRequestAttributes: (any Span) -> Void,
         setResponseAttributes: ((any Span, R) -> Void)? = nil,
         next: (_ headers: [String: Api.Common.V1.Payload]) async throws -> R
     ) async throws -> R {
+        if suppressDuringReplay, Self.isReplaying {
+            return try await next(headers)
+        }
+
         let serviceContext = ServiceContext.current ?? .topLevel
 
         // This works around a compiler crash on 6.2+ by defining a separate closure
@@ -62,7 +67,7 @@ struct TemporalTraceRecording {
 
                 // Inject context into tracer payload
                 var tracerPayload = [String: String]()
-                self.tracer.inject(serviceContext, into: &tracerPayload, using: self.injector)
+                self.tracer.inject(span.context, into: &tracerPayload, using: self.injector)
                 let convertedTracerPayload =
                     try DataConverter
                     .default
@@ -90,19 +95,21 @@ struct TemporalTraceRecording {
     func recordInbound<R: Sendable>(
         spanName: String,
         headers: [String: Api.Common.V1.Payload],
+        suppressDuringReplay: Bool = true,
         setSpanAttributes: (any Span) -> Void,
         next: () async throws -> R
     ) async throws -> R {
-        let linkContext = try extractLinkContext(headers: headers)
+        if suppressDuringReplay, Self.isReplaying {
+            return try await next()
+        }
+
+        let parentContext = try extractParentContext(headers: headers)
 
         return try await self.tracer.withSpan(
             spanName,
-            context: .topLevel,
+            context: parentContext ?? .topLevel,
             ofKind: .server  // matches C#
         ) { span in
-            if let linkContext {
-                span.addLink(SpanLink(context: linkContext, attributes: [:]))
-            }
             setSpanAttributes(span)
 
             do {
@@ -119,19 +126,21 @@ struct TemporalTraceRecording {
     func recordInbound<R: Sendable>(
         spanName: String,
         headers: [String: Api.Common.V1.Payload],
+        suppressDuringReplay: Bool = true,
         setSpanAttributes: (any Span) -> Void,
         next: () throws -> R
     ) throws -> R {
-        let linkContext = try extractLinkContext(headers: headers)
+        if suppressDuringReplay, Self.isReplaying {
+            return try next()
+        }
+
+        let parentContext = try extractParentContext(headers: headers)
 
         return try self.tracer.withSpan(
             spanName,
-            context: .topLevel,
+            context: parentContext ?? .topLevel,
             ofKind: .server  // matches C#
         ) { span in
-            if let linkContext {
-                span.addLink(SpanLink(context: linkContext, attributes: [:]))
-            }
             setSpanAttributes(span)
 
             do {
@@ -144,9 +153,21 @@ struct TemporalTraceRecording {
         }
     }
 
-    /// Extracts the trace context carried on a Temporal request header into a
-    /// `ServiceContext` suitable for attaching as a ``SpanLink``.
-    private func extractLinkContext(
+    /// A Boolean value that indicates whether the calling code is re-executing during a workflow replay.
+    ///
+    /// Workflow code runs again from the beginning on every replay, so an operation instrumented here is
+    /// reached once per replayed workflow task. Recording each of those produces a duplicate span for work
+    /// that happened only once, which is why recording is suppressed on replay by default and an operation
+    /// has to opt out of that.
+    ///
+    /// This is always `false` outside a workflow, so the client interceptor is unaffected by the default.
+    private static var isReplaying: Bool {
+        InternalWorkflowContext.current?.isReplaying ?? false
+    }
+
+    /// Extracts the trace context carried on a Temporal request header, to be used as the parent of the
+    /// span recorded for the inbound operation.
+    private func extractParentContext(
         headers: [String: Api.Common.V1.Payload]
     ) throws -> ServiceContext? {
         // Check if header with tracer key exists
@@ -161,12 +182,12 @@ struct TemporalTraceRecording {
             .payloadConverter
             .convertPayloadHandlingVoid(tracerPayload)
 
-        var linkContext = ServiceContext.topLevel
+        var parentContext = ServiceContext.topLevel
         self.tracer.extract(
             convertedTracerPayload,
-            into: &linkContext,
+            into: &parentContext,
             using: self.extractor
         )
-        return linkContext
+        return parentContext
     }
 }

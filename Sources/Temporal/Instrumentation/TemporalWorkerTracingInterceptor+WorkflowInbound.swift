@@ -35,9 +35,13 @@ extension TemporalWorkerTracingInterceptor {
             input: ExecuteWorkflowInput<Workflow>,
             next: (ExecuteWorkflowInput<Workflow>) async throws -> Workflow.Output
         ) async throws -> Workflow.Output {
+            // Not suppressed during replay: this span covers the whole workflow execution and therefore
+            // spans workflow tasks. A workflow resumed after a cache miss begins on a replayed task, so
+            // suppressing here would leave the rest of that execution unrecorded and orphan its child spans.
             try await self.traceRecording.recordInbound(
                 spanName: "RunWorkflow:\(input.info.workflowName)",
                 headers: input.headers,
+                suppressDuringReplay: false,
                 setSpanAttributes: { span in
                     span.setWorkerExecuteWorkflowSpanAttributes(info: input.info)
                 },
@@ -67,9 +71,13 @@ extension TemporalWorkerTracingInterceptor {
             input: HandleQueryInput<Query>,
             next: (HandleQueryInput<Query>) throws -> Query.Output
         ) throws -> Query.Output {
+            // Not suppressed during replay: queries are not recorded in workflow history, so they are never
+            // genuinely re-executed. A query served right after a cache-miss replay would otherwise be lost.
+            // This matches the .NET SDK, which passes `evenOnReplay: true` for query handling.
             try self.traceRecording.recordInbound(
                 spanName: "HandleQuery:\(input.name)",
                 headers: input.headers,
+                suppressDuringReplay: false,
                 setSpanAttributes: { span in
                     span.setWorkerHandleQuerySpanAttributes(queryId: input.id, queryName: input.name, workflowInfo: input.info)
                 },
