@@ -13,10 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncAlgorithms
-import Foundation
 import Temporal
 import TemporalTestKit
 import Testing
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension TestServerDependentTests {
     @Suite(.tags(.clientTests))

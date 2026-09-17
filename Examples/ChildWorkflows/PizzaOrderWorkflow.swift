@@ -12,8 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import Temporal
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Parent workflow that orchestrates pizza order fulfillment.
 ///

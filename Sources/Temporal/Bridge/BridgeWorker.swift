@@ -13,9 +13,14 @@
 //===----------------------------------------------------------------------===//
 
 import Bridge
-import Foundation
 import GRPCCore
 internal import SwiftProtobuf
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 package protocol BridgeWorkerProtocol: Sendable {
     init(
