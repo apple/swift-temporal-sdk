@@ -117,15 +117,15 @@ extension Logger.Level {
 extension TemporalCoreForwardedLogLevel {
     fileprivate var level: Logger.Level {
         switch self {
-        case Bridge.Trace:
+        case Bridge.TemporalCoreForwardedLogLevel_Trace:
             .trace
-        case Bridge.Debug:
+        case Bridge.TemporalCoreForwardedLogLevel_Debug:
             .debug
-        case Bridge.Info:
+        case Bridge.TemporalCoreForwardedLogLevel_Info:
             .info
-        case Bridge.Warn:
+        case Bridge.TemporalCoreForwardedLogLevel_Warn:
             .warning
-        case Bridge.Error:
+        case Bridge.TemporalCoreForwardedLogLevel_Error:
             .error
         default:
             .critical

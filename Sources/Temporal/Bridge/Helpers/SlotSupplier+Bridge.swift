@@ -19,10 +19,10 @@ extension TemporalCoreSlotSupplier {
         var supplier = TemporalCoreSlotSupplier()
         switch slotSupplier.kind {
         case .fixedSize(let fixedSize):
-            supplier.tag = FixedSize
+            supplier.tag = TemporalCoreSlotSupplier_FixedSize
             supplier.fixed_size.num_slots = UInt(fixedSize.maximumSlots)
         case .resourceBased(let options, let tunerOptions):
-            supplier.tag = ResourceBased
+            supplier.tag = TemporalCoreSlotSupplier_ResourceBased
             supplier.resource_based.minimum_slots = UInt(options.minimumSlots)
             supplier.resource_based.maximum_slots = UInt(options.maximumSlots)
             supplier.resource_based.ramp_throttle_ms = options.rampThrottle.milliseconds

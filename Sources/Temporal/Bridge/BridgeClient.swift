@@ -285,7 +285,11 @@ package struct BridgeClient: ~Copyable, Sendable {
                                 keep_alive_options: nil,  // Default is picked when passing `nil`, HTTP2 gRPC keep alive enabled.
                                 http_connect_proxy_options: nil,
                                 grpc_override_callback: grpcCallback,
-                                grpc_override_callback_user_data: grpcCallbackUserDataPointer
+                                grpc_override_callback_user_data: grpcCallbackUserDataPointer,
+                                dns_load_balancing_options: nil,
+                                grpc_compression: TemporalCoreClientGrpcCompression_Gzip,
+                                payloads_warn_size: 0,
+                                memo_warn_size: 0
                             )
 
                             return try withUnsafePointer(to: options) { unsafe_options in

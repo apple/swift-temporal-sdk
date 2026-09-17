@@ -16,9 +16,6 @@ import struct Foundation.Data
 
 /// A payload converter for `Array<UInt8>` and `Data` values.
 public struct BinaryPayloadConverter: EncodingPayloadConverter {
-    private struct EncodingError: Error {}
-    private struct DecodingError: Error {}
-
     public static let encoding = Encodings.binaryPlain
 
     /// Creates a new binary payload converter.
@@ -37,7 +34,10 @@ public struct BinaryPayloadConverter: EncodingPayloadConverter {
             }
         }
 
-        throw EncodingError()
+        throw PayloadConverterError.encodingFailed(
+            converter: "BinaryPayloadConverter",
+            reason: "value of type '\(type(of: value))' is not '[UInt8]' or 'Foundation.Data'"
+        )
     }
 
     public func convertPayload<Value>(
@@ -51,6 +51,9 @@ public struct BinaryPayloadConverter: EncodingPayloadConverter {
             return payload.data as! Value
         }
 
-        throw DecodingError()
+        throw PayloadConverterError.decodingFailed(
+            converter: "BinaryPayloadConverter",
+            reason: "requested type '\(valueType)' is not '[UInt8]' or 'Foundation.Data'"
+        )
     }
 }

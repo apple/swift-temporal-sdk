@@ -14,9 +14,6 @@
 
 /// A payload converter that handles `nil` (`Optional<T>.none`) values.
 public struct BinaryNilPayloadConverter: EncodingPayloadConverter {
-    private struct EncodingError: Error {}
-    private struct DecodingError: Error {}
-
     public static let encoding = Encodings.binaryNil
 
     /// Creates a new binary nil payload converter.
@@ -24,7 +21,10 @@ public struct BinaryNilPayloadConverter: EncodingPayloadConverter {
 
     public func convertValue(_ value: some Any) throws -> Api.Common.V1.Payload {
         guard let optionalValue = value as? any OptionalValue, optionalValue.isNil else {
-            throw EncodingError()
+            throw PayloadConverterError.encodingFailed(
+                converter: "BinaryNilPayloadConverter",
+                reason: "value of type '\(type(of: value))' is not a nil optional"
+            )
         }
 
         return createPayload(for: [])
@@ -35,11 +35,17 @@ public struct BinaryNilPayloadConverter: EncodingPayloadConverter {
         as valueType: Value.Type
     ) throws -> Value {
         guard payload.data.isEmpty else {
-            throw DecodingError()
+            throw PayloadConverterError.decodingFailed(
+                converter: "BinaryNilPayloadConverter",
+                reason: "cannot decode a non-empty payload (\(payload.data.count) bytes) as a nil value"
+            )
         }
 
         guard let optional = valueType as? any OptionalValue.Type else {
-            throw DecodingError()
+            throw PayloadConverterError.decodingFailed(
+                converter: "BinaryNilPayloadConverter",
+                reason: "requested type '\(valueType)' is not an optional"
+            )
         }
 
         // This force unwrap is safe

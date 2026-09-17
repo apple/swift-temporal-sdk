@@ -81,9 +81,8 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 input: ()
             )
         ) { input in
-            // With span links, the inbound trace becomes a link on the span
-            // rather than the parent context, so it's not on `current`.
-            #expect(ServiceContext.current?.traceID == nil)
+            // The inbound span continues the caller's trace, so the handler runs inside it.
+            #expect(ServiceContext.current?.traceID == traceID.uuidString)
         }
 
         assertTestSpanComponents(
@@ -107,10 +106,10 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             #expect(errors == [])
         }
 
-        // Inbound trace context is attached as a span link.
-        let links = tracer.getSpan(ofOperation: "RunWorkflow:\(Self.workflowName)")?.context.spanLinks ?? []
-        #expect(links.count == 1)
-        #expect(links.first?.context.traceID == traceID.uuidString)
+        // The caller's trace is continued as the span's parent, not attached as a link.
+        let span = tracer.getSpan(ofOperation: "RunWorkflow:\(Self.workflowName)")
+        #expect(span?.context.traceID == traceID.uuidString)
+        #expect(span?.context.spanLinks == nil)
     }
 
     @Test
@@ -139,9 +138,8 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                     input: ()
                 )
             ) { input in
-                // With span links, the inbound trace becomes a link on the span
-                // rather than the parent context, so it's not on `current`.
-                #expect(ServiceContext.current?.traceID == nil)
+                // The inbound span continues the caller's trace, so the handler runs inside it.
+                #expect(ServiceContext.current?.traceID == traceID.uuidString)
 
                 // Simulates an error within the RPC
                 throw TracingInterceptorTestError.testError
@@ -163,10 +161,10 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 #expect(errors == [.testError])
             }
 
-            // Inbound trace context is attached as a span link.
-            let links = tracer.getSpan(ofOperation: "RunWorkflow:\(Self.workflowName)")?.context.spanLinks ?? []
-            #expect(links.count == 1)
-            #expect(links.first?.context.traceID == traceID.uuidString)
+            // The caller's trace is continued as the span's parent, not attached as a link.
+            let span = tracer.getSpan(ofOperation: "RunWorkflow:\(Self.workflowName)")
+            #expect(span?.context.traceID == traceID.uuidString)
+            #expect(span?.context.spanLinks == nil)
         }
     }
 
@@ -199,9 +197,8 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 input: ()
             )
         ) { input in
-            // With span links, the inbound trace becomes a link on the span
-            // rather than the parent context, so it's not on `current`.
-            #expect(ServiceContext.current?.traceID == nil)
+            // The inbound span continues the caller's trace, so the handler runs inside it.
+            #expect(ServiceContext.current?.traceID == traceID.uuidString)
 
             return ()
         }
@@ -220,10 +217,10 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             #expect(errors == [])
         }
 
-        // Inbound trace context is attached as a span link.
-        let links = tracer.getSpan(ofOperation: "RunActivity:\(TestActivityName.name)")?.context.spanLinks ?? []
-        #expect(links.count == 1)
-        #expect(links.first?.context.traceID == traceID.uuidString)
+        // The caller's trace is continued as the span's parent, not attached as a link.
+        let span = tracer.getSpan(ofOperation: "RunActivity:\(TestActivityName.name)")
+        #expect(span?.context.traceID == traceID.uuidString)
+        #expect(span?.context.spanLinks == nil)
     }
 
     @Test
@@ -252,9 +249,8 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                     input: ()
                 )
             ) { input in
-                // With span links, the inbound trace becomes a link on the span
-                // rather than the parent context, so it's not on `current`.
-                #expect(ServiceContext.current?.traceID == nil)
+                // The inbound span continues the caller's trace, so the handler runs inside it.
+                #expect(ServiceContext.current?.traceID == traceID.uuidString)
 
                 // Simulates an error within the RPC
                 throw TracingInterceptorTestError.testError
@@ -276,10 +272,10 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 #expect(errors == [.testError])
             }
 
-            // Inbound trace context is attached as a span link.
-            let links = tracer.getSpan(ofOperation: "RunActivity:\(TestActivityName.name)")?.context.spanLinks ?? []
-            #expect(links.count == 1)
-            #expect(links.first?.context.traceID == traceID.uuidString)
+            // The caller's trace is continued as the span's parent, not attached as a link.
+            let span = tracer.getSpan(ofOperation: "RunActivity:\(TestActivityName.name)")
+            #expect(span?.context.traceID == traceID.uuidString)
+            #expect(span?.context.spanLinks == nil)
         }
     }
 }

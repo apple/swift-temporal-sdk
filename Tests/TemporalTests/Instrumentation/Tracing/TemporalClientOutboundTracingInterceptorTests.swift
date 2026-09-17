@@ -50,8 +50,11 @@ struct TemporalClientOutboundTracingInterceptorTests {
         headers: [:],
         input: ()
     )
+    private static let listQuery = "WorkflowType = 'VoidWorkflow'"
+    private static let listLimit = 5
 
-    // only test one outbound client interceptor, as logic is the same (except for the setting of span attributes)
+    // the trace recording plumbing is shared across the client interceptor methods, so assert it in depth on
+    // one of them only; per-method span attributes are covered separately
     @Test
     func tracingInterceptorTemporalClient() async throws {
         let tracer = TestTracer()
@@ -166,6 +169,43 @@ struct TemporalClientOutboundTracingInterceptorTests {
                 } assertErrors: { errors in
                     #expect(errors == [.testError])
                 }
+            }
+        }
+    }
+
+    @Test
+    func listWorkflowsRecordsQueryUnderWorkflowKey() async throws {
+        let tracer = TestTracer()
+        let interceptor = try #require(
+            TemporalClientTracingInterceptor(
+                tracer: tracer
+            ).clientOutboundInterceptor
+        )
+
+        do {
+            _ = try await interceptor.listWorkflows(
+                input: ListWorkflowsInput(query: Self.listQuery, limit: Self.listLimit),
+                next: { _ -> AsyncThrowingStream<WorkflowExecution, any Error> in
+                    throw TracingInterceptorTestError.testError
+                }
+            )
+
+            Issue.record("Should have thrown")
+        } catch {
+            assertTestSpanComponents(
+                forSpan:
+                    Api.Workflowservice.V1.WorkflowService.Method.ListWorkflowExecutions.descriptor.fullyQualifiedMethod,
+                tracer: tracer
+            ) { events in
+                #expect(events.isEmpty)
+            } assertAttributes: { attributes in
+                #expect(attributes[TemporalTracingKeys.workflowListQuery]?.toSpanAttribute() == .string(Self.listQuery))
+                #expect(attributes[TemporalTracingKeys.scheduleListQuery] == nil)
+                #expect(attributes[TemporalTracingKeys.workflowListLimit]?.toSpanAttribute() == .int64(Int64(Self.listLimit)))
+            } assertStatus: { status in
+                #expect(status == .some(.init(code: .error)))
+            } assertErrors: { errors in
+                #expect(errors == [.testError])
             }
         }
     }

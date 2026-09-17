@@ -72,7 +72,12 @@ extension BridgeWorker {
                                             nondeterminism_as_workflow_fail: nondeterminismAsWorkflowFail,
                                             nondeterminism_as_workflow_fail_for_types: nondetArray,
                                             plugins: .init(),
-                                            storage_drivers: .init()
+                                            storage_drivers: .init(),
+                                            // NOTE: Mirrors the Core SDK defaults (`WorkerConfig::disable_payload_error_limit`
+                                            // and `WorkerConfig::max_eager_activity_reservations_per_workflow_task`) until
+                                            // these are exposed as configurable options.
+                                            disable_payload_error_limit: false,
+                                            max_eager_activity_reservations_per_workflow_task: 3
                                         )
 
                                         return try body(&opts)
@@ -97,7 +102,7 @@ extension TemporalWorker.Configuration.VersioningStrategy {
 
             return try buildId.withByteArrayRef { buildIdRef in
                 var versioningStrategy = TemporalCoreWorkerVersioningStrategy()
-                versioningStrategy.tag = None
+                versioningStrategy.tag = TemporalCoreWorkerVersioningStrategy_None
                 versioningStrategy.none = .init(build_id: buildIdRef)
 
                 return try body(versioningStrategy)
@@ -106,7 +111,7 @@ extension TemporalWorker.Configuration.VersioningStrategy {
             return try deploymentBasedParameter.deploymentVersion.buildId.withByteArrayRef { buildIdRef in
                 try deploymentBasedParameter.deploymentVersion.deploymentName.withByteArrayRef { deploymentVersionRef in
                     var versioningStrategy = TemporalCoreWorkerVersioningStrategy()
-                    versioningStrategy.tag = DeploymentBased
+                    versioningStrategy.tag = TemporalCoreWorkerVersioningStrategy_DeploymentBased
                     versioningStrategy.deployment_based = .init(
                         version: .init(deployment_name: deploymentVersionRef, build_id: buildIdRef),
                         use_worker_versioning: deploymentBasedParameter.useWorkerVersioning,
@@ -128,7 +133,7 @@ extension TemporalWorker.Configuration.VersioningStrategy {
         case .legacyBuildIdBased(let legacyBuildIdBasedParameters):
             return try legacyBuildIdBasedParameters.buildId.withByteArrayRef { buildIdRef in
                 var versioningStrategy = TemporalCoreWorkerVersioningStrategy()
-                versioningStrategy.tag = LegacyBuildIdBased
+                versioningStrategy.tag = TemporalCoreWorkerVersioningStrategy_LegacyBuildIdBased
                 versioningStrategy.legacy_build_id_based = .init(build_id: buildIdRef)
 
                 return try body(versioningStrategy)

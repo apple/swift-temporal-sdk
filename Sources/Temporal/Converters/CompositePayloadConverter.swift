@@ -24,9 +24,6 @@ import struct Foundation.Data
 /// underlying converter that reports processing that encoding is used for
 /// decoding the payload.
 public struct CompositePayloadConverter<each Converter: EncodingPayloadConverter>: PayloadConverter {
-    private struct EncodingError: Error {}
-    private struct DecodingError: Error {}
-
     private let converter: (repeat each Converter)
 
     /// Creates a composite payload converter with the given underlying converters.
@@ -45,7 +42,10 @@ public struct CompositePayloadConverter<each Converter: EncodingPayloadConverter
             }
         }
 
-        throw EncodingError()
+        throw PayloadConverterError.encodingFailed(
+            converter: "CompositePayloadConverter",
+            reason: "none of the configured converters could encode a value of type '\(type(of: value))'"
+        )
     }
 
     public func convertPayload<Value>(
@@ -57,7 +57,10 @@ public struct CompositePayloadConverter<each Converter: EncodingPayloadConverter
         }
 
         guard let encoding = payload.metadata[Encodings.encodingKey] else {
-            throw DecodingError()
+            throw PayloadConverterError.decodingFailed(
+                converter: "CompositePayloadConverter",
+                reason: "payload is missing the '\(Encodings.encodingKey)' metadata key required to select a converter"
+            )
         }
 
         for (type, converter) in repeat ((each Converter).self, each converter) {
@@ -66,6 +69,10 @@ public struct CompositePayloadConverter<each Converter: EncodingPayloadConverter
             }
         }
 
-        throw DecodingError()
+        throw PayloadConverterError.decodingFailed(
+            converter: "CompositePayloadConverter",
+            reason:
+                "none of the configured converters handle the payload encoding '\(String(decoding: encoding, as: UTF8.self))'"
+        )
     }
 }
