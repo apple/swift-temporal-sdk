@@ -61,7 +61,8 @@ public struct _WorkflowState<Value>: @unchecked Sendable {
     /// Creates a new workflow state wrapper with the specified initial value.
     ///
     /// - Parameter initialValue: The initial value to be wrapped and managed by the workflow state.
-    public init(initialValue: sending Value) {
+    public init(initialValue: Value) {
+        Self.ensureOnWorkflowExecutor()
         self.box = ArcBox(initialValue)
     }
 }
