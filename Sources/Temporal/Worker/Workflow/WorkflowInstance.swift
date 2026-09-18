@@ -124,10 +124,12 @@ struct WorkflowInstance: Sendable {
         let executionState: WorkflowExecutionState<Workflow>
         let input: WorkflowTaskExecutorIsolatedBox<Workflow.Input>
         do {
-            (executionState, input) = try await self.initializeWorkflow(
-                activation,
-                workflowType: workflowType
-            )
+            (executionState, input) = try await Self.$isOnWorkflowInstance.withValue(true) {
+                try await self.initializeWorkflow(
+                    activation,
+                    workflowType: workflowType
+                )
+            }
         } catch {
             // We failed to initialize the workflow. This indicates a workflow task failure
             // so let's fail the activation and return here.
