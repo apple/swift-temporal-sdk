@@ -12,12 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if canImport(Darwin)
-import Foundation
-#endif
 import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxMacros
+
+#if canImport(Darwin)
+import Foundation
+#endif
 
 /// Macro implementation for the `@Workflow` attribute.
 public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
