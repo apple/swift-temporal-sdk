@@ -57,15 +57,7 @@ final class InMemoryLogHandler: LogHandler {
         self.metadataProvider = metadataProvider
     }
 
-    func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata explicitMetadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
+    func log(event: LogEvent) {
         var mergedMetadata = self._metadata.withLock { $0 }
 
         if let provider = self.metadataProvider {
@@ -75,18 +67,18 @@ final class InMemoryLogHandler: LogHandler {
             }
         }
 
-        if let explicitMetadata {
-            mergedMetadata.merge(explicitMetadata) { _, new in new }
+        if let eventMetadata = event.metadata {
+            mergedMetadata.merge(eventMetadata) { _, new in new }
         }
 
         let entry = LogEntry(
-            level: level,
-            message: message,
+            level: event.level,
+            message: event.message,
             metadata: mergedMetadata,
-            source: source,
-            file: file,
-            function: function,
-            line: line
+            source: event.source,
+            file: event.file,
+            function: event.function,
+            line: event.line
         )
 
         self.entries.withLock {
