@@ -47,6 +47,7 @@ public func withActivityTestEnvironment<Return>(
     let context = ActivityExecutionContext(
         info: info,
         logger: logger,
+        contextMetadata: [:],
         outboundInterceptors: [],
         heartbeatContinuation: heartbeatDetails.continuation
     ) {
@@ -84,6 +85,7 @@ public func withActivityTestEnvironment<Result>(
     let context = ActivityExecutionContext(
         info: info,
         logger: logger,
+        contextMetadata: [:],
         outboundInterceptors: [],
         heartbeatContinuation: heartbeatDetails.continuation
     ) {

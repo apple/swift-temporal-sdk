@@ -244,6 +244,7 @@ public struct ActivityExecutionContext: Sendable {
 
     /// The logger associated with the current activity execution.
     public let logger: Logger
+    package let contextMetadata: Logger.Metadata
 
     private let heartbeatContinuation: AsyncStream<[any Sendable]>.Continuation
 
@@ -254,12 +255,14 @@ public struct ActivityExecutionContext: Sendable {
     package init(
         info: Info,
         logger: Logger,
+        contextMetadata: Logger.Metadata,
         outboundInterceptors: [any ActivityOutboundInterceptor],
         heartbeatContinuation: AsyncStream<[any Sendable]>.Continuation,
         lookupCancellationReason: @escaping @Sendable () -> ActivityCancellationReason?
     ) {
         self.info = info
         self.logger = logger
+        self.contextMetadata = contextMetadata
         self.heartbeatContinuation = heartbeatContinuation
         self.lookupCancellationReason = lookupCancellationReason
         self.implementation = .init(interceptors: outboundInterceptors)
@@ -359,19 +362,26 @@ extension ActivityExecutionContext {
             dataConverter: dataConverter
         )
 
+        let contextMetadata: Logger.Metadata = [
+            LoggingKeys.taskQueue: "\(info.taskQueue)",
+            LoggingKeys.workflowNamespace: "\(info.workflowNamespace)",
+            LoggingKeys.workflowID: "\(info.workflowID)",
+            LoggingKeys.workflowRunID: "\(info.workflowRunID)",
+            LoggingKeys.workflowType: "\(info.workflowType)",
+            LoggingKeys.activityID: "\(info.activityID)",
+            LoggingKeys.activityName: "\(info.activityType)",
+            LoggingKeys.activityAttempt: "\(info.attempt)",
+        ]
+
         var logger = logger
-        logger[metadataKey: LoggingKeys.taskQueue] = "\(info.taskQueue)"
-        logger[metadataKey: LoggingKeys.workflowNamespace] = "\(info.workflowNamespace)"
-        logger[metadataKey: LoggingKeys.workflowID] = "\(info.workflowID)"
-        logger[metadataKey: LoggingKeys.workflowRunID] = "\(info.workflowRunID)"
-        logger[metadataKey: LoggingKeys.workflowType] = "\(info.workflowType)"
-        logger[metadataKey: LoggingKeys.activityID] = "\(info.activityID)"
-        logger[metadataKey: LoggingKeys.activityName] = "\(info.activityType)"
-        logger[metadataKey: LoggingKeys.activityAttempt] = "\(info.attempt)"
+        for (key, value) in contextMetadata {
+            logger[metadataKey: key] = value
+        }
 
         self.init(
             info: info,
             logger: logger,
+            contextMetadata: contextMetadata,
             outboundInterceptors: outboundInterceptors,
             heartbeatContinuation: heartbeatContinuation,
             lookupCancellationReason: lookupCancellationReason
