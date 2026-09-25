@@ -261,8 +261,7 @@ where
                         try ActivityWorker(
                             worker: worker,
                             configuration: self.configuration,
-                            activities: self.activities,
-                            logger: self.logger
+                            activities: self.activities
                         )
                     } else {
                         nil
@@ -317,6 +316,7 @@ where
         workflowWorker: WorkflowWorker?,
         isRunningForShutdown: Bool = false
     ) async throws {
+        let logger = Logger.current
         try await cancelWhenGracefulShutdown {
             try await withTaskCancellationHandler {
                 // Block cancellation from propagating inwards.

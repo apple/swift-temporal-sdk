@@ -95,6 +95,7 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
     }
 
     package func run() async throws {
+        let logger = Logger.current
         // We are using an unstructured task here as a cancellation shield to avoid cancellation of the worker's task
         // to propagate to the workflow instances. The worker itself is listening to cancellation and informs the bridge worker
         // to initiate a shutdown. This will result in all workflow instances to be removed from cache at some point and rescheduled
@@ -212,6 +213,7 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
         runningWorkflows: inout [String: AsyncStream<Coresdk.WorkflowActivation.WorkflowActivation>.Continuation],
         taskGroup: inout DiscardingTaskGroup
     ) async throws -> AsyncStream<Coresdk.WorkflowActivation.WorkflowActivation>.Continuation? {
+        let logger = Logger.current
         let runID = activation.runID
 
         // First we check if we have a running workflow

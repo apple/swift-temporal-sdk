@@ -110,6 +110,7 @@ struct WorkflowInstance: Sendable {
         workflowType: Workflow.Type,
         activations: some AsyncSequence<Coresdk.WorkflowActivation.WorkflowActivation, Never>
     ) async throws {
+        let logger = Logger.current
         var activationsIterator = activations.makeAsyncIterator()
 
         guard let activation = await activationsIterator.next(isolation: #isolation) else {
@@ -294,6 +295,7 @@ struct WorkflowInstance: Sendable {
         input: WorkflowTaskExecutorIsolatedBox<Workflow.Input>,
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
+        let logger = Logger.current
         group.addTask(executorPreference: self.executor) {
             self.logger.trace("Intercepting workflow")
             let workflow = executionState.workflowStateBox.value
@@ -539,6 +541,7 @@ struct WorkflowInstance: Sendable {
         publicContext: WorkflowContext<Signal.Workflow>,
         temporalPayloads: [Api.Common.V1.Payload]
     ) async {
+        let logger = Logger.current
         let input: Signal.Input
         do {
             input = try self.payloadConverter.convertPayloads(temporalPayloads, as: Signal.Input.self)
@@ -665,6 +668,7 @@ struct WorkflowInstance: Sendable {
         headers: [String: Api.Common.V1.Payload],
         temporalPayloads: [Api.Common.V1.Payload]
     ) async where Query.Workflow == Workflow {
+        let logger = Logger.current
         let input: Query.Input
         do {
             input = try self.payloadConverter.convertPayloads(temporalPayloads, as: Query.Input.self)
@@ -826,6 +830,7 @@ struct WorkflowInstance: Sendable {
         headers: [String: Api.Common.V1.Payload],
         temporalPayloads: [Api.Common.V1.Payload]
     ) async where Update.Workflow == Workflow {
+        let logger = Logger.current
         // The input is given to both the validator method and the update method to match
         // other temporal SDKs we are passing two separately converted inputs to disallow
         // user mutation of the input between validator and update.
@@ -1024,6 +1029,7 @@ struct WorkflowInstance: Sendable {
     // MARK: Top level error handling
 
     private func handleTopLevelError(_ error: any Error) async {
+        let logger = Logger.current
         if let continueAsNewError = error as? ContinueAsNewError {
             self.logger.debug("Workflow requested continue as new")
             self.stateMachine.continueAsNew(continueAsNewError)
