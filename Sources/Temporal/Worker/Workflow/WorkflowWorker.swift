@@ -233,11 +233,17 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
                 return nil
             }
 
-            var logger = self.logger
-            logger[metadataKey: LoggingKeys.taskQueue] = "\(self.taskQueue)"
-            logger[metadataKey: LoggingKeys.workflowNamespace] = "\(self.namespace)"
-            logger[metadataKey: LoggingKeys.workflowRunID] = "\(runID)"
-            logger[metadataKey: LoggingKeys.workflowType] = "\(workflowType)"
+            let instanceLoggerMetadata: Logger.Metadata = [
+                LoggingKeys.taskQueue: "\(self.taskQueue)",
+                LoggingKeys.workflowNamespace: "\(self.namespace)",
+                LoggingKeys.workflowRunID: "\(runID)",
+                LoggingKeys.workflowType: "\(workflowType)",
+            ]
+
+            var logger = logger
+            for (key, value) in instanceLoggerMetadata {
+                logger[metadataKey: key] = value
+            }
 
             logger.debug("Creating new workflow instance")
 
@@ -247,7 +253,8 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
                 namespace: self.namespace,
                 payloadConverter: self.dataConverter.payloadConverter,
                 failureConverter: self.dataConverter.failureConverter,
-                logger: logger
+                logger: logger,
+                instanceLoggerMetadata: instanceLoggerMetadata
             )
             // Other SDKs keep this without an upper buffer limit as well
             // TODO: Check if we should enforce a buffer size
