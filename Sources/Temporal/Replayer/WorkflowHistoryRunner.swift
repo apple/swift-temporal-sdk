@@ -97,7 +97,8 @@ package final class WorkflowHistoryRunner: Sendable {
         history: WorkflowHistory,
         historyData: Data
     ) async throws -> WorkflowReplayResult {
-        await withTaskCancellationHandler {
+        let logger = Logger.current
+        return await withTaskCancellationHandler {
             // Block cancellation from propagating inwards, similar to TemporalWorker
             await Task {
                 await withTaskGroup(of: Void.self) { group in
