@@ -286,6 +286,9 @@ where [.executable, .test, .regular].contains(
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0461-async-function-isolation.md
     settings.append(.enableUpcomingFeature("NonIsolatedNonSendingByDefault"))
 
+    // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0480-swiftpm-warning-control.md
+    settings.append(.treatAllWarnings(as: .error))
+
     target.swiftSettings = settings
 }
 
