@@ -167,16 +167,30 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     /// - Throws: Network errors, task execution errors, or cancellation errors that terminate the polling
     /// loop.
     package func run() async throws {
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            // TODO: Check for task cancellation here
-            while true {
-                self.logger.debug("Polling next activity task")
-                try await self.pollNextActivityTask(
-                    taskGroup: &group,
-                    logger: self.logger
-                )
-                self.logger.debug("Finished activity task")
+        // A discarding task group releases each activity's child task once it finished, instead of retaining all
+        // of them until the worker stops
+        var pollingError: (any Error)?
+        await withDiscardingTaskGroup { group in
+            // We don't have to handle cancellation here since the TemporalWorker is handling this
+            // for us and telling the bridge worker about it
+            do {
+                while true {
+                    self.logger.debug("Polling next activity task")
+                    try await self.pollNextActivityTask(
+                        taskGroup: &group,
+                        logger: self.logger
+                    )
+                    self.logger.debug("Finished activity task")
+                }
+            } catch {
+                // Cancel the running activities, the task group waits for them to finish before returning
+                group.cancelAll()
+                pollingError = error
             }
+        }
+
+        if let pollingError {
+            throw pollingError
         }
     }
 
@@ -190,7 +204,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     ///   - taskGroup: The task group for managing concurrent activity executions.
     ///   - logger: The logger instance for diagnostic output.
     private func pollNextActivityTask(
-        taskGroup: inout ThrowingTaskGroup<Void, any Error>,
+        taskGroup: inout DiscardingTaskGroup,
         logger: Logger
     ) async throws {
         var logger = self.logger
@@ -260,7 +274,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
         activity: A,
         activityTaskStart: Coresdk.ActivityTask.Start,
         taskToken: ActivityTaskToken,
-        taskGroup: inout ThrowingTaskGroup<Void, any Error>,
+        taskGroup: inout DiscardingTaskGroup,
         logger: Logger
     ) async throws {
         let runningActivity = RunningActivity()
@@ -270,7 +284,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
             // To allow us to manually cancel the activity we are putting it in a separate
             // task group. In this task group we have one child task that is to manually
             // trigger cancellation.
-            try await withThrowingTaskGroup(of: Void.self) { group in
+            await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
                     await runningActivity.waitForCancellation(logger: logger)
                     self.state.withLock {
@@ -416,8 +430,20 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                     }
                 }
 
-                try await group.next()
-                group.cancelAll()
+                do {
+                    try await group.next()
+                    group.cancelAll()
+                    try await group.waitForAll()
+                } catch {
+                    group.cancelAll()
+                    logger.error(
+                        "Failed to complete activity",
+                        metadata: [
+                            LoggingKeys.errorType: "\(type(of: error))",
+                            LoggingKeys.errorMessage: "\(error)",
+                        ]
+                    )
+                }
             }
         }
     }
