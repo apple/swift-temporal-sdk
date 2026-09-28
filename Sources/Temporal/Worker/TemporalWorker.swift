@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 public import GRPCCore
-import GRPCNIOTransportHTTP2Posix
 import GRPCOTelTracingInterceptors
 import GRPCServiceLifecycle
 public import Logging
