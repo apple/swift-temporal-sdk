@@ -39,6 +39,7 @@ private final class MockBridgeWorker: BridgeWorkerProtocol {
     func pollActivityTask() async throws -> Coresdk.ActivityTask.ActivityTask { fatalError() }
     func completeActivityTask(_ completion: Coresdk.ActivityTaskCompletion) async throws { fatalError() }
     func recordActivityHeartbeat(_ heartbeat: Coresdk.ActivityHeartbeat) throws { fatalError() }
+    func runSlotSupplierLoops() async {}
 }
 
 // Test workflows with duplicate names
