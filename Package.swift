@@ -54,6 +54,7 @@ let package = Package(
         .package(url: "https://github.com/grpc/grpc-swift-extras.git", from: "2.0.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
         .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: []),
+        .package(url: "https://github.com/swiftlang/swift-subprocess.git", from: "1.0.0"),
     ],
     targets: [
         .binaryTarget(
@@ -121,6 +122,11 @@ let package = Package(
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
                 .product(name: "GRPCServiceLifecycle", package: "grpc-swift-extras"),
                 .target(name: "Temporal"),
+                .product(
+                    name: "Subprocess",
+                    package: "swift-subprocess",
+                    condition: .when(platforms: [.macOS, .linux])
+                ),
             ]
         ),
         .target(
