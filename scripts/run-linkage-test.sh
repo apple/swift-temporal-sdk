@@ -53,6 +53,14 @@ echo "$LDD_OUTPUT"
 if echo "$LDD_OUTPUT" | grep -q "libFoundation.so"; then
     echo "Error: Binary is linked against libFoundation.so - this indicates incorrect linkage. Ensure the full Foundation is not linked on Linux when default traits are disabled." >&2
     exit 1
+fi
+
+echo "Success: Binary is not linked against libFoundation.so."
+
+# Positive check: verify the binary actually runs (confirms Temporal is linked)
+if "$BUILD_PATH"; then
+    echo "Success: Linkage test binary runs correctly with Temporal linked."
 else
-    echo "Success: Binary is not linked against libFoundation.so - linkage test passed."
+    echo "Error: Linkage test binary failed to run - the Temporal library may not be linked correctly." >&2
+    exit 1
 fi
