@@ -352,14 +352,16 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                                     }
 
                                     // TODO: We want to have a task local logger here
-                                    let output = try await self.implementation.run(
-                                        activity,
-                                        input: .init(
-                                            definition: activity,
-                                            headers: headers,
-                                            input: input
+                                    let output = try await withLogger(executionContext.logger) { _ in
+                                        try await self.implementation.run(
+                                            activity,
+                                            input: .init(
+                                                definition: activity,
+                                                headers: headers,
+                                                input: input
+                                            )
                                         )
-                                    )
+                                    }
                                     resultPayload = try await self.dataConverter.convertValue(output)
                                 } catch is CompleteAsyncError {  // Async completion of the activity
                                     logger.debug("Completing activity asynchronously", metadata: [LoggingKeys.activityName: "\(A.name)"])
