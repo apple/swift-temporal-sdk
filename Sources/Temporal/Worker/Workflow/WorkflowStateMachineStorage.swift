@@ -134,7 +134,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
 
     func withCancellationShield<Result: Sendable>(_ operation: () async throws -> Result) async throws -> Result {
         // Typed explicitly, since `withoutActuallyEscaping` would otherwise run it `@concurrent` instead of on the
-        // caller's isolation
+        // caller's isolation, see https://github.com/swiftlang/swift/issues/84591
         let shield: nonisolated(nonsending) (@escaping () async throws -> Result) async throws -> Result = { escapingOperation in
             nonisolated(unsafe) let unsafeEscapingOperation = escapingOperation
             return try await Task(executorPreference: self.executor) { @Sendable in try await unsafeEscapingOperation() }.value
@@ -144,7 +144,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
 
     func condition(_ condition: () -> Bool) async throws {
         // Typed explicitly, since `withoutActuallyEscaping` would otherwise run it `@concurrent` instead of on the
-        // caller's isolation
+        // caller's isolation, see https://github.com/swiftlang/swift/issues/84591
         let wait: nonisolated(nonsending) (@escaping () -> Bool) async throws -> Void = { escapingCondition in
             let id = self.stateMachine.condition(escapingCondition)
             try await withTaskCancellationHandler {

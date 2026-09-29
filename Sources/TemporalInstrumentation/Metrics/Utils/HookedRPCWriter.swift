@@ -31,9 +31,10 @@ struct HookedRPCWriter<Writer: RPCWriterProtocol>: RPCWriterProtocol {
         self.afterEachWrite()
     }
 
-    @concurrent
     func write(contentsOf elements: some Sequence<Writer.Element>) async throws {
-        try await self.writer.write(contentsOf: elements)
-        self.afterEachWrite()
+        // Written one by one, since `elements` and its conformance to `Sequence` may be isolated to the caller
+        for element in elements {
+            try await self.write(element)
+        }
     }
 }

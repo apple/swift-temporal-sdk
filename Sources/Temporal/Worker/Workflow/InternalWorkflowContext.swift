@@ -158,7 +158,7 @@ struct InternalWorkflowContext: Sendable {
         body: () async throws(Failure) -> Return
     ) async throws(Failure) -> Return {
         // The operation is typed explicitly, since `withoutActuallyEscaping` would otherwise run it `@concurrent`
-        // instead of on the caller's isolation
+        // instead of on the caller's isolation, see https://github.com/swiftlang/swift/issues/84591
         let operation: nonisolated(nonsending) (@escaping () async throws(Failure) -> Return) async throws(Failure) -> Return = {
             escapingBody async throws(Failure) in
             try await withTaskGroup(of: TimeoutResult<Return, Failure>.self) { group in

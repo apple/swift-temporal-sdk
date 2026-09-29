@@ -90,6 +90,8 @@ public func withActivityTestEnvironment<Result>(
         cancellationReason
     }
 
+    // Uses `async let` instead of `withoutActuallyEscaping`, since its closure can't capture `body` on the caller's isolation, see
+    // https://github.com/swiftlang/swift/issues/84591
     return try await rethrowing {
         async let heartbeatAssertion: Void = assertHeartbeatDetails(HeartbeatDetailsSequence(base: heartbeatDetails.stream))
 

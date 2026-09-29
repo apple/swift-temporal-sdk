@@ -678,6 +678,8 @@ public struct TemporalTestServer: Sendable {
 /// }
 /// ```
 public struct TemporalTestServerTrait: SuiteTrait, TestTrait, TestScoping {
+    // `function` is `@concurrent` to match `TestScoping`, since Swift Testing doesn't support NonisolatedNonsendingByDefault yet, see
+    // https://github.com/swiftlang/swift-testing/issues/1570
     public func provideScope(
         for test: Test,
         testCase: Test.Case?,
@@ -721,6 +723,8 @@ public struct TemporalTestServerTrait: SuiteTrait, TestTrait, TestScoping {
 /// }
 /// ```
 public struct TemporalTimeSkippingTestServerTrait: SuiteTrait, TestTrait, TestScoping {
+    // `function` is `@concurrent` to match `TestScoping`, since Swift Testing doesn't support NonisolatedNonsendingByDefault yet, see
+    // https://github.com/swiftlang/swift-testing/issues/1570
     public func provideScope(
         for test: Test,
         testCase: Test.Case?,

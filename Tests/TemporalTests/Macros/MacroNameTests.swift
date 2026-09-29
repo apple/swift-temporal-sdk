@@ -104,6 +104,13 @@ extension TestServerDependentTests {
             func activityCustom(input: String) async throws -> String {
                 input
             }
+
+            // Checks that the generated code compiles for synchronous methods isolated to a global actor
+            @Activity
+            @MainActor
+            func activityMainActor(input: String) -> String {
+                input
+            }
         }
     }
 }
