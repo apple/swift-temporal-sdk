@@ -405,6 +405,8 @@ private struct CancellationDetailsActivity: ActivityDefinition {
     }
 }
 
+private struct ActivityTaskPollingError: Error {}
+
 @Suite()
 struct ActivityWorkerTests {
     private let bridgeWorker = MockBridgeWorker()
@@ -567,6 +569,41 @@ struct ActivityWorkerTests {
             }
             #expect(completion == expectedCompletion)
             group.cancelAll()
+        }
+    }
+
+    /// Running activities are cancelled when polling for activity tasks fails, and the polling error is rethrown.
+    @Test(.timeLimit(.minutes(1)))
+    static func pollingFailureCancelsRunningActivities() async throws {
+        let test = ActivityWorkerTests(activities: [SleepActivity()])
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                await #expect(throws: ActivityTaskPollingError.self) {
+                    try await test.activityWorker.run()
+                }
+            }
+
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([1])
+                    $0.start.activityType = "SleepActivity"
+                    $0.start.activityID = "ActivityID1"
+                    $0.start.attempt = 1
+                    $0.start.workflowType = "WorkflowType"
+                    $0.start.workflowExecution = .with {
+                        $0.runID = "RunID"
+                        $0.workflowID = "WorkflowID1"
+                    }
+                }
+            )
+            test.bridgeWorker.activityTaskContinuation.finish(throwing: ActivityTaskPollingError())
+
+            // The activity sleeps until it is cancelled, so it only completes if the failed polling cancelled it
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            let completion = try await activityTaskCompletionIterator.next()
+            #expect(completion?.taskToken == Data([1]))
+            try await group.waitForAll()
         }
     }
 
