@@ -108,9 +108,11 @@ extension UntypedScheduleHandle {
     /// - Throws: An error if the update cannot be applied or validation fails.
     public func update<Input: Sendable>(
         inputType: Input.Type = Input.self,
-        _ update: @Sendable (ScheduleDescription<Input>) async throws -> ScheduleUpdate<Input>?,
+        _ update: @Sendable @concurrent (ScheduleDescription<Input>) async throws -> ScheduleUpdate<Input>?,
         callOptions: CallOptions? = nil
     ) async throws {
+        // `update` is `@concurrent` since the Swift 6.2 and 6.3 compilers crash when escaping a caller-isolated closure with
+        // parameters through `withoutActuallyEscaping`
         try await withoutActuallyEscaping(update) { update in
             try await self.interceptor.updateSchedule(
                 .init(

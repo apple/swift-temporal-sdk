@@ -87,7 +87,7 @@ extension ScheduleHandle {
     ///   - callOptions: Optional gRPC call options for customizing the behavior of the underlying request.
     /// - Throws: An error if the update cannot be applied or validation fails.
     public func update(
-        _ update: @Sendable (ScheduleDescription<Workflow.Input>) async throws -> ScheduleUpdate<Workflow.Input>?,
+        _ update: @Sendable @concurrent (ScheduleDescription<Workflow.Input>) async throws -> ScheduleUpdate<Workflow.Input>?,
         callOptions: CallOptions? = nil
     ) async throws {
         try await self.untypedHandle.update(update, callOptions: callOptions)

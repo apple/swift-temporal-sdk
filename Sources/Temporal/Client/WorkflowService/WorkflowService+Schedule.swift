@@ -182,7 +182,7 @@ extension TemporalClient.WorkflowService {
     public func updateSchedule<Input: Sendable>(
         id: String,
         inputType: Input.Type = Input.self,
-        _ update: (ScheduleDescription<Input>) async throws -> ScheduleUpdate<Input>?,
+        _ update: @concurrent (ScheduleDescription<Input>) async throws -> ScheduleUpdate<Input>?,
         callOptions: CallOptions? = nil
     ) async throws {
         let description = try await self.describeSchedule(id: id, inputType: Input.self)
