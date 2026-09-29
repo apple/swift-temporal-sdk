@@ -157,7 +157,10 @@ struct InternalWorkflowContext: Sendable {
         for duration: Duration,
         body: () async throws(Failure) -> Return
     ) async throws(Failure) -> Return {
-        try await withoutActuallyEscaping(body) { escapingBody async throws(Failure) in
+        // The operation is typed explicitly, since `withoutActuallyEscaping` would otherwise run it `@concurrent`
+        // instead of on the caller's isolation
+        let operation: nonisolated(nonsending) (@escaping () async throws(Failure) -> Return) async throws(Failure) -> Return = {
+            escapingBody async throws(Failure) in
             try await withTaskGroup(of: TimeoutResult<Return, Failure>.self) { group in
                 group.addTask {
                     do {
@@ -209,6 +212,7 @@ struct InternalWorkflowContext: Sendable {
                 }
             }.get()
         }
+        return try await withoutActuallyEscaping(body, do: operation)
     }
 
     func withCancellationShield<Result: Sendable>(_ operation: () async throws -> Result) async throws -> Result {

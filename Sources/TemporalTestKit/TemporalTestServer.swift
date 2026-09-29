@@ -681,7 +681,7 @@ public struct TemporalTestServerTrait: SuiteTrait, TestTrait, TestScoping {
     public func provideScope(
         for test: Test,
         testCase: Test.Case?,
-        performing function: @Sendable () async throws -> Void
+        performing function: @concurrent @Sendable () async throws -> Void
     ) async throws {
         try await TemporalTestServer.withTestServer { testServer in
             try await TemporalTestServer.$testServer.withValue(testServer) {
@@ -724,7 +724,7 @@ public struct TemporalTimeSkippingTestServerTrait: SuiteTrait, TestTrait, TestSc
     public func provideScope(
         for test: Test,
         testCase: Test.Case?,
-        performing function: @Sendable () async throws -> Void
+        performing function: @concurrent @Sendable () async throws -> Void
     ) async throws {
         try await TemporalTestServer.withTimeSkippingTestServer { testServer in
             try await TemporalTestServer.$timeSkippingTestServer.withValue(testServer) {

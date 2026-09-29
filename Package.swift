@@ -284,7 +284,7 @@ where [.executable, .test, .regular].contains(
     settings.append(.enableUpcomingFeature("InternalImportsByDefault"))
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0461-async-function-isolation.md
-    settings.append(.enableUpcomingFeature("NonIsolatedNonSendingByDefault"))
+    settings.append(.enableUpcomingFeature("NonisolatedNonsendingByDefault"))
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0480-swiftpm-warning-control.md
     settings.append(.treatAllWarnings(as: .error))
