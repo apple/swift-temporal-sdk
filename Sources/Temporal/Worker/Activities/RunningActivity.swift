@@ -28,7 +28,7 @@ extension ActivityWorker {
     /// 1. `initial` - Created but not yet executing
     /// 2. `running` - Active execution with cancellation monitoring
     /// 3. `cancelled` - Stopped due to cancellation with recorded reason
-    /// 4. `finished` - Completed execution (normal or error)
+    /// 4. `finished` - The task observing cancellation was cancelled, e.g. because the activity completed
     final class RunningActivity: Sendable {
         /// Represents the possible execution states of a running activity.
         enum State: Sendable {
@@ -40,7 +40,8 @@ extension ActivityWorker {
             /// The activity has been cancelled and is no longer executing, with the cancellation reason
             /// preserved.
             case cancelled(ActivityCancellationReason)
-            /// The activity execution has completed successfully or with an error.
+            /// The task observing cancellation was cancelled, typically because the activity execution
+            /// completed. Later cancellation requests are ignored.
             case finished
         }
 
@@ -78,9 +79,9 @@ extension ActivityWorker {
                         case .initial:
                             $0 = .running(continuation)
                             return nil
-                        case .running, .finished:
+                        case .running:
                             fatalError("Activity cancellation observation should only be used once")
-                        case .cancelled:
+                        case .cancelled, .finished:
                             return continuation
                         }
                     }
@@ -88,13 +89,23 @@ extension ActivityWorker {
                     maybeContinuation?.resume()
                 }
             } onCancel: {
-                // This is only happening if activity finished and we are cleaning up this cancellation handler.
+                // This happens when the activity finished, or when the enclosing task group is torn down while the
+                // activity is still running. The task may already be cancelled before the operation above registered
+                // its continuation, in which case this handler runs first and the operation returns immediately
                 let maybeContinuation: CheckedContinuation<Void, Never>? = state.withLock {
                     switch $0 {
-                    case .initial, .cancelled, .finished:
-                        fatalError("Activity cancellation happened at unexpected time")
+                    case .initial:
+                        $0 = .finished
+                        return nil
                     case .running(let continuation):
+                        $0 = .finished
                         return continuation
+                    case .cancelled, .finished:
+                        // The continuation is resumed by `cancel(reason:)` or the operation above. `.finished` is also
+                        // reached if this handler runs twice, which seems to be the case for the Swift 6.0 / 6.1 concurrency runtimes
+                        // when the task is cancelled while this handler is being registered, see https://github.com/swiftlang/swift/issues/80161
+                        // Was fixed with Swift 6.2, see https://github.com/swiftlang/swift/pull/80456
+                        return nil
                     }
                 }
 
@@ -105,7 +116,8 @@ extension ActivityWorker {
         /// Transitions the activity to the cancelled state with the specified reason.
         ///
         /// This method safely transitions the activity from its current state to cancelled, recording the
-        /// cancellation reason and resuming any waiting cancellation observers.
+        /// cancellation reason and resuming any waiting cancellation observers. If the task observing
+        /// cancellation was already cancelled, the request is ignored.
         ///
         /// - Parameter reason: The specific reason why the activity is being cancelled.
         /// - Important: This method should only be called once per activity instance.
@@ -118,7 +130,9 @@ extension ActivityWorker {
                 case .running(let continuation):
                     $0 = .cancelled(reason)
                     return continuation
-                case .cancelled, .finished:
+                case .finished:
+                    return nil
+                case .cancelled:
                     fatalError("Activity should only be cancelled once.")
                 }
             }

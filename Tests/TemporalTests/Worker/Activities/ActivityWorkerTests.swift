@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Dispatch
 import Logging
 import SwiftProtobuf
 import Synchronization
@@ -80,6 +81,39 @@ private final class MockBridgeWorker: BridgeWorkerProtocol {
 
     func recordActivityHeartbeat(_ heartbeat: Coresdk.ActivityHeartbeat) throws {
         self.heartbeatContinuation.yield(heartbeat)
+    }
+}
+
+/// A task executor that runs jobs on a dedicated thread, always running the most recently enqueued job first.
+///
+/// This makes the scheduling order of sibling child tasks deterministic: a child task enqueued earlier only
+/// runs once all later enqueued work is done or suspended.
+private final class LastInFirstOutTaskExecutor: TaskExecutor {
+    private let jobs = Mutex<[UnownedJob]>([])
+    private let jobsAvailable = DispatchSemaphore(value: 0)
+
+    init() {
+        Thread { self.runJobs() }.start()
+    }
+
+    func enqueue(_ job: consuming ExecutorJob) {
+        let job = UnownedJob(job)
+        self.jobs.withLock { $0.append(job) }
+        self.jobsAvailable.signal()
+    }
+
+    func shutdown() {
+        self.jobsAvailable.signal()
+    }
+
+    private func runJobs() {
+        while true {
+            self.jobsAvailable.wait()
+            guard let job = self.jobs.withLock({ $0.popLast() }) else {
+                return
+            }
+            job.runSynchronously(on: self.asUnownedTaskExecutor())
+        }
     }
 }
 
@@ -376,6 +410,8 @@ private struct CancellationDetailsActivity: ActivityDefinition {
     }
 }
 
+private struct ActivityTaskPollingError: Error {}
+
 @Suite()
 struct ActivityWorkerTests {
     private let bridgeWorker = MockBridgeWorker()
@@ -458,6 +494,46 @@ struct ActivityWorkerTests {
         }
     }
 
+    /// Tests an activity finishing before the task observing its cancellation starts.
+    ///
+    /// The observing task then starts out cancelled. Running the most recently enqueued job first forces
+    /// that order.
+    @Test(.timeLimit(.minutes(1)))
+    static func activityFinishingBeforeCancellationObservationStarts() async throws {
+        let test = ActivityWorkerTests(activities: [VoidActivity()])
+        let executor = LastInFirstOutTaskExecutor()
+        defer { executor.shutdown() }
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask(executorPreference: executor) {
+                try await test.activityWorker.run()
+            }
+
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([1])
+                    $0.start.activityType = "VoidActivity"
+                    $0.start.activityID = "ActivityID1"
+                    $0.start.attempt = 1
+                    $0.start.workflowType = "WorkflowType"
+                    $0.start.workflowExecution = .with {
+                        $0.runID = "RunID"
+                        $0.workflowID = "WorkflowID1"
+                    }
+                }
+            )
+
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            let completion = try await activityTaskCompletionIterator.next()
+            let expectedCompletion = Coresdk.ActivityTaskCompletion.with {
+                $0.taskToken = Data([1])
+                $0.result.completed.result = .init()
+            }
+            #expect(completion == expectedCompletion)
+            group.cancelAll()
+        }
+    }
+
     @Test
     static func dataActivity() async throws {
         let test = ActivityWorkerTests(activities: [DataActivity()])
@@ -498,6 +574,41 @@ struct ActivityWorkerTests {
             }
             #expect(completion == expectedCompletion)
             group.cancelAll()
+        }
+    }
+
+    /// Running activities are cancelled when polling for activity tasks fails, and the polling error is rethrown.
+    @Test(.timeLimit(.minutes(1)))
+    static func pollingFailureCancelsRunningActivities() async throws {
+        let test = ActivityWorkerTests(activities: [SleepActivity()])
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                await #expect(throws: ActivityTaskPollingError.self) {
+                    try await test.activityWorker.run()
+                }
+            }
+
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([1])
+                    $0.start.activityType = "SleepActivity"
+                    $0.start.activityID = "ActivityID1"
+                    $0.start.attempt = 1
+                    $0.start.workflowType = "WorkflowType"
+                    $0.start.workflowExecution = .with {
+                        $0.runID = "RunID"
+                        $0.workflowID = "WorkflowID1"
+                    }
+                }
+            )
+            test.bridgeWorker.activityTaskContinuation.finish(throwing: ActivityTaskPollingError())
+
+            // The activity sleeps until it is cancelled, so it only completes if the failed polling cancelled it
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            let completion = try await activityTaskCompletionIterator.next()
+            #expect(completion?.taskToken == Data([1]))
+            try await group.waitForAll()
         }
     }
 
