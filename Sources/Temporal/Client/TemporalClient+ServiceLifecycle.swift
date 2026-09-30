@@ -36,6 +36,9 @@ extension TemporalClient: Service {
         configuration: TemporalClient.Configuration,
         logger: Logger = Logger(label: "NoOpLogger", factory: { _ in SwiftLogNoOpLogHandler() })
     ) {
+        var configuration = configuration
+        configuration.applyPlugins(logger: logger)
+
         let grpcClient = GRPCClient(
             transport: transport,
             interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger)
@@ -47,11 +50,20 @@ extension TemporalClient: Service {
     /// Starts the Temporal client and keeps it running until shutdown is initiated.
     ///
     /// This method starts the underlying gRPC client and keeps it running to handle requests.
+    /// Plugins set on ``Configuration/plugins`` wrap the run via
+    /// ``ClientPlugin/connectClient(configuration:next:)``, with the first plugin in the array as
+    /// the outermost wrap.
     ///
     /// - Throws: A runtime error if the client cannot be started or is in an invalid state.
     public func run() async throws {
         // Graceful shutdown is handled by `GRPCServiceLifecycle`
-        try await self.workflowService.client.client.run()
+        let configuration = self.configuration
+        try await applyClientConnectChain(
+            plugins: configuration.plugins[...],
+            configuration: configuration
+        ) {
+            try await self.workflowService.client.client.run()
+        }
     }
 
     /// Initiates graceful shutdown of the Temporal client.

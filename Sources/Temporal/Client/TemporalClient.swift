@@ -96,6 +96,9 @@ public final class TemporalClient: Sendable {
     /// - Parameters:
     ///   - client: The gRPC client used for network communication.
     ///   - configuration: The configuration settings for the Temporal client.
+    // Invariant: `configuration.applyPlugins(logger:)` has already been called by the public entry
+    // point (`connect(transport:configuration:logger:_:)` or the ServiceLifecycle init) before
+    // reaching this initializer, so plugins are not re-applied here.
     package init<Transport: ClientTransport>(
         client: GRPCClient<Transport>,
         configuration: TemporalClient.Configuration
@@ -168,13 +171,21 @@ public final class TemporalClient: Sendable {
         logger: Logger = Logger(label: "NoOpLogger", factory: { _ in SwiftLogNoOpLogHandler() }),
         _ body: (TemporalClient) async throws -> sending Result
     ) async throws -> sending Result {
-        try await withGRPCClient(
-            transport: transport,
-            interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger),
-            isolation: #isolation
-        ) { client in
-            let temporalClient = Self.init(client: client, configuration: configuration)
-            return try await body(temporalClient)
+        var configuration = configuration
+        configuration.applyPlugins(logger: logger)
+        let plugins = configuration.plugins
+        return try await applyClientConnectChain(
+            plugins: plugins[...],
+            configuration: configuration
+        ) {
+            try await withGRPCClient(
+                transport: transport,
+                interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger),
+                isolation: #isolation
+            ) { client in
+                let temporalClient = Self.init(client: client, configuration: configuration)
+                return try await body(temporalClient)
+            }
         }
     }
 }
