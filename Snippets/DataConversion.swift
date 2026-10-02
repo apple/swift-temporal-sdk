@@ -22,9 +22,14 @@
 // To stop: container stop temporal && container rm temporal
 
 // snippet.hide
-import Foundation
 import Logging
 import Temporal
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 // snippet.show
 

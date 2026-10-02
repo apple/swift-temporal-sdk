@@ -12,8 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftProtobuf
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension NamespaceConfig {
     init(proto: Api.Namespace.V1.NamespaceConfig) {
