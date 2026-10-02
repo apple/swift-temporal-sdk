@@ -45,6 +45,8 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
     private let workflows: [String: any WorkflowDefinition.Type]
     /// The logger.
     private let logger: Logger
+    /// Whether the workflow logger keeps emitting records while replaying.
+    private let enableLoggingInReplay: Bool
     /// The worker interceptor factories.
     package let interceptors: [any WorkerInterceptor]
 
@@ -55,7 +57,8 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
         dataConverter: DataConverter,
         workflows: [any WorkflowDefinition.Type],
         interceptors: [any WorkerInterceptor],
-        logger: Logger
+        logger: Logger,
+        enableLoggingInReplay: Bool = false
     ) throws {
         self.worker = worker
         self.taskQueue = taskQueue
@@ -70,6 +73,7 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
         )
         self.interceptors = interceptors
         self.logger = logger
+        self.enableLoggingInReplay = enableLoggingInReplay
     }
 
     package convenience init(
@@ -85,7 +89,8 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
             dataConverter: configuration.dataConverter,
             workflows: workflows,
             interceptors: configuration.interceptors,
-            logger: logger
+            logger: logger,
+            enableLoggingInReplay: configuration.enableLoggingInReplay
         )
     }
 
@@ -247,7 +252,8 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
                 namespace: self.namespace,
                 payloadConverter: self.dataConverter.payloadConverter,
                 failureConverter: self.dataConverter.failureConverter,
-                logger: logger
+                logger: logger,
+                enableLoggingInReplay: self.enableLoggingInReplay
             )
             // Other SDKs keep this without an upper buffer limit as well
             // TODO: Check if we should enforce a buffer size
