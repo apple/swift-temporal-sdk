@@ -59,7 +59,7 @@ func withInterceptors<Interceptor: Sendable, Input: Sendable, Result: Sendable>(
     original: (Input) async throws -> Result
 ) async throws -> Result {
     var iterator = interceptors.makeIterator()
-    func iterate(input: Input, iterator: inout [Interceptor].Iterator) async throws -> Result {
+    nonisolated(nonsending) func iterate(input: Input, iterator: inout [Interceptor].Iterator) async throws -> Result {
         guard let interceptor = iterator.next() else {
             return try await original(input)
         }

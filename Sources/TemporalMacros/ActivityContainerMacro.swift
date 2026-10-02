@@ -27,7 +27,10 @@ private struct ActivityInfo {
     var resultType: String
 
     var structDefinition: DeclSyntax {
-        let closureType: String = "@Sendable (\(inputType)) async throws -> \(resultType)"
+        // `@concurrent` keeps the activity closure's meaning independent of the language mode of the module expanding
+        // the macro. With `NonisolatedNonsendingByDefault` enabled, Swift 6.3 and nightly compilers otherwise crash while
+        // converting the activity method reference into a caller-isolated closure
+        let closureType: String = "@Sendable @concurrent (\(inputType)) async throws -> \(resultType)"
 
         let nameDecl: String
         if isDynamic {

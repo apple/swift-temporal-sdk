@@ -34,8 +34,8 @@ struct ActivityMacrosTests {
                     let container: Foo
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable (Int) async throws -> Int
-                        init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
+                        var _run: @Sendable @concurrent (Int) async throws -> Int
+                        init(run: @escaping @Sendable @concurrent (Int) async throws -> Int) { self._run = run }
                         func run(input: Int) async throws -> Int { return try await self._run(input) }
                     }
                     var bar: Bar { return .init(run: self.container.bar) }
@@ -76,15 +76,15 @@ struct ActivityMacrosTests {
                     let container: Foo
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable (Int) async throws -> Int
-                        init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
+                        var _run: @Sendable @concurrent (Int) async throws -> Int
+                        init(run: @escaping @Sendable @concurrent (Int) async throws -> Int) { self._run = run }
                         func run(input: Int) async throws -> Int { return try await self._run(input) }
                     }
                     var bar: Bar { return .init(run: self.container.bar) }
                     \(activityModifier) struct Bar2: ActivityDefinition {
                         \(activityModifier) static var name: String { "Bar2" }
-                        var _run: @Sendable (Int) async throws -> Int
-                        init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
+                        var _run: @Sendable @concurrent (Int) async throws -> Int
+                        init(run: @escaping @Sendable @concurrent (Int) async throws -> Int) { self._run = run }
                         \(activityModifier) func run(input: Int) async throws -> Int { return try await self._run(input) }
                     }
                     \(activityModifier) var bar2: Bar2 { return .init(run: self.container.bar2) }
@@ -130,8 +130,8 @@ struct ActivityMacrosTests {
                     let container: Foo
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable (Int) async throws -> Int
-                        init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
+                        var _run: @Sendable @concurrent (Int) async throws -> Int
+                        init(run: @escaping @Sendable @concurrent (Int) async throws -> Int) { self._run = run }
                         func run(input: Int) async throws -> Int { return try await self._run(input) }
                     }
                     var bar: Bar { return .init(run: self.container.bar) }
@@ -167,8 +167,8 @@ struct ActivityMacrosTests {
                 struct Activities {
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable (Int) async throws -> Int
-                        init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
+                        var _run: @Sendable @concurrent (Int) async throws -> Int
+                        init(run: @escaping @Sendable @concurrent (Int) async throws -> Int) { self._run = run }
                         func run(input: Int) async throws -> Int { return try await self._run(input) }
                     }
                     var bar: Bar { return .init(run: Foo.bar) }
@@ -204,8 +204,8 @@ struct ActivityMacrosTests {
                 struct Activities {
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable () async throws -> Int
-                        init(run: @escaping @Sendable () async throws -> Int) { self._run = run }
+                        var _run: @Sendable @concurrent () async throws -> Int
+                        init(run: @escaping @Sendable @concurrent () async throws -> Int) { self._run = run }
                         func run(input: Void) async throws -> Int { return try await self._run() }
                     }
                     var bar: Bar { return .init(run: Foo.bar) }
@@ -241,8 +241,8 @@ struct ActivityMacrosTests {
                 struct Activities {
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable () async throws -> Void
-                        init(run: @escaping @Sendable () async throws -> Void) { self._run = run }
+                        var _run: @Sendable @concurrent () async throws -> Void
+                        init(run: @escaping @Sendable @concurrent () async throws -> Void) { self._run = run }
                         func run(input: Void) async throws -> Void { return try await self._run() }
                     }
                     var bar: Bar { return .init(run: Foo.bar) }
@@ -278,8 +278,8 @@ struct ActivityMacrosTests {
                 struct Activities {
                     struct Bar: ActivityDefinition {
                         static var name: String { "FooActivity" }
-                        var _run: @Sendable () async throws -> Void
-                        init(run: @escaping @Sendable () async throws -> Void) { self._run = run }
+                        var _run: @Sendable @concurrent () async throws -> Void
+                        init(run: @escaping @Sendable @concurrent () async throws -> Void) { self._run = run }
                         func run(input: Void) async throws -> Void { return try await self._run() }
                     }
                     var bar: Bar { return .init(run: Foo.bar) }
@@ -318,8 +318,8 @@ struct ActivityMacrosTests {
                     let container: Namespace.Foo
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable (Int) async throws -> Int
-                        init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
+                        var _run: @Sendable @concurrent (Int) async throws -> Int
+                        init(run: @escaping @Sendable @concurrent (Int) async throws -> Int) { self._run = run }
                         func run(input: Int) async throws -> Int { return try await self._run(input) }
                     }
                     var bar: Bar { return .init(run: self.container.bar) }
@@ -357,8 +357,8 @@ struct ActivityMacrosTests {
                 struct Activities {
                     struct Handle: ActivityDefinition {
                         static var isDynamic: Bool { true }
-                        var _run: @Sendable ([TemporalRawValue]) async throws -> TemporalRawValue
-                        init(run: @escaping @Sendable ([TemporalRawValue]) async throws -> TemporalRawValue) { self._run = run }
+                        var _run: @Sendable @concurrent ([TemporalRawValue]) async throws -> TemporalRawValue
+                        init(run: @escaping @Sendable @concurrent ([TemporalRawValue]) async throws -> TemporalRawValue) { self._run = run }
                         func run(input: [TemporalRawValue]) async throws -> TemporalRawValue { return try await self._run(input) }
                     }
                     var handle: Handle { return .init(run: Foo.handle) }

@@ -20,7 +20,7 @@ public struct UpdateScheduleInput<Input: Sendable>: Sendable {
     public var id: String
 
     /// Function that transforms the current schedule into an updated configuration.
-    public var update: @Sendable (ScheduleDescription<Input>) async throws -> ScheduleUpdate<Input>?
+    public var update: @Sendable @concurrent (ScheduleDescription<Input>) async throws -> ScheduleUpdate<Input>?
 
     /// Optional gRPC call options for customizing the update request.
     public var callOptions: CallOptions?
@@ -33,7 +33,7 @@ public struct UpdateScheduleInput<Input: Sendable>: Sendable {
     ///   - callOptions: Optional gRPC call options for customizing the request.
     public init(
         id: String,
-        update: @Sendable @escaping (ScheduleDescription<Input>) async throws -> ScheduleUpdate<Input>?,
+        update: @Sendable @escaping @concurrent (ScheduleDescription<Input>) async throws -> ScheduleUpdate<Input>?,
         callOptions: CallOptions? = nil
     ) {
         self.id = id
@@ -51,7 +51,7 @@ public struct UpdateScheduleInput<Input: Sendable>: Sendable {
     public init<Workflow: WorkflowDefinition>(
         id: String,
         workflowType: Workflow.Type = Workflow.self,
-        update: @Sendable @escaping (ScheduleDescription<Input>) async throws -> ScheduleUpdate<Input>?,
+        update: @Sendable @escaping @concurrent (ScheduleDescription<Input>) async throws -> ScheduleUpdate<Input>?,
         callOptions: CallOptions? = nil
     ) where Workflow.Input == Input {
         self.id = id
