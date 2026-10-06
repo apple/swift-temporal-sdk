@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftSyntax
 import SwiftSyntaxMacros
 

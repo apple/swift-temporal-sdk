@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import GRPCCore
 import GRPCNIOTransportHTTP2Posix
 import Logging
@@ -21,6 +20,12 @@ import Temporal
 import TemporalTestKit
 import Testing
 import Tracing
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 @Suite(.tags(.instrumentationTests))
 struct TemporalClientOutboundTracingInterceptorTests {

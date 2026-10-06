@@ -13,7 +13,12 @@
 //===----------------------------------------------------------------------===//
 
 import Bridge
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension Data {
     /// Takes ownership of the buffer in `bytesPtr` and frees the `ByteArray`.

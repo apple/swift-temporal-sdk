@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import GRPCNIOTransportCore
 import GRPCNIOTransportHTTP2Posix
 import Logging
@@ -21,6 +20,12 @@ import Synchronization
 import Temporal
 import TemporalTestKit
 import Testing
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension TestServerDependentTests {
     @Suite

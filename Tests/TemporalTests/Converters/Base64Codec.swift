@@ -12,9 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftProtobuf
 import Temporal
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 struct Base64PayloadCodec: PayloadCodec {
     let encodingName = "application/base64"
