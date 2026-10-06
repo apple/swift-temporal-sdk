@@ -284,7 +284,10 @@ where [.executable, .test, .regular].contains(
     settings.append(.enableUpcomingFeature("InternalImportsByDefault"))
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0461-async-function-isolation.md
-    settings.append(.enableUpcomingFeature("NonIsolatedNonSendingByDefault"))
+    // Only enabled from Swift 6.4 on, since older compilers crash on parts of the code base with this feature enabled
+    #if compiler(>=6.4)
+    settings.append(.enableUpcomingFeature("NonisolatedNonsendingByDefault"))
+    #endif
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0480-swiftpm-warning-control.md
     settings.append(.treatAllWarnings(as: .error))

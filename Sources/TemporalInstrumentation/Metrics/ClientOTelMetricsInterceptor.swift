@@ -36,7 +36,7 @@ package struct ClientOTelMetricsInterceptor: GRPCCore.ClientInterceptor {
     package func intercept<Input: Sendable, Output: Sendable>(
         request: StreamingClientRequest<Input>,
         context: ClientContext,
-        next: (StreamingClientRequest<Input>, ClientContext) async throws -> StreamingClientResponse<Output>
+        next: @concurrent (StreamingClientRequest<Input>, ClientContext) async throws -> StreamingClientResponse<Output>
     ) async throws -> StreamingClientResponse<Output> {
         let dimensions = context.dimensions(serverHostname: self.serverHostname, networkTransportMethod: self.networkTransportMethod)
 

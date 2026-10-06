@@ -47,46 +47,37 @@ struct TemporalTraceRecording {
             return try await next(headers)
         }
 
-        let serviceContext = ServiceContext.current ?? .topLevel
+        // The span is managed manually instead of using `withSpan`, whose operation closure is `@concurrent` (because it did not adopt NonisolatedNonsendingByDefault yet)
+        // and therefore can't capture the non-`Sendable` closures passed to this method
+        let span = self.tracer.startSpan(spanName, context: ServiceContext.current ?? .topLevel, ofKind: .client)
+        defer { span.end() }
 
-        // This works around a compiler crash on 6.2+ by defining a separate closure
-        // that we pass without escaping it.
-        var result: R? = nil
-        let callMe: (any Span, [String: Api.Common.V1.Payload]) async throws -> Void = { span, headers in
-            let r = try await next(headers)
-            setResponseAttributes?(span, r)
-            result = r
-        }
-        try await withoutActuallyEscaping(callMe) { callMe in
-            try await self.tracer.withSpan(
-                spanName,
-                context: serviceContext,
-                ofKind: .client
-            ) { span in
-                setRequestAttributes(span)
+        do {
+            setRequestAttributes(span)
 
-                // Inject context into tracer payload
-                var tracerPayload = [String: String]()
-                self.tracer.inject(span.context, into: &tracerPayload, using: self.injector)
-                let convertedTracerPayload =
-                    try DataConverter
-                    .default
-                    .payloadConverter
-                    .convertValueHandlingVoid(tracerPayload)
+            // Inject context into tracer payload
+            var tracerPayload = [String: String]()
+            self.tracer.inject(span.context, into: &tracerPayload, using: self.injector)
+            let convertedTracerPayload =
+                try DataConverter
+                .default
+                .payloadConverter
+                .convertValueHandlingVoid(tracerPayload)
 
-                // Set encoded tracer payload as a header
-                var headers = headers
-                headers[self.tracingHeaderKey] = convertedTracerPayload
+            // Set encoded tracer payload as a header
+            var headers = headers
+            headers[self.tracingHeaderKey] = convertedTracerPayload
 
-                do {
-                    try await callMe(span, headers)
-                } catch {
-                    span.setStatus(SpanStatus(code: .error))
-                    throw error
-                }
+            let result = try await ServiceContext.$current.withValue(span.context) {
+                try await next(headers)
             }
+            setResponseAttributes?(span, result)
+            return result
+        } catch {
+            span.recordError(error)
+            span.setStatus(SpanStatus(code: .error))
+            throw error
         }
-        return result.unsafelyUnwrapped
     }
 
     // MARK: Inbound

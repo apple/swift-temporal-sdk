@@ -34,11 +34,10 @@ struct ActivityMacrosTests {
                     let container: Foo
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable (Int) async throws -> Int
-                        init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
-                        func run(input: Int) async throws -> Int { return try await self._run(input) }
+                        let container: Foo
+                        func run(input: Int) async throws -> Int { return try await _activityResult(self.container.bar(input: input)) }
                     }
-                    var bar: Bar { return .init(run: self.container.bar) }
+                    var bar: Bar { return .init(container: self.container) }
                 }
                 var activities: Activities { return .init(container: self) }
                 var allActivities: [any ActivityDefinition] { return [self.activities.bar] }
@@ -51,6 +50,62 @@ struct ActivityMacrosTests {
             class Foo {
                 @Activity
                 func bar(input: Int) -> Int { return input }
+            }
+            """
+        )
+
+        #expect(expectedOutput == actualOutput)
+        #expect(diagnostics.isEmpty)
+    }
+
+    @Test
+    func argumentLabels() throws {
+        let (expectedOutput, _) = try parse(
+            """
+            struct Foo {
+                func unlabeled(_ input: Int) async throws -> Int { return input }
+                func labeled(value: Int) async -> Int { return value }
+                static func throwing() throws {}
+            }
+
+            extension Foo: ActivityContainer {
+                struct Activities {
+                    let container: Foo
+                    struct Unlabeled: ActivityDefinition {
+                        static var name: String { "Unlabeled" }
+                        let container: Foo
+                        func run(input: Int) async throws -> Int { return try await _activityResult(self.container.unlabeled(input)) }
+                    }
+                    var unlabeled: Unlabeled { return .init(container: self.container) }
+                    struct Labeled: ActivityDefinition {
+                        static var name: String { "Labeled" }
+                        let container: Foo
+                        func run(input: Int) async throws -> Int { return try await _activityResult(self.container.labeled(value: input)) }
+                    }
+                    var labeled: Labeled { return .init(container: self.container) }
+                    struct Throwing: ActivityDefinition {
+                        static var name: String { "Throwing" }
+                        func run(input: Void) async throws -> Void { return try await _activityResult(Foo.throwing()) }
+                    }
+                    var throwing: Throwing { return .init() }
+                }
+                var activities: Activities { return .init(container: self) }
+                var allActivities: [any ActivityDefinition] {
+                    return [self.activities.unlabeled, self.activities.labeled, self.activities.throwing]
+                }
+            }
+            """
+        )
+        let (actualOutput, diagnostics) = try parse(
+            """
+            @ActivityContainer
+            struct Foo {
+                @Activity
+                func unlabeled(_ input: Int) async throws -> Int { return input }
+                @Activity
+                func labeled(value: Int) async -> Int { return value }
+                @Activity
+                static func throwing() throws {}
             }
             """
         )
@@ -76,18 +131,16 @@ struct ActivityMacrosTests {
                     let container: Foo
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable (Int) async throws -> Int
-                        init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
-                        func run(input: Int) async throws -> Int { return try await self._run(input) }
+                        let container: Foo
+                        func run(input: Int) async throws -> Int { return try await _activityResult(self.container.bar(input: input)) }
                     }
-                    var bar: Bar { return .init(run: self.container.bar) }
+                    var bar: Bar { return .init(container: self.container) }
                     \(activityModifier) struct Bar2: ActivityDefinition {
                         \(activityModifier) static var name: String { "Bar2" }
-                        var _run: @Sendable (Int) async throws -> Int
-                        init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
-                        \(activityModifier) func run(input: Int) async throws -> Int { return try await self._run(input) }
+                        let container: Foo
+                        \(activityModifier) func run(input: Int) async throws -> Int { return try await _activityResult(self.container.bar2(input: input)) }
                     }
-                    \(activityModifier) var bar2: Bar2 { return .init(run: self.container.bar2) }
+                    \(activityModifier) var bar2: Bar2 { return .init(container: self.container) }
                 }
                 \(declarationModifier) var activities: Activities { return .init(container: self) }
                 \(declarationModifier) var allActivities: [any ActivityDefinition] { return [self.activities.bar, self.activities.bar2] }
@@ -130,11 +183,10 @@ struct ActivityMacrosTests {
                     let container: Foo
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable (Int) async throws -> Int
-                        init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
-                        func run(input: Int) async throws -> Int { return try await self._run(input) }
+                        let container: Foo
+                        func run(input: Int) async throws -> Int { return try await _activityResult(self.container.bar(input: input)) }
                     }
-                    var bar: Bar { return .init(run: self.container.bar) }
+                    var bar: Bar { return .init(container: self.container) }
                 }
                 \(rawResultingModifier)var activities: Activities { return .init(container: self) }
                 \(rawResultingModifier)var allActivities: [any ActivityDefinition] { return [self.activities.bar] }
@@ -167,11 +219,9 @@ struct ActivityMacrosTests {
                 struct Activities {
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable (Int) async throws -> Int
-                        init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
-                        func run(input: Int) async throws -> Int { return try await self._run(input) }
+                        func run(input: Int) async throws -> Int { return try await _activityResult(Foo.bar(input: input)) }
                     }
-                    var bar: Bar { return .init(run: Foo.bar) }
+                    var bar: Bar { return .init() }
                 }
                 var activities: Activities { return .init() }
                 var allActivities: [any ActivityDefinition] { return [self.activities.bar] }
@@ -204,11 +254,9 @@ struct ActivityMacrosTests {
                 struct Activities {
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable () async throws -> Int
-                        init(run: @escaping @Sendable () async throws -> Int) { self._run = run }
-                        func run(input: Void) async throws -> Int { return try await self._run() }
+                        func run(input: Void) async throws -> Int { return try await _activityResult(Foo.bar()) }
                     }
-                    var bar: Bar { return .init(run: Foo.bar) }
+                    var bar: Bar { return .init() }
                 }
                 var activities: Activities { return .init() }
                 var allActivities: [any ActivityDefinition] { return [self.activities.bar] }
@@ -241,11 +289,9 @@ struct ActivityMacrosTests {
                 struct Activities {
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable () async throws -> Void
-                        init(run: @escaping @Sendable () async throws -> Void) { self._run = run }
-                        func run(input: Void) async throws -> Void { return try await self._run() }
+                        func run(input: Void) async throws -> Void { return try await _activityResult(Foo.bar()) }
                     }
-                    var bar: Bar { return .init(run: Foo.bar) }
+                    var bar: Bar { return .init() }
                 }
                 var activities: Activities { return .init() }
                 var allActivities: [any ActivityDefinition] { return [self.activities.bar] }
@@ -278,11 +324,9 @@ struct ActivityMacrosTests {
                 struct Activities {
                     struct Bar: ActivityDefinition {
                         static var name: String { "FooActivity" }
-                        var _run: @Sendable () async throws -> Void
-                        init(run: @escaping @Sendable () async throws -> Void) { self._run = run }
-                        func run(input: Void) async throws -> Void { return try await self._run() }
+                        func run(input: Void) async throws -> Void { return try await _activityResult(Foo.bar()) }
                     }
-                    var bar: Bar { return .init(run: Foo.bar) }
+                    var bar: Bar { return .init() }
                 }
                 var activities: Activities { return .init() }
                 var allActivities: [any ActivityDefinition] { return [self.activities.bar] }
@@ -318,11 +362,10 @@ struct ActivityMacrosTests {
                     let container: Namespace.Foo
                     struct Bar: ActivityDefinition {
                         static var name: String { "Bar" }
-                        var _run: @Sendable (Int) async throws -> Int
-                        init(run: @escaping @Sendable (Int) async throws -> Int) { self._run = run }
-                        func run(input: Int) async throws -> Int { return try await self._run(input) }
+                        let container: Namespace.Foo
+                        func run(input: Int) async throws -> Int { return try await _activityResult(self.container.bar(input: input)) }
                     }
-                    var bar: Bar { return .init(run: self.container.bar) }
+                    var bar: Bar { return .init(container: self.container) }
                 }
                 var activities: Activities { return .init(container: self) }
                 var allActivities: [any ActivityDefinition] { return [self.activities.bar] }
@@ -357,11 +400,9 @@ struct ActivityMacrosTests {
                 struct Activities {
                     struct Handle: ActivityDefinition {
                         static var isDynamic: Bool { true }
-                        var _run: @Sendable ([TemporalRawValue]) async throws -> TemporalRawValue
-                        init(run: @escaping @Sendable ([TemporalRawValue]) async throws -> TemporalRawValue) { self._run = run }
-                        func run(input: [TemporalRawValue]) async throws -> TemporalRawValue { return try await self._run(input) }
+                        func run(input: [TemporalRawValue]) async throws -> TemporalRawValue { return try await _activityResult(Foo.handle(input: input)) }
                     }
-                    var handle: Handle { return .init(run: Foo.handle) }
+                    var handle: Handle { return .init() }
                 }
                 var activities: Activities { return .init() }
                 var allActivities: [any ActivityDefinition] { return [self.activities.handle] }
