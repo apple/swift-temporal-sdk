@@ -248,6 +248,28 @@ private struct ExecutionContextActivity: ActivityDefinition {
     }
 }
 
+private struct TaskLocalLoggerActivity: ActivityDefinition {
+    // Ideally we would export the metadata as well but that isn't possible easily.
+    struct LoggerLabels: Codable, Hashable {
+        var taskLocal: String
+        var executionContext: String
+    }
+
+    typealias Input = Void
+    typealias Output = LoggerLabels
+
+    static let name: String? = "TaskLocalLoggerActivity"
+
+    func run(input: Void) async throws -> LoggerLabels {
+        let context = try #require(ActivityExecutionContext.current)
+
+        return .init(
+            taskLocal:  Logger.current.label,
+            executionContext: context.logger.label
+        )
+    }
+}
+
 private struct HeartbeatActivity: ActivityDefinition {
     typealias Input = Void
     typealias Output = Void
@@ -1399,6 +1421,41 @@ struct ActivityWorkerTests {
             // priority and retryPolicy should be nil when not set on the proto
             #expect(decodedExecutionContext.priorityKey == nil)
             #expect(decodedExecutionContext.retryPolicyMaxAttempts == nil)
+            group.cancelAll()
+        }
+    }
+
+    @Test
+    static func activityTaskLocalWorkerCarriesCorrectMetadata() async throws {
+        let test = ActivityWorkerTests(activities: [TaskLocalLoggerActivity()])
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await test.activityWorker.run()
+            }
+
+            test.bridgeWorker.activityTaskContinuation.yield(
+                .with {
+                    $0.taskToken = Data([1])
+                    $0.start.activityType = "TaskLocalLoggerActivity"
+                    $0.start.activityID = "ActivityID1"
+                    $0.start.attempt = 1
+                    $0.start.workflowType = "WorkflowType"
+                    $0.start.workflowExecution = .with {
+                        $0.runID = "RunID"
+                        $0.workflowID = "WorkflowID1"
+                    }
+                }
+            )
+
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            let completion = try #require(try await activityTaskCompletionIterator.next())
+            let decodedLoggerLabels = try JSONDecoder().decode(
+                TaskLocalLoggerActivity.LoggerLabels.self,
+                from: completion.result.completed.result.data
+            )
+            // priority and retryPolicy should be nil when not set on the proto
+            #expect(decodedLoggerLabels.taskLocal == decodedLoggerLabels.executionContext)
             group.cancelAll()
         }
     }

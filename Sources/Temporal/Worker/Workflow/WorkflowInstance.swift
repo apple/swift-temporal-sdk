@@ -85,7 +85,10 @@ struct WorkflowInstance: Sendable {
             payloadConverter: payloadConverter,
             failureConverter: failureConverter
         )
-        var inboundInterceptors = [any WorkflowInboundInterceptor]()
+        // Always outermost so user interceptors also observe the task local logger.
+        var inboundInterceptors: [any WorkflowInboundInterceptor] = [
+            TaskLocalLoggerWorkflowInboundInterceptor(logger: logger)
+        ]
         var outboundInterceptors = [any WorkflowOutboundInterceptor]()
         for interceptor in workflowWorker.interceptors {
             if let inbound = interceptor.workflowInboundInterceptor {
