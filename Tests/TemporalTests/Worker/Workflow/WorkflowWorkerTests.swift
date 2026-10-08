@@ -80,14 +80,15 @@ struct WorkflowWorkerTests {
             instrumentation: TemporalWorker.Configuration.Instrumentation(serverHostname: "localhost")
         )
 
-        // Expect error to be thrown when creating WorkflowWorker with duplicate workflow names
-        #expect(throws: (any Error).self) {
-            let _ = try WorkflowWorker(
-                worker: bridgeWorker,
-                configuration: configuration,
-                workflows: [FirstWorkflow.self, SecondWorkflow.self, UniqueWorkflow.self],
-                logger: logger
-            )
+        // Expect error to be thrown when creating WorkflowWorker with duplicate workflow names.
+        let _ = withLogger(logger) { _ in
+            #expect(throws: (any Error).self) {
+                let _ = try WorkflowWorker(
+                    worker: bridgeWorker,
+                    configuration: configuration,
+                    workflows: [FirstWorkflow.self, SecondWorkflow.self, UniqueWorkflow.self]
+                )
+            }
         }
 
         // Verify the info log was recorded before the error was thrown
@@ -117,13 +118,15 @@ struct WorkflowWorkerTests {
             instrumentation: TemporalWorker.Configuration.Instrumentation(serverHostname: "localhost")
         )
 
-        // Should not throw when creating WorkflowWorker with unique workflow names
-        let _ = try WorkflowWorker(
-            worker: bridgeWorker,
-            configuration: configuration,
-            workflows: [UniqueWorkflow.self],
-            logger: logger
-        )
+        // Should not throw when creating WorkflowWorker with unique workflow names.
+        // The worker logs through the task local logger, so bind the capturing handler.
+        try withLogger(logger) { _ in
+            let _ = try WorkflowWorker(
+                worker: bridgeWorker,
+                configuration: configuration,
+                workflows: [UniqueWorkflow.self]
+            )
+        }
 
         // Verify no logs were recorded
         logHandler.entries.withLock { entries in

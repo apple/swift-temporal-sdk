@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-package import Logging
+import Logging
 import SwiftProtobuf
 
 package protocol WorkflowWorkerProtocol: Sendable {
@@ -20,8 +20,7 @@ package protocol WorkflowWorkerProtocol: Sendable {
     init(
         worker: BridgeWorker,
         configuration: TemporalWorker.Configuration,
-        workflows: [any WorkflowDefinition.Type],
-        logger: Logger
+        workflows: [any WorkflowDefinition.Type]
     ) throws
     var worker: BridgeWorker { get }
     var interceptors: [any WorkerInterceptor] { get }
@@ -43,8 +42,6 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
     private let dataConverter: DataConverter
     /// Workflow definition keyed by their name.
     private let workflows: [String: any WorkflowDefinition.Type]
-    /// The logger.
-    private let logger: Logger
     /// Whether the workflow logger keeps emitting records while replaying.
     private let enableLoggingInReplay: Bool
     /// The worker interceptor factories.
@@ -57,9 +54,10 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
         dataConverter: DataConverter,
         workflows: [any WorkflowDefinition.Type],
         interceptors: [any WorkerInterceptor],
-        logger: Logger,
         enableLoggingInReplay: Bool = false
     ) throws {
+        let logger = Logger.current
+
         self.worker = worker
         self.taskQueue = taskQueue
         self.namespace = namespace
@@ -72,15 +70,13 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
             }
         )
         self.interceptors = interceptors
-        self.logger = logger
         self.enableLoggingInReplay = enableLoggingInReplay
     }
 
     package convenience init(
         worker: BridgeWorker,
         configuration: TemporalWorker.Configuration,
-        workflows: [any WorkflowDefinition.Type],
-        logger: Logger
+        workflows: [any WorkflowDefinition.Type]
     ) throws {
         try self.init(
             worker: worker,
@@ -89,7 +85,6 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
             dataConverter: configuration.dataConverter,
             workflows: workflows,
             interceptors: configuration.interceptors,
-            logger: logger,
             enableLoggingInReplay: configuration.enableLoggingInReplay
         )
     }
@@ -110,75 +105,57 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
                 // for us and telling the bridge worker about it.
                 do {
                     while true {
-                        self.logger.trace("Polling next workflow activation")
+                        logger.trace("Polling next workflow activation")
                         // Let's poll the next activation
                         var activation = try await self.worker.pollWorkflowActivation()
-                        self.logger.trace(
-                            "Polled next workflow activation",
-                            metadata: [
-                                LoggingKeys.workflowRunID: "\(activation.runID)"
-                            ]
-                        )
+                        try await withLogger(mergingMetadata: [LoggingKeys.workflowRunID: "\(activation.runID)"]) { logger in
+                            logger.trace("Polled next workflow activation")
 
-                        if let payloadCodec = dataConverter.payloadCodec {
-                            try await activation.decode(payloadCodec: payloadCodec)
-                            self.logger.trace(
-                                "Decoded next workflow activation",
-                                metadata: [
-                                    LoggingKeys.workflowRunID: "\(activation.runID)"
-                                ]
-                            )
-                        }
+                            if let payloadCodec = dataConverter.payloadCodec {
+                                try await activation.decode(payloadCodec: payloadCodec)
+                                logger.trace("Decoded next workflow activation")
+                            }
 
-                        // Get the activations continuation for the workflow instance
-                        // each workflow instance is running in a separate child task.
-                        guard
-                            let continuation = try await self.workflowInstanceActivationContinuation(
-                                for: activation,
-                                runningWorkflows: &runningWorkflows,
-                                taskGroup: &group
-                            )
-                        else {
-                            continue
-                        }
+                            // Get the activations continuation for the workflow instance
+                            // each workflow instance is running in a separate child task.
+                            guard
+                                let continuation = try await self.workflowInstanceActivationContinuation(
+                                    for: activation,
+                                    runningWorkflows: &runningWorkflows,
+                                    taskGroup: &group
+                                )
+                            else {
+                                return  // exit the withLogger scope which leads to a new iteration.
+                            }
 
-                        // If the activation has only one job and that's remove from cache we need
-                        // to finish the continuation right away and remove the workflow from our cache
-                        if case .removeFromCache = activation.jobs.first?.variant, activation.jobs.count == 1 {
-                            self.logger.debug(
-                                "Removing workflow instance from cache",
-                                metadata: [
-                                    LoggingKeys.workflowRunID: "\(activation.runID)"
-                                ]
-                            )
-                            runningWorkflows.removeValue(forKey: activation.runID)
-                            continuation.finish()
-                            try await self.worker.completeWorkflowActivation(
-                                completion: .with {
-                                    $0.runID = activation.runID
-                                    $0.successful = .init()
-                                }
-                            )
-                        } else {
-                            self.logger.trace(
-                                "Yielding activation to existing workflow instance",
-                                metadata: [
-                                    LoggingKeys.workflowRunID: "\(activation.runID)"
-                                ]
-                            )
-                            // We have at least one job that we need to process that's not a remove from cache
-                            continuation.yield(activation)
+                            // If the activation has only one job and that's remove from cache we need
+                            // to finish the continuation right away and remove the workflow from our cache
+                            if case .removeFromCache = activation.jobs.first?.variant, activation.jobs.count == 1 {
+                                logger.debug("Removing workflow instance from cache")
+                                runningWorkflows.removeValue(forKey: activation.runID)
+                                continuation.finish()
+                                try await self.worker.completeWorkflowActivation(
+                                    completion: .with {
+                                        $0.runID = activation.runID
+                                        $0.successful = .init()
+                                    }
+                                )
+                            } else {
+                                logger.trace("Yielding activation to existing workflow instance")
+                                // We have at least one job that we need to process that's not a remove from cache
+                                continuation.yield(activation)
 
-                            // If our activation contains a remove from cache job
-                            // we need to finish the continuation and remove it from our running workflows
-                            for job in activation.jobs {
-                                switch job.variant {
-                                case .removeFromCache:
-                                    runningWorkflows.removeValue(forKey: activation.runID)
-                                    continuation.finish()
-                                    break
-                                default:
-                                    break
+                                // If our activation contains a remove from cache job
+                                // we need to finish the continuation and remove it from our running workflows
+                                for job in activation.jobs {
+                                    switch job.variant {
+                                    case .removeFromCache:
+                                        runningWorkflows.removeValue(forKey: activation.runID)
+                                        continuation.finish()
+                                        break
+                                    default:
+                                        break
+                                    }
                                 }
                             }
                         }
@@ -190,7 +167,7 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
                     // We can't cancel the task group though since we must ensure that
                     // the workflow instance is the only thing interacting with
                     // the workflow state machine
-                    self.logger.debug(
+                    logger.debug(
                         "Workflow worker encountered error while processing activations",
                         metadata: [
                             LoggingKeys.errorType: "\(type(of: error))",
@@ -225,7 +202,7 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
         for case let .initializeWorkflow(initializeWorkflow) in activation.jobs.map({ $0.variant }) {
             let workflowType = initializeWorkflow.workflowType
             guard let workflowType = self.workflows[workflowType] else {
-                logger.error("Workflow type not found", metadata: [LoggingKeys.workflowType: "\(workflowType)"])
+                logger.error("Workflow type not found")
                 try await self.worker.completeWorkflowActivation(
                     completion: Coresdk.WorkflowCompletion.WorkflowActivationCompletion.with {
                         $0.runID = runID
@@ -240,45 +217,51 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
                 return nil
             }
 
-            var logger = self.logger
-            logger[metadataKey: LoggingKeys.taskQueue] = "\(self.taskQueue)"
-            logger[metadataKey: LoggingKeys.workflowNamespace] = "\(self.namespace)"
-            logger[metadataKey: LoggingKeys.workflowRunID] = "\(runID)"
-            logger[metadataKey: LoggingKeys.workflowType] = "\(workflowType)"
+            let instanceLoggerMetadata: Logger.Metadata = [
+                LoggingKeys.taskQueue: "\(self.taskQueue)",
+                LoggingKeys.workflowNamespace: "\(self.namespace)",
+                LoggingKeys.workflowRunID: "\(runID)",
+                LoggingKeys.workflowType: "\(workflowType)",
+            ]
 
-            logger.debug("Creating new workflow instance")
-
+            logger.debug("Creating new workflow instance", metadata: instanceLoggerMetadata)
             let workflowInstance = WorkflowInstance(
                 workflowWorker: self,
                 taskQueue: self.taskQueue,
                 namespace: self.namespace,
                 payloadConverter: self.dataConverter.payloadConverter,
-                failureConverter: self.dataConverter.failureConverter,
-                logger: logger,
-                enableLoggingInReplay: self.enableLoggingInReplay
+                failureConverter: self.dataConverter.failureConverter
             )
             // Other SDKs keep this without an upper buffer limit as well
             // TODO: Check if we should enforce a buffer size
             let (activationsStream, activationsContinuation) = AsyncStream<Coresdk.WorkflowActivation.WorkflowActivation>.makeStream()
             runningWorkflows[runID] = activationsContinuation
             taskGroup.addTask {
-                logger.trace("Running workflow instance")
-                do {
-                    try await workflowInstance.run(
-                        workflowType: workflowType,
-                        activations: activationsStream
-                    )
-                    logger.trace("Workflow instance finished")
-                } catch {
-                    // TODO: We should probably log an error here and let it all tear down
-                    // since this can only happen if we failed to send a completion to the worker
-                    logger.info(
-                        "Workflow instance failed to send a completion",
-                        metadata: [
-                            LoggingKeys.errorType: "\(type(of: error))",
-                            LoggingKeys.errorMessage: "\(error)",
-                        ]
-                    )
+                await withLogger(mergingMetadata: instanceLoggerMetadata) { logger in
+                    logger.trace("Running workflow instance")
+                    // The logger seen by workflow code drops records while replaying.
+                    var workflowLogger = logger
+                    if !self.enableLoggingInReplay {
+                        workflowLogger.handler = ReplayAwareLogHandler(underlying: logger.handler)
+                    }
+                    do {
+                        try await withLogger(workflowLogger) { _ in
+                            try await workflowInstance.run(
+                                workflowType: workflowType,
+                                activations: activationsStream
+                            )
+                        }
+                        logger.trace("Workflow instance finished")
+                    } catch {
+                        // TODO: We should probably log an error here and let it all tear down
+                        logger.info(
+                            "Workflow instance failed to send a completion",
+                            metadata: [
+                                LoggingKeys.errorType: "\(type(of: error))",
+                                LoggingKeys.errorMessage: "\(error)",
+                            ]
+                        )
+                    }
                 }
             }
             return activationsContinuation

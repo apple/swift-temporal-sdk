@@ -43,14 +43,24 @@ package final class WorkflowHistoryRunner: Sendable {
         history: WorkflowHistory,
         throwOnReplayFailure: Bool
     ) async throws -> WorkflowReplayResult {
-        // Serialize the history to protobuf bytes
-        let historyData = try Api.History.V1.History
-            .with { $0.events = history.events }
-            .serializedData()
-
+        // The replayer configuration supplies the logger explicitly, so bind it for the replay
+        // rather than reading whatever the caller had bound.
         var logger = self.configuration.logger
         logger[metadataKey: LoggingKeys.workflowID] = "\(history.id)"
+        return try await withLogger(logger) { _ in
+            try await self.replayWorkflow(
+                history: history,
+                historyData: try Api.History.V1.History.with { $0.events = history.events }.serializedData(),
+                throwOnReplayFailure: throwOnReplayFailure
+            )
+        }
+    }
 
+    private func replayWorkflow(
+        history: WorkflowHistory,
+        historyData: Data,
+        throwOnReplayFailure: Bool
+    ) async throws -> WorkflowReplayResult {
         // Create a result box to capture the replay result
         let resultBox = ReplayResultBox()
 
@@ -70,7 +80,6 @@ package final class WorkflowHistoryRunner: Sendable {
             dataConverter: self.configuration.dataConverter,
             workflows: self.configuration.workflows,
             interceptors: self.configuration.interceptors,
-            logger: logger,
             enableLoggingInReplay: self.configuration.enableLoggingInReplay
         )
 
@@ -105,11 +114,11 @@ package final class WorkflowHistoryRunner: Sendable {
                     // Start the worker running in the background
                     group.addTask {
                         do {
-                            self.configuration.logger.debug("Starting replay workflow worker")
+                            logger.debug("Starting replay workflow worker")
                             try await workflowWorker.run()
                         } catch {
                             // Worker encountered an error - this triggers shutdown
-                            self.configuration.logger.debug(
+                            logger.debug(
                                 "Replay worker encountered error",
                                 metadata: [
                                     LoggingKeys.errorType: "\(type(of: error))",
@@ -137,7 +146,7 @@ package final class WorkflowHistoryRunner: Sendable {
 
                     // Got the result from replay completion
                     // Now initiate shutdown and clean up
-                    self.configuration.logger.debug("Replay complete, initiating shutdown")
+                    logger.debug("Replay complete, initiating shutdown")
                     replayBridgeWorker.initiateShutdown()
 
                     // Cancel remaining tasks
@@ -150,7 +159,7 @@ package final class WorkflowHistoryRunner: Sendable {
             }.value
         } onCancel: {
             // Handle cancellation by initiating shutdown
-            self.configuration.logger.debug("Replay cancelled, initiating shutdown")
+            logger.debug("Replay cancelled, initiating shutdown")
             replayBridgeWorker.initiateShutdown()
         }
     }
