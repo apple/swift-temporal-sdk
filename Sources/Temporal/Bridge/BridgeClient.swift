@@ -25,21 +25,19 @@ import Foundation
 package struct BridgeClient: ~Copyable, Sendable {
     nonisolated(unsafe) let client: OpaquePointer
     private let runtime: BridgeRuntime
-    private let logger: Logger
 
-    private init(_ client: OpaquePointer, runtime: consuming BridgeRuntime, logger: Logger) {
+    private init(_ client: OpaquePointer, runtime: consuming BridgeRuntime) {
         self.client = client
         self.runtime = runtime
-        self.logger = logger
     }
 
     static func withBridgeClient<Result: Sendable>(
         grpcClient: AnyUInt8GRPCClient,
         runtime: consuming BridgeRuntime,
         configuration: TemporalWorker.Configuration,
-        logger: Logger,
         handleBridgeClient: (consuming BridgeClient) async throws -> Result
     ) async throws -> Result {
+        let logger = Logger.current
         // Workaround to capture noncopyable in closure: https://forums.swift.org/t/capture-noncopyable-in-closure/80460
         var runtimeOptional: Optional = runtime
 
@@ -190,7 +188,7 @@ package struct BridgeClient: ~Copyable, Sendable {
                 }
             }
 
-            let bridgeClient = Self.init(temporalClient.wrapped, runtime: runtime, logger: logger)
+            let bridgeClient = Self.init(temporalClient.wrapped, runtime: runtime)
             let result = try await handleBridgeClient(bridgeClient)
 
             return result
