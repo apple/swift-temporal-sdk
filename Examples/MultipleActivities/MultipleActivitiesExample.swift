@@ -43,99 +43,98 @@ import Temporal
 @main
 struct MultipleActivitiesExample {
     static func main() async throws {
-        let logger = Logger(label: "TemporalWorker")
+        try await withLogger(Logger(label: "TemporalWorker")) { logger in
 
-        let namespace = "default"
-        let taskQueue = "order-fulfillment-queue"
+            let namespace = "default"
+            let taskQueue = "order-fulfillment-queue"
 
-        // Create worker configuration
-        let workerConfiguration = TemporalWorker.Configuration(
-            namespace: namespace,
-            taskQueue: taskQueue,
-            instrumentation: .init(serverHostname: "localhost")
-        )
-
-        // Create activities with fake external service implementations
-        let activities = MultipleActivitiesActivities()
-
-        // Create the worker with activities and workflows
-        let worker = try TemporalWorker(
-            configuration: workerConfiguration,
-            target: .ipv4(address: "127.0.0.1", port: 7233),
-            transportSecurity: .plaintext,
-            activityContainers: activities,
-            activities: [],
-            workflows: [MultipleActivitiesWorkflow.self],
-            logger: logger
-        )
-
-        let client = try TemporalClient(
-            target: .ipv4(address: "127.0.0.1", port: 7233),
-            transportSecurity: .plaintext,
-            configuration: .init(
-                instrumentation: .init(
-                    serverHostname: "localhost"
-                )
-            ),
-            logger: logger
-        )
-
-        try await withThrowingTaskGroup { group in
-            group.addTask {
-                try await worker.run()
-            }
-
-            group.addTask {
-                try await client.run()
-            }
-
-            // Wait for the worker and client to initialize
-            try await Task.sleep(for: .seconds(1))
-
-            print("🛒 Starting Order Fulfillment Workflow Example")
-            print(String(repeating: "=", count: 60))
-
-            // Create a sample order
-            let orderRequest = MultipleActivitiesWorkflow.OrderRequest(
-                orderId: "ORD-\(UUID().uuidString.prefix(8))",
-                customerId: "customer-123",
-                items: ["laptop", "mouse", "keyboard"],
-                totalAmount: 1299.99
+            // Create worker configuration
+            let workerConfiguration = TemporalWorker.Configuration(
+                namespace: namespace,
+                taskQueue: taskQueue,
+                instrumentation: .init(serverHostname: "localhost")
             )
 
-            print("\n🔗 View in Temporal UI:")
-            print("  http://localhost:8233/namespaces/\(namespace)/workflows/\(orderRequest.orderId)")
-            print("\n📋 Order Details:")
-            print("  Order ID: \(orderRequest.orderId)")
-            print("  Customer: \(orderRequest.customerId)")
-            print("  Items: \(orderRequest.items.joined(separator: ", "))")
-            print("  Total: $\(orderRequest.totalAmount)")
-            print()
+            // Create activities with fake external service implementations
+            let activities = MultipleActivitiesActivities()
 
-            do {
-                let result = try await client.executeWorkflow(
-                    type: MultipleActivitiesWorkflow.self,
-                    options: .init(id: orderRequest.orderId, taskQueue: taskQueue),
-                    input: orderRequest
+            // Create the worker with activities and workflows
+            let worker = try TemporalWorker(
+                configuration: workerConfiguration,
+                target: .ipv4(address: "127.0.0.1", port: 7233),
+                transportSecurity: .plaintext,
+                activityContainers: activities,
+                activities: [],
+                workflows: [MultipleActivitiesWorkflow.self]
+            )
+
+            let client = try TemporalClient(
+                target: .ipv4(address: "127.0.0.1", port: 7233),
+                transportSecurity: .plaintext,
+                configuration: .init(
+                    instrumentation: .init(
+                        serverHostname: "localhost"
+                    )
+                )
+            )
+
+            try await withThrowingTaskGroup { group in
+                group.addTask {
+                    try await worker.run()
+                }
+
+                group.addTask {
+                    try await client.run()
+                }
+
+                // Wait for the worker and client to initialize
+                try await Task.sleep(for: .seconds(1))
+
+                print("🛒 Starting Order Fulfillment Workflow Example")
+                print(String(repeating: "=", count: 60))
+
+                // Create a sample order
+                let orderRequest = MultipleActivitiesWorkflow.OrderRequest(
+                    orderId: "ORD-\(UUID().uuidString.prefix(8))",
+                    customerId: "customer-123",
+                    items: ["laptop", "mouse", "keyboard"],
+                    totalAmount: 1299.99
                 )
 
-                print("\n" + String(repeating: "=", count: 60))
-                print("✅ Order Fulfilled Successfully!")
-                print(String(repeating: "=", count: 60))
-                print("📦 Order Status: \(result.status)")
-                print("💳 Payment ID: \(result.paymentId)")
-                print("🚚 Tracking Number: \(result.trackingNumber)")
+                print("\n🔗 View in Temporal UI:")
+                print("  http://localhost:8233/namespaces/\(namespace)/workflows/\(orderRequest.orderId)")
+                print("\n📋 Order Details:")
+                print("  Order ID: \(orderRequest.orderId)")
+                print("  Customer: \(orderRequest.customerId)")
+                print("  Items: \(orderRequest.items.joined(separator: ", "))")
+                print("  Total: $\(orderRequest.totalAmount)")
                 print()
-            } catch {
-                print("\n" + String(repeating: "=", count: 60))
-                print("❌ Order Fulfillment Failed")
-                print(String(repeating: "=", count: 60))
-                print("Error: \(error.localizedDescription)")
-                print()
-            }
 
-            // Cancel the client and worker
-            group.cancelAll()
+                do {
+                    let result = try await client.executeWorkflow(
+                        type: MultipleActivitiesWorkflow.self,
+                        options: .init(id: orderRequest.orderId, taskQueue: taskQueue),
+                        input: orderRequest
+                    )
+
+                    print("\n" + String(repeating: "=", count: 60))
+                    print("✅ Order Fulfilled Successfully!")
+                    print(String(repeating: "=", count: 60))
+                    print("📦 Order Status: \(result.status)")
+                    print("💳 Payment ID: \(result.paymentId)")
+                    print("🚚 Tracking Number: \(result.trackingNumber)")
+                    print()
+                } catch {
+                    print("\n" + String(repeating: "=", count: 60))
+                    print("❌ Order Fulfillment Failed")
+                    print(String(repeating: "=", count: 60))
+                    print("Error: \(error.localizedDescription)")
+                    print()
+                }
+
+                // Cancel the client and worker
+                group.cancelAll()
+            }
         }
     }
 }
