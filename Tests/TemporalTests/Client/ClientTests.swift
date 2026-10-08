@@ -100,10 +100,49 @@ extension TestServerDependentTests {
 
         @Test(.timeLimit(.minutes(1)))
         func serviceForceShutdown() async throws {
-            try await TemporalTestServer.withTestServer { server in
-                let (host, port) = server.hostAndPort()
+            // The client logs through the task local logger, which the tasks below inherit.
+            try await withLogger(Logger(label: "TestLogger")) { _ in
+                try await TemporalTestServer.withTestServer { server in
+                    let (host, port) = server.hostAndPort()
 
-                let task = Task {
+                    let task = Task {
+                        let client = try TemporalClient(
+                            transport: .http2NIOPosix(
+                                target: .dns(host: host, port: port),
+                                transportSecurity: .plaintext,  // plaintext transport for testing
+                                config: .defaults,
+                                resolverRegistry: .defaults,
+                                serviceConfig: .init(),
+                                eventLoopGroup: .singletonMultiThreadedEventLoopGroup
+                            ),
+                            configuration: .init(
+                                instrumentation: .init(serverHostname: host),
+                                interceptors: []
+                            )
+                        )
+
+                        try await client.run()
+                    }
+
+                    // Wait until connection is established
+                    try await Task.sleep(for: .milliseconds(100))
+
+                    // Force shutdown
+                    task.cancel()
+
+                    // If connection is established, this should not throw an error upon returning
+                    // (`CancellationError` is not propagated by `GRPCClient`)
+                    try await task.value
+                }
+            }
+        }
+
+        @Test(.timeLimit(.minutes(1)))
+        func serviceGracefulShutdown() async throws {
+            // The client logs through the task local logger, which the tasks below inherit.
+            try await withLogger(Logger(label: "TestLogger")) { _ in
+                try await TemporalTestServer.withTestServer { server in
+                    let (host, port) = server.hostAndPort()
                     let client = try TemporalClient(
                         transport: .http2NIOPosix(
                             target: .dns(host: host, port: port),
@@ -116,137 +155,107 @@ extension TestServerDependentTests {
                         configuration: .init(
                             instrumentation: .init(serverHostname: host),
                             interceptors: []
-                        ),
-                        logger: Logger(label: "TestLogger")
+                        )
                     )
 
-                    try await client.run()
-                }
-
-                // Wait until connection is established
-                try await Task.sleep(for: .milliseconds(100))
-
-                // Force shutdown
-                task.cancel()
-
-                // If connection is established, this should not throw an error upon returning (`CancellationError` is not propagated by `GRPCClient`)
-                try await task.value
-            }
-        }
-
-        @Test(.timeLimit(.minutes(1)))
-        func serviceGracefulShutdown() async throws {
-            try await TemporalTestServer.withTestServer { server in
-                let (host, port) = server.hostAndPort()
-                let client = try TemporalClient(
-                    transport: .http2NIOPosix(
-                        target: .dns(host: host, port: port),
-                        transportSecurity: .plaintext,  // plaintext transport for testing
-                        config: .defaults,
-                        resolverRegistry: .defaults,
-                        serviceConfig: .init(),
-                        eventLoopGroup: .singletonMultiThreadedEventLoopGroup
-                    ),
-                    configuration: .init(
-                        instrumentation: .init(serverHostname: host),
-                        interceptors: []
-                    ),
-                    logger: Logger(label: "TestLogger")
-                )
-
-                let task = Task {
-                    try await client.run()
-                }
-
-                // Sleep required because of grpc-swift internal state handling: https://github.com/grpc/grpc-swift/issues/2214
-                try await Task.sleep(for: .milliseconds(100))
-
-                // Start graceful shutdown
-                client.beginGracefulShutdown()
-
-                // If connection is established, this should not throw an error upon returning
-                try await task.value
-            }
-        }
-
-        @Test(.timeLimit(.minutes(1)))
-        func serviceGroupGracefulShutdown() async throws {
-            try await TemporalTestServer.withTestServer { server in
-                let (host, port) = server.hostAndPort()
-                let client = try TemporalClient(
-                    transport: .http2NIOPosix(
-                        target: .dns(host: host, port: port),
-                        transportSecurity: .plaintext,  // plaintext transport for testing
-                        config: .defaults,
-                        resolverRegistry: .defaults,
-                        serviceConfig: .init(),
-                        eventLoopGroup: .singletonMultiThreadedEventLoopGroup
-                    ),
-                    configuration: .init(
-                        instrumentation: .init(serverHostname: host),
-                        interceptors: []
-                    ),
-                    logger: Logger(label: "TestLogger")
-                )
-                let serviceGroup = ServiceGroup(
-                    services: [client],
-                    logger: Logger(label: "TestLogger")
-                )
-
-                try await withThrowingTaskGroup { group in
-                    group.addTask {
-                        try await serviceGroup.run()
+                    let task = Task {
+                        try await client.run()
                     }
 
                     // Sleep required because of grpc-swift internal state handling: https://github.com/grpc/grpc-swift/issues/2214
                     try await Task.sleep(for: .milliseconds(100))
 
-                    // Start graceful shutdown of the service group
-                    await serviceGroup.triggerGracefulShutdown()
+                    // Start graceful shutdown
+                    client.beginGracefulShutdown()
 
                     // If connection is established, this should not throw an error upon returning
-                    try await group.waitForAll()
+                    try await task.value
+                }
+            }
+        }
+
+        @Test(.timeLimit(.minutes(1)))
+        func serviceGroupGracefulShutdown() async throws {
+            // The client logs through the task local logger, which the tasks below inherit.
+            try await withLogger(Logger(label: "TestLogger")) { _ in
+                try await TemporalTestServer.withTestServer { server in
+                    let (host, port) = server.hostAndPort()
+                    let client = try TemporalClient(
+                        transport: .http2NIOPosix(
+                            target: .dns(host: host, port: port),
+                            transportSecurity: .plaintext,  // plaintext transport for testing
+                            config: .defaults,
+                            resolverRegistry: .defaults,
+                            serviceConfig: .init(),
+                            eventLoopGroup: .singletonMultiThreadedEventLoopGroup
+                        ),
+                        configuration: .init(
+                            instrumentation: .init(serverHostname: host),
+                            interceptors: []
+                        )
+                    )
+                    let serviceGroup = ServiceGroup(
+                        services: [client],
+                        logger: Logger(label: "TestLogger")
+                    )
+
+                    try await withThrowingTaskGroup { group in
+                        group.addTask {
+                            try await serviceGroup.run()
+                        }
+
+                        // Sleep required because of grpc-swift internal state handling: https://github.com/grpc/grpc-swift/issues/2214
+                        try await Task.sleep(for: .milliseconds(100))
+
+                        // Start graceful shutdown of the service group
+                        await serviceGroup.triggerGracefulShutdown()
+
+                        // If connection is established, this should not throw an error upon returning
+                        try await group.waitForAll()
+                    }
                 }
             }
         }
 
         @Test(.timeLimit(.minutes(1)))
         func serviceGroupForceShutdown() async throws {
-            try await TemporalTestServer.withTestServer { server in
-                let (host, port) = server.hostAndPort()
-                let client = try TemporalClient(
-                    transport: .http2NIOPosix(
-                        target: .dns(host: host, port: port),
-                        transportSecurity: .plaintext,  // plaintext transport for testing
-                        config: .defaults,
-                        resolverRegistry: .defaults,
-                        serviceConfig: .init(),
-                        eventLoopGroup: .singletonMultiThreadedEventLoopGroup
-                    ),
-                    configuration: .init(
-                        instrumentation: .init(serverHostname: host),
-                        interceptors: []
-                    ),
-                    logger: Logger(label: "TestLogger")
-                )
-                let serviceGroup = ServiceGroup(
-                    services: [client],
-                    logger: Logger(label: "TestLogger")
-                )
+            // The client logs through the task local logger, which the tasks below inherit.
+            try await withLogger(Logger(label: "TestLogger")) { _ in
+                try await TemporalTestServer.withTestServer { server in
+                    let (host, port) = server.hostAndPort()
+                    let client = try TemporalClient(
+                        transport: .http2NIOPosix(
+                            target: .dns(host: host, port: port),
+                            transportSecurity: .plaintext,  // plaintext transport for testing
+                            config: .defaults,
+                            resolverRegistry: .defaults,
+                            serviceConfig: .init(),
+                            eventLoopGroup: .singletonMultiThreadedEventLoopGroup
+                        ),
+                        configuration: .init(
+                            instrumentation: .init(serverHostname: host),
+                            interceptors: []
+                        )
+                    )
+                    let serviceGroup = ServiceGroup(
+                        services: [client],
+                        logger: Logger(label: "TestLogger")
+                    )
 
-                try await withThrowingTaskGroup { group in
-                    group.addTask {
-                        try await serviceGroup.run()
+                    try await withThrowingTaskGroup { group in
+                        group.addTask {
+                            try await serviceGroup.run()
+                        }
+
+                        // Wait until connection is established
+                        try await Task.sleep(for: .milliseconds(100))
+
+                        // Force shutdown by cancelling task group
+                        group.cancelAll()
+
+                        // If connection is established, this should not throw an error upon returning
+                        try await group.waitForAll()
                     }
-
-                    // Wait until connection is established
-                    try await Task.sleep(for: .milliseconds(100))
-
-                    // Force shutdown by cancelling task group
-                    group.cancelAll()
-
-                    // If connection is established, this should not throw an error upon returning
-                    try await group.waitForAll()
                 }
             }
         }

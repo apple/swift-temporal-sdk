@@ -13,13 +13,12 @@
 //===----------------------------------------------------------------------===//
 
 package import GRPCCore
-package import Logging
+import Logging
 package import OTelSemanticConventions
 package import Tracing
 
 /// Logging interceptor for the `GRPCClient`.
 package struct ClientOTelLoggingInterceptor: ClientInterceptor {
-    private let logger: Logger
     private let serverHostname: String
     private let networkTransportMethod: SpanAttributes.NetworkAttributes.NestedSpanAttributes.TransportEnum
     private var includeRequestMetadata: Bool
@@ -28,19 +27,16 @@ package struct ClientOTelLoggingInterceptor: ClientInterceptor {
     /// Creates an OTel logging interceptor for the gRPC client.
     ///
     /// - Parameters:
-    ///   - logger: The `Logger` instance used by the interceptor. The `Logger.Metadata` should include trace and span IDs for log correlation.
     ///   - serverHostname: The hostname of the RPC server. This will be the value for the `server.address` attribute in spans.
     ///   - networkTransportMethod: The transport in use (for example, "tcp" or "unix"). This will be the value for the `network.transport` attribute in spans.
     ///   - includeRequestMetadata: If `true`, all metadata keys with string values included in the request are added to the logger metadata.
     ///   - includeResponseMetadata: If `true`, all metadata keys with string values included in the response are added to the logger metadata.
     package init(
-        logger: Logger,
         serverHostname: String,
         networkTransportMethod: SpanAttributes.NetworkAttributes.NestedSpanAttributes.TransportEnum,
         includeRequestMetadata: Bool = false,
         includeResponseMetadata: Bool = false
     ) {
-        self.logger = logger  // Should include trace and span IDs for log correlation
         self.serverHostname = serverHostname
         self.networkTransportMethod = networkTransportMethod
         self.includeRequestMetadata = includeRequestMetadata
@@ -56,6 +52,8 @@ package struct ClientOTelLoggingInterceptor: ClientInterceptor {
                 _ context: ClientContext
             ) async throws -> StreamingClientResponse<Output>
     ) async throws -> StreamingClientResponse<Output> {
+        let logger = Logger.current
+
         // Build logging metadata
         var metadata = context.metadata(
             serverHostname: self.serverHostname,
@@ -63,7 +61,7 @@ package struct ClientOTelLoggingInterceptor: ClientInterceptor {
             requestMetadata: self.includeRequestMetadata ? request.metadata : [:]
         )
 
-        self.logger.trace("Invoking RPC", metadata: metadata)
+        logger.trace("Invoking RPC", metadata: metadata)
 
         // Invoke RPC
         let response: StreamingClientResponse<Output>
@@ -76,7 +74,7 @@ package struct ClientOTelLoggingInterceptor: ClientInterceptor {
             metadata.append(attribute: \.exception.message, "\(error)")
             metadata.append(attribute: \.exception.type, errorType)
 
-            self.logger.log(
+            logger.log(
                 level: error is CancellationError ? .trace : .info,
                 "RPC failed in interceptor chain",
                 metadata: metadata
@@ -97,7 +95,7 @@ package struct ClientOTelLoggingInterceptor: ClientInterceptor {
         case .success:
             // An "accepted" request is one where the server responds with initial metadata and attempts to process the request.
             // Does NOT guarantee that the request will be processed successfully, server could fail to complete processing the request.
-            self.logger.trace("Accepted RPC", metadata: metadata)
+            logger.trace("Accepted RPC", metadata: metadata)
         case .failure(let rpcError):
             // A "rejected" request is one where the server responds with a status as the first and only response part and doesn't process the request body.
             // Indicates that the server chose not to process the RPC or the client failed to execute the request.
@@ -118,7 +116,7 @@ package struct ClientOTelLoggingInterceptor: ClientInterceptor {
                 }
             }
 
-            self.logger.log(
+            logger.log(
                 level: rpcError.cause is CancellationError ? .trace : .info,
                 "Rejected RPC",
                 metadata: metadata
