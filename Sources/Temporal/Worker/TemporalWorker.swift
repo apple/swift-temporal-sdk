@@ -163,7 +163,6 @@ where
                     networkTransportMethod: .tcp
                 ),
                 ClientOTelLoggingInterceptor(
-                    logger: logger,
                     serverHostname: configuration.instrumentation.serverHostname,
                     networkTransportMethod: .tcp,
                     includeRequestMetadata: true,

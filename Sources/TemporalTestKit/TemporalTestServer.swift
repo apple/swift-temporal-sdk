@@ -298,7 +298,8 @@ public struct TemporalTestServer: Sendable {
     /// ```
     ///
     /// - Parameters:
-    ///   - logger: The logger instance used by the client for diagnostic output.
+    ///   - logger: The logger instance used by the client for diagnostic output. To log through a
+    ///   logger you have already bound with `withLogger(_:_:)`, pass `.current`.
     ///   - body: An async closure that receives the connected client and performs test operations.
     /// - Returns: The result value returned by the closure.
     /// - Throws: Any errors thrown during client connection establishment or by the closure.
@@ -320,7 +321,8 @@ public struct TemporalTestServer: Sendable {
     /// connection details or custom client configuration.
     ///
     /// - Parameters:
-    ///   - logger: The logger instance used by the client for diagnostic output.
+    ///   - logger: The logger instance used by the client for diagnostic output. To log through a
+    ///   logger you have already bound with `withLogger(_:_:)`, pass `.current`.
     ///   - interceptors: An array of client interceptors to apply to the connection.
     ///   - body: An async closure that receives the connected client, host, and port for test operations.
     /// - Returns: The result value returned by the closure.
@@ -340,22 +342,26 @@ public struct TemporalTestServer: Sendable {
             allInterceptors.insert(TimeSkippingClientInterceptor(testServer: self), at: 0)
         }
 
-        return try await TemporalClient.connect(
-            transport: .http2NIOPosix(
-                target: .dns(host: host, port: port),
-                transportSecurity: .plaintext,  // plaintext transport for testing
-                config: .defaults,
-                resolverRegistry: .defaults,
-                serviceConfig: .init(),
-                eventLoopGroup: .singletonMultiThreadedEventLoopGroup
-            ),
-            configuration: .init(
-                instrumentation: .init(serverHostname: host),
-                interceptors: allInterceptors
-            ),
-            logger: logger,
-        ) { client in
-            try await body(client, host, port)
+        // The client logs through the task local logger, and its RPCs are issued from `body`, so
+        // bind around both. When the caller passed `.current`, this rebinds the logger that is
+        // already bound, which leaves their `withLogger` scope in effect.
+        return try await withLogger(logger) { _ in
+            try await TemporalClient.connect(
+                transport: .http2NIOPosix(
+                    target: .dns(host: host, port: port),
+                    transportSecurity: .plaintext,  // plaintext transport for testing
+                    config: .defaults,
+                    resolverRegistry: .defaults,
+                    serviceConfig: .init(),
+                    eventLoopGroup: .singletonMultiThreadedEventLoopGroup
+                ),
+                configuration: .init(
+                    instrumentation: .init(serverHostname: host),
+                    interceptors: allInterceptors
+                )
+            ) { client in
+                try await body(client, host, port)
+            }
         }
     }
 
@@ -389,7 +395,8 @@ public struct TemporalTestServer: Sendable {
     ///   - configuration: Worker configuration including namespace, task queue, interceptors, and tuning parameters.
     ///   - activities: Activity implementations to register on the worker.
     ///   - workflows: Workflow types to register on the worker.
-    ///   - logger: Logger used by the worker. Defaults to a stdout `Logger` at `.info`.
+    ///   - logger: Logger used by the worker. Defaults to a stdout `Logger` at `.info`. To log through
+    ///   a logger you have already bound with `withLogger(_:_:)`, pass `.current`.
     ///   - body: An async closure that receives the running worker and performs test operations. When the closure completes, the worker is cancelled.
     /// - Returns: The value returned by `body`.
     /// - Throws: Any error thrown while creating/starting the worker, establishing the transport, or by the `body` closure.
@@ -445,12 +452,16 @@ public struct TemporalTestServer: Sendable {
                     serviceConfig: .init()
                 ),
                 activities: activities,
-                workflows: workflows,
-                logger: logger
+                workflows: workflows
             )
 
             group.addTask {
-                try await worker.run(bridgeRuntime: BridgeTestServer.bridgeRuntime)  // pass in the single runtime we have for testing
+                // The worker logs through the task local logger, so bind around its run. When the
+                // caller passed `.current`, this rebinds the logger that is already bound, which
+                // leaves their `withLogger` scope in effect.
+                try await withLogger(logger) { _ in
+                    try await worker.run(bridgeRuntime: BridgeTestServer.bridgeRuntime)  // pass in the single runtime we have for testing
+                }
                 return nil
             }
 
@@ -497,6 +508,7 @@ public struct TemporalTestServer: Sendable {
     ///   - workerInterceptors: Worker interceptors to apply.
     ///   - clientInterceptors: Client interceptors to apply.
     ///   - logger: Logger used by both the worker and client. Defaults to a stdout `Logger` at `.info`.
+    ///   To log through a logger you have already bound with `withLogger(_:_:)`, pass `.current`.
     ///   - body: An async closure that receives the task queue name and a connected client.
     /// - Returns: The value returned by `body`.
     /// - Throws: Any error thrown while creating the worker, connecting the client, or by the `body` closure.
