@@ -114,14 +114,12 @@ extension TestServerDependentTests {
                 required init(
                     worker: BridgeWorker,
                     configuration: TemporalWorker.Configuration,
-                    workflows: [any WorkflowDefinition.Type],
-                    logger: Logger
+                    workflows: [any WorkflowDefinition.Type]
                 ) throws {
                     self.base = try WorkflowWorker(
                         worker: worker,
                         configuration: configuration,
-                        workflows: workflows,
-                        logger: logger
+                        workflows: workflows
                     )
                 }
 

@@ -33,7 +33,18 @@ extension WorkflowReplayer {
         public var interceptors: [any WorkerInterceptor]
 
         /// A logger for diagnostic output during replay.
-        public var logger: Logger
+        @available(*, deprecated, message: "Use a task local logger around replay operations.")
+        public var logger: Logger {
+            get {
+                self._logger
+            }
+            set {
+                self._logger = newValue
+            }
+        }
+
+        // Don't actually use this
+        private var _logger: Logger
 
         /// Whether ``WorkflowContext/logger`` keeps emitting records during replay (default `false`).
         ///
@@ -56,6 +67,7 @@ extension WorkflowReplayer {
         ///     `"WorkflowReplayer"`.
         ///   - enableLoggingInReplay: Whether the workflow logger keeps emitting records during replay.
         ///     Defaults to `false`.
+        @available(*, deprecated, message: "Use a task local logger around replay operations.")
         public init(
             workflows: [any WorkflowDefinition.Type] = [],
             namespace: String = "ReplayNamespace",
@@ -70,8 +82,38 @@ extension WorkflowReplayer {
             self.taskQueue = taskQueue
             self.dataConverter = dataConverter
             self.interceptors = interceptors
-            self.logger = logger
+            self._logger = logger
             self.enableLoggingInReplay = enableLoggingInReplay
+        }
+
+        /// Creates a new replayer configuration.
+        ///
+        /// - Parameters:
+        ///   - workflows: The workflow types to register for replay. At least one workflow
+        ///     must be registered before creating a replayer.
+        ///   - namespace: The namespace for replay context. Defaults to `"ReplayNamespace"`.
+        ///   - taskQueue: The task queue for replay context. Defaults to `"ReplayTaskQueue"`.
+        ///   - dataConverter: The data converter for payload serialization. Defaults to
+        ///     ``DataConverter/default``.
+        ///   - interceptors: The interceptors to apply during replay. Defaults to an empty
+        ///     array (no interceptors).
+        ///   - enableLoggingInReplay: Whether the workflow logger keeps emitting records during replay.
+        ///     Defaults to `false`.
+        public init(
+            workflows: [any WorkflowDefinition.Type] = [],
+            namespace: String = "ReplayNamespace",
+            taskQueue: String = "ReplayTaskQueue",
+            dataConverter: DataConverter = .default,
+            interceptors: [any WorkerInterceptor] = [],
+            enableLoggingInReplay: Bool = false
+        ) {
+            self.workflows = workflows
+            self.namespace = namespace
+            self.taskQueue = taskQueue
+            self.dataConverter = dataConverter
+            self.interceptors = interceptors
+            self.enableLoggingInReplay = enableLoggingInReplay
+            self._logger = Logger.current
         }
     }
 }

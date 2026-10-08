@@ -271,8 +271,7 @@ where
                         try WorkflowWorker(
                             worker: worker,
                             configuration: self.configuration,
-                            workflows: self.workflows,
-                            logger: self.logger
+                            workflows: self.workflows
                         )
                     } else {
                         nil
