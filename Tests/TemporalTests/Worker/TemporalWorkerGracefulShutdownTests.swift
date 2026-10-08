@@ -114,15 +114,19 @@ extension TestServerDependentTests {
                 target: .dns(host: host, port: port),
                 transportSecurity: .plaintext,
                 activities: [HeartbeatingActivity(signal: signal)],
-                workflows: [HeartbeatWorkflow.self],
-                logger: Logger(label: "worker")
+                workflows: [HeartbeatWorkflow.self]
             )
             let serviceGroup = ServiceGroup(
                 configuration: .init(services: [worker], logger: Logger(label: "service-group"))
             )
 
             await withTaskGroup(of: Void.self) { group in
-                group.addTask { try? await serviceGroup.run() }
+                group.addTask {
+                    // The worker logs through the task local logger, so bind it around the run.
+                    try? await withLogger(Logger(label: "worker")) { _ in
+                        try await serviceGroup.run()
+                    }
+                }
                 try? await withTestClient { client in
                     _ = try await client.startWorkflow(
                         type: HeartbeatWorkflow.self,
