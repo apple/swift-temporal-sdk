@@ -15,6 +15,7 @@
 import Foundation
 import GRPCCore
 import Metrics
+import MetricsTestKit
 import OTelSemanticConventions
 import TemporalInstrumentation
 import Testing
@@ -23,7 +24,7 @@ import Testing
 struct GRPCClientMetricsInterceptorTests {
     @Test
     func interceptorRecordsMetricsForSuccessfulCall() async throws {
-        let metricsFactory = TestMetricsFactory()
+        let metricsFactory = TestMetrics()
         let interceptor = ClientOTelMetricsInterceptor(
             serverHostname: "test-server",
             networkTransportMethod: .tcp,
@@ -105,7 +106,7 @@ struct GRPCClientMetricsInterceptorTests {
 
     @Test
     func interceptorRecordsMetricsForFailedCall() async throws {
-        let metricsFactory = TestMetricsFactory()
+        let metricsFactory = TestMetrics()
         let interceptor = ClientOTelMetricsInterceptor(
             serverHostname: "test-server",
             networkTransportMethod: .tcp,
@@ -198,7 +199,7 @@ struct GRPCClientMetricsInterceptorTests {
 
     @Test
     func interceptorCountsMessagesCorrectly() async throws {
-        let metricsFactory = TestMetricsFactory()
+        let metricsFactory = TestMetrics()
         let interceptor = ClientOTelMetricsInterceptor(
             serverHostname: "test-server",
             networkTransportMethod: .tcp,
