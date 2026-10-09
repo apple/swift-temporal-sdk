@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-package import Tracing
-
 extension TemporalWorkerTracingInterceptor {
     /// Activity inbound interceptor that instruments all worker inbound activity requests with distributed tracing.
     public struct ActivityInbound: ActivityInboundInterceptor {
@@ -24,11 +22,8 @@ extension TemporalWorkerTracingInterceptor {
         /// - Parameters:
         ///    - tracer: The `Tracer` instance to use for creating spans.
         ///    - tracingHeaderKey: The name of the Temporal tracing header key.
-        package init(tracer: any Tracer, tracingHeaderKey: String) {
-            self.traceRecording = TemporalTraceRecording(
-                tracer: tracer,
-                tracingHeaderKey: tracingHeaderKey
-            )
+        package init(tracingHeaderKey: String) {
+            self.traceRecording = TemporalTraceRecording(tracingHeaderKey: tracingHeaderKey)
         }
 
         public func executeActivity<Activity>(

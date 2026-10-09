@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-package import Tracing
-
 extension TemporalWorkerTracingInterceptor {
     /// Workflow outbound interceptor that instruments all worker outbound workflow requests with distributed tracing.
     public struct WorkflowOutbound: WorkflowOutboundInterceptor {
@@ -23,11 +21,8 @@ extension TemporalWorkerTracingInterceptor {
         /// - Parameters:
         ///    - tracer: The `Tracer` instance to use for creating spans.
         ///    - tracingHeaderKey: The name of the Temporal tracing header key.
-        package init(tracer: any Tracer, tracingHeaderKey: String) {
-            self.traceRecording = TemporalTraceRecording(
-                tracer: tracer,
-                tracingHeaderKey: tracingHeaderKey
-            )
+        package init(tracingHeaderKey: String) {
+            self.traceRecording = TemporalTraceRecording(tracingHeaderKey: tracingHeaderKey)
         }
 
         public func handleSleep(
