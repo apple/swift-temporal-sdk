@@ -15,11 +15,7 @@
 import SwiftParser
 import SwiftSyntax
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
 import Foundation
-#endif
 
 // This tool transforms the underscored proto generated namespaces into dot seperated ones.
 // Ideally this would be part of SwiftProtobuf but the generation pattern has some problems discussed in

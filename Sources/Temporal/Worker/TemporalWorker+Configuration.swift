@@ -398,7 +398,7 @@ extension TemporalWorker {
             self.versioningStrategy = versioningStrategy
             self.clientIdentity =
                 clientIdentity
-                ?? "\(Self.workerClientName)-\(Self.workerClientVersion)-\(UUID().uuidString.replacingOccurrences(of: "-", with: "").suffix(5))"
+                ?? "\(Self.workerClientName)-\(Self.workerClientVersion)-\(UUID().uuidString.replacing("-", with: "").suffix(5))"
             self.dataConverter = dataConverter
             self.interceptors = interceptors
             self.apiKey = apiKey
