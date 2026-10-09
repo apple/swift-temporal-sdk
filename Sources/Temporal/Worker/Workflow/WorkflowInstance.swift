@@ -430,8 +430,8 @@ struct WorkflowInstance: Sendable {
             // 4.
             self.executor.run()
             // 5.
-            // We are finding the first condition that evaluates to true and resume the associated
-            // continuation. If we have resumed the first continuation then we are going to run the
+            // We are finding the first condition that evaluates to true, in registration order, and resume the
+            // associated continuation. If we have resumed the first continuation then we are going to run the
             // executor again. This allows wait condition users to trust that the line after the
             // condition still has the condition satisfied.
             let continuationID = Self.$isOnWorkflowInstance.withValue(true) {
