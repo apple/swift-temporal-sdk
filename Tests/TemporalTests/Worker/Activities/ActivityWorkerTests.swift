@@ -77,6 +77,8 @@ private final class MockBridgeWorker: BridgeWorkerProtocol {
     func recordActivityHeartbeat(_ heartbeat: Coresdk.ActivityHeartbeat) throws {
         self.heartbeatContinuation.yield(heartbeat)
     }
+
+    func runSlotSupplierLoops() async {}
 }
 
 /// A task executor that runs jobs on a dedicated thread, always running the most recently enqueued job first.
