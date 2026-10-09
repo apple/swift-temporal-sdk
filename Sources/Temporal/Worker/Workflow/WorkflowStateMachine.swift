@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import OrderedCollections
 import SwiftProtobuf
 
 import struct Foundation.Date
@@ -96,8 +97,11 @@ struct WorkflowStateMachine: ~Copyable {
             /// These are the current activity continuations that the workflow is waiting on.
             var activityContinuations: [UInt32: CheckedContinuation<Coresdk.ActivityResult.ActivityResolution, any Error>]
 
-            /// These are the continuations for all the current wait conditions.
-            var waitConditionContinuations: [UInt32: (() -> Bool, CheckedContinuation<Void, any Error>?)]
+            /// These are the continuations for all the current wait conditions, in the order they were registered.
+            ///
+            /// Satisfied conditions are resumed in this order. A `Dictionary` iterates in a different order in every
+            /// process, so a replay could resume a different condition first.
+            var waitConditionContinuations: OrderedDictionary<UInt32, (() -> Bool, CheckedContinuation<Void, any Error>?)>
 
             /// These are the current child workflow start continuations that the workflow is waiting on.
             var childWorkflowStartContinuations: [UInt32: (String, CheckedContinuation<(String, String), any Error>)]
@@ -606,7 +610,7 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
-    func conditions() -> [UInt32: () -> Bool] {
+    func conditions() -> OrderedDictionary<UInt32, () -> Bool> {
         switch self.state {
         case .active(let active):
             return active.waitConditionContinuations.mapValues { $0.0 }

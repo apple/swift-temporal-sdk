@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import OrderedCollections
 import SwiftProtobuf
 
 import struct Foundation.Date
@@ -247,7 +248,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         continuation.resume(returning: resolveActivity.result)
     }
 
-    func conditions() -> [UInt32: () -> Bool] {
+    func conditions() -> OrderedDictionary<UInt32, () -> Bool> {
         return self.stateMachine.conditions()
     }
 
