@@ -32,26 +32,37 @@ extension TemporalWorkerTracingInterceptor {
             input: ExecuteWorkflowInput<Workflow>,
             next: (ExecuteWorkflowInput<Workflow>) async throws -> Workflow.Output
         ) async throws -> Workflow.Output {
-            // Not suppressed during replay: this span covers the whole workflow execution and therefore
-            // spans workflow tasks. A workflow resumed after a cache miss begins on a replayed task, so
-            // suppressing here would leave the rest of that execution unrecorded and orphan its child spans.
-            try await self.traceRecording.recordInbound(
-                spanName: "RunWorkflow:\(input.info.workflowName)",
-                headers: input.headers,
-                suppressDuringReplay: false,
-                setSpanAttributes: { span in
-                    span.setWorkerExecuteWorkflowSpanAttributes(info: input.info)
-                },
-                next: {
-                    try await next(input)
-                }
-            )
+            guard let current = InternalWorkflowContext.current else {
+                throw CancellationError() // TODO: find an error currency type!
+            }
+
+            var tracer = InstrumentationSystem.tracer
+            tracer.setIDGenerator(current.randomNumberGenerator)  // TODO: this alter the seed now!
+
+            return try await withTracer(tracer) {
+                // TODO: update comment!
+                // Not suppressed during replay: this span covers the whole workflow execution and therefore
+                // spans workflow tasks. A workflow resumed after a cache miss begins on a replayed task, so
+                // suppressing here would leave the rest of that execution unrecorded and orphan its child spans.
+                try await self.traceRecording.recordInbound(
+                    spanName: "RunWorkflow:\(input.info.workflowName)",
+                    headers: input.headers,
+                    suppressDuringReplay: false,
+                    setSpanAttributes: { span in
+                        span.setWorkerExecuteWorkflowSpanAttributes(info: input.info)
+                    },
+                    next: {
+                        try await next(input)
+                    }
+                )
+            }
         }
 
         public func handleSignal<Signal>(
             input: HandleSignalInput<Signal>,
             next: (HandleSignalInput<Signal>) async throws -> Void
         ) async throws {
+            // TODO: parent under workflow span, link to input.headers
             try await self.traceRecording.recordInbound(
                 spanName: "HandleSignal:\(input.name)",
                 headers: input.headers,
@@ -68,6 +79,7 @@ extension TemporalWorkerTracingInterceptor {
             input: HandleQueryInput<Query>,
             next: (HandleQueryInput<Query>) throws -> Query.Output
         ) throws -> Query.Output {
+            // TODO: parent under workflow span, link to input.headers
             // Not suppressed during replay: queries are not recorded in workflow history, so they are never
             // genuinely re-executed. A query served right after a cache-miss replay would otherwise be lost.
             // This matches the .NET SDK, which passes `evenOnReplay: true` for query handling.
@@ -88,6 +100,7 @@ extension TemporalWorkerTracingInterceptor {
             input: HandleUpdateInput<Update>,
             next: (HandleUpdateInput<Update>) async throws -> Update.Output
         ) async throws -> Update.Output {
+            // TODO: parent under workflow span, link to input.headers
             try await self.traceRecording.recordInbound(
                 spanName: "HandleUpdate:\(input.name)",
                 headers: input.headers,
@@ -104,6 +117,7 @@ extension TemporalWorkerTracingInterceptor {
             input: HandleUpdateInput<Update>,
             next: (HandleUpdateInput<Update>) throws -> Void
         ) throws {
+            // TODO: parent under workflow span, link to input.headers
             try self.traceRecording.recordInbound(
                 spanName: "ValidateUpdate:\(input.name)",
                 headers: input.headers,

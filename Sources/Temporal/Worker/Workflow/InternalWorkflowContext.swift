@@ -50,7 +50,7 @@ struct InternalWorkflowContext: Sendable {
     let payloadConverter: any PayloadConverter
 
     /// A deterministic random number generator for workflow use.
-    var randomNumberGenerator: any RandomNumberGenerator {
+    var randomNumberGenerator: any RandomNumberGenerator & Sendable {
         WorkflowRandomNumberGenerator(stateMachine: self.stateMachine)
     }
 
