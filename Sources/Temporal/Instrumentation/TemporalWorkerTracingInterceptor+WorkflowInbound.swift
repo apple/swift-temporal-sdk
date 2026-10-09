@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-package import Tracing
+import Tracing
 
 extension TemporalWorkerTracingInterceptor {
     /// Workflow inbound interceptor that instruments all worker inbound workflow requests with distributed tracing.
@@ -24,11 +24,8 @@ extension TemporalWorkerTracingInterceptor {
         /// - Parameters:
         ///    - tracer: The `Tracer` instance to use for creating spans.
         ///    - tracingHeaderKey: The name of the Temporal tracing header key.
-        package init(tracer: any Tracer, tracingHeaderKey: String) {
-            self.traceRecording = TemporalTraceRecording(
-                tracer: tracer,
-                tracingHeaderKey: tracingHeaderKey
-            )
+        package init(tracingHeaderKey: String) {
+            self.traceRecording = TemporalTraceRecording(tracingHeaderKey: tracingHeaderKey)
         }
 
         public func executeWorkflow<Workflow>(
