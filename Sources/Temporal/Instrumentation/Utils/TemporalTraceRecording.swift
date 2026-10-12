@@ -19,8 +19,6 @@ struct TemporalTraceRecording {
     private let injector = TemporalHeaderInjector()
     /// `Extractor` extracting the context from the Temporal response headers.
     private let extractor = TemporalHeaderExtractor()
-    /// `Tracer` that creates the new trace spans.
-    private let tracer: any Tracer
     /// The name of the Temporal tracing header key.
     private var tracingHeaderKey: String
 
@@ -28,8 +26,7 @@ struct TemporalTraceRecording {
     /// - Parameters:
     ///   - tracer: The `Tracer` that creates the new trace spans.
     ///   - tracingHeaderKey: The name of the Temporal tracing header key.
-    init<T: Tracer>(tracer: T, tracingHeaderKey: String) {
-        self.tracer = tracer
+    init(tracingHeaderKey: String) {
         self.tracingHeaderKey = tracingHeaderKey
     }
 
@@ -47,9 +44,11 @@ struct TemporalTraceRecording {
             return try await next(headers)
         }
 
+        let tracer = InstrumentationSystem.tracer
+
         // The span is managed manually instead of using `withSpan`, whose operation closure is `@concurrent` (because it did not adopt NonisolatedNonsendingByDefault yet)
         // and therefore can't capture the non-`Sendable` closures passed to this method
-        let span = self.tracer.startSpan(spanName, context: ServiceContext.current ?? .topLevel, ofKind: .client)
+        let span = tracer.startSpan(spanName, context: ServiceContext.current ?? .topLevel, ofKind: .client)
         defer { span.end() }
 
         do {
@@ -57,7 +56,7 @@ struct TemporalTraceRecording {
 
             // Inject context into tracer payload
             var tracerPayload = [String: String]()
-            self.tracer.inject(span.context, into: &tracerPayload, using: self.injector)
+            tracer.inject(span.context, into: &tracerPayload, using: self.injector)
             let convertedTracerPayload =
                 try DataConverter
                 .default
@@ -94,9 +93,11 @@ struct TemporalTraceRecording {
             return try await next()
         }
 
-        let parentContext = try extractParentContext(headers: headers)
+        let tracer = InstrumentationSystem.tracer
 
-        return try await self.tracer.withSpan(
+        let parentContext = try extractParentContext(tracer: tracer, headers: headers)
+
+        return try await tracer.withSpan(
             spanName,
             context: parentContext ?? .topLevel,
             ofKind: .server  // matches C#
@@ -125,9 +126,11 @@ struct TemporalTraceRecording {
             return try next()
         }
 
-        let parentContext = try extractParentContext(headers: headers)
+        let tracer = InstrumentationSystem.tracer
 
-        return try self.tracer.withSpan(
+        let parentContext = try extractParentContext(tracer: tracer, headers: headers)
+
+        return try tracer.withSpan(
             spanName,
             context: parentContext ?? .topLevel,
             ofKind: .server  // matches C#
@@ -159,6 +162,7 @@ struct TemporalTraceRecording {
     /// Extracts the trace context carried on a Temporal request header, to be used as the parent of the
     /// span recorded for the inbound operation.
     private func extractParentContext(
+        tracer: some Tracer,
         headers: [String: Api.Common.V1.Payload]
     ) throws -> ServiceContext? {
         // Check if header with tracer key exists
@@ -174,7 +178,7 @@ struct TemporalTraceRecording {
             .convertPayloadHandlingVoid(tracerPayload)
 
         var parentContext = ServiceContext.topLevel
-        self.tracer.extract(
+        tracer.extract(
             convertedTracerPayload,
             into: &parentContext,
             using: self.extractor

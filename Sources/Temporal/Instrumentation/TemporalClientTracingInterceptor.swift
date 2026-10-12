@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-package import Tracing
-
 /// Interceptor that creates and propagates distributed tracing activities for Temporal client operations.
 ///
 /// ### Usage
@@ -38,38 +36,17 @@ package import Tracing
 ///
 /// - Note: For comprehensive tracing coverage, ensure this interceptor is the last in your interceptor chain.
 public struct TemporalClientTracingInterceptor: ClientInterceptor {
-    /// The tracer used to create distributed tracing spans.
-    private let tracer: any Tracer
     /// The name of the Temporal tracing header key.
     private var tracingHeaderKey: String
 
     /// Creates a tracing interceptor using the globally configured instrumentation system.
     ///
     /// - Parameter tracingHeaderKey: The name of the Temporal tracing header key, defaults to `_tracer-data`.
-    /// - Important: Ensure `InstrumentationSystem` is properly bootstrapped before using this initializer.
-    public init(
-        tracingHeaderKey: String = "_tracer-data"
-    ) {
-        self.init(
-            tracer: InstrumentationSystem.tracer,
-            tracingHeaderKey: tracingHeaderKey
-        )
-    }
-
-    /// Creates the interceptor with a custom `Tracer`, useful for testing.
-    ///
-    /// - Parameters:
-    ///    - tracer: Custom `Tracer` passed in.
-    ///    - tracingHeaderKey: The name of the Temporal tracing header key, defaults to `_tracer-data`.
-    package init(
-        tracer: any Tracer,
-        tracingHeaderKey: String = "_tracer-data"
-    ) {
-        self.tracer = tracer
+    public init(tracingHeaderKey: String = "_tracer-data") {
         self.tracingHeaderKey = tracingHeaderKey
     }
 
     public var clientOutboundInterceptor: Self.Outbound? {
-        Self.Outbound(tracer: self.tracer, tracingHeaderKey: self.tracingHeaderKey)
+        Self.Outbound(tracingHeaderKey: self.tracingHeaderKey)
     }
 }

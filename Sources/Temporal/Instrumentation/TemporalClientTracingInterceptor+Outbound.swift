@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import GRPCCore
-package import Tracing
 
 extension TemporalClientTracingInterceptor {
     /// Outbound client interceptor that instruments all client requests with distributed tracing.
@@ -25,11 +24,8 @@ extension TemporalClientTracingInterceptor {
         /// - Parameters:
         ///    - tracer: The `Tracer` instance to use for creating spans.
         ///    - tracingHeaderKey: The name of the Temporal tracing header key.
-        package init(tracer: any Tracer, tracingHeaderKey: String) {
-            self.traceRecording = TemporalTraceRecording(
-                tracer: tracer,
-                tracingHeaderKey: tracingHeaderKey
-            )
+        package init(tracingHeaderKey: String) {
+            self.traceRecording = TemporalTraceRecording(tracingHeaderKey: tracingHeaderKey)
         }
 
         public func startWorkflow<each Input>(

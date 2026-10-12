@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-package import Tracing
-
 /// Interceptor that creates and propagates distributed tracing activities for Temporal worker operations.
 ///
 /// ### Usage
@@ -38,45 +36,26 @@ package import Tracing
 ///
 /// - Note: For comprehensive tracing coverage, ensure this interceptor is the last in your interceptor chain.
 public struct TemporalWorkerTracingInterceptor: WorkerInterceptor {
-    /// `Tracer` that creates the new trace spans.
-    private let tracer: any Tracer
     /// The name of the Temporal tracing header key.
     private var tracingHeaderKey: String
 
     /// Creates a tracing interceptor using the globally configured instrumentation system tracer.
     ///
     /// - Parameter tracingHeaderKey: The name of the Temporal tracing header key, defaults to `_tracer-data`.
-    /// - Important: Ensure `InstrumentationSystem` is properly bootstrapped before using this initializer.
     public init(tracingHeaderKey: String = "_tracer-data") {
-        self.init(
-            tracer: InstrumentationSystem.tracer,
-            tracingHeaderKey: tracingHeaderKey
-        )
-    }
-
-    /// Creates the interceptor with a custom `Tracer`, useful for testing.
-    ///
-    /// - Parameters:
-    ///    - tracer: Custom `Tracer` passed in.
-    ///    - tracingHeaderKey: The name of the Temporal tracing header key, defaults to `_tracer-data`.
-    package init(
-        tracer: any Tracer,
-        tracingHeaderKey: String = "_tracer-data"
-    ) {
-        self.tracer = tracer
         self.tracingHeaderKey = tracingHeaderKey
     }
 
     public var workflowInboundInterceptor: WorkflowInbound? {
-        Self.WorkflowInbound(tracer: self.tracer, tracingHeaderKey: self.tracingHeaderKey)
+        Self.WorkflowInbound(tracingHeaderKey: self.tracingHeaderKey)
     }
 
     public var workflowOutboundInterceptor: WorkflowOutbound? {
-        Self.WorkflowOutbound(tracer: self.tracer, tracingHeaderKey: self.tracingHeaderKey)
+        Self.WorkflowOutbound(tracingHeaderKey: self.tracingHeaderKey)
     }
 
     public var activityInboundInterceptor: ActivityInbound? {
-        Self.ActivityInbound(tracer: self.tracer, tracingHeaderKey: self.tracingHeaderKey)
+        Self.ActivityInbound(tracingHeaderKey: self.tracingHeaderKey)
     }
 
     // no activity outbound interceptor as it's only a heartbeat and C# SDK also doesn't intercept these calls
