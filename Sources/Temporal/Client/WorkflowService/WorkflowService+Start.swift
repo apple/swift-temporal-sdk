@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+import GRPCProtobuf
+import SwiftProtobuf
+
 import struct GRPCCore.CallOptions
+import struct GRPCCore.RPCError
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -35,27 +39,38 @@ extension TemporalClient.WorkflowService {
     ///   - input: The input parameters to pass to the workflow's execution method.
     /// - Returns: The unique run ID of the started workflow execution for tracking and operations.
     /// - Throws: ``WorkflowAlreadyStartedError`` if a workflow with the same ID is already
-    /// running (depending on ID reuse policy), or an error for other startup failures.
+    /// running (depending on the ID conflict policy) or has already finished (depending on the
+    /// ID reuse policy), or an error for other startup failures.
     public func startWorkflow<each Input: Sendable>(
         name: String,
         options: WorkflowOptions,
         headers: [String: Api.Common.V1.Payload] = [:],
         input: repeat each Input
     ) async throws -> String {
-        let response: Api.Workflowservice.V1.StartWorkflowExecutionResponse = try await self.client.unary(
-            method: Api.Workflowservice.V1.WorkflowService.Method.StartWorkflowExecution.descriptor,
-            request: Api.Workflowservice.V1.StartWorkflowExecutionRequest(
-                namespace: self.configuration.namespace,
-                identity: self.configuration.identity,
-                requestID: UUID().uuidString,
-                workflowTypeName: name,
-                workflowOptions: options,
-                dataConverter: self.configuration.dataConverter,
-                headers: headers,
-                inputs: self.configuration.dataConverter.convertValues(repeat each input)
-            ),
-            callOptions: options.callOptions
+        let request = try await Api.Workflowservice.V1.StartWorkflowExecutionRequest(
+            namespace: self.configuration.namespace,
+            identity: self.configuration.identity,
+            requestID: UUID().uuidString,
+            workflowTypeName: name,
+            workflowOptions: options,
+            dataConverter: self.configuration.dataConverter,
+            headers: headers,
+            inputs: self.configuration.dataConverter.convertValues(repeat each input)
         )
+
+        let response: Api.Workflowservice.V1.StartWorkflowExecutionResponse
+        do {
+            response = try await self.client.unary(
+                method: Api.Workflowservice.V1.WorkflowService.Method.StartWorkflowExecution.descriptor,
+                request: request,
+                callOptions: options.callOptions
+            )
+        } catch let error as RPCError {
+            if let alreadyStartedError = WorkflowAlreadyStartedError(error, workflowID: options.id, workflowName: name) {
+                throw alreadyStartedError
+            }
+            throw error
+        }
 
         return response.runID
     }
@@ -74,7 +89,8 @@ extension TemporalClient.WorkflowService {
     ///   - signalInput: The input data to send with the signal.
     ///   - input: The input parameters to pass to the workflow's execution method.
     /// - Returns: The unique run ID of the workflow execution.
-    /// - Throws: An error if the operation fails.
+    /// - Throws: ``WorkflowAlreadyStartedError`` if a workflow with the same ID has already
+    /// finished and the ID reuse policy rejects the start, or an error for other failures.
     func signalWithStartWorkflow<each Input: Sendable>(
         name: String,
         options: WorkflowOptions,
@@ -91,22 +107,32 @@ extension TemporalClient.WorkflowService {
             try await signalPayloads.append(dataConverter.convertValue(input))
         }
 
-        let response: Api.Workflowservice.V1.SignalWithStartWorkflowExecutionResponse = try await self.client.unary(
-            method: Api.Workflowservice.V1.WorkflowService.Method.SignalWithStartWorkflowExecution.descriptor,
-            request: Api.Workflowservice.V1.SignalWithStartWorkflowExecutionRequest(
-                namespace: self.configuration.namespace,
-                identity: self.configuration.identity,
-                requestID: UUID().uuidString,
-                workflowTypeName: name,
-                workflowOptions: options,
-                dataConverter: dataConverter,
-                headers: headers,
-                inputs: dataConverter.convertValues(repeat each input),
-                signalName: signalName,
-                signalInput: signalPayloads
-            ),
-            callOptions: options.callOptions
+        let request = try await Api.Workflowservice.V1.SignalWithStartWorkflowExecutionRequest(
+            namespace: self.configuration.namespace,
+            identity: self.configuration.identity,
+            requestID: UUID().uuidString,
+            workflowTypeName: name,
+            workflowOptions: options,
+            dataConverter: dataConverter,
+            headers: headers,
+            inputs: dataConverter.convertValues(repeat each input),
+            signalName: signalName,
+            signalInput: signalPayloads
         )
+
+        let response: Api.Workflowservice.V1.SignalWithStartWorkflowExecutionResponse
+        do {
+            response = try await self.client.unary(
+                method: Api.Workflowservice.V1.WorkflowService.Method.SignalWithStartWorkflowExecution.descriptor,
+                request: request,
+                callOptions: options.callOptions
+            )
+        } catch let error as RPCError {
+            if let alreadyStartedError = WorkflowAlreadyStartedError(error, workflowID: options.id, workflowName: name) {
+                throw alreadyStartedError
+            }
+            throw error
+        }
 
         return response.runID
     }
@@ -125,7 +151,8 @@ extension TemporalClient.WorkflowService {
     ///   - signalPayloads: The already-serialized signal input data.
     ///   - input: The input parameters to pass to the workflow's execution method.
     /// - Returns: The unique run ID of the workflow execution.
-    /// - Throws: An error if the operation fails.
+    /// - Throws: ``WorkflowAlreadyStartedError`` if a workflow with the same ID has already
+    /// finished and the ID reuse policy rejects the start, or an error for other failures.
     func signalWithStartWorkflow<each Input: Sendable>(
         name: String,
         options: WorkflowOptions,
@@ -136,22 +163,32 @@ extension TemporalClient.WorkflowService {
     ) async throws -> String {
         let dataConverter = self.configuration.dataConverter
 
-        let response: Api.Workflowservice.V1.SignalWithStartWorkflowExecutionResponse = try await self.client.unary(
-            method: Api.Workflowservice.V1.WorkflowService.Method.SignalWithStartWorkflowExecution.descriptor,
-            request: Api.Workflowservice.V1.SignalWithStartWorkflowExecutionRequest(
-                namespace: self.configuration.namespace,
-                identity: self.configuration.identity,
-                requestID: UUID().uuidString,
-                workflowTypeName: name,
-                workflowOptions: options,
-                dataConverter: dataConverter,
-                headers: headers,
-                inputs: dataConverter.convertValues(repeat each input),
-                signalName: signalName,
-                signalInput: signalPayloads
-            ),
-            callOptions: options.callOptions
+        let request = try await Api.Workflowservice.V1.SignalWithStartWorkflowExecutionRequest(
+            namespace: self.configuration.namespace,
+            identity: self.configuration.identity,
+            requestID: UUID().uuidString,
+            workflowTypeName: name,
+            workflowOptions: options,
+            dataConverter: dataConverter,
+            headers: headers,
+            inputs: dataConverter.convertValues(repeat each input),
+            signalName: signalName,
+            signalInput: signalPayloads
         )
+
+        let response: Api.Workflowservice.V1.SignalWithStartWorkflowExecutionResponse
+        do {
+            response = try await self.client.unary(
+                method: Api.Workflowservice.V1.WorkflowService.Method.SignalWithStartWorkflowExecution.descriptor,
+                request: request,
+                callOptions: options.callOptions
+            )
+        } catch let error as RPCError {
+            if let alreadyStartedError = WorkflowAlreadyStartedError(error, workflowID: options.id, workflowName: name) {
+                throw alreadyStartedError
+            }
+            throw error
+        }
 
         return response.runID
     }
@@ -171,7 +208,8 @@ extension TemporalClient.WorkflowService {
     ///   - input: The input parameter matching the workflow definition's `Input` type.
     /// - Returns: The unique run ID of the started workflow execution for tracking and operations.
     /// - Throws: ``WorkflowAlreadyStartedError`` if a workflow with the same ID is already
-    /// running (depending on ID reuse policy), or an error for other startup failures.
+    /// running (depending on the ID conflict policy) or has already finished (depending on the
+    /// ID reuse policy), or an error for other startup failures.
     public func startWorkflow<Workflow: WorkflowDefinition>(
         type: Workflow.Type = Workflow.self,
         options: WorkflowOptions,
@@ -197,7 +235,9 @@ extension TemporalClient.WorkflowService {
     ///   - options: Configuration options controlling workflow execution behavior, timeouts, and policies.
     ///   - headers: Custom headers for tracing, authentication, or workflow context.
     /// - Returns: The unique run ID of the started workflow execution for tracking and operations.
-    /// - Throws: ``WorkflowAlreadyStartedError`` if a workflow with the same ID is already running (depending on ID reuse policy), or an error for other startup failures.
+    /// - Throws: ``WorkflowAlreadyStartedError`` if a workflow with the same ID is already
+    /// running (depending on the ID conflict policy) or has already finished (depending on the
+    /// ID reuse policy), or an error for other startup failures.
     public func startWorkflow<Workflow: WorkflowDefinition>(
         type: Workflow.Type = Workflow.self,
         options: WorkflowOptions,
@@ -208,5 +248,34 @@ extension TemporalClient.WorkflowService {
             options: options,
             headers: headers
         )
+    }
+}
+
+extension WorkflowAlreadyStartedError {
+    /// Creates a workflow-already-started error from an RPC error returned by the server.
+    ///
+    /// The server reports a rejected workflow start with an `ALREADY_EXISTS` status carrying a
+    /// `WorkflowExecutionAlreadyStartedFailure` detail. This is the case both when a workflow with
+    /// the same ID is still running and when it has already finished but the ID reuse policy
+    /// rejects the start.
+    ///
+    /// - Returns: `nil` if the RPC error isn't a workflow-already-started failure.
+    init?(_ error: RPCError, workflowID: String, workflowName: String) {
+        guard error.code == .alreadyExists,
+            let status = try? error.unpackGoogleRPCStatus(),
+            let failure = status.details.lazy.compactMap({ detail in
+                detail.any.flatMap { try? Api.Errordetails.V1.WorkflowExecutionAlreadyStartedFailure(unpackingAny: $0) }
+            }).first
+        else {
+            return nil
+        }
+
+        self.init(
+            cause: error,
+            workflowID: workflowID,
+            runID: failure.runID.isEmpty ? nil : failure.runID,
+            workflowName: workflowName
+        )
+        self.message = error.message
     }
 }
