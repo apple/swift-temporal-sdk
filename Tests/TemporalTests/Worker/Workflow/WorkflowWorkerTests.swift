@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import InMemoryLogging
 import Logging
-import Synchronization
 import Temporal
 import Testing
 
@@ -69,7 +69,7 @@ struct WorkflowWorkerTests {
     @Test
     func duplicateWorkflowRegistrationThrowsError() async throws {
         // Test that duplicate workflow registrations throw error
-        let logHandler = InMemoryLogHandler()
+        var logHandler = InMemoryLogHandler()
         logHandler.logLevel = .trace  // Capture all logs including info
         let logger = Logger(label: "TestWorkflowWorker") { _ in logHandler }
 
@@ -91,7 +91,8 @@ struct WorkflowWorkerTests {
         }
 
         // Verify the info log was recorded before the error was thrown
-        try logHandler.entries.withLock { entries in
+        do {
+            let entries = logHandler.entries
             let infoEntries = entries.filter { $0.level == .info }
             #expect(infoEntries.count == 1)
 
@@ -99,7 +100,7 @@ struct WorkflowWorkerTests {
             #expect(logEntry.message == "Duplicate workflow registration")
 
             // Verify structured metadata using workflow type key
-            let workflowType = try #require(logEntry.metadata?["temporal.workflow.type"])
+            let workflowType = try #require(logEntry.metadata["temporal.workflow.type"])
             #expect(workflowType == "DuplicateWorkflow")
         }
     }
@@ -126,8 +127,6 @@ struct WorkflowWorkerTests {
         )
 
         // Verify no logs were recorded
-        logHandler.entries.withLock { entries in
-            #expect(entries.isEmpty)
-        }
+        #expect(logHandler.entries.isEmpty)
     }
 }
