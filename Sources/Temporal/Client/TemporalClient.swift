@@ -152,6 +152,8 @@ public final class TemporalClient: Sendable {
     /// Creates and manages a lifetime-scoped Temporal client that executes the provided closure.
     ///
     /// The configuration's ``TemporalClient/Configuration/plugins`` are applied first, in order.
+    /// Each plugin's ``ClientPlugin/connectClient(configuration:next:)`` then wraps the connection
+    /// and `body`; the first plugin is the outermost wrap.
     ///
     /// - Note: grpc-swift’s `ClientTransport` provides an option to configure an additional retry *throttling* policy via `ClientTransport/retryThrottle`, applicable to all retryable status codes.
     /// This throttling mechanism works in conjunction with the retry logic implemented in ``TemporalClient`` and can help reduce server load during periods of high request failure rates.
@@ -175,13 +177,18 @@ public final class TemporalClient: Sendable {
     ) async throws -> sending Result {
         var configuration = configuration
         configuration.applyPlugins(logger: logger)
-        return try await withGRPCClient(
-            transport: transport,
-            interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger),
-            isolation: #isolation
-        ) { client in
-            let temporalClient = Self.init(client: client, configuration: configuration)
-            return try await body(temporalClient)
+        return try await applyClientConnectChain(
+            plugins: configuration.plugins[...],
+            configuration: configuration
+        ) {
+            try await withGRPCClient(
+                transport: transport,
+                interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger),
+                isolation: #isolation
+            ) { client in
+                let temporalClient = Self.init(client: client, configuration: configuration)
+                return try await body(temporalClient)
+            }
         }
     }
 }

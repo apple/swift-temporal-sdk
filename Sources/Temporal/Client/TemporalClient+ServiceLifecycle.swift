@@ -52,11 +52,18 @@ extension TemporalClient: Service {
     /// Starts the Temporal client and keeps it running until shutdown is initiated.
     ///
     /// This method starts the underlying gRPC client and keeps it running to handle requests.
+    /// Each plugin's ``ClientPlugin/connectClient(configuration:next:)`` wraps the run; the first
+    /// plugin is the outermost wrap.
     ///
     /// - Throws: A runtime error if the client cannot be started or is in an invalid state.
     public func run() async throws {
-        // Graceful shutdown is handled by `GRPCServiceLifecycle`
-        try await self.workflowService.client.client.run()
+        try await applyClientConnectChain(
+            plugins: self.configuration.plugins[...],
+            configuration: self.configuration
+        ) {
+            // Graceful shutdown is handled by `GRPCServiceLifecycle`
+            try await self.workflowService.client.client.run()
+        }
     }
 
     /// Initiates graceful shutdown of the Temporal client.

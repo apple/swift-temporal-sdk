@@ -39,3 +39,23 @@ extension WorkflowReplayer.Configuration {
         self.plugins = plugins
     }
 }
+
+/// Runs `body` wrapped by each plugin's ``WorkerPlugin/runReplayer(configuration:next:)``.
+///
+/// The first plugin is the outermost wrap.
+package func applyReplayerRunChain<R: Sendable>(
+    plugins: ArraySlice<any WorkerPlugin>,
+    configuration: WorkflowReplayer.Configuration,
+    body: () async throws -> sending R
+) async throws -> sending R {
+    guard let plugin = plugins.first else {
+        return try await body()
+    }
+    return try await plugin.runReplayer(configuration: configuration) {
+        try await applyReplayerRunChain(
+            plugins: plugins.dropFirst(),
+            configuration: configuration,
+            body: body
+        )
+    }
+}
