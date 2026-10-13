@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import ServiceContextModule
 import Tracing
 
 /// Injects the service context into the Temporal headers.

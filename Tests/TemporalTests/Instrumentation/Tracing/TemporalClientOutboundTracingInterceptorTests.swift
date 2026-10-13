@@ -54,11 +54,11 @@ struct TemporalClientOutboundTracingInterceptorTests {
     @Test
     func tracingInterceptorTemporalClient() async throws {
         let tracer = TestTracer()
-        var serviceContext = ServiceContext.topLevel
+        var serviceContext = InstrumentationContext.topLevel
         let traceIDString = UUID().uuidString
         serviceContext.traceID = traceIDString
 
-        try await ServiceContext.withValue(serviceContext) {
+        try await InstrumentationContext.withValue(serviceContext) {
             let interceptor = try #require(
                 TemporalClientTracingInterceptor(
                     tracer: tracer
@@ -110,11 +110,11 @@ struct TemporalClientOutboundTracingInterceptorTests {
     @Test
     func tracingInterceptorTemporalClientFailure() async throws {
         let tracer = TestTracer()
-        var serviceContext = ServiceContext.topLevel
+        var serviceContext = InstrumentationContext.topLevel
         let traceIDString = UUID().uuidString
         serviceContext.traceID = traceIDString
 
-        try await ServiceContext.withValue(serviceContext) {
+        try await InstrumentationContext.withValue(serviceContext) {
             let interceptor = try #require(
                 TemporalClientTracingInterceptor(
                     tracer: tracer

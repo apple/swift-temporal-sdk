@@ -78,7 +78,7 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             )
         ) { input in
             // The inbound span continues the caller's trace, so the handler runs inside it.
-            #expect(ServiceContext.current?.traceID == traceID.uuidString)
+            #expect(InstrumentationContext.current?.traceID == traceID.uuidString)
         }
 
         assertTestSpanComponents(
@@ -135,7 +135,7 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 )
             ) { input in
                 // The inbound span continues the caller's trace, so the handler runs inside it.
-                #expect(ServiceContext.current?.traceID == traceID.uuidString)
+                #expect(InstrumentationContext.current?.traceID == traceID.uuidString)
 
                 // Simulates an error within the RPC
                 throw TracingInterceptorTestError.testError
@@ -194,7 +194,7 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             )
         ) { input in
             // The inbound span continues the caller's trace, so the handler runs inside it.
-            #expect(ServiceContext.current?.traceID == traceID.uuidString)
+            #expect(InstrumentationContext.current?.traceID == traceID.uuidString)
 
             return ()
         }
@@ -246,7 +246,7 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 )
             ) { input in
                 // The inbound span continues the caller's trace, so the handler runs inside it.
-                #expect(ServiceContext.current?.traceID == traceID.uuidString)
+                #expect(InstrumentationContext.current?.traceID == traceID.uuidString)
 
                 // Simulates an error within the RPC
                 throw TracingInterceptorTestError.testError

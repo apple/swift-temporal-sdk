@@ -31,7 +31,7 @@ package import Tracing
 /// For optimal diagnostic coverage, position this interceptor as the final entry in your interceptor chain to capture
 /// the complete request lifecycle including modifications from other interceptors.
 ///
-/// The interceptor leverages `swift-distributed-tracing` `ServiceContext` for context propagation and serializes
+/// The interceptor leverages `swift-distributed-tracing` `InstrumentationContext` for context propagation and serializes
 /// diagnostic activities through Temporal headers for cross-system observability.
 ///
 /// - Important: Requires `swift-distributed-tracing` instrumentation system to be properly configured in your application.

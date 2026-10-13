@@ -34,7 +34,7 @@ final class TestTracer: Tracer {
 
     func extract<Carrier, Extract>(
         _ carrier: Carrier,
-        into context: inout ServiceContextModule.ServiceContext,
+        into context: inout InstrumentationContext,
         using extractor: Extract
     ) where Carrier == Extract.Carrier, Extract: Instrumentation.Extractor {
         let traceID = extractor.extract(key: TraceID.keyName, from: carrier)
@@ -42,7 +42,7 @@ final class TestTracer: Tracer {
     }
 
     func inject<Carrier, Inject>(
-        _ context: ServiceContextModule.ServiceContext,
+        _ context: InstrumentationContext,
         into carrier: inout Carrier,
         using injector: Inject
     ) where Carrier == Inject.Carrier, Inject: Instrumentation.Injector {
@@ -60,7 +60,7 @@ final class TestTracer: Tracer {
 
     func startSpan<Instant>(
         _ operationName: String,
-        context: @autoclosure () -> ServiceContext,
+        context: @autoclosure () -> InstrumentationContext,
         ofKind kind: SpanKind,
         at instant: @autoclosure () -> Instant,
         function: String,
@@ -81,7 +81,7 @@ final class TestTracer: Tracer {
 
 final class TestSpan: Span, Sendable {
     private struct State {
-        var context: ServiceContextModule.ServiceContext
+        var context: InstrumentationContext
         var operationName: String
         var attributes: Tracing.SpanAttributes
         var status: Tracing.SpanStatus?
@@ -92,7 +92,7 @@ final class TestSpan: Span, Sendable {
     private let state: Mutex<State>
     let isRecording: Bool
 
-    var context: ServiceContextModule.ServiceContext {
+    var context: InstrumentationContext {
         self.state.withLock { $0.context }
     }
 
@@ -119,7 +119,7 @@ final class TestSpan: Span, Sendable {
     }
 
     init(
-        context: ServiceContextModule.ServiceContext,
+        context: InstrumentationContext,
         operationName: String,
         attributes: Tracing.SpanAttributes = [:],
         isRecording: Bool = true
@@ -164,25 +164,25 @@ final class TestSpan: Span, Sendable {
     }
 }
 
-enum TraceID: ServiceContextModule.ServiceContextKey {
+enum TraceID: InstrumentationContextKey {
     typealias Value = String
 
     static let keyName = "traceparent"  // matches default Temporal tracing key
 }
 
-enum SpanID: ServiceContextModule.ServiceContextKey {
+enum SpanID: InstrumentationContextKey{
     typealias Value = String
 
     static let keyName = "spanid"
 }
 
-enum ServiceContextSpanLinksKey: ServiceContextModule.ServiceContextKey {
+enum InstrumentationContextSpanLinksKey: InstrumentationContextKey {
     typealias Value = [SpanLink]
 
     static let keyName = "span-links"
 }
 
-extension ServiceContext {
+extension InstrumentationContext {
     var traceID: String? {
         get {
             self[TraceID.self]
@@ -203,10 +203,10 @@ extension ServiceContext {
 
     var spanLinks: [SpanLink]? {
         get {
-            self[ServiceContextSpanLinksKey.self]
+            self[InstrumentationContextSpanLinksKey.self]
         }
         set {
-            self[ServiceContextSpanLinksKey.self] = newValue
+            self[InstrumentationContextSpanLinksKey.self] = newValue
         }
     }
 }

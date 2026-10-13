@@ -75,11 +75,11 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
     @Test
     func outboundTracingWorkflowWorker() async throws {
         let tracer = TestTracer()
-        var serviceContext = ServiceContext.topLevel
+        var serviceContext = InstrumentationContext.topLevel
         let traceIDString = UUID().uuidString
         serviceContext.traceID = traceIDString
 
-        try await ServiceContext.withValue(serviceContext) {
+        try await InstrumentationContext.withValue(serviceContext) {
             let interceptor = try #require(
                 TemporalWorkerTracingInterceptor(
                     tracer: tracer
@@ -156,11 +156,11 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
     @Test
     func outboundTracingWorkflowWorkerFailure() async throws {
         let tracer = TestTracer()
-        var serviceContext = ServiceContext.topLevel
+        var serviceContext = InstrumentationContext.topLevel
         let traceIDString = UUID().uuidString
         serviceContext.traceID = traceIDString
 
-        try await ServiceContext.withValue(serviceContext) {
+        try await InstrumentationContext.withValue(serviceContext) {
             let interceptor = try #require(
                 TemporalWorkerTracingInterceptor(
                     tracer: tracer
@@ -322,11 +322,11 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
     @Test
     func outboundSignalExternalWorkflowPropagatesTraceContext() async throws {
         let tracer = TestTracer()
-        var serviceContext = ServiceContext.topLevel
+        var serviceContext = InstrumentationContext.topLevel
         let traceIDString = UUID().uuidString
         serviceContext.traceID = traceIDString
 
-        try await ServiceContext.withValue(serviceContext) {
+        try await InstrumentationContext.withValue(serviceContext) {
             let interceptor = try #require(
                 TemporalWorkerTracingInterceptor(
                     tracer: tracer
@@ -378,12 +378,12 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
     @Test
     func outboundPropagatesItsOwnSpanContext() async throws {
         let tracer = TestTracer()
-        var serviceContext = ServiceContext.topLevel
+        var serviceContext = InstrumentationContext.topLevel
         serviceContext.traceID = UUID().uuidString
         serviceContext.spanID = UUID().uuidString
         let callerSpanID = try #require(serviceContext.spanID)
 
-        try await ServiceContext.withValue(serviceContext) {
+        try await InstrumentationContext.withValue(serviceContext) {
             let interceptor = try #require(
                 TemporalWorkerTracingInterceptor(
                     tracer: tracer

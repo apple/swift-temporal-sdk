@@ -50,7 +50,7 @@ struct TemporalTraceRecording {
 
         // The span is managed manually instead of using `withSpan`, whose operation closure is `@concurrent` (because it did not adopt NonisolatedNonsendingByDefault yet)
         // and therefore can't capture the non-`Sendable` closures passed to this method
-        let span = self.tracer.startSpan(spanName, context: ServiceContext.current ?? .topLevel, ofKind: .client)
+        let span = self.tracer.startSpan(spanName, context: InstrumentationContext.current ?? .topLevel, ofKind: .client)
         defer { span.end() }
 
         do {
@@ -69,7 +69,7 @@ struct TemporalTraceRecording {
             var headers = headers
             headers[self.tracingHeaderKey] = convertedTracerPayload
 
-            let result = try await ServiceContext.$current.withValue(span.context) {
+            let result = try await InstrumentationContext.$current.withValue(span.context) {
                 try await next(headers)
             }
             setResponseAttributes?(span, result)
@@ -161,7 +161,7 @@ struct TemporalTraceRecording {
     /// span recorded for the inbound operation.
     private func extractParentContext(
         headers: [String: Api.Common.V1.Payload]
-    ) throws -> ServiceContext? {
+    ) throws -> InstrumentationContext? {
         // Check if header with tracer key exists
         guard let tracerPayload = headers[self.tracingHeaderKey] else {
             return nil
@@ -174,7 +174,7 @@ struct TemporalTraceRecording {
             .payloadConverter
             .convertPayloadHandlingVoid(tracerPayload)
 
-        var parentContext = ServiceContext.topLevel
+        var parentContext = InstrumentationContext.topLevel
         self.tracer.extract(
             convertedTracerPayload,
             into: &parentContext,
