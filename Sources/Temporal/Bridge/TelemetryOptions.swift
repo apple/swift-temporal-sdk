@@ -93,7 +93,8 @@ extension TelemetryOptions.Logging.Filter {
     var temporalFilterString: String {
         let coreLevel = self.core.temporalLevel
         let otherLevel = self.other.temporalLevel
-        return "\(otherLevel),temporal_sdk_core=\(coreLevel),temporal_client=\(coreLevel),temporal_sdk=\(coreLevel)"
+        return
+            "\(otherLevel),temporalio_common=\(coreLevel),temporalio_sdk_core=\(coreLevel),temporalio_client=\(coreLevel),temporalio_sdk=\(coreLevel)"
     }
 }
 
