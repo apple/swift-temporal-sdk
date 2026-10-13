@@ -265,5 +265,35 @@ extension TestServerDependentTests {
                 try await handle.result()
             }
         }
+
+        @Test
+        func signalWithStartFinishedWorkflowThrowsAlreadyStartedError() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [SignalWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = UUID().uuidString
+                let options = WorkflowOptions(id: workflowID, taskQueue: taskQueue, idReusePolicy: .rejectDuplicate)
+
+                let handle = try await client.signalWithStartWorkflow(
+                    type: SignalWorkflow.self,
+                    options: options,
+                    signalType: SignalWorkflow.Signal.self,
+                    signalInput: SignalWorkflow.SignalScenario.updateState
+                )
+                try await handle.result()
+
+                // The reuse policy rejects starting a new run for the finished workflow ID
+                let error = await #expect(throws: WorkflowAlreadyStartedError.self) {
+                    try await client.signalWithStartWorkflow(
+                        type: SignalWorkflow.self,
+                        options: options,
+                        signalType: SignalWorkflow.Signal.self,
+                        signalInput: SignalWorkflow.SignalScenario.updateState
+                    )
+                }
+                #expect(error?.workflowID == workflowID)
+                #expect(error?.workflowName == SignalWorkflow.name)
+            }
+        }
     }
 }

@@ -36,7 +36,8 @@ extension TemporalClient.InterceptedService {
     ///   - input: The input parameters to pass to the workflow's execution method.
     /// - Returns: An ``UntypedWorkflowHandle`` for monitoring and controlling the started workflow.
     /// - Throws: ``WorkflowAlreadyStartedError`` if a workflow with the same ID is already
-    /// running (depending on ID reuse policy), or an error for other startup failures.
+    /// running (depending on the ID conflict policy) or has already finished (depending on the
+    /// ID reuse policy), or an error for other startup failures.
     package func startWorkflow<each Input: Sendable>(
         name: String,
         options: WorkflowOptions,
@@ -149,7 +150,8 @@ extension TemporalClient.InterceptedService {
     ///   - options: Configuration options controlling workflow execution behavior, timeouts, and policies.
     /// - Returns: An ``UntypedWorkflowHandle`` for monitoring and controlling the started workflow.
     /// - Throws: ``WorkflowAlreadyStartedError`` if a workflow with the same ID is already
-    /// running (depending on ID reuse policy), or an error for other startup failures.
+    /// running (depending on the ID conflict policy) or has already finished (depending on the
+    /// ID reuse policy), or an error for other startup failures.
     package func startWorkflow(
         name: String,
         options: WorkflowOptions
