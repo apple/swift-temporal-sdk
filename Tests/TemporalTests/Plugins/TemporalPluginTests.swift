@@ -45,4 +45,13 @@ struct TemporalPluginTests {
         #expect(asClient.name == "BothSidesPlugin")
         #expect(asWorker.name == "BothSidesPlugin")
     }
+
+    @Test
+    func simplePluginSatisfiesBothProtocols() {
+        let plugin = SimplePlugin(name: "my-org.simple")
+        let asClient: any ClientPlugin = plugin
+        let asWorker: any WorkerPlugin = plugin
+        #expect(asClient.name == "my-org.simple")
+        #expect(asWorker.name == "my-org.simple")
+    }
 }

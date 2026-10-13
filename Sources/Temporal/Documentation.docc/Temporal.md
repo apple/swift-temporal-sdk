@@ -77,6 +77,7 @@ Customize clients, workers, and replayers with reusable plugins.
 
 - ``ClientPlugin``
 - ``WorkerPlugin``
+- ``SimplePlugin``
 - ``TemporalPlugin``
 
 ## See Also
