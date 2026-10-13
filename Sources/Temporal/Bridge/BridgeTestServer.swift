@@ -197,31 +197,15 @@ package struct BridgeTestServer: ~Copyable, Sendable {
         testServerOptions: BridgeTestServer.TestServerOptions = .default,
         _ body: (borrowing BridgeTestServer, String) async throws -> Result
     ) async throws -> Result {
-        let (serverPointer, connectTarget): (UnsafeTransfer<OpaquePointer>, String) = try await withCheckedThrowingContinuation { continuation in
+        let (serverPointer, connectTarget) = try await Self.startServer { userData, callback in
             testServerOptions.withBridgeTestServerOptions { testServerOptions in
                 withUnsafePointer(to: testServerOptions) { testServerOptionsPointer in
-                    let continuationHolder = ContinuationHolder(continuation)
-                    let opaqueContinuationHolder = Unmanaged.passRetained(continuationHolder).toOpaque()
                     temporal_core_ephemeral_server_start_test_server(
                         Self.bridgeRuntime.runtime,
                         testServerOptionsPointer,
-                        opaqueContinuationHolder
-                    ) { userData, success, successTarget, fail in
-                        let continuation = Unmanaged<ContinuationHolder<(UnsafeTransfer<OpaquePointer>, String)>>
-                            .fromOpaque(userData!).takeRetainedValue().continuation
-                        if let fail {
-                            continuation.resume(throwing: BridgeError(messagePointer: fail))
-                        } else if let success, let successTarget {
-                            continuation.resume(
-                                returning: (
-                                    .init(wrapped: success),
-                                    String(byteArray: successTarget.pointee)
-                                )
-                            )
-                        } else {
-                            fatalError("Temporal Core SDK bug: No success or fail")
-                        }
-                    }
+                        userData,
+                        callback
+                    )
                 }
             }
         }
@@ -245,31 +229,15 @@ package struct BridgeTestServer: ~Copyable, Sendable {
         devServerOptions: BridgeTestServer.DevServerOptions = .default,
         _ body: (borrowing BridgeTestServer, String) async throws -> Result
     ) async throws -> Result {
-        let (serverPointer, connectTarget): (UnsafeTransfer<OpaquePointer>, String) = try await withCheckedThrowingContinuation { continuation in
+        let (serverPointer, connectTarget) = try await Self.startServer { userData, callback in
             devServerOptions.withBridgeDevServerOptions { devServerOptions in
                 withUnsafePointer(to: devServerOptions) { devServerOptionsPointer in
-                    let continuationHolder = ContinuationHolder(continuation)
-                    let opaqueContinuationHolder = Unmanaged.passRetained(continuationHolder).toOpaque()
                     temporal_core_ephemeral_server_start_dev_server(
                         Self.bridgeRuntime.runtime,
                         devServerOptionsPointer,
-                        opaqueContinuationHolder
-                    ) { userData, success, successTarget, fail in
-                        let continuation = Unmanaged<ContinuationHolder<(UnsafeTransfer<OpaquePointer>, String)>>
-                            .fromOpaque(userData!).takeRetainedValue().continuation
-                        if let fail {
-                            continuation.resume(throwing: BridgeError(messagePointer: fail))
-                        } else if let success, let successTarget {
-                            continuation.resume(
-                                returning: (
-                                    .init(wrapped: success),
-                                    String(byteArray: successTarget.pointee)
-                                )
-                            )
-                        } else {
-                            fatalError("Temporal Core SDK bug: No success or fail")
-                        }
-                    }
+                        userData,
+                        callback
+                    )
                 }
             }
         }
@@ -287,6 +255,53 @@ package struct BridgeTestServer: ~Copyable, Sendable {
         }
         try await bridgeTestServer.shutdown()
         return result
+    }
+
+    // Starts a server through one of Temporal Core SDK's start functions, retrying failed starts.
+    private static func startServer(
+        _ start: (UnsafeMutableRawPointer, TemporalCoreEphemeralServerStartCallback) -> Void
+    ) async throws -> (UnsafeTransfer<OpaquePointer>, String) {
+        try await Self.retryingStart {
+            try await withCheckedThrowingContinuation { continuation in
+                let continuationHolder = ContinuationHolder(continuation)
+                start(Unmanaged.passRetained(continuationHolder).toOpaque()) { userData, success, successTarget, fail in
+                    let continuation = Unmanaged<ContinuationHolder<(UnsafeTransfer<OpaquePointer>, String)>>
+                        .fromOpaque(userData!).takeRetainedValue().continuation
+                    if let fail {
+                        continuation.resume(throwing: BridgeError(messagePointer: fail))
+                    } else if let success, let successTarget {
+                        continuation.resume(
+                            returning: (
+                                .init(wrapped: success),
+                                String(byteArray: successTarget.pointee)
+                            )
+                        )
+                    } else {
+                        fatalError("Temporal Core SDK bug: No success or fail")
+                    }
+                }
+            }
+        }
+    }
+
+    // The Temporal Core SDK gives the server process five seconds to accept connections, which a loaded host, for example one running
+    // many test suites in parallel in CI, can exceed. Core kills the process of a failed start, so a retry launches a fresh
+    // process on a newly selected port.
+    // See: https://github.com/temporalio/sdk-rust/blob/9cb90f5a92c75167fe690a39c1ffd91f71a0fdfd/crates/sdk-core/src/ephemeral_server/mod.rs#L320
+    package static func retryingStart<Started>(
+        attempts: Int = 3,
+        delay: Duration = .milliseconds(250),
+        _ start: () async throws -> Started
+    ) async throws -> Started {
+        precondition(attempts > 0, "At least one start attempt is required")
+        for _ in 1..<attempts {
+            do {
+                return try await start()
+            } catch {
+                try await Task.sleep(for: delay)
+            }
+        }
+        return try await start()
     }
 
     private func shutdown() async throws {
