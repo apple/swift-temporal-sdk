@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import InMemoryLogging
 import Logging
-import Synchronization
 import Temporal
 import TemporalTestKit
 import Testing
@@ -83,15 +83,14 @@ extension TestServerDependentTests {
                 try await handle.signal(signalType: UnfinishedSignalWorkflow.WarnSignal.self)
                 try await handle.result()
 
-                let infoEntries = logHandler.entries.withLock { entries in
-                    entries.filter { $0.level == .info }
-                }
+                let infoEntries = logHandler.entries.filter { $0.level == .info }
                 let warningEntry = infoEntries.first {
                     "\($0.message)".contains("Workflow finished while signal or update handlers are still running")
                 }
 
                 #expect(warningEntry != nil, "Expected an unfinished handler warning at info level")
-                if let entry = warningEntry, let metadata = entry.metadata {
+                if let entry = warningEntry {
+                    let metadata = entry.metadata
                     let signalMeta = metadata["temporal.workflow.unfinished-signals"]
                     #expect(signalMeta != nil, "Expected signal metadata key")
                     if let signalMeta {
@@ -118,9 +117,7 @@ extension TestServerDependentTests {
                 try await handle.signal(signalType: UnfinishedSignalWorkflow.AbandonSignal.self)
                 try await handle.result()
 
-                let allMessages = logHandler.entries.withLock { entries in
-                    entries.map { "\($0.message)" }
-                }
+                let allMessages = logHandler.entries.map { "\($0.message)" }
                 let unfinishedWarning = allMessages.first {
                     $0.contains("Workflow finished while signal or update handlers are still running")
                 }
@@ -153,15 +150,14 @@ extension TestServerDependentTests {
                 )
                 try await handle.result()
 
-                let infoEntries = logHandler.entries.withLock { entries in
-                    entries.filter { $0.level == .info }
-                }
+                let infoEntries = logHandler.entries.filter { $0.level == .info }
                 let warningEntry = infoEntries.first {
                     "\($0.message)".contains("Workflow finished while signal or update handlers are still running")
                 }
 
                 #expect(warningEntry != nil, "Expected an unfinished handler warning at info level")
-                if let entry = warningEntry, let metadata = entry.metadata {
+                if let entry = warningEntry {
+                    let metadata = entry.metadata
                     let updateMeta = metadata["temporal.workflow.unfinished-updates"]
                     #expect(updateMeta != nil, "Expected update metadata key")
                     if let updateMeta {
@@ -192,9 +188,7 @@ extension TestServerDependentTests {
                 )
                 try await handle.result()
 
-                let allMessages = logHandler.entries.withLock { entries in
-                    entries.map { "\($0.message)" }
-                }
+                let allMessages = logHandler.entries.map { "\($0.message)" }
                 let unfinishedWarning = allMessages.first {
                     $0.contains("Workflow finished while signal or update handlers are still running")
                 }
