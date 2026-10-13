@@ -141,8 +141,8 @@ struct ClientOTelLoggingInterceptorTests {
             #expect(log2.level == .trace)
 
             // only check if the second log contains all metadata from the first log
-            let metadataKeys1 = try #require(log1.metadata.keys)
-            let metadataKeys2 = try #require(log2.metadata.keys)
+            let metadataKeys1 = log1.metadata.keys
+            let metadataKeys2 = log2.metadata.keys
             #expect(Set(metadataKeys2).isSuperset(of: Set(metadataKeys1)))
             // check additional response header
             let responseHeader = try #require(log2.metadata["rpc.grpc.response.metadata.test-key"])
