@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import GRPCCore
+import InMemoryLogging
 import Logging
 import OTelSemanticConventions
-import Synchronization
 import Temporal
 import TemporalInstrumentation
 import TemporalTestKit
@@ -27,15 +27,15 @@ struct ClientOTelLoggingInterceptorTests {
     @Test
     func loggingClientInterceptorNew() async throws {
         // in-memory log handler
-        let logHandler = InMemoryLogHandler(
-            metadataProvider: .init {
-                [
-                    // Fake log correlation via traceId and spanId
-                    "trace_id": "1234",
-                    "span_id": "5678",
-                ]
-            }
-        )
+        var logHandler = InMemoryLogHandler()
+        logHandler.logLevel = .trace
+        logHandler.metadataProvider = .init {
+            [
+                // Fake log correlation via traceId and spanId
+                "trace_id": "1234",
+                "span_id": "5678",
+            ]
+        }
 
         let logger = Logger(label: "ClientGRPCInterceptor") { _ in logHandler }
 
@@ -94,7 +94,8 @@ struct ClientOTelLoggingInterceptorTests {
             return
         }
 
-        try logHandler.entries.withLock { entries in
+        do {
+            let entries = logHandler.entries
             // Exactly two log entries should exist
             #expect(entries.count == 2)
 
@@ -102,39 +103,38 @@ struct ClientOTelLoggingInterceptorTests {
             let log1 = try #require(entries.first)
 
             #expect(log1.level == .trace)
-            #expect(log1.source == "TemporalInstrumentation")
             #expect(log1.message == "Invoking RPC")
 
             // check association with trace and span id
-            let traceId = try #require(log1.metadata?["trace_id"])
+            let traceId = try #require(log1.metadata["trace_id"])
             #expect(traceId == "1234")
-            let spanId = try #require(log1.metadata?["span_id"])
+            let spanId = try #require(log1.metadata["span_id"])
             #expect(spanId == "5678")
 
             // rpc metadata
-            let rpcSystem = try #require(log1.metadata?["rpc.system"])
+            let rpcSystem = try #require(log1.metadata["rpc.system"])
             #expect(rpcSystem == "grpc")
-            let rpcServiceName = try #require(log1.metadata?["rpc.service"])
+            let rpcServiceName = try #require(log1.metadata["rpc.service"])
             #expect(rpcServiceName == .string(descriptor.service.fullyQualifiedService))
-            let rpcMethodName = try #require(log1.metadata?["rpc.method"])
+            let rpcMethodName = try #require(log1.metadata["rpc.method"])
             #expect(rpcMethodName == .string(descriptor.method))
 
             // network metadata
-            let type = try #require(log1.metadata?["network.type"])
+            let type = try #require(log1.metadata["network.type"])
             #expect(type == "ipv4")
-            let transport = try #require(log1.metadata?["network.transport"])
+            let transport = try #require(log1.metadata["network.transport"])
             #expect(transport == .string(transport.description))
-            let networkLocalAddress = try #require(log1.metadata?["network.local.address"])
+            let networkLocalAddress = try #require(log1.metadata["network.local.address"])
             #expect(networkLocalAddress == .string(String(localPeer.split(separator: ":").dropFirst().first!)))
-            let networkLocalPort = try #require(log1.metadata?["network.local.port"])
+            let networkLocalPort = try #require(log1.metadata["network.local.port"])
             #expect(networkLocalPort == .string(String(localPeer.split(separator: ":").dropFirst().dropFirst().first!)))
-            let networkRemoteAddress = try #require(log1.metadata?["network.peer.address"])
+            let networkRemoteAddress = try #require(log1.metadata["network.peer.address"])
             #expect(networkRemoteAddress == .string(String(remotePeer.split(separator: ":").dropFirst().first!)))
-            let networkRemotePort = try #require(log1.metadata?["network.peer.port"])
+            let networkRemotePort = try #require(log1.metadata["network.peer.port"])
             #expect(networkRemotePort == .string(String(remotePeer.split(separator: ":").dropFirst().dropFirst().first!)))
-            let serverAddress = try #require(log1.metadata?["server.address"])
+            let serverAddress = try #require(log1.metadata["server.address"])
             #expect(serverAddress == serverAddress)
-            let serverPort = try #require(log1.metadata?["server.port"])
+            let serverPort = try #require(log1.metadata["server.port"])
             #expect(serverPort == .string(String(remotePeer.split(separator: ":").dropFirst().dropFirst().first!)))
 
             // Second "accept RPC" log
@@ -143,11 +143,11 @@ struct ClientOTelLoggingInterceptorTests {
             #expect(log2.level == .trace)
 
             // only check if the second log contains all metadata from the first log
-            let metadataKeys1 = try #require(log1.metadata?.keys)
-            let metadataKeys2 = try #require(log2.metadata?.keys)
+            let metadataKeys1 = try #require(log1.metadata.keys)
+            let metadataKeys2 = try #require(log2.metadata.keys)
             #expect(Set(metadataKeys2).isSuperset(of: Set(metadataKeys1)))
             // check additional response header
-            let responseHeader = try #require(log2.metadata?["rpc.grpc.response.metadata.test-key"])
+            let responseHeader = try #require(log2.metadata["rpc.grpc.response.metadata.test-key"])
             #expect(responseHeader == "test-value")
         }
     }
@@ -155,15 +155,15 @@ struct ClientOTelLoggingInterceptorTests {
     @Test
     func loggingClientInterceptorFailure() async throws {
         // in-memory log handler
-        let logHandler = InMemoryLogHandler(
-            metadataProvider: .init {
-                [
-                    // Fake log correlation via traceId and spanId
-                    "trace_id": "1234",
-                    "span_id": "5678",
-                ]
-            }
-        )
+        var logHandler = InMemoryLogHandler()
+        logHandler.logLevel = .trace
+        logHandler.metadataProvider = .init {
+            [
+                // Fake log correlation via traceId and spanId
+                "trace_id": "1234",
+                "span_id": "5678",
+            ]
+        }
 
         let logger = Logger(label: "ClientGRPCInterceptor") { _ in logHandler }
 
@@ -210,7 +210,8 @@ struct ClientOTelLoggingInterceptorTests {
             return
         }
 
-        try logHandler.entries.withLock { entries in
+        do {
+            let entries = logHandler.entries
             // Exactly two log entries should exist
             #expect(entries.count == 2)
 
@@ -218,21 +219,20 @@ struct ClientOTelLoggingInterceptorTests {
             let log1 = try #require(entries.first)
 
             #expect(log1.level == .trace)
-            #expect(log1.source == "TemporalInstrumentation")
             #expect(log1.message == "Invoking RPC")
 
             // check association with trace and span id
-            let traceId = try #require(log1.metadata?["trace_id"])
+            let traceId = try #require(log1.metadata["trace_id"])
             #expect(traceId == "1234")
-            let spanId = try #require(log1.metadata?["span_id"])
+            let spanId = try #require(log1.metadata["span_id"])
             #expect(spanId == "5678")
 
             // rpc metadata
-            let rpcSystem = try #require(log1.metadata?["rpc.system"])
+            let rpcSystem = try #require(log1.metadata["rpc.system"])
             #expect(rpcSystem == "grpc")
-            let rpcServiceName = try #require(log1.metadata?["rpc.service"])
+            let rpcServiceName = try #require(log1.metadata["rpc.service"])
             #expect(rpcServiceName == .string(descriptor.service.fullyQualifiedService))
-            let rpcMethodName = try #require(log1.metadata?["rpc.method"])
+            let rpcMethodName = try #require(log1.metadata["rpc.method"])
             #expect(rpcMethodName == .string(descriptor.method))
 
             // Second "rejected RPC" log
@@ -241,15 +241,15 @@ struct ClientOTelLoggingInterceptorTests {
             #expect(log2.level == .info)  // info level for failure, except cancellation error
 
             // error descriptions
-            let grpcStatusCode = try #require(log2.metadata?["rpc.grpc.status_code"])
+            let grpcStatusCode = try #require(log2.metadata["rpc.grpc.status_code"])
             #expect(grpcStatusCode == .string(GRPCCore.Status.Code.aborted.description))
-            let exceptionType = try #require(log2.metadata?["exception.type"])
+            let exceptionType = try #require(log2.metadata["exception.type"])
             #expect(exceptionType == "RPCError")
-            let exceptionMessage = try #require(log2.metadata?["exception.message"])
+            let exceptionMessage = try #require(log2.metadata["exception.message"])
             #expect(exceptionMessage == "Test failure")
-            let exceptionStacktrace = try #require(log2.metadata?["exception.stacktrace"])
+            let exceptionStacktrace = try #require(log2.metadata["exception.stacktrace"])
             #expect(exceptionStacktrace == "TestError()")
-            let metadata = try #require(log2.metadata?["rpc.grpc.response.metadata.test-key-error"])
+            let metadata = try #require(log2.metadata["rpc.grpc.response.metadata.test-key-error"])
             #expect(metadata == "test-value-error")
         }
     }
