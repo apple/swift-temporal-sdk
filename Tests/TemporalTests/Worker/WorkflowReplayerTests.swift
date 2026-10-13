@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import InMemoryLogging
 import Logging
-import Synchronization
 import Temporal
 import TemporalTestKit
 import Testing
@@ -156,7 +156,7 @@ extension TestServerDependentTests {
         func replayDoesNotEmitWorkflowLogsByDefault() async throws {
             let handler = try await Self.replayLoggingWorkflow(enableLoggingInReplay: false)
 
-            let entries = handler.entries.withLock { $0 }
+            let entries = handler.entries
             #expect(
                 !entries.contains(where: { event in
                     event.message == LoggingWorkflow.logMessage
@@ -168,7 +168,7 @@ extension TestServerDependentTests {
         func replayEmitsWorkflowLogsWhenEnabled() async throws {
             let handler = try await Self.replayLoggingWorkflow(enableLoggingInReplay: true)
 
-            let entries = handler.entries.withLock { $0 }
+            let entries = handler.entries
             #expect(
                 entries.contains(where: { event in
                     event.message == LoggingWorkflow.logMessage
