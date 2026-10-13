@@ -44,14 +44,15 @@ extension WorkflowReplayer {
         /// The plugins that customize this replayer before it starts replaying.
         ///
         /// Each plugin's ``WorkerPlugin/configureReplayer(_:)`` runs against this configuration, in
-        /// array order, when the replayer is created. See ``WorkerPlugin``.
+        /// array order, when the replayer is created, and the plugins' workflows are appended to
+        /// ``workflows``. See ``WorkerPlugin``.
         public var plugins: [any WorkerPlugin]
 
         /// Creates a new replayer configuration.
         ///
         /// - Parameters:
-        ///   - workflows: The workflow types to register for replay. At least one workflow
-        ///     must be registered before creating a replayer.
+        ///   - workflows: The workflow types to register for replay. A replayer needs at least one,
+        ///     here or from a plugin.
         ///   - namespace: The namespace for replay context. Defaults to `"ReplayNamespace"`.
         ///   - taskQueue: The task queue for replay context. Defaults to `"ReplayTaskQueue"`.
         ///   - dataConverter: The data converter for payload serialization. Defaults to

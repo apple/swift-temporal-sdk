@@ -44,10 +44,15 @@ public final class WorkflowReplayer: Sendable {
 
     /// Creates a new workflow replayer with the given configuration.
     ///
-    /// At least one workflow must be registered in the configuration.
+    /// At least one workflow must be registered, either in ``Configuration/workflows`` or by a plugin
+    /// set on ``Configuration/plugins``.
     ///
     /// - Parameter configuration: The configuration specifying which workflows to replay
     ///   and how to process them.
+    ///
+    /// - Warning: Registrations are not deduplicated, so a workflow name in
+    ///   ``Configuration/workflows`` that a plugin also registers makes
+    ///   ``replayWorkflow(history:throwOnReplayFailure:)`` throw.
     public init(configuration: Configuration) {
         var configuration = configuration
         configuration.applyPlugins()

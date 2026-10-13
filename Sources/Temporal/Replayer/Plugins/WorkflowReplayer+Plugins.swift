@@ -15,7 +15,8 @@
 internal import Logging
 
 extension WorkflowReplayer.Configuration {
-    /// Applies ``WorkflowReplayer/Configuration/plugins`` to this configuration, in order.
+    /// Applies ``WorkflowReplayer/Configuration/plugins`` to this configuration, in order, then
+    /// appends their ``WorkerPlugin/workflows`` to ``WorkflowReplayer/Configuration/workflows``.
     ///
     /// Each plugin's ``WorkerPlugin/configureReplayer(_:)`` sees the changes made by the plugins
     /// before it. The plugin list is captured before the first plugin runs and restored afterward,
@@ -25,7 +26,7 @@ extension WorkflowReplayer.Configuration {
     /// Called by ``WorkflowReplayer/init(configuration:)``.
     ///
     /// - Note: Call this once per configuration value. Calling it again re-runs every plugin and
-    ///   duplicates anything they append, such as interceptors.
+    ///   duplicates anything they append, such as interceptors and workflows.
     package mutating func applyPlugins() {
         let plugins = self.plugins
         // Read once, so every entry goes through the same logger even if a plugin replaces it.
@@ -34,6 +35,7 @@ extension WorkflowReplayer.Configuration {
             logger.debug("Applying replayer plugin", metadata: [LoggingKeys.pluginName: "\(plugin.name)"])
             plugin.configureReplayer(&self)
         }
+        self.workflows += plugins.flatMap(\.workflows)
         self.plugins = plugins
     }
 }

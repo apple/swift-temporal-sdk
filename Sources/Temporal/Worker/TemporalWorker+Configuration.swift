@@ -372,7 +372,8 @@ extension TemporalWorker {
         /// The plugins that customize this worker before it starts.
         ///
         /// Each plugin's ``WorkerPlugin/configureWorker(_:)`` runs against this configuration, in array
-        /// order, when the worker is created. See ``WorkerPlugin``.
+        /// order, when the worker is created, and the plugins' activities and workflows are registered
+        /// with it. See ``WorkerPlugin``.
         public var plugins: [any WorkerPlugin] = []
 
         /// Creates a Temporal worker configuration with the specified parameters.
