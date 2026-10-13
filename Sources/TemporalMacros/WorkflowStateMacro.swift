@@ -323,16 +323,7 @@ extension AccessorBlockSyntax {
 
 extension AccessorDeclSyntax {
     func locationAnnotated(context: some MacroExpansionContext) -> AccessorDeclSyntax {
-        return AccessorDeclSyntax(
-            leadingTrivia: leadingTrivia,
-            attributes: attributes,
-            modifier: modifier,
-            accessorSpecifier: accessorSpecifier,
-            parameters: parameters,
-            effectSpecifiers: effectSpecifiers,
-            body: body?.locationAnnotated(context: context),
-            trailingTrivia: trailingTrivia
-        )
+        return with(\.body, body?.locationAnnotated(context: context))
     }
 }
 
