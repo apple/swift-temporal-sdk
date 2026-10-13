@@ -93,6 +93,9 @@ public final class TemporalClient: Sendable {
 
     /// Creates a new Temporal client with the specified gRPC client and configuration.
     ///
+    /// Plugins aren't applied here, because the public entry points that call this have already
+    /// applied them.
+    ///
     /// - Parameters:
     ///   - client: The gRPC client used for network communication.
     ///   - configuration: The configuration settings for the Temporal client.
@@ -148,6 +151,8 @@ public final class TemporalClient: Sendable {
 
     /// Creates and manages a lifetime-scoped Temporal client that executes the provided closure.
     ///
+    /// The configuration's ``TemporalClient/Configuration/plugins`` are applied first, in order.
+    ///
     /// - Note: grpc-swift’s `ClientTransport` provides an option to configure an additional retry *throttling* policy via `ClientTransport/retryThrottle`, applicable to all retryable status codes.
     /// This throttling mechanism works in conjunction with the retry logic implemented in ``TemporalClient`` and can help reduce server load during periods of high request failure rates.
     ///
@@ -168,7 +173,9 @@ public final class TemporalClient: Sendable {
         logger: Logger = Logger(label: "NoOpLogger", factory: { _ in SwiftLogNoOpLogHandler() }),
         _ body: (TemporalClient) async throws -> sending Result
     ) async throws -> sending Result {
-        try await withGRPCClient(
+        var configuration = configuration
+        configuration.applyPlugins(logger: logger)
+        return try await withGRPCClient(
             transport: transport,
             interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger),
             isolation: #isolation

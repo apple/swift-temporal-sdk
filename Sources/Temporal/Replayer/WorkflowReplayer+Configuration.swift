@@ -41,6 +41,12 @@ extension WorkflowReplayer {
         /// produce nothing. Enable it to follow a workflow's own logging through the replay.
         public var enableLoggingInReplay: Bool
 
+        /// The plugins that customize this replayer before it starts replaying.
+        ///
+        /// Each plugin's ``WorkerPlugin/configureReplayer(_:)`` runs against this configuration, in
+        /// array order, when the replayer is created. See ``WorkerPlugin``.
+        public var plugins: [any WorkerPlugin]
+
         /// Creates a new replayer configuration.
         ///
         /// - Parameters:
@@ -56,6 +62,7 @@ extension WorkflowReplayer {
         ///     `"WorkflowReplayer"`.
         ///   - enableLoggingInReplay: Whether the workflow logger keeps emitting records during replay.
         ///     Defaults to `false`.
+        ///   - plugins: The plugins to apply when the replayer is created. Defaults to none.
         public init(
             workflows: [any WorkflowDefinition.Type] = [],
             namespace: String = "ReplayNamespace",
@@ -63,7 +70,8 @@ extension WorkflowReplayer {
             dataConverter: DataConverter = .default,
             interceptors: [any WorkerInterceptor] = [],
             logger: Logger = Logger(label: "WorkflowReplayer"),
-            enableLoggingInReplay: Bool = false
+            enableLoggingInReplay: Bool = false,
+            plugins: [any WorkerPlugin] = []
         ) {
             self.workflows = workflows
             self.namespace = namespace
@@ -72,6 +80,7 @@ extension WorkflowReplayer {
             self.interceptors = interceptors
             self.logger = logger
             self.enableLoggingInReplay = enableLoggingInReplay
+            self.plugins = plugins
         }
     }
 }

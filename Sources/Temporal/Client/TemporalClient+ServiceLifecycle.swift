@@ -24,6 +24,8 @@ extension TemporalClient: Service {
     /// which provides automatic lifecycle management, this initializer requires manual management of
     /// the client's lifecycle through the `Service` protocol methods.
     ///
+    /// The configuration's ``TemporalClient/Configuration/plugins`` are applied here, in order.
+    ///
     /// - Important: Simply instantiating the client is not sufficient to perform requests.
     ///   You must call ``run()`` and manage the lifecycle properly for the client to function.
     ///
@@ -36,6 +38,9 @@ extension TemporalClient: Service {
         configuration: TemporalClient.Configuration,
         logger: Logger = Logger(label: "NoOpLogger", factory: { _ in SwiftLogNoOpLogHandler() })
     ) {
+        var configuration = configuration
+        configuration.applyPlugins(logger: logger)
+
         let grpcClient = GRPCClient(
             transport: transport,
             interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger)

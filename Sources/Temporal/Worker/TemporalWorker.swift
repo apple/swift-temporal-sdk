@@ -95,6 +95,9 @@ public final class TemporalWorker: Service, Sendable {
         workflows: [any WorkflowDefinition.Type] = [],
         logger: Logger
     ) {
+        var configuration = configuration
+        configuration.applyPlugins(logger: logger)
+
         self.implementation = GenericTemporalWorker(
             configuration: configuration,
             transport: transport,
