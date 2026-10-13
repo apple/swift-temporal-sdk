@@ -27,3 +27,23 @@ extension TemporalClient.Configuration {
         self.plugins = plugins
     }
 }
+
+/// Wraps `body` in each plugin's ``ClientPlugin/connectClient(configuration:next:)``.
+///
+/// It recurses instead of using `reduce`, so `body` can stay non-escaping.
+package nonisolated(nonsending) func applyClientConnectChain<R: Sendable>(
+    plugins: ArraySlice<any ClientPlugin>,
+    configuration: TemporalClient.Configuration,
+    body: nonisolated(nonsending) () async throws -> sending R
+) async throws -> sending R {
+    guard let plugin = plugins.first else {
+        return try await body()
+    }
+    return try await plugin.connectClient(configuration: configuration) {
+        try await applyClientConnectChain(
+            plugins: plugins.dropFirst(),
+            configuration: configuration,
+            body: body
+        )
+    }
+}

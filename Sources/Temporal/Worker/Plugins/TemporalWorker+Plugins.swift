@@ -27,3 +27,22 @@ extension TemporalWorker.Configuration {
         self.plugins = plugins
     }
 }
+
+/// Wraps `body` in each plugin's ``WorkerPlugin/runWorker(configuration:next:)``.
+package nonisolated(nonsending) func applyWorkerRunChain(
+    plugins: ArraySlice<any WorkerPlugin>,
+    configuration: TemporalWorker.Configuration,
+    body: nonisolated(nonsending) () async throws -> Void
+) async throws {
+    guard let plugin = plugins.first else {
+        try await body()
+        return
+    }
+    try await plugin.runWorker(configuration: configuration) {
+        try await applyWorkerRunChain(
+            plugins: plugins.dropFirst(),
+            configuration: configuration,
+            body: body
+        )
+    }
+}

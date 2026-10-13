@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// A plugin that customizes a ``TemporalWorker`` before it starts and a ``WorkflowReplayer`` before
-/// it replays.
+/// it replays, and can wrap the worker's run and each replay.
 ///
 /// Each plugin's ``configureWorker(_:)`` runs against the ``TemporalWorker/Configuration`` before
 /// the worker starts, in the order the plugins appear in ``TemporalWorker/Configuration/plugins``.
@@ -75,6 +75,44 @@ public protocol WorkerPlugin: TemporalPlugin {
     ///
     /// - Parameter configuration: The replayer configuration to customize.
     func configureReplayer(_ configuration: inout WorkflowReplayer.Configuration)
+
+    /// Wraps the run of a worker.
+    ///
+    /// Implementations must invoke `next` exactly once, and throw when it throws. The default
+    /// implementation only calls `next`. A worker's run only ends by throwing, usually a
+    /// `CancellationError` on shutdown. When several plugins are set, the first in
+    /// ``TemporalWorker/Configuration/plugins`` is the outermost wrap.
+    ///
+    /// - Important: Copy this signature exactly, including `nonisolated(nonsending)`. Otherwise the
+    ///   default implementation can silently run instead.
+    ///
+    /// - Parameters:
+    ///   - configuration: The configuration after every plugin's ``configureWorker(_:)`` has run.
+    ///   - next: Runs the rest of the plugin chain and then the worker.
+    nonisolated(nonsending) func runWorker(
+        configuration: TemporalWorker.Configuration,
+        next: nonisolated(nonsending) () async throws -> Void
+    ) async throws
+
+    /// Wraps a single replay.
+    ///
+    /// Implementations must invoke `next` exactly once and return the value it produces. The
+    /// default implementation only calls `next`.
+    /// ``WorkflowReplayer/replayWorkflows(histories:throwOnReplayFailure:)`` calls this once per
+    /// history, so setup inside the wrap repeats for each one. When several plugins are set, the
+    /// first in ``WorkflowReplayer/Configuration/plugins`` is the outermost wrap.
+    ///
+    /// - Important: Copy this signature exactly, including `nonisolated(nonsending)` and both
+    ///   `sending` keywords. Otherwise the default implementation can silently run instead.
+    ///
+    /// - Parameters:
+    ///   - configuration: The configuration after every plugin's ``configureReplayer(_:)`` has run.
+    ///   - next: Runs the rest of the plugin chain and then the replay.
+    /// - Returns: The value produced by `next`.
+    nonisolated(nonsending) func runReplayer<R: Sendable>(
+        configuration: WorkflowReplayer.Configuration,
+        next: nonisolated(nonsending) () async throws -> sending R
+    ) async throws -> sending R
 }
 
 extension WorkerPlugin {
@@ -85,4 +123,18 @@ extension WorkerPlugin {
     public func configureWorker(_ configuration: inout TemporalWorker.Configuration) {}
 
     public func configureReplayer(_ configuration: inout WorkflowReplayer.Configuration) {}
+
+    public nonisolated(nonsending) func runWorker(
+        configuration: TemporalWorker.Configuration,
+        next: nonisolated(nonsending) () async throws -> Void
+    ) async throws {
+        try await next()
+    }
+
+    public nonisolated(nonsending) func runReplayer<R: Sendable>(
+        configuration: WorkflowReplayer.Configuration,
+        next: nonisolated(nonsending) () async throws -> sending R
+    ) async throws -> sending R {
+        try await next()
+    }
 }
