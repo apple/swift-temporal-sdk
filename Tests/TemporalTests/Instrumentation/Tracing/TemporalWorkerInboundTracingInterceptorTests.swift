@@ -14,6 +14,7 @@
 
 import Foundation
 import Logging
+import ServiceContextModule
 import SwiftProtobuf
 import Temporal
 import Testing

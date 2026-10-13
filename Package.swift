@@ -43,6 +43,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.6.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.7.0"),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.2.0"),
+        .package(url: "https://github.com/apple/swift-service-context.git", from: "1.0.0"),
         .package(url: "https://github.com/swift-otel/swift-otel-semantic-conventions.git", from: "1.34.2"),
         .package(url: "https://github.com/apple/swift-certificates.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
@@ -78,6 +79,7 @@ let package = Package(
                 .product(name: "GRPCCore", package: "grpc-swift-2"),
                 .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
                 .product(name: "GRPCOTelTracingInterceptors", package: "grpc-swift-extras"),
+                .product(name: "ServiceContextModule", package: "swift-service-context"),
                 .product(name: "GRPCServiceLifecycle", package: "grpc-swift-extras"),
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
                 .product(name: "Configuration", package: "swift-configuration"),
@@ -254,6 +256,7 @@ let package = Package(
                 "Temporal",
                 "TemporalTestKit",
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
+                .product(name: "ServiceContextModule", package: "swift-service-context"),
             ],
             resources: [
                 .copy("Worker/Histories")
