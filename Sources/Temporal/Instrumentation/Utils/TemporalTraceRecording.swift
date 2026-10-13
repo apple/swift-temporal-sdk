@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import ServiceContextModule
 import Tracing
 
 struct TemporalTraceRecording {
