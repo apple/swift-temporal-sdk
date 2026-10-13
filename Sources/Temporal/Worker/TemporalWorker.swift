@@ -78,6 +78,9 @@ public final class TemporalWorker: Service, Sendable {
     ///
     /// The worker automatically sets up gRPC client interceptors for tracing, metrics, and logging.
     ///
+    /// Activities and workflows from plugins set on ``Configuration/plugins`` are registered
+    /// alongside the ones passed here.
+    ///
     /// - Parameters:
     ///   - configuration: The worker configuration including namespace, task queue, and
     ///   operational settings.
@@ -87,6 +90,9 @@ public final class TemporalWorker: Service, Sendable {
     ///   - activities: Additional standalone activity definitions to register alongside container
     ///   activities.
     ///   - workflows: The workflow types to register with this worker for task processing.
+    ///
+    /// - Warning: Registrations are not deduplicated, so passing an activity or workflow whose name a
+    ///   plugin also registers is an error.
     public init<each Container: ActivityContainer, Transport: ClientTransport>(
         configuration: Configuration,
         transport: Transport,
@@ -101,8 +107,8 @@ public final class TemporalWorker: Service, Sendable {
             configuration: configuration,
             transport: transport,
             activityContainers: repeat each activityContainers,
-            activities: activities,
-            workflows: workflows
+            activities: activities + configuration.plugins.flatMap(\.activities),
+            workflows: workflows + configuration.plugins.flatMap(\.workflows)
         )
     }
 
