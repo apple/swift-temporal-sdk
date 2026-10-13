@@ -94,6 +94,9 @@ public final class TemporalWorker: Service, Sendable {
         activities: [any ActivityDefinition] = [],
         workflows: [any WorkflowDefinition.Type] = []
     ) {
+        var configuration = configuration
+        configuration.applyPlugins()
+
         self.implementation = GenericTemporalWorker(
             configuration: configuration,
             transport: transport,
@@ -124,7 +127,7 @@ public final class TemporalWorker: Service, Sendable {
             application's entry point.
             """
     )
-    public init<each Container: ActivityContainer, Transport: ClientTransport>(
+    public convenience init<each Container: ActivityContainer, Transport: ClientTransport>(
         configuration: Configuration,
         transport: Transport,
         activityContainers: repeat each Container,
@@ -132,7 +135,7 @@ public final class TemporalWorker: Service, Sendable {
         workflows: [any WorkflowDefinition.Type] = [],
         logger: Logger
     ) {
-        self.implementation = GenericTemporalWorker(
+        self.init(
             configuration: configuration,
             transport: transport,
             activityContainers: repeat each activityContainers,

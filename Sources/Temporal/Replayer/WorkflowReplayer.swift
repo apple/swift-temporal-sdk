@@ -49,6 +49,8 @@ public final class WorkflowReplayer: Sendable {
     /// - Parameter configuration: The configuration specifying which workflows to replay
     ///   and how to process them.
     public init(configuration: Configuration) {
+        var configuration = configuration
+        configuration.applyPlugins()
         precondition(
             !configuration.workflows.isEmpty,
             "At least one workflow must be registered with the replayer"

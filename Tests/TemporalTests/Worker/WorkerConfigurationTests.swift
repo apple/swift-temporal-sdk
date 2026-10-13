@@ -16,6 +16,8 @@ import Configuration
 import Temporal
 import Testing
 
+private struct SentinelPlugin: WorkerPlugin {}
+
 @Suite
 struct WorkerConfigurationTests {
     @Test
@@ -42,7 +44,8 @@ struct WorkerConfigurationTests {
         let config = try TemporalWorker.Configuration(
             configReader:
                 container
-                .scoped(to: "temporal")  // scope container to `temporal` prefix
+                .scoped(to: "temporal"),  // scope container to `temporal` prefix
+            plugins: [SentinelPlugin()]
         )
 
         #expect(config.namespace == namespace)
@@ -50,6 +53,7 @@ struct WorkerConfigurationTests {
         #expect(config.clientIdentity == clientIdentity)
         #expect(config.instrumentation.serverHostname == clientServerHostname)
         #expect(config.interceptors.count == 1)  // default tracing interceptor
+        #expect(config.plugins.first is SentinelPlugin)
         guard case .none(let noneParameters) = config.versioningStrategy.kind else {
             Issue.record("Expected `.none` versioning strategy, got: \(config.versioningStrategy)")
             return

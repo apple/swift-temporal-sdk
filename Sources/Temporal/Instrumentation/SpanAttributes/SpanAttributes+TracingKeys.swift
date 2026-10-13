@@ -126,4 +126,6 @@ package enum TemporalTracingKeys: Hashable, Sendable {
     package static let activityHeartbeatDetails = "temporal.activity.heartbeat.details"
     package static let activityHeartbeatLastDetails = "temporal.activity.heartbeat.last-details"
     package static let activityFailCause = "temporal.activity.fail-cause"
+
+    package static let pluginName = "temporal.plugin.name"
 }
