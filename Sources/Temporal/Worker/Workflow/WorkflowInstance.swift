@@ -60,10 +60,6 @@ struct WorkflowInstance: Sendable {
     private let implementation: Implementation
     /// The workflow outbound interceptor chain.
     private let outboundInterceptors: [any WorkflowOutboundInterceptor]
-    /// The workflow instance logger.
-    private let logger: Logger
-    /// The logger handed to workflow code, which drops records while replaying.
-    private let workflowLogger: Logger
 
     init<WorkflowWorker: WorkflowWorkerProtocol>(
         workflowWorker: WorkflowWorker,
@@ -71,8 +67,6 @@ struct WorkflowInstance: Sendable {
         namespace: String,
         payloadConverter: any PayloadConverter,
         failureConverter: any FailureConverter,
-        logger: Logger,
-        enableLoggingInReplay: Bool = false
     ) {
         self.workflowWorkerCompleteWorkflowActivation = workflowWorker.completeWorkflowActivation
         self.taskQueue = taskQueue
@@ -85,6 +79,7 @@ struct WorkflowInstance: Sendable {
             payloadConverter: payloadConverter,
             failureConverter: failureConverter
         )
+
         var inboundInterceptors = [any WorkflowInboundInterceptor]()
         var outboundInterceptors = [any WorkflowOutboundInterceptor]()
         for interceptor in workflowWorker.interceptors {
@@ -97,19 +92,13 @@ struct WorkflowInstance: Sendable {
         }
         self.implementation = .init(interceptors: inboundInterceptors, executor: self.executor)
         self.outboundInterceptors = outboundInterceptors
-        self.logger = logger
-
-        var workflowLogger = logger
-        if !enableLoggingInReplay {
-            workflowLogger.handler = ReplayAwareLogHandler(underlying: logger.handler)
-        }
-        self.workflowLogger = workflowLogger
     }
 
     func run<Workflow: WorkflowDefinition>(
         workflowType: Workflow.Type,
         activations: some AsyncSequence<Coresdk.WorkflowActivation.WorkflowActivation, Never>
     ) async throws {
+        let logger = Logger.current
         var activationsIterator = activations.makeAsyncIterator()
 
         guard let activation = await activationsIterator.next(isolation: #isolation) else {
@@ -186,7 +175,7 @@ struct WorkflowInstance: Sendable {
             try await self.completeActivation(activation: activation)
 
             // The following does steps 2-6 for every new activation
-            self.logger.trace("Waiting for next activation")
+            logger.trace("Waiting for next activation")
             while let activation = await activationsIterator.next(isolation: #isolation) {
                 updateActivation(activation)
 
@@ -209,7 +198,7 @@ struct WorkflowInstance: Sendable {
             // If we arrive here it means our workflow is removed from the cache and
             // we need to clean up our state i.e. cancel the workflow's run method and
             // all handlers.
-            self.logger.trace("No more activations. Cancelling task group")
+            logger.trace("No more activations. Cancelling task group")
             // Cancelling is also modifying the state machine through continuations
             Self.$isOnWorkflowInstance.withValue(true) {
                 group.cancelAll()
@@ -268,7 +257,6 @@ struct WorkflowInstance: Sendable {
             ),
             payloadConverter: self.payloadConverter,
             outboundInterceptors: self.outboundInterceptors,
-            logger: self.workflowLogger,
         )
 
         let workflowStateBox = ArcBox(Workflow(input: input))
@@ -294,8 +282,9 @@ struct WorkflowInstance: Sendable {
         input: WorkflowTaskExecutorIsolatedBox<Workflow.Input>,
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
+        let logger = Logger.current
         group.addTask(executorPreference: self.executor) {
-            self.logger.trace("Intercepting workflow")
+            logger.trace("Intercepting workflow")
             let workflow = executionState.workflowStateBox.value
             let workflowResult = await Result {
                 // Context is not frozen during normal workflow execution
@@ -317,7 +306,7 @@ struct WorkflowInstance: Sendable {
 
             switch workflowResult {
             case .success(let output):
-                self.logger.trace("Workflow finished")
+                logger.trace("Workflow finished")
                 let dataConversionResult = await Result { () async throws -> Api.Common.V1.Payload in
                     try self.payloadConverter.convertValueHandlingVoid(output)
                 }
@@ -329,7 +318,7 @@ struct WorkflowInstance: Sendable {
                     self.stateMachine.workflowTaskFailed(failure: failure)
                 }
             case .failure(let error):
-                self.logger.trace(
+                logger.trace(
                     "Workflow failed",
                     metadata: [
                         LoggingKeys.errorType: "\(type(of: error))",
@@ -505,28 +494,29 @@ struct WorkflowInstance: Sendable {
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
         group.addTask(executorPreference: self.executor) {
-            let workflow = executionState.workflowStateBox.value
-            guard let signal = Workflow.signals.first(where: { $0.name == signalWorkflow.signalName }) else {
-                self.logger.error(
-                    "No signal handler found",
-                    metadata: [LoggingKeys.workflowSignalName: "\(signalWorkflow.signalName)"]
-                )
-                return
-            }
+            await withLogger(mergingMetadata: [
+                LoggingKeys.workflowSignalName: "\(signalWorkflow.signalName)"
+            ]) { logger in
+                let workflow = executionState.workflowStateBox.value
+                guard let signal = Workflow.signals.first(where: { $0.name == signalWorkflow.signalName }) else {
+                    logger.error("No signal handler found")
+                    return
+                }
 
-            await self.runMessageHandler(
-                name: signal.name,
-                updateId: nil,
-                unfinishedPolicy: signal.unfinishedPolicy
-            ) {
-                await self.runSignal(
-                    signal: signal,
-                    workflow: workflow,
-                    headers: signalWorkflow.headers,
-                    context: executionState.workflowContext,
-                    publicContext: executionState.publicContext,
-                    temporalPayloads: signalWorkflow.input
-                )
+                await self.runMessageHandler(
+                    name: signal.name,
+                    updateId: nil,
+                    unfinishedPolicy: signal.unfinishedPolicy
+                ) {
+                    await self.runSignal(
+                        signal: signal,
+                        workflow: workflow,
+                        headers: signalWorkflow.headers,
+                        context: executionState.workflowContext,
+                        publicContext: executionState.publicContext,
+                        temporalPayloads: signalWorkflow.input
+                    )
+                }
             }
         }
     }
@@ -539,14 +529,14 @@ struct WorkflowInstance: Sendable {
         publicContext: WorkflowContext<Signal.Workflow>,
         temporalPayloads: [Api.Common.V1.Payload]
     ) async {
+        let logger = Logger.current
         let input: Signal.Input
         do {
             input = try self.payloadConverter.convertPayloads(temporalPayloads, as: Signal.Input.self)
         } catch {
-            self.logger.error(
+            logger.error(
                 "Failed converting signal input",
                 metadata: [
-                    LoggingKeys.workflowSignalName: "\(Signal.name)",
                     LoggingKeys.errorType: "\(type(of: error))",
                     LoggingKeys.errorMessage: "\(error)",
                 ]
@@ -555,7 +545,7 @@ struct WorkflowInstance: Sendable {
         }
 
         do {
-            self.logger.trace("Running signal handler")
+            logger.trace("Running signal handler")
             try await implementation.handleSignal(
                 workflow: workflow,
                 context: context,
@@ -568,13 +558,13 @@ struct WorkflowInstance: Sendable {
                     input: input
                 )
             )
-            self.logger.trace("Running signal handler finished")
+            logger.trace("Running signal handler finished")
         } catch {
             // Signal handlers are treated as top level code i.e. they are
             // on the same level as the workflows primary run method. This means
             // that a throwing signal in a workflow has the same effect as a throwing
             // workflow run method.
-            self.logger.trace(
+            logger.trace(
                 "Running signal handler failed",
                 metadata: [
                     LoggingKeys.errorType: "\(type(of: error))",
@@ -593,66 +583,66 @@ struct WorkflowInstance: Sendable {
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
         group.addTask(executorPreference: self.executor) {
-            let workflow = executionState.workflowStateBox.value
-            if queryWorkflow.queryType == "__temporal_workflow_metadata" {
+            await withLogger(mergingMetadata: [
+                LoggingKeys.workflowQueryID: "\(queryWorkflow.queryID)",
+                LoggingKeys.workflowQueryName: "\(queryWorkflow.queryType)",
+            ]) { logger in
+                let workflow = executionState.workflowStateBox.value
+                if queryWorkflow.queryType == "__temporal_workflow_metadata" {
+                    await self.runMessageHandler(
+                        name: queryWorkflow.queryType,
+                        updateId: nil,
+                        unfinishedPolicy: .abandon
+                    ) {
+                        do {
+                            let metadata = workflowMetadata(type: Workflow.self, context: executionState.workflowContext)
+                            // Use the default data converter as this query will be
+                            // used for displaying information in the Temporal UI.
+                            let payload = try await DataConverter.default.convertValue(metadata)
+                            self.stateMachine.queryFinished(id: queryWorkflow.queryID, temporalPayload: payload)
+                        } catch {
+                            logger.trace(
+                                "Running query handler failed",
+                                metadata: [
+                                    LoggingKeys.errorType: "\(type(of: error))",
+                                    LoggingKeys.errorMessage: "\(error)",
+                                ]
+                            )
+                            let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
+                            self.stateMachine.queryFailed(id: queryWorkflow.queryID, failure: failure)
+                        }
+                    }
+                    return
+                }
+
+                guard let query = Workflow.queries.first(where: { $0.name == queryWorkflow.queryType }) else {
+                    logger.error("No query handler found")
+                    // If we fail to find a handler we treat it as a workflow task failure
+                    // so that the workflow will get retried and a new code deploy can fix the issue.
+                    self.stateMachine.workflowTaskFailed(
+                        failure: .with {
+                            $0.message =
+                                "Query handler for \(queryWorkflow.queryType) expected but not found, known queries: [\(Workflow.queries.lazy.map { $0.name }.sorted().joined(separator: ","))"
+                            $0.source = "swift-temporal-sdk"
+                        }
+                    )
+                    return
+                }
+
                 await self.runMessageHandler(
-                    name: queryWorkflow.queryType,
+                    name: query.name,
                     updateId: nil,
                     unfinishedPolicy: .abandon
                 ) {
-                    do {
-                        let metadata = workflowMetadata(type: Workflow.self, context: executionState.workflowContext)
-                        // Use the default data converter as this query will be
-                        // used for displaying information in the Temporal UI.
-                        let payload = try await DataConverter.default.convertValue(metadata)
-                        self.stateMachine.queryFinished(id: queryWorkflow.queryID, temporalPayload: payload)
-                    } catch {
-                        self.logger.trace(
-                            "Running query handler failed",
-                            metadata: [
-                                LoggingKeys.workflowQueryID: "\(queryWorkflow.queryID)",
-                                LoggingKeys.workflowQueryName: "\(queryWorkflow.queryType)",
-                                LoggingKeys.errorType: "\(type(of: error))",
-                                LoggingKeys.errorMessage: "\(error)",
-                            ]
-                        )
-                        let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
-                        self.stateMachine.queryFailed(id: queryWorkflow.queryID, failure: failure)
-                    }
+                    await self.runQuery(
+                        id: queryWorkflow.queryID,
+                        query: query,
+                        workflow: workflow,
+                        context: executionState.workflowContext,
+                        headers: queryWorkflow.headers,
+                        temporalPayloads: queryWorkflow.arguments
+                    )
                 }
-                return
-            }
-
-            guard let query = Workflow.queries.first(where: { $0.name == queryWorkflow.queryType }) else {
-                self.logger.error(
-                    "No query handler found",
-                    metadata: [LoggingKeys.workflowQueryName: "\(queryWorkflow.queryType)"]
-                )
-                // If we fail to find a handler we treat it as a workflow task failure
-                // so that the workflow will get retried and a new code deploy can fix the issue.
-                self.stateMachine.workflowTaskFailed(
-                    failure: .with {
-                        $0.message =
-                            "Query handler for \(queryWorkflow.queryType) expected but not found, known queries: [\(Workflow.queries.lazy.map { $0.name }.sorted().joined(separator: ","))"
-                        $0.source = "swift-temporal-sdk"
-                    }
-                )
-                return
-            }
-
-            await self.runMessageHandler(
-                name: query.name,
-                updateId: nil,
-                unfinishedPolicy: .abandon
-            ) {
-                await self.runQuery(
-                    id: queryWorkflow.queryID,
-                    query: query,
-                    workflow: workflow,
-                    context: executionState.workflowContext,
-                    headers: queryWorkflow.headers,
-                    temporalPayloads: queryWorkflow.arguments
-                )
             }
         }
     }
@@ -665,15 +655,14 @@ struct WorkflowInstance: Sendable {
         headers: [String: Api.Common.V1.Payload],
         temporalPayloads: [Api.Common.V1.Payload]
     ) async where Query.Workflow == Workflow {
+        let logger = Logger.current
         let input: Query.Input
         do {
             input = try self.payloadConverter.convertPayloads(temporalPayloads, as: Query.Input.self)
         } catch {
-            self.logger.error(
+            logger.error(
                 "Failed converting query input",
                 metadata: [
-                    LoggingKeys.workflowQueryID: "\(id)",
-                    LoggingKeys.workflowQueryName: "\(Query.name)",
                     LoggingKeys.errorType: "\(type(of: error))",
                     LoggingKeys.errorMessage: "\(error)",
                 ]
@@ -682,13 +671,7 @@ struct WorkflowInstance: Sendable {
         }
 
         do {
-            self.logger.trace(
-                "Running query handler",
-                metadata: [
-                    LoggingKeys.workflowQueryID: "\(id)",
-                    LoggingKeys.workflowQueryName: "\(Query.name)",
-                ]
-            )
+            logger.trace("Running query handler")
             let output = try implementation.handleQuery(
                 workflow: workflow,
                 context: context,
@@ -701,7 +684,7 @@ struct WorkflowInstance: Sendable {
                     input: input
                 )
             )
-            self.logger.trace(
+            logger.trace(
                 "Running query handler finished",
                 metadata: [
                     LoggingKeys.workflowQueryID: "\(id)",
@@ -711,7 +694,7 @@ struct WorkflowInstance: Sendable {
             let payload = try self.payloadConverter.convertValueHandlingVoid(output)
             self.stateMachine.queryFinished(id: id, temporalPayload: payload)
         } catch {
-            self.logger.trace(
+            logger.trace(
                 "Running query handler failed",
                 metadata: [
                     LoggingKeys.workflowQueryID: "\(id)",
@@ -779,39 +762,41 @@ struct WorkflowInstance: Sendable {
         group: inout ThrowingTaskGroup<Void, any Error>
     ) {
         group.addTask(executorPreference: self.executor) {
-            let workflow = executionState.workflowStateBox.value
-            guard let update = Workflow.updates.first(where: { $0.name == updateWorkflow.name }) else {
-                self.logger.error(
-                    "No update handler found",
-                    metadata: [LoggingKeys.workflowQueryName: "\(updateWorkflow.name)"]
-                )
-                // If we fail to find a handler we treat it as a workflow task failure
-                // so that the workflow will get retried and a new code deploy can fix the issue.
-                self.stateMachine.workflowTaskFailed(
-                    failure: .with {
-                        $0.message =
-                            "Update handler for \(updateWorkflow.name) expected but not found, known updates: [\(Workflow.updates.lazy.map { $0.name }.sorted().joined(separator: ","))"
-                        $0.source = "swift-temporal-sdk"
-                    }
-                )
-                return
-            }
+            await withLogger(mergingMetadata: [
+                LoggingKeys.workflowUpdateID: "\(updateWorkflow.protocolInstanceID)",
+                LoggingKeys.workflowUpdateName: "\(updateWorkflow.name)",
+            ]) { logger in
+                let workflow = executionState.workflowStateBox.value
+                guard let update = Workflow.updates.first(where: { $0.name == updateWorkflow.name }) else {
+                    logger.error("No update handler found")
+                    // If we fail to find a handler we treat it as a workflow task failure
+                    // so that the workflow will get retried and a new code deploy can fix the issue.
+                    self.stateMachine.workflowTaskFailed(
+                        failure: .with {
+                            $0.message =
+                                "Update handler for \(updateWorkflow.name) expected but not found, known updates: [\(Workflow.updates.lazy.map { $0.name }.sorted().joined(separator: ","))"
+                            $0.source = "swift-temporal-sdk"
+                        }
+                    )
+                    return
+                }
 
-            await self.runMessageHandler(
-                name: update.name,
-                updateId: updateWorkflow.protocolInstanceID,
-                unfinishedPolicy: update.unfinishedPolicy
-            ) {
-                await self.runUpdate(
-                    id: updateWorkflow.protocolInstanceID,
-                    runValidator: updateWorkflow.runValidator,
-                    update: update,
-                    workflow: workflow,
-                    workflowContext: executionState.workflowContext,
-                    publicContext: executionState.publicContext,
-                    headers: updateWorkflow.headers,
-                    temporalPayloads: updateWorkflow.input
-                )
+                await self.runMessageHandler(
+                    name: update.name,
+                    updateId: updateWorkflow.protocolInstanceID,
+                    unfinishedPolicy: update.unfinishedPolicy
+                ) {
+                    await self.runUpdate(
+                        id: updateWorkflow.protocolInstanceID,
+                        runValidator: updateWorkflow.runValidator,
+                        update: update,
+                        workflow: workflow,
+                        workflowContext: executionState.workflowContext,
+                        publicContext: executionState.publicContext,
+                        headers: updateWorkflow.headers,
+                        temporalPayloads: updateWorkflow.input
+                    )
+                }
             }
         }
     }
@@ -826,6 +811,7 @@ struct WorkflowInstance: Sendable {
         headers: [String: Api.Common.V1.Payload],
         temporalPayloads: [Api.Common.V1.Payload]
     ) async where Update.Workflow == Workflow {
+        let logger = Logger.current
         // The input is given to both the validator method and the update method to match
         // other temporal SDKs we are passing two separately converted inputs to disallow
         // user mutation of the input between validator and update.
@@ -834,11 +820,9 @@ struct WorkflowInstance: Sendable {
             do {
                 return try self.payloadConverter.convertPayloads(temporalPayloads, as: Update.Input.self)
             } catch {
-                self.logger.error(
+                logger.error(
                     "Failed converting update input",
                     metadata: [
-                        LoggingKeys.workflowUpdateID: "\(id)",
-                        LoggingKeys.workflowUpdateName: "\(Update.name)",
                         LoggingKeys.errorType: "\(type(of: error))",
                         LoggingKeys.errorMessage: "\(error)",
                     ]
@@ -872,11 +856,9 @@ struct WorkflowInstance: Sendable {
                     )
                 )
             } catch {
-                self.logger.debug(
+                logger.debug(
                     "Update rejected",
                     metadata: [
-                        LoggingKeys.workflowUpdateID: "\(id)",
-                        LoggingKeys.workflowUpdateName: "\(Update.name)",
                         LoggingKeys.errorType: "\(type(of: error))",
                         LoggingKeys.errorMessage: "\(error)",
                     ]
@@ -896,13 +878,7 @@ struct WorkflowInstance: Sendable {
         self.stateMachine.updateAccepted(id: id)
 
         do {
-            self.logger.trace(
-                "Running update handler",
-                metadata: [
-                    LoggingKeys.workflowUpdateID: "\(id)",
-                    LoggingKeys.workflowUpdateName: "\(Update.name)",
-                ]
-            )
+            logger.trace("Running update handler")
             let output = try await implementation.handleUpdate(
                 workflow: workflow,
                 context: workflowContext,
@@ -916,21 +892,13 @@ struct WorkflowInstance: Sendable {
                     input: updateInput
                 )
             )
-            self.logger.trace(
-                "Running update handler finished",
-                metadata: [
-                    LoggingKeys.workflowUpdateID: "\(id)",
-                    LoggingKeys.workflowUpdateName: "\(Update.name)",
-                ]
-            )
+            logger.trace("Running update handler finished")
             let payload = try self.payloadConverter.convertValueHandlingVoid(output)
             self.stateMachine.updateCompleted(id: id, temporalPayload: payload)
         } catch {
-            self.logger.trace(
+            logger.trace(
                 "Running update handler failed",
                 metadata: [
-                    LoggingKeys.workflowUpdateID: "\(id)",
-                    LoggingKeys.workflowUpdateName: "\(Update.name)",
                     LoggingKeys.errorType: "\(type(of: error))",
                     LoggingKeys.errorMessage: "\(error)",
                 ]
@@ -1007,7 +975,7 @@ struct WorkflowInstance: Sendable {
             `@WorkflowSignal(unfinishedPolicy: .abandon)`.
             """
 
-        self.logger.info(message, metadata: metadata)
+        Logger.current.info(message, metadata: metadata)
     }
 
     private func runMessageHandler(
@@ -1024,11 +992,12 @@ struct WorkflowInstance: Sendable {
     // MARK: Top level error handling
 
     private func handleTopLevelError(_ error: any Error) async {
+        let logger = Logger.current
         if let continueAsNewError = error as? ContinueAsNewError {
-            self.logger.debug("Workflow requested continue as new")
+            logger.debug("Workflow requested continue as new")
             self.stateMachine.continueAsNew(continueAsNewError)
         } else if Task.isCancelled && error.isTemporalCancellation {
-            self.logger.debug("Workflow raised a cancellation.")
+            logger.debug("Workflow raised a cancellation.")
             self.stateMachine.cancelWorkflowExecution()
         } else if let temporalFailureError = error as? any TemporalFailureError {
             // If the thrown error is a temporal failure error it needs to fail the whole

@@ -88,7 +88,7 @@ extension TestServerDependentTests {
             static let logMessage: Logger.Message = "workflow-log-record"
 
             mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
-                context.logger.info(Self.logMessage)
+                Logger.current.info(Self.logMessage)
             }
         }
 

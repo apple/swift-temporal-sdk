@@ -47,7 +47,6 @@ struct ClientOTelLoggingInterceptorTests {
         let localPeer = "ipv4:145.32.54.12:4321"
 
         let interceptor = ClientOTelLoggingInterceptor(
-            logger: logger,
             serverHostname: serverHostname,
             networkTransportMethod: transport,
             includeRequestMetadata: true,
@@ -81,11 +80,13 @@ struct ClientOTelLoggingInterceptorTests {
             )
         }
 
-        let response = try await interceptor.intercept(
-            request: request,
-            context: context,
-            next: next
-        )
+        let response = try await withLogger(logger) { _ in
+            try await interceptor.intercept(
+                request: request,
+                context: context,
+                next: next
+            )
+        }
 
         guard case .success = response.accepted else {
             Issue.record("Should have been successful")
@@ -169,7 +170,6 @@ struct ClientOTelLoggingInterceptorTests {
         let descriptor = MethodDescriptor(fullyQualifiedService: serviceName, method: "TestMethod")
 
         let interceptor = ClientOTelLoggingInterceptor(
-            logger: logger,
             serverHostname: "test.com",
             networkTransportMethod: .tcp,
             includeRequestMetadata: true,
@@ -195,11 +195,13 @@ struct ClientOTelLoggingInterceptorTests {
             )
         }
 
-        let response = try await interceptor.intercept(
-            request: request,
-            context: ClientContext(descriptor: descriptor, remotePeer: "", localPeer: ""),
-            next: next
-        )
+        let response = try await withLogger(logger) { _ in
+            try await interceptor.intercept(
+                request: request,
+                context: ClientContext(descriptor: descriptor, remotePeer: "", localPeer: ""),
+                next: next
+            )
+        }
 
         guard case .failure = response.accepted else {
             Issue.record("Should have failed")

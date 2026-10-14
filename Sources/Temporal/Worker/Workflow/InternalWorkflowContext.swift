@@ -34,9 +34,6 @@ struct InternalWorkflowContext: Sendable {
     /// Implementation delegate for interceptor processing.
     let implementation: Implementation
 
-    /// The logger passed to the workflow execution.
-    let logger: Logger
-
     /// Information about the current workflow execution.
     ///
     /// Provides access to workflow metadata including identifiers, timing information,
@@ -121,8 +118,7 @@ struct InternalWorkflowContext: Sendable {
         stateMachine: WorkflowStateMachineStorage,
         workflowInfo: WorkflowInfo,
         payloadConverter: any PayloadConverter,
-        outboundInterceptors: [any WorkflowOutboundInterceptor],
-        logger: Logger
+        outboundInterceptors: [any WorkflowOutboundInterceptor]
     ) {
         self.stateMachine = stateMachine
         self.info = workflowInfo
@@ -133,7 +129,6 @@ struct InternalWorkflowContext: Sendable {
             stateMachine: stateMachine,
             payloadConverter: payloadConverter
         )
-        self.logger = logger
     }
 
     func sleep(for duration: Duration, summary: String? = nil) async throws {
