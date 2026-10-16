@@ -12,13 +12,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import Logging
 import ServiceContextModule
 import SwiftProtobuf
 import Temporal
 import Testing
 import Tracing
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 @Suite(.tags(.instrumentationTests))
 struct TemporalWorkerInboundTracingInterceptorTests {

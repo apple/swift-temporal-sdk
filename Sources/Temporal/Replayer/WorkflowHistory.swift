@@ -12,8 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-public import Foundation
 internal import SwiftProtobuf
+
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
 
 /// Represents a workflow's execution history for replay purposes.
 public struct WorkflowHistory: Sendable {

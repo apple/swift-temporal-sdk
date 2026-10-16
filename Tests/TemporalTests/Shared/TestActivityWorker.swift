@@ -12,9 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import Logging
 import Temporal
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 protocol ActivityWorkerForwarding: ActivityWorkerProtocol where BridgeWorker: BridgeWorkerProtocol {
     var base: ActivityWorker<BridgeWorker> { get }

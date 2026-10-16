@@ -12,11 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import ServiceContextModule
 import Synchronization
 import Testing
 import Tracing
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Simle `Tracer` for testing usage.
 final class TestTracer: Tracer {
