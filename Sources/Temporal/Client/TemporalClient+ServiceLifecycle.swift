@@ -24,6 +24,8 @@ extension TemporalClient: Service {
     /// which provides automatic lifecycle management, this initializer requires manual management of
     /// the client's lifecycle through the `Service` protocol methods.
     ///
+    /// The configuration's ``TemporalClient/Configuration/plugins`` are applied here, in order.
+    ///
     /// - Important: Simply instantiating the client is not sufficient to perform requests.
     ///   You must call ``run()`` and manage the lifecycle properly for the client to function.
     ///
@@ -36,6 +38,9 @@ extension TemporalClient: Service {
         configuration: TemporalClient.Configuration,
         logger: Logger = Logger(label: "NoOpLogger", factory: { _ in SwiftLogNoOpLogHandler() })
     ) {
+        var configuration = configuration
+        configuration.applyPlugins(logger: logger)
+
         let grpcClient = GRPCClient(
             transport: transport,
             interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger)
@@ -47,11 +52,18 @@ extension TemporalClient: Service {
     /// Starts the Temporal client and keeps it running until shutdown is initiated.
     ///
     /// This method starts the underlying gRPC client and keeps it running to handle requests.
+    /// Each plugin's ``ClientPlugin/connectClient(configuration:next:)`` wraps the run; the first
+    /// plugin is the outermost wrap.
     ///
     /// - Throws: A runtime error if the client cannot be started or is in an invalid state.
     public func run() async throws {
-        // Graceful shutdown is handled by `GRPCServiceLifecycle`
-        try await self.workflowService.client.client.run()
+        try await applyClientConnectChain(
+            plugins: self.configuration.plugins[...],
+            configuration: self.configuration
+        ) {
+            // Graceful shutdown is handled by `GRPCServiceLifecycle`
+            try await self.workflowService.client.client.run()
+        }
     }
 
     /// Initiates graceful shutdown of the Temporal client.

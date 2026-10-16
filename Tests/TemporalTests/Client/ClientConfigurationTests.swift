@@ -16,6 +16,8 @@ import Configuration
 import Temporal
 import Testing
 
+private struct SentinelPlugin: ClientPlugin {}
+
 @Suite(.tags(.clientTests))
 struct ClientConfigurationTests {
     @Test
@@ -36,13 +38,15 @@ struct ClientConfigurationTests {
         )
 
         let config = try TemporalClient.Configuration(
-            configReader: container.scoped(to: "temporal")  // scope container to `temporal` prefix
+            configReader: container.scoped(to: "temporal"),  // scope container to `temporal` prefix
+            plugins: [SentinelPlugin()]
         )
 
         #expect(config.instrumentation.serverHostname == serverHostname)
         #expect(config.namespace == namespace)
         #expect(config.identity == identity)
         #expect(config.interceptors.count == 1)  // default tracing interceptor
+        #expect(config.plugins.first is SentinelPlugin)
 
         // sadly the thrown error is `package`-level
         #expect(throws: (any Error).self, "If no scoping for container is provided, config creation should throw an error") {

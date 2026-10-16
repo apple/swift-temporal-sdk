@@ -44,11 +44,18 @@ public final class WorkflowReplayer: Sendable {
 
     /// Creates a new workflow replayer with the given configuration.
     ///
-    /// At least one workflow must be registered in the configuration.
+    /// At least one workflow must be registered, either in ``Configuration/workflows`` or by a plugin
+    /// set on ``Configuration/plugins``.
     ///
     /// - Parameter configuration: The configuration specifying which workflows to replay
     ///   and how to process them.
+    ///
+    /// - Warning: Registrations are not deduplicated, so a workflow name in
+    ///   ``Configuration/workflows`` that a plugin also registers makes
+    ///   ``replayWorkflow(history:throwOnReplayFailure:)`` throw.
     public init(configuration: Configuration) {
+        var configuration = configuration
+        configuration.applyPlugins()
         precondition(
             !configuration.workflows.isEmpty,
             "At least one workflow must be registered with the replayer"
@@ -57,6 +64,9 @@ public final class WorkflowReplayer: Sendable {
     }
 
     /// Replays a single workflow history.
+    ///
+    /// Each plugin's ``WorkerPlugin/runReplayer(configuration:next:)`` wraps the replay; the first
+    /// plugin is the outermost wrap.
     ///
     /// - Parameters:
     ///   - history: The workflow history to replay.
@@ -71,20 +81,28 @@ public final class WorkflowReplayer: Sendable {
         history: WorkflowHistory,
         throwOnReplayFailure: Bool = true
     ) async throws -> WorkflowReplayResult {
-        let runner = try WorkflowHistoryRunner(configuration: self.configuration)
-        return try await runner.replayWorkflow(
-            history: history,
-            throwOnReplayFailure: throwOnReplayFailure
-        )
+        try await applyReplayerRunChain(
+            plugins: self.configuration.plugins[...],
+            configuration: self.configuration
+        ) {
+            let runner = try WorkflowHistoryRunner(configuration: self.configuration)
+            return try await runner.replayWorkflow(
+                history: history,
+                throwOnReplayFailure: throwOnReplayFailure
+            )
+        }
     }
 
     /// Replays multiple workflow histories.
+    ///
+    /// Each history goes through ``replayWorkflow(history:throwOnReplayFailure:)``, so plugins wrap
+    /// each replay rather than the batch.
     ///
     /// - Parameters:
     ///   - histories: The workflow histories to replay.
     ///   - throwOnReplayFailure: If `true` (the default), throws on the first replay
     ///     failure. If `false`, continues replaying all histories and returns results
-    ///     for each.
+    ///     for each. A plugin's error stops the batch either way.
     /// - Returns: An array of ``WorkflowReplayResult`` containing the outcome for each
     ///   history, in the same order as the input.
     /// - Throws: ``WorkflowNondeterminismError`` if any workflow code is incompatible
