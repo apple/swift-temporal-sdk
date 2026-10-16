@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
+import ServiceContextModule
 import SwiftProtobuf
 import Synchronization
 import Temporal

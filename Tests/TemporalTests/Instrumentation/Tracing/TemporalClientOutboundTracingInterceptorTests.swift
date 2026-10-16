@@ -15,6 +15,7 @@
 import GRPCCore
 import GRPCNIOTransportHTTP2Posix
 import Logging
+import ServiceContextModule
 import SwiftProtobuf
 import Temporal
 import TemporalTestKit

@@ -16,6 +16,12 @@ import Temporal
 import TemporalTestKit
 import Testing
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
 extension TestServerDependentTests {
     @Suite(.tags(.clientTests))
     struct WorkflowHandleTests {
@@ -53,6 +59,51 @@ extension TestServerDependentTests {
             try await workflowHandle(for: HelloInputWorkflow.self, input: input) { handle in
                 let result = try await handle.result()
                 #expect(result == input)
+            }
+        }
+
+        @Test
+        func startWorkflowThrowsAlreadyStartedErrorWhenWorkflowIsRunning() async throws {
+            try await withTestWorkerAndClient(workflows: [HelloWorldWorkflow.self]) { _, client in
+                let workflowID = "wf-\(UUID())"
+                // Nothing polls this task queue so the first execution stays running.
+                let options = WorkflowOptions(
+                    id: workflowID,
+                    taskQueue: "unpolled-\(UUID())",
+                    executionTimeOut: .seconds(60)
+                )
+                let handle = try await client.startWorkflow(type: HelloWorldWorkflow.self, options: options)
+
+                let error = await #expect(throws: WorkflowAlreadyStartedError.self) {
+                    try await client.startWorkflow(type: HelloWorldWorkflow.self, options: options)
+                }
+                #expect(error?.workflowID == workflowID)
+                #expect(error?.workflowName == HelloWorldWorkflow.name)
+                #expect(error?.runID == handle.resultRunID)
+
+                try await handle.terminate()
+            }
+        }
+
+        @Test
+        func startWorkflowThrowsAlreadyStartedErrorWhenWorkflowIsFinished() async throws {
+            try await withTestWorkerAndClient(workflows: [HelloWorldWorkflow.self]) { taskQueue, client in
+                let workflowID = "wf-\(UUID())"
+                let options = WorkflowOptions(
+                    id: workflowID,
+                    taskQueue: taskQueue,
+                    executionTimeOut: .seconds(60),
+                    idReusePolicy: .rejectDuplicate
+                )
+                let handle = try await client.startWorkflow(type: HelloWorldWorkflow.self, options: options)
+                _ = try await handle.result()
+
+                let error = await #expect(throws: WorkflowAlreadyStartedError.self) {
+                    try await client.startWorkflow(type: HelloWorldWorkflow.self, options: options)
+                }
+                #expect(error?.workflowID == workflowID)
+                #expect(error?.workflowName == HelloWorldWorkflow.name)
+                #expect(error?.runID == handle.resultRunID)
             }
         }
     }

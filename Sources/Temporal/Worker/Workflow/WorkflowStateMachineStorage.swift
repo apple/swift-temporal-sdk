@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import OrderedCollections
 import SwiftProtobuf
 
 import struct Foundation.Date
@@ -23,20 +24,15 @@ import struct Foundation.Date
 // This is fine though since we manually run the jobs of the executor so no
 // concurrent access can happen.
 package final class WorkflowStateMachineStorage: @unchecked Sendable {
-    private enum Access {
-        case reading
-        case mutating
-    }
-
     private var stateMachine: WorkflowStateMachine {
         _read {
             // Read-only access is allowed in frozen state, therefore, impose a more lenient check here.
-            self.ensureOnExecutor(access: .reading)
+            self.ensureOnExecutor()
             yield self._stateMachine
         }
         _modify {
             // mutating methods might add commands which is not allowed when context is frozen.
-            self.ensureOnExecutor(access: .mutating)
+            self.ensureOnExecutor()
             yield &self._stateMachine
         }
     }
@@ -138,14 +134,19 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
     }
 
     func withCancellationShield<Result: Sendable>(_ operation: () async throws -> Result) async throws -> Result {
-        try await withoutActuallyEscaping(operation) { escapingOperation in
+        // Typed explicitly, since `withoutActuallyEscaping` would otherwise run it `@concurrent` instead of on the
+        // caller's isolation, see https://github.com/swiftlang/swift/issues/84591
+        let shield: nonisolated(nonsending) (@escaping () async throws -> Result) async throws -> Result = { escapingOperation in
             nonisolated(unsafe) let unsafeEscapingOperation = escapingOperation
-            return try await Task(executorPreference: self.executor, operation: unsafeEscapingOperation).value
+            return try await Task(executorPreference: self.executor) { @Sendable in try await unsafeEscapingOperation() }.value
         }
+        return try await withoutActuallyEscaping(operation, do: shield)
     }
 
     func condition(_ condition: () -> Bool) async throws {
-        try await withoutActuallyEscaping(condition) { escapingCondition in
+        // Typed explicitly, since `withoutActuallyEscaping` would otherwise run it `@concurrent` instead of on the
+        // caller's isolation, see https://github.com/swiftlang/swift/issues/84591
+        let wait: nonisolated(nonsending) (@escaping () -> Bool) async throws -> Void = { escapingCondition in
             let id = self.stateMachine.condition(escapingCondition)
             try await withTaskCancellationHandler {
                 try await withCheckedThrowingContinuation { continuation in
@@ -161,6 +162,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
                 continuation?.resume(throwing: CanceledError(message: "Wait condition cancelled"))
             }
         }
+        try await withoutActuallyEscaping(condition, do: wait)
     }
 
     func forceCancelOutstandingContinuations() {
@@ -247,7 +249,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         continuation.resume(returning: resolveActivity.result)
     }
 
-    func conditions() -> [UInt32: () -> Bool] {
+    func conditions() -> OrderedDictionary<UInt32, () -> Bool> {
         return self.stateMachine.conditions()
     }
 
@@ -620,21 +622,28 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         return self.stateMachine.commands()
     }
 
-    private func ensureOnExecutor(access: Access) {
+    func isOnExecutor() -> Bool {
+        // This is using custom logic instead of preconditionIsolated to ensure
+        // the error messages are printed on crash.
+        return withUnsafeCurrentTask { currentTask in
+            guard let currentTask else {
+                fatalError("Current task not found")
+            }
+            guard currentTask.unownedTaskExecutor == executor.asUnownedTaskExecutor() else {
+                return false
+            }
+            return true
+        }
+    }
+
+    private func ensureOnExecutor() {
         // Allow access if the workflow instance itself is modifying the state
         if WorkflowInstance.isOnWorkflowInstance {
             return
         }
 
-        // This is using custom logic instead of preconditionIsolated to ensure
-        // the error messages are printed on crash.
-        withUnsafeCurrentTask { currentTask in
-            guard let currentTask else {
-                fatalError("Current task not found")
-            }
-            guard currentTask.unownedTaskExecutor == executor.asUnownedTaskExecutor() else {
-                fatalError("Current task executor mismatch")
-            }
+        guard self.isOnExecutor() else {
+            fatalError("Current task executor mismatch")
         }
     }
 }

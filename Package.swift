@@ -43,11 +43,12 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.6.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.7.0"),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.2.0"),
+        .package(url: "https://github.com/apple/swift-service-context.git", from: "1.0.0"),
         .package(url: "https://github.com/swift-otel/swift-otel-semantic-conventions.git", from: "1.34.2"),
         .package(url: "https://github.com/apple/swift-certificates.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.0"),
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "601.0.1"),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", "601.0.1"..<"605.0.0"),
         .package(url: "https://github.com/grpc/grpc-swift-2.git", from: "2.3.0"),
         .package(url: "https://github.com/grpc/grpc-swift-nio-transport.git", from: "2.0.0"),
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "2.0.0"),
@@ -71,12 +72,14 @@ let package = Package(
             dependencies: [
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "DequeModule", package: "swift-collections"),
+                .product(name: "OrderedCollections", package: "swift-collections"),
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "GRPCCore", package: "grpc-swift-2"),
                 .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
                 .product(name: "GRPCOTelTracingInterceptors", package: "grpc-swift-extras"),
+                .product(name: "ServiceContextModule", package: "swift-service-context"),
                 .product(name: "GRPCServiceLifecycle", package: "grpc-swift-extras"),
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
                 .product(name: "Configuration", package: "swift-configuration"),
@@ -252,6 +255,8 @@ let package = Package(
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
                 "Temporal",
                 "TemporalTestKit",
+                .product(name: "MetricsTestKit", package: "swift-metrics"),
+                .product(name: "ServiceContextModule", package: "swift-service-context"),
             ],
             resources: [
                 .copy("Worker/Histories")
@@ -284,7 +289,10 @@ where [.executable, .test, .regular].contains(
     settings.append(.enableUpcomingFeature("InternalImportsByDefault"))
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0461-async-function-isolation.md
-    settings.append(.enableUpcomingFeature("NonIsolatedNonSendingByDefault"))
+    // Only enabled from Swift 6.4 on, since older compilers crash on parts of the code base with this feature enabled
+    #if compiler(>=6.4)
+    settings.append(.enableUpcomingFeature("NonisolatedNonsendingByDefault"))
+    #endif
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0480-swiftpm-warning-control.md
     settings.append(.treatAllWarnings(as: .error))

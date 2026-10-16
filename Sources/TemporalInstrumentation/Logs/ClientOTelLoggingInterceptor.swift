@@ -50,10 +50,11 @@ package struct ClientOTelLoggingInterceptor: ClientInterceptor {
     package func intercept<Input: Sendable, Output: Sendable>(
         request: StreamingClientRequest<Input>,
         context: ClientContext,
-        next: (
-            _ request: StreamingClientRequest<Input>,
-            _ context: ClientContext
-        ) async throws -> StreamingClientResponse<Output>
+        next:
+            @concurrent (
+                _ request: StreamingClientRequest<Input>,
+                _ context: ClientContext
+            ) async throws -> StreamingClientResponse<Output>
     ) async throws -> StreamingClientResponse<Output> {
         // Build logging metadata
         var metadata = context.metadata(

@@ -24,11 +24,10 @@ private struct ActivityInfo {
     var accessModifier: DeclModifierListSyntax
     var isStatic: Bool
     var inputType: String
+    var inputLabel: String?
     var resultType: String
 
     var structDefinition: DeclSyntax {
-        let closureType: String = "@Sendable (\(inputType)) async throws -> \(resultType)"
-
         let nameDecl: String
         if isDynamic {
             nameDecl = "static var isDynamic: Bool { true }"
@@ -36,13 +35,36 @@ private struct ActivityInfo {
             nameDecl = "static var name: String { \"\(name!)\" }"
         }
 
+        // The activity calls the method directly instead of storing a reference to it, so the method runs with its declared
+        // isolation, independent of the language mode of the module expanding the macro. Wrapping the call in
+        // `_activityResult` lets the compiler decide which effects the call needs, which syntax alone can't tell
+        let argument: String
+        if inputType == "" {
+            argument = ""
+        } else if let inputLabel, inputLabel != "_" {
+            argument = "\(inputLabel): input"
+        } else {
+            argument = "input"
+        }
+        let structName = parentMethodName.capitalizingFirst()
+        let input = inputType == "" ? "Void" : inputType
+
+        if isStatic {
+            return """
+                \(accessModifier)struct \(raw: structName): ActivityDefinition {
+                    \(accessModifier)\(raw: nameDecl)
+                    \(accessModifier)func run(input: \(raw: input)) async throws -> \(raw: resultType) {
+                        return try await _activityResult(\(raw: parentTypeName).\(raw: parentMethodName)(\(raw: argument)))
+                    }
+                }
+                """
+        }
         return """
-            \(accessModifier)struct \(raw: parentMethodName.capitalizingFirst()): ActivityDefinition {
+            \(accessModifier)struct \(raw: structName): ActivityDefinition {
                 \(accessModifier)\(raw: nameDecl)
-                var _run: \(raw: closureType)
-                init(run: @escaping \(raw: closureType)) { self._run = run }
-                \(accessModifier)func run(input: \(raw: inputType == "" ? "Void" : inputType)) async throws -> \(raw: resultType) {
-                    return try await self._run(\(raw: inputType == "" ? "" : "input"))
+                let container: \(raw: parentTypeName)
+                \(accessModifier)func run(input: \(raw: input)) async throws -> \(raw: resultType) {
+                    return try await _activityResult(self.container.\(raw: parentMethodName)(\(raw: argument)))
                 }
             }
             """
@@ -51,7 +73,7 @@ private struct ActivityInfo {
     var varDefinition: DeclSyntax {
         return """
             \(accessModifier)var \(raw: parentMethodName): \(raw: parentMethodName.capitalizingFirst()) {
-                return .init(run: \(raw: isStatic ? parentTypeName : "self.container").\(raw: parentMethodName))
+                return .init(\(raw: isStatic ? "" : "container: self.container"))
             }
             """
     }
@@ -106,6 +128,7 @@ public struct ActivityContainerMacro: ExtensionMacro {
                     accessModifier: activityAccessModifiers,
                     isStatic: functionDecl.modifiers.contains { $0.trimmedDescription == "static" },
                     inputType: functionDecl.signature.parameterClause.parameters.first?.type.trimmedDescription ?? "",
+                    inputLabel: functionDecl.signature.parameterClause.parameters.first?.firstName.text,
                     resultType: functionDecl.signature.returnClause?.type.trimmedDescription ?? "Void"
                 )
             )

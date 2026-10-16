@@ -238,6 +238,10 @@ public struct WorkflowContext<Workflow: WorkflowDefinition>: @unchecked Sendable
     }
 
     /// The logger used for the workflow execution.
+    ///
+    /// Records are dropped while the workflow is replaying, so that a log statement in workflow code
+    /// produces one record rather than one per replayed workflow task. Set
+    /// ``TemporalWorker/Configuration/enableLoggingInReplay`` to keep them when debugging a replay.
     public var logger: Logger {
         self.internalContext.logger
     }

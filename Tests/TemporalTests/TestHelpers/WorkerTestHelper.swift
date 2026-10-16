@@ -224,7 +224,8 @@ func withTimeSkippingTestWorkerAndClient<Result: Sendable, Worker: TemporalWorke
 func executeWorkflow<Workflow: WorkflowDefinition>(
     _ workflowType: Workflow.Type = Workflow.self,
     input: sending Workflow.Input,
-    workflowExecutionTimeout: Duration? = nil,
+    // Bound execution so a stuck workflow fails fast; the suite time limit can't cancel it.
+    workflowExecutionTimeout: Duration? = .seconds(60),
     workflowRetryPolicy: RetryPolicy? = nil,
     activities: [any ActivityDefinition] = [],
     moreWorkflows: [any WorkflowDefinition.Type] = [],
@@ -274,7 +275,7 @@ func executeWorkflow<Workflow: WorkflowDefinition>(
 func workflowHandle<Workflow: WorkflowDefinition, R>(
     for workflowType: Workflow.Type = Workflow.self,
     input: Workflow.Input,
-    workflowExecutionTimeout: Duration? = nil,
+    workflowExecutionTimeout: Duration? = .seconds(60),
     workflowRetryPolicy: RetryPolicy? = nil,
     activities: [any ActivityDefinition] = [],
     moreWorkflows: [any WorkflowDefinition.Type] = [],

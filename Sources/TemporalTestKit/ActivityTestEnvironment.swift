@@ -90,28 +90,31 @@ public func withActivityTestEnvironment<Result>(
         cancellationReason
     }
 
-    return try await withoutActuallyEscaping(assertHeartbeatDetails) { escapingClosure in
-        try await withThrowingTaskGroup { group in
-            group.addTask {
-                try await escapingClosure(HeartbeatDetailsSequence(base: heartbeatDetails.stream))
+    // Uses `async let` instead of `withoutActuallyEscaping`, since its closure can't capture `body` on the caller's isolation, see
+    // https://github.com/swiftlang/swift/issues/84591
+    return try await rethrowing {
+        async let heartbeatAssertion: Void = assertHeartbeatDetails(HeartbeatDetailsSequence(base: heartbeatDetails.stream))
+
+        let result: Result
+        do {
+            result = try await ActivityExecutionContext.$taskLocal.withValue(context) {
+                try await body()
             }
-
-            let result: Result
-            do {
-                result = try await ActivityExecutionContext.$taskLocal.withValue(context) {
-                    try await body()
-                }
-                heartbeatDetails.continuation.finish()
-            } catch {
-                heartbeatDetails.continuation.finish()
-                throw error
-            }
-
-            try await group.waitForAll()
-
-            return result
+            heartbeatDetails.continuation.finish()
+        } catch {
+            heartbeatDetails.continuation.finish()
+            throw error
         }
+
+        try await heartbeatAssertion
+
+        return result
     }
+}
+
+/// Runs the operation, allowing a `rethrows` function to throw errors that only originate from its closure parameters.
+private func rethrowing<Result>(_ operation: () async throws -> Result) async rethrows -> Result {
+    try await operation()
 }
 
 extension ActivityExecutionContext.Info {
