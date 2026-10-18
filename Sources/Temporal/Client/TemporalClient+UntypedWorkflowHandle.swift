@@ -423,7 +423,8 @@ extension TemporalClient.Interceptor {
                 interceptor: self,
                 id: result.updateID,
                 workflowID: input.options.id,
-                workflowRunID: nil  // Not targeting a specific run
+                workflowRunID: nil,  // Not targeting a specific run
+                knownOutcome: result.outcome
             )
         }
     }

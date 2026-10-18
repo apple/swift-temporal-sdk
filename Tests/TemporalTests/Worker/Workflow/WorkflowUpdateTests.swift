@@ -195,7 +195,7 @@ extension TestServerDependentTests {
 
                 // Empty input should be rejected by the validator.
                 // executeUpdate waits for completion, so it will throw on rejection.
-                await #expect(throws: (any Error).self) {
+                await #expect(throws: WorkflowUpdateFailedError.self) {
                     try await handle.executeUpdate(
                         updateType: ValidatedUpdateWorkflow.SetValue.self,
                         input: ""
@@ -205,6 +205,37 @@ extension TestServerDependentTests {
                 // Workflow should still be running (validator rejection doesn't fail the workflow).
                 // Send a valid update to complete it.
                 let result = try await handle.executeUpdate(
+                    updateType: ValidatedUpdateWorkflow.SetValue.self,
+                    input: "valid"
+                )
+                #expect(result == "set:valid")
+
+                let workflowResult = try await handle.result()
+                #expect(workflowResult == "valid")
+            }
+        }
+
+        @Test
+        func workflowServiceExecuteUpdateRejectionUsesKnownOutcome() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [ValidatedUpdateWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = UUID().uuidString
+                let handle = try await client.startWorkflow(
+                    type: ValidatedUpdateWorkflow.self,
+                    options: .init(id: workflowID, taskQueue: taskQueue)
+                )
+
+                await #expect(throws: WorkflowUpdateFailedError.self) {
+                    try await client.workflowService.executeWorkflowUpdate(
+                        workflowID: workflowID,
+                        updateType: ValidatedUpdateWorkflow.SetValue.self,
+                        input: ""
+                    )
+                }
+
+                let result = try await client.workflowService.executeWorkflowUpdate(
+                    workflowID: workflowID,
                     updateType: ValidatedUpdateWorkflow.SetValue.self,
                     input: "valid"
                 )
@@ -230,6 +261,26 @@ extension TestServerDependentTests {
             mutating func setValue(input: String) async -> String {
                 self.value = input
                 return "updated:\(input)"
+            }
+        }
+
+        final class PollCountingInterceptor: ClientInterceptor {
+            let pollCounter: Mutex<Int> = .init(0)
+
+            struct Outbound: ClientOutboundInterceptor {
+                let interceptor: PollCountingInterceptor
+
+                func pollWorkflowUpdate(
+                    input: PollWorkflowUpdateInput,
+                    next: (PollWorkflowUpdateInput) async throws -> Api.Update.V1.Outcome
+                ) async throws -> Api.Update.V1.Outcome {
+                    interceptor.pollCounter.withLock { $0 += 1 }
+                    return try await next(input)
+                }
+            }
+
+            var clientOutboundInterceptor: Outbound? {
+                Outbound(interceptor: self)
             }
         }
 
@@ -291,6 +342,73 @@ extension TestServerDependentTests {
                 )
                 let workflowResult = try await workflowHandle.result()
                 #expect(workflowResult == "world")
+            }
+        }
+
+        @Test
+        func executeUpdateWithStartUsesKnownOutcome() async throws {
+            let interceptor = PollCountingInterceptor()
+
+            try await withTestWorkerAndClient(
+                clientInterceptors: [interceptor],
+                workflows: [UpdateWithStartTargetWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = "wf-\(UUID().uuidString)"
+                let options = WorkflowOptions(id: workflowID, taskQueue: taskQueue)
+
+                let updateResult = try await client.executeUpdateWithStartWorkflow(
+                    type: UpdateWithStartTargetWorkflow.self,
+                    input: "initial",
+                    options: options,
+                    updateType: UpdateWithStartTargetWorkflow.SetValue.self,
+                    updateInput: "world"
+                )
+
+                #expect(updateResult == "updated:world")
+                #expect(interceptor.pollCounter.withLock { $0 } == 0)
+
+                let workflowHandle = client.workflowHandle(
+                    type: UpdateWithStartTargetWorkflow.self,
+                    id: workflowID
+                )
+                let workflowResult = try await workflowHandle.result()
+                #expect(workflowResult == "world")
+            }
+        }
+
+        @Test
+        func executeUpdateWithStartRejectionUsesKnownOutcome() async throws {
+            let interceptor = PollCountingInterceptor()
+
+            try await withTestWorkerAndClient(
+                clientInterceptors: [interceptor],
+                workflows: [ValidatedUpdateWorkflow.self]
+            ) { taskQueue, client in
+                let workflowID = "wf-\(UUID().uuidString)"
+                let options = WorkflowOptions(id: workflowID, taskQueue: taskQueue)
+
+                await #expect(throws: WorkflowUpdateFailedError.self) {
+                    try await client.executeUpdateWithStartWorkflow(
+                        type: ValidatedUpdateWorkflow.self,
+                        options: options,
+                        updateType: ValidatedUpdateWorkflow.SetValue.self,
+                        updateInput: ""
+                    )
+                }
+                #expect(interceptor.pollCounter.withLock { $0 } == 0)
+
+                let workflowHandle = client.workflowHandle(
+                    type: ValidatedUpdateWorkflow.self,
+                    id: workflowID
+                )
+                let result = try await workflowHandle.executeUpdate(
+                    updateType: ValidatedUpdateWorkflow.SetValue.self,
+                    input: "valid"
+                )
+                #expect(result == "set:valid")
+
+                let workflowResult = try await workflowHandle.result()
+                #expect(workflowResult == "valid")
             }
         }
 

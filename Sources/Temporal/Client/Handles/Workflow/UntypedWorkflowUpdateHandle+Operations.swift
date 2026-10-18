@@ -28,8 +28,8 @@ extension UntypedWorkflowUpdateHandle {
     /// The method suspends until the update reaches a terminal state (completed or failed).
     ///
     /// If the update outcome was already known at handle creation time (for example, when the
-    /// update was started with ``WorkflowUpdateStage/completed``), the cached result is returned
-    /// without making an additional RPC.
+    /// update was started with ``WorkflowUpdateStage/completed``), the result is returned, or the
+    /// update failure thrown, without making an additional RPC.
     ///
     /// - Parameters:
     ///    - resultTypes: The expected result types from the update operation.
@@ -40,20 +40,19 @@ extension UntypedWorkflowUpdateHandle {
         resultTypes: repeat (each Result).Type,
         callOptions: CallOptions? = nil
     ) async throws -> (repeat each Result) {
+        let outcome: Api.Update.V1.Outcome
         if let knownOutcome {
-            return try await self.interceptor.workflowService.configuration.dataConverter.convertPayloads(
-                knownOutcome,
-                as: repeat each resultTypes
+            outcome = knownOutcome
+        } else {
+            outcome = try await self.interceptor.pollWorkflowUpdate(
+                .init(
+                    workflowID: self.workflowID,
+                    runID: self.workflowRunID,
+                    updateID: self.id,
+                    callOptions: callOptions
+                )
             )
         }
-        let outcome = try await self.interceptor.pollWorkflowUpdate(
-            .init(
-                workflowID: self.workflowID,
-                runID: self.workflowRunID,
-                updateID: self.id,
-                callOptions: callOptions
-            )
-        )
         let dataConverter = self.interceptor.workflowService.configuration.dataConverter
         let payloads = try await outcome.successPayloads(using: dataConverter)
         return try await dataConverter.convertPayloads(payloads, as: repeat each resultTypes)

@@ -431,7 +431,7 @@ extension TemporalClient.Interceptor {
                 id: result.updateID,
                 workflowID: input.id,
                 workflowRunID: input.runID,  // Starting update does not create a new runID
-                knownOutcome: result.outcomePayloads
+                knownOutcome: result.outcome
             )
         }
     }
