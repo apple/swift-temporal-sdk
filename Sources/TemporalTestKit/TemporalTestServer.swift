@@ -393,6 +393,7 @@ public struct TemporalTestServer: Sendable {
     ///   - body: An async closure that receives the running worker and performs test operations. When the closure completes, the worker is cancelled.
     /// - Returns: The value returned by `body`.
     /// - Throws: Any error thrown while creating/starting the worker, establishing the transport, or by the `body` closure.
+    ///   Also throws if the worker stops before `body` finishes.
     /// - Note: The worker is run concurrently in a `TaskGroup`. The group is cancelled after the first task
     ///   (typically your `body`) completes. The transport uses plaintext HTTP/2 and is intended for test environments only.
     public func withConnectedWorker<Result: Sendable>(
@@ -460,8 +461,16 @@ public struct TemporalTestServer: Sendable {
 
             let result = await group.nextResult()!
             group.cancelAll()
-            return try result.get()!
+            guard let value = try result.get() else {
+                throw WorkerStoppedError()
+            }
+            return value
         }
+    }
+
+    /// Thrown when the worker stops before the body passed to `withConnectedWorker` finishes.
+    private struct WorkerStoppedError: Error, CustomStringConvertible {
+        var description: String { "The worker stopped before the body finished." }
     }
 
     // MARK: - Worker and Client Convenience
@@ -500,6 +509,7 @@ public struct TemporalTestServer: Sendable {
     ///   - body: An async closure that receives the task queue name and a connected client.
     /// - Returns: The value returned by `body`.
     /// - Throws: Any error thrown while creating the worker, connecting the client, or by the `body` closure.
+    ///   Also throws if the worker stops before `body` finishes.
     public func withWorkerAndClient<Result: Sendable>(
         activities: [any ActivityDefinition] = [],
         workflows: [any WorkflowDefinition.Type] = [],

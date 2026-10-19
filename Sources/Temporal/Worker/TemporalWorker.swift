@@ -73,9 +73,16 @@ public final class TemporalWorker: Service, Sendable {
             AnyUInt8GRPCClient
         >
 
+    /// The worker configuration after plugins have been applied, passed to each plugin's
+    /// ``WorkerPlugin/runWorker(configuration:next:)``.
+    private let configuration: Configuration
+
     /// Creates a Temporal worker with the specified configuration and registrations.
     ///
     /// The worker automatically sets up gRPC client interceptors for tracing, metrics, and logging.
+    ///
+    /// Activities and workflows from plugins set on ``Configuration/plugins`` are registered
+    /// alongside the ones passed here.
     ///
     /// - Parameters:
     ///   - configuration: The worker configuration including namespace, task queue, and
@@ -87,6 +94,9 @@ public final class TemporalWorker: Service, Sendable {
     ///   activities.
     ///   - workflows: The workflow types to register with this worker for task processing.
     ///   - logger: The logger instance used for diagnostic and debugging output.
+    ///
+    /// - Warning: Registrations are not deduplicated, so passing an activity or workflow whose name a
+    ///   plugin also registers is an error.
     public init<each Container: ActivityContainer, Transport: ClientTransport>(
         configuration: Configuration,
         transport: Transport,
@@ -95,12 +105,16 @@ public final class TemporalWorker: Service, Sendable {
         workflows: [any WorkflowDefinition.Type] = [],
         logger: Logger
     ) {
+        var configuration = configuration
+        configuration.applyPlugins(logger: logger)
+
+        self.configuration = configuration
         self.implementation = GenericTemporalWorker(
             configuration: configuration,
             transport: transport,
             activityContainers: repeat each activityContainers,
-            activities: activities,
-            workflows: workflows,
+            activities: activities + configuration.plugins.flatMap(\.activities),
+            workflows: workflows + configuration.plugins.flatMap(\.workflows),
             logger: logger
         )
     }
@@ -108,12 +122,24 @@ public final class TemporalWorker: Service, Sendable {
     /// Starts the worker and begins polling for workflow and activity tasks.
     ///
     /// This method suspends indefinitely until the worker is shut down or an error occurs.
+    /// Each plugin's ``WorkerPlugin/runWorker(configuration:next:)`` wraps the run; the first plugin
+    /// is the outermost wrap.
     public func run() async throws {
-        try await self.implementation.run()
+        try await applyWorkerRunChain(
+            plugins: self.configuration.plugins[...],
+            configuration: self.configuration
+        ) {
+            try await self.implementation.run()
+        }
     }
 
     package func run(bridgeRuntime: BridgeRuntime) async throws {
-        try await self.implementation.run(bridgeRuntime: bridgeRuntime)
+        try await applyWorkerRunChain(
+            plugins: self.configuration.plugins[...],
+            configuration: self.configuration
+        ) {
+            try await self.implementation.run(bridgeRuntime: bridgeRuntime)
+        }
     }
 }
 

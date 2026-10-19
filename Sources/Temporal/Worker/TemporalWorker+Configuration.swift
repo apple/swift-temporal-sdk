@@ -369,6 +369,13 @@ extension TemporalWorker {
         /// A Boolean value that indicates whether to skip fetching server system info on startup (default `false`).
         public var skipGetSystemInfo: Bool = false
 
+        /// The plugins that customize this worker before it starts.
+        ///
+        /// Each plugin's ``WorkerPlugin/configureWorker(_:)`` runs against this configuration, in array
+        /// order, when the worker is created, and the plugins' activities and workflows are registered
+        /// with it. See ``WorkerPlugin``.
+        public var plugins: [any WorkerPlugin] = []
+
         /// Creates a Temporal worker configuration with the specified parameters.
         ///
         /// The configuration includes a tracing interceptor by default. Override the `interceptors`
@@ -383,6 +390,7 @@ extension TemporalWorker {
         ///   - dataConverter: The converter used to encode and decode payloads.
         ///   - interceptors: Interceptors of the worker, earlier ones wrap later ones. Defaults to a tracing interceptor.
         ///   - apiKey: The API key to use for authenticating with a Temporal Cloud instance. Defaults to none.
+        ///   - plugins: The plugins to apply when the worker is created. Defaults to none.
         public init(
             namespace: String,
             taskQueue: String,
@@ -391,7 +399,8 @@ extension TemporalWorker {
             clientIdentity: String? = nil,
             dataConverter: DataConverter = DataConverter.default,
             interceptors: [any WorkerInterceptor] = [TemporalWorkerTracingInterceptor()],
-            apiKey: String? = nil
+            apiKey: String? = nil,
+            plugins: [any WorkerPlugin] = []
         ) {
             self.namespace = namespace
             self.taskQueue = taskQueue
@@ -403,6 +412,7 @@ extension TemporalWorker {
             self.dataConverter = dataConverter
             self.interceptors = interceptors
             self.apiKey = apiKey
+            self.plugins = plugins
         }
 
         /// Creates a Temporal worker configuration from external configuration data.
@@ -447,11 +457,13 @@ extension TemporalWorker {
         ///   - dataConverter: The converter for encoding and decoding payloads. Defaults to the
         ///   standard converter.
         ///   - interceptors: A collection of worker interceptors. Defaults to tracing interceptor only.
+        ///   - plugins: The plugins to apply when the worker is created. Defaults to none.
         /// - Throws: Configuration errors if required keys are missing or invalid.
         public init(
             configReader: ConfigReader,
             dataConverter: DataConverter = DataConverter.default,
-            interceptors: [any WorkerInterceptor] = [TemporalWorkerTracingInterceptor()]
+            interceptors: [any WorkerInterceptor] = [TemporalWorkerTracingInterceptor()],
+            plugins: [any WorkerPlugin] = []
         ) throws {
             let snapshot = configReader.snapshot()
             let namespace = try snapshot.requiredString(forKey: .workerNamespace)
@@ -468,7 +480,8 @@ extension TemporalWorker {
                 clientIdentity: clientIdentity,
                 dataConverter: dataConverter,
                 interceptors: interceptors,
-                apiKey: apiKey
+                apiKey: apiKey,
+                plugins: plugins
             )
 
             // Set optional configuration values that have defaults

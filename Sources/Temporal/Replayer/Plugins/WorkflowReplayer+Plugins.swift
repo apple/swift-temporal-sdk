@@ -1,0 +1,61 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Swift Temporal SDK open source project
+//
+// Copyright (c) 2026 Apple Inc. and the Swift Temporal SDK project authors
+// Licensed under MIT License
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of Swift Temporal SDK project authors
+//
+// SPDX-License-Identifier: MIT
+//
+//===----------------------------------------------------------------------===//
+
+internal import Logging
+
+extension WorkflowReplayer.Configuration {
+    /// Applies ``WorkflowReplayer/Configuration/plugins`` to this configuration, in order, then
+    /// appends their ``WorkerPlugin/workflows`` to ``WorkflowReplayer/Configuration/workflows``.
+    ///
+    /// Each plugin's ``WorkerPlugin/configureReplayer(_:)`` sees the changes made by the plugins
+    /// before it. The plugin list is captured before the first plugin runs and restored afterward,
+    /// so a plugin that changes ``WorkflowReplayer/Configuration/plugins`` has no effect. One
+    /// `debug` entry per plugin goes to ``WorkflowReplayer/Configuration/logger``.
+    ///
+    /// Called by ``WorkflowReplayer/init(configuration:)``.
+    ///
+    /// - Note: Call this once per configuration value. Calling it again re-runs every plugin and
+    ///   duplicates anything they append, such as interceptors and workflows.
+    package mutating func applyPlugins() {
+        let plugins = self.plugins
+        // Read once, so every entry goes through the same logger even if a plugin replaces it.
+        let logger = self.logger
+        for plugin in plugins {
+            logger.debug("Applying replayer plugin", metadata: [LoggingKeys.pluginName: "\(plugin.name)"])
+            plugin.configureReplayer(&self)
+        }
+        self.workflows += plugins.flatMap(\.workflows)
+        self.plugins = plugins
+    }
+}
+
+/// Runs `body` wrapped by each plugin's ``WorkerPlugin/runReplayer(configuration:next:)``.
+///
+/// The first plugin is the outermost wrap.
+package func applyReplayerRunChain<R: Sendable>(
+    plugins: ArraySlice<any WorkerPlugin>,
+    configuration: WorkflowReplayer.Configuration,
+    body: () async throws -> sending R
+) async throws -> sending R {
+    guard let plugin = plugins.first else {
+        return try await body()
+    }
+    return try await plugin.runReplayer(configuration: configuration) {
+        try await applyReplayerRunChain(
+            plugins: plugins.dropFirst(),
+            configuration: configuration,
+            body: body
+        )
+    }
+}
