@@ -39,7 +39,9 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.36.0"),
+        // Opt out of default traits to avoid pulling in full Foundation via
+        // `BinaryDelimitedStreams`; the SDK does not use BinaryDelimited.
+        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.36.0", traits: []),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.15.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.7.0"),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.2.0"),
