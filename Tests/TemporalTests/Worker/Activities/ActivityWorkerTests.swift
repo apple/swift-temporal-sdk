@@ -253,6 +253,87 @@ private struct ExecutionContextActivity: ActivityDefinition {
     }
 }
 
+/// Releases every waiter only once `count` of them have arrived.
+///
+/// Lets a test hold several activities in flight simultaneously, so a logger leaking between
+/// concurrently executing activities becomes observable.
+private final class ActivityBarrier: Sendable {
+    private struct State {
+        var remaining: Int
+        var waiters: [CheckedContinuation<Void, Never>] = []
+    }
+
+    private let state: Mutex<State>
+
+    init(count: Int) {
+        self.state = Mutex(State(remaining: count))
+    }
+
+    func arriveAndWait() async {
+        await withCheckedContinuation { continuation in
+            let released = self.state.withLock { state -> [CheckedContinuation<Void, Never>] in
+                state.waiters.append(continuation)
+                state.remaining -= 1
+                guard state.remaining == 0 else { return [] }
+                defer { state.waiters = [] }
+                return state.waiters
+            }
+            for waiter in released {
+                waiter.resume()
+            }
+        }
+    }
+}
+
+private struct TaskLocalLoggerActivity: ActivityDefinition {
+    /// The metadata observed on the task local logger, alongside the values that
+    /// `ActivityExecutionContext.Info` independently reports for the same execution.
+    ///
+    /// Anchoring the expectation to `Info` rather than to `ActivityExecutionContext.logger` keeps
+    /// this test meaningful once the stored logger goes away.
+    struct Observations: Codable, Hashable {
+        var taskLocal: [String: String]
+        var expected: [String: String]
+        /// The task local logger's label, to catch the handler being inherited from somewhere
+        /// other than the worker's logger.
+        var taskLocalLabel: String
+    }
+
+    typealias Input = Void
+    typealias Output = Observations
+
+    static let name: String? = "TaskLocalLoggerActivity"
+
+    let barrier: ActivityBarrier
+
+    func run(input: Void) async throws -> Observations {
+        let info = try #require(ActivityExecutionContext.current).info
+        let expected = [
+            LoggingKeys.taskQueue: info.taskQueue,
+            LoggingKeys.workflowNamespace: info.workflowNamespace,
+            LoggingKeys.workflowID: info.workflowID,
+            LoggingKeys.workflowRunID: info.workflowRunID,
+            LoggingKeys.workflowType: info.workflowType,
+            LoggingKeys.activityID: info.activityID,
+            LoggingKeys.activityName: info.activityType,
+            LoggingKeys.activityAttempt: "\(info.attempt)",
+        ]
+
+        // Read the task local only once every dispatched activity is inside its own execution, so
+        // that metadata bleeding across in-flight activities shows up as a mismatch below.
+        await self.barrier.arriveAndWait()
+
+        let logger = Logger.current
+        let taskLocal = expected.keys.reduce(into: [String: String]()) { observed, key in
+            if case let .string(value) = logger[metadataKey: key] {
+                observed[key] = value
+            }
+        }
+
+        return .init(taskLocal: taskLocal, expected: expected, taskLocalLabel: logger.label)
+    }
+}
+
 private struct HeartbeatActivity: ActivityDefinition {
     typealias Input = Void
     typealias Output = Void
@@ -417,18 +498,30 @@ struct ActivityWorkerTests {
     private let bridgeWorker = MockBridgeWorker()
     private let activityWorker: ActivityWorker<MockBridgeWorker>
 
+    /// The logger the worker logs through, bound as the task local logger around its construction and run.
+    private static let logger = Logger(label: "TestLogger")
+
     init(activities: [any ActivityDefinition] = [], dataConverter: DataConverter = .default, interceptors: [any WorkerInterceptor] = []) {
+        let bridgeWorker = self.bridgeWorker
         do {
-            self.activityWorker = try .init(
-                worker: self.bridgeWorker,
-                activities: activities,
-                taskQueue: "test-queue",
-                dataConverter: dataConverter,
-                interceptors: interceptors,
-                logger: .init(label: "TestLogger")
-            )
+            self.activityWorker = try withLogger(Self.logger) { _ in
+                try .init(
+                    worker: bridgeWorker,
+                    activities: activities,
+                    taskQueue: "test-queue",
+                    dataConverter: dataConverter,
+                    interceptors: interceptors
+                )
+            }
         } catch {
             fatalError("Failed to initialize ActivityWorker: \(error)")
+        }
+    }
+
+    /// Runs the activity worker with the harness logger bound as the task local logger.
+    private func run() async throws {
+        try await withLogger(Self.logger) { _ in
+            try await self.activityWorker.run()
         }
     }
 
@@ -436,7 +529,7 @@ struct ActivityWorkerTests {
     func unknownActivity() async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await self.activityWorker.run()
+                try await self.run()
             }
 
             self.bridgeWorker.activityTaskContinuation.yield(
@@ -466,7 +559,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -506,7 +599,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask(executorPreference: executor) {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -540,7 +633,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -585,7 +678,7 @@ struct ActivityWorkerTests {
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
                 await #expect(throws: ActivityTaskPollingError.self) {
-                    try await test.activityWorker.run()
+                    try await test.run()
                 }
             }
 
@@ -618,7 +711,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -666,7 +759,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -723,7 +816,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -764,7 +857,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -805,7 +898,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             let currentAttemptScheduledTime = Date(timeIntervalSince1970: 1_737_302_400)
@@ -886,7 +979,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -941,7 +1034,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -983,7 +1076,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -1021,7 +1114,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -1081,16 +1174,18 @@ struct ActivityWorkerTests {
 
         let bridgeWorker = MockBridgeWorker()
 
-        // Expect error to be thrown when creating ActivityWorker with duplicate activity names
-        #expect(throws: (any Error).self) {
-            let _ = try ActivityWorker(
-                worker: bridgeWorker,
-                activities: [FirstActivity(), SecondActivity(), UniqueActivity()],
-                taskQueue: "test-queue",
-                dataConverter: .default,
-                interceptors: [],
-                logger: logger
-            )
+        // Expect error to be thrown when creating ActivityWorker with duplicate activity names.
+        // The worker logs through the task local logger, so bind the capturing handler.
+        _ = withLogger(logger) { _ in
+            #expect(throws: (any Error).self) {
+                let _ = try ActivityWorker(
+                    worker: bridgeWorker,
+                    activities: [FirstActivity(), SecondActivity(), UniqueActivity()],
+                    taskQueue: "test-queue",
+                    dataConverter: .default,
+                    interceptors: []
+                )
+            }
         }
 
         // Verify the info log was recorded before the error was thrown
@@ -1115,15 +1210,17 @@ struct ActivityWorkerTests {
 
         let bridgeWorker = MockBridgeWorker()
 
-        // Should not throw when creating ActivityWorker with unique activity names
-        let _ = try ActivityWorker(
-            worker: bridgeWorker,
-            activities: [UniqueActivity()],
-            taskQueue: "test-queue",
-            dataConverter: .default,
-            interceptors: [],
-            logger: logger
-        )
+        // Should not throw when creating ActivityWorker with unique activity names.
+        // The worker logs through the task local logger, so bind the capturing handler.
+        try withLogger(logger) { _ in
+            let _ = try ActivityWorker(
+                worker: bridgeWorker,
+                activities: [UniqueActivity()],
+                taskQueue: "test-queue",
+                dataConverter: .default,
+                interceptors: []
+            )
+        }
 
         // Verify no logs were recorded
         logHandler.entries.withLock { entries in
@@ -1137,7 +1234,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -1176,7 +1273,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -1218,7 +1315,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             // Send a task for the registered VoidActivity
@@ -1252,15 +1349,17 @@ struct ActivityWorkerTests {
     func reservedNamePrefixThrowsError() async throws {
         let bridgeWorker = MockBridgeWorker()
 
-        #expect(throws: (any Error).self) {
-            let _ = try ActivityWorker(
-                worker: bridgeWorker,
-                activities: [ReservedNameActivity()],
-                taskQueue: "test-queue",
-                dataConverter: .default,
-                interceptors: [],
-                logger: .init(label: "TestLogger")
-            )
+        // The worker logs through the task local logger.
+        _ = withLogger(Logger(label: "TestLogger")) { _ in
+            #expect(throws: (any Error).self) {
+                let _ = try ActivityWorker(
+                    worker: bridgeWorker,
+                    activities: [ReservedNameActivity()],
+                    taskQueue: "test-queue",
+                    dataConverter: .default,
+                    interceptors: []
+                )
+            }
         }
     }
 
@@ -1268,15 +1367,17 @@ struct ActivityWorkerTests {
     func duplicateDynamicActivitiesThrowsError() async throws {
         let bridgeWorker = MockBridgeWorker()
 
-        #expect(throws: (any Error).self) {
-            let _ = try ActivityWorker(
-                worker: bridgeWorker,
-                activities: [TestDynamicActivity(), TestDynamicActivity()],
-                taskQueue: "test-queue",
-                dataConverter: .default,
-                interceptors: [],
-                logger: .init(label: "TestLogger")
-            )
+        // The worker logs through the task local logger.
+        _ = withLogger(Logger(label: "TestLogger")) { _ in
+            #expect(throws: (any Error).self) {
+                let _ = try ActivityWorker(
+                    worker: bridgeWorker,
+                    activities: [TestDynamicActivity(), TestDynamicActivity()],
+                    taskQueue: "test-queue",
+                    dataConverter: .default,
+                    interceptors: []
+                )
+            }
         }
     }
 
@@ -1286,7 +1387,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -1319,7 +1420,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             test.bridgeWorker.activityTaskContinuation.yield(
@@ -1359,7 +1460,7 @@ struct ActivityWorkerTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await test.activityWorker.run()
+                try await test.run()
             }
 
             let currentAttemptScheduledTime = Date(timeIntervalSince1970: 1_737_302_400)
@@ -1404,6 +1505,57 @@ struct ActivityWorkerTests {
             // priority and retryPolicy should be nil when not set on the proto
             #expect(decodedExecutionContext.priorityKey == nil)
             #expect(decodedExecutionContext.retryPolicyMaxAttempts == nil)
+            group.cancelAll()
+        }
+    }
+
+    @Test
+    static func activityTaskLocalWorkerCarriesCorrectMetadata() async throws {
+        // Two activities in flight on the same worker, so a leaked logger shows up as metadata
+        // from the wrong execution.
+        let activity = TaskLocalLoggerActivity(barrier: .init(count: 2))
+        let test = ActivityWorkerTests(activities: [activity])
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await test.run()
+            }
+
+            for index in 1...2 {
+                test.bridgeWorker.activityTaskContinuation.yield(
+                    .with {
+                        $0.taskToken = Data([UInt8(index)])
+                        $0.start.activityType = "TaskLocalLoggerActivity"
+                        $0.start.activityID = "ActivityID\(index)"
+                        $0.start.attempt = UInt32(index)
+                        $0.start.workflowType = "WorkflowType\(index)"
+                        $0.start.workflowNamespace = "WorkflowNamespace\(index)"
+                        $0.start.workflowExecution = .with {
+                            $0.runID = "RunID\(index)"
+                            $0.workflowID = "WorkflowID\(index)"
+                        }
+                    }
+                )
+            }
+
+            var activityTaskCompletionIterator = test.bridgeWorker.activityTaskCompletionStream.makeAsyncIterator()
+            var observationsByActivityID = [String: TaskLocalLoggerActivity.Observations]()
+            for _ in 1...2 {
+                let completion = try #require(try await activityTaskCompletionIterator.next())
+                let observations = try JSONDecoder().decode(
+                    TaskLocalLoggerActivity.Observations.self,
+                    from: completion.result.completed.result.data
+                )
+                observationsByActivityID[try #require(observations.expected[LoggingKeys.activityID])] = observations
+            }
+
+            // Both activities ran, and each saw every metadata key the execution context reports.
+            #expect(observationsByActivityID.keys.sorted() == ["ActivityID1", "ActivityID2"])
+            for (activityID, observations) in observationsByActivityID {
+                #expect(observations.taskLocalLabel == "TestLogger")
+                #expect(observations.taskLocal == observations.expected, "task local logger metadata mismatch for \(activityID)")
+            }
+
             group.cancelAll()
         }
     }

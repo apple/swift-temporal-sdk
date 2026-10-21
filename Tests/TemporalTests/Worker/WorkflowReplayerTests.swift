@@ -93,7 +93,7 @@ extension TestServerDependentTests {
             static let logMessage: Logger.Message = "workflow-log-record"
 
             mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
-                context.logger.info(Self.logMessage)
+                Logger.current.info(Self.logMessage)
             }
         }
 
@@ -196,12 +196,13 @@ extension TestServerDependentTests {
             let handler = InMemoryLogHandler()
             let configuration = WorkflowReplayer.Configuration(
                 workflows: [LoggingWorkflow.self],
-                logger: Logger(label: "WorkflowReplayer") { _ in handler },
                 enableLoggingInReplay: enableLoggingInReplay
             )
 
             let replayer = WorkflowReplayer(configuration: configuration)
-            let result = try await replayer.replayWorkflow(history: history)
+            let result = try await withLogger(Logger(label: "WorkflowReplayer") { _ in handler }) { _ in
+                try await replayer.replayWorkflow(history: history)
+            }
             #expect(result.replayFailure == nil)
 
             return handler

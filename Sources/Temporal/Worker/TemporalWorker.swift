@@ -30,7 +30,7 @@ import TemporalInstrumentation
 ///
 /// ## Creating a worker
 ///
-/// Create a worker with configuration, transport, activities, workflows, and a logger:
+/// Create a worker with configuration, transport, activities, and workflows:
 ///
 /// ```swift
 /// let temporalWorker = TemporalWorker(
@@ -44,17 +44,19 @@ import TemporalInstrumentation
 ///     ),
 ///     activityContainers: MyActivityContainer(),
 ///     activities: [],
-///     workflows: [MyWorkflow.self],
-///     logger: logger
+///     workflows: [MyWorkflow.self]
 /// )
 /// ```
 ///
 /// ## Running the worker
 ///
-/// Start processing tasks by calling the `run()` method:
+/// Start processing tasks by calling the `run()` method. The worker logs through the task local
+/// logger, so bind your application's logger around it:
 ///
 /// ```swift
-/// try await temporalWorker.run()
+/// try await withLogger(logger) { _ in
+///     try await temporalWorker.run()
+/// }
 /// ```
 ///
 /// The worker runs indefinitely until cancelled or gracefully shut down.
@@ -85,7 +87,43 @@ public final class TemporalWorker: Service, Sendable {
     ///   - activities: Additional standalone activity definitions to register alongside container
     ///   activities.
     ///   - workflows: The workflow types to register with this worker for task processing.
+    public init<each Container: ActivityContainer, Transport: ClientTransport>(
+        configuration: Configuration,
+        transport: Transport,
+        activityContainers: repeat each Container,
+        activities: [any ActivityDefinition] = [],
+        workflows: [any WorkflowDefinition.Type] = []
+    ) {
+        self.implementation = GenericTemporalWorker(
+            configuration: configuration,
+            transport: transport,
+            activityContainers: repeat each activityContainers,
+            activities: activities,
+            workflows: workflows
+        )
+    }
+
+    /// Creates a Temporal worker with the specified configuration and registrations.
+    ///
+    /// - Parameters:
+    ///   - configuration: The worker configuration including namespace, task queue, and
+    ///   operational settings.
+    ///   - transport: The transport layer for gRPC communication with the Temporal server.
+    ///   - activityContainers: One or more containers that provide activity implementations for
+    ///   registration.
+    ///   - activities: Additional standalone activity definitions to register alongside container
+    ///   activities.
+    ///   - workflows: The workflow types to register with this worker for task processing.
     ///   - logger: The logger instance used for diagnostic and debugging output.
+    @available(
+        *,
+        deprecated,
+        message: """
+            The worker no longer takes a logger. It logs through the task local logger instead. so \
+            this logger is ignored. Bind yours with `withLogger(_:)` around `run()`, or at your \
+            application's entry point.
+            """
+    )
     public init<each Container: ActivityContainer, Transport: ClientTransport>(
         configuration: Configuration,
         transport: Transport,
@@ -99,8 +137,7 @@ public final class TemporalWorker: Service, Sendable {
             transport: transport,
             activityContainers: repeat each activityContainers,
             activities: activities,
-            workflows: workflows,
-            logger: logger
+            workflows: workflows
         )
     }
 
@@ -136,16 +173,13 @@ where
     private let activities: [any ActivityDefinition]
     /// The workflow types registered with this worker for task execution.
     private let workflows: [any WorkflowDefinition.Type]
-    /// The logger instance used for diagnostic and debugging output.
-    private let logger: Logger
 
     package convenience init<each Container: ActivityContainer, Transport: ClientTransport>(
         configuration: TemporalWorker.Configuration,
         transport: Transport,
         activityContainers: repeat each Container,
         activities: [any ActivityDefinition],
-        workflows: [any WorkflowDefinition.Type],
-        logger: Logger
+        workflows: [any WorkflowDefinition.Type]
     ) {
         let client = GRPCClient(
             transport: transport,
@@ -162,7 +196,6 @@ where
                     networkTransportMethod: .tcp
                 ),
                 ClientOTelLoggingInterceptor(
-                    logger: logger,
                     serverHostname: configuration.instrumentation.serverHostname,
                     networkTransportMethod: .tcp,
                     includeRequestMetadata: true,
@@ -180,8 +213,7 @@ where
             ),
             activityContainers: repeat each activityContainers,
             activities: activities,
-            workflows: workflows,
-            logger: logger
+            workflows: workflows
         )
     }
 
@@ -190,8 +222,7 @@ where
         client: Client,
         activityContainers: repeat each Container,
         activities: [any ActivityDefinition],
-        workflows: [any WorkflowDefinition.Type],
-        logger: Logger
+        workflows: [any WorkflowDefinition.Type]
     ) {
         self.configuration = configuration
 
@@ -209,8 +240,6 @@ where
         }
         self.activities = combinedActivities
         self.workflows = workflows
-
-        self.logger = logger
     }
 
     /// Runs the Temporal worker to process activities and workflows.
@@ -236,13 +265,24 @@ where
     /// - Parameter bridgeRuntime: The bridge runtime to use for initializing the worker.
     /// - Throws: An error when the worker is cancelled, or other errors during startup or operation.
     package func run(bridgeRuntime: BridgeRuntime) async throws {
-        self.logger.debug("Running Temporal worker")
+        try await withLogger(
+            mergingMetadata: [
+                LoggingKeys.taskQueue: "\(self.configuration.taskQueue)",
+                LoggingKeys.workflowNamespace: "\(self.configuration.namespace)",
+            ]
+        ) { _ in
+            try await self.runWorker(bridgeRuntime: bridgeRuntime)
+        }
+    }
+
+    private func runWorker(bridgeRuntime: BridgeRuntime) async throws {
+        let logger = Logger.current
+        logger.debug("Running Temporal worker")
 
         try await BridgeClient.withBridgeClient(
             grpcClient: self.workerClient,
             runtime: bridgeRuntime,
-            configuration: self.configuration,
-            logger: self.logger
+            configuration: self.configuration
         ) { client in
             var optionalWorker: BridgeWorker?
 
@@ -260,8 +300,7 @@ where
                         try ActivityWorker(
                             worker: worker,
                             configuration: self.configuration,
-                            activities: self.activities,
-                            logger: self.logger
+                            activities: self.activities
                         )
                     } else {
                         nil
@@ -271,8 +310,7 @@ where
                         try WorkflowWorker(
                             worker: worker,
                             configuration: self.configuration,
-                            workflows: self.workflows,
-                            logger: self.logger
+                            workflows: self.workflows
                         )
                     } else {
                         nil
@@ -286,12 +324,12 @@ where
             } catch {
                 // Activity and workflow worker have shutdown, now finalize it.
                 if let worker = optionalWorker {
-                    self.logger.debug("Finalizing shut down of Temporal worker")
+                    logger.debug("Finalizing shut down of Temporal worker")
                     do {
                         try await worker.finalizeShutdown()
                     } catch {
                         // Swallow the error so that we can finish shutdown.
-                        self.logger.warning(
+                        logger.warning(
                             "Temporal worker failed finalizing shutdown",
                             metadata: [
                                 LoggingKeys.errorType: "\(type(of: error))",
@@ -299,10 +337,10 @@ where
                             ]
                         )
                     }
-                    self.logger.debug("Finished shutting down bridge worker.")
+                    logger.debug("Finished shutting down bridge worker.")
                 }
 
-                self.logger.debug("Shut down task queue and worker client.")
+                logger.debug("Shut down task queue and worker client.")
                 throw error
             }
         }
@@ -316,6 +354,7 @@ where
         workflowWorker: WorkflowWorker?,
         isRunningForShutdown: Bool = false
     ) async throws {
+        let logger = Logger.current
         try await cancelWhenGracefulShutdown {
             try await withTaskCancellationHandler {
                 // Block cancellation from propagating inwards.
@@ -336,11 +375,11 @@ where
                             try await group.waitForAll()
                         } else {
                             // Wait for one of the tasks to fail and then initiate shutdown.
-                            self.logger.debug("Waiting for cancellation or graceful shutdown of Temporal worker")
+                            logger.debug("Waiting for cancellation or graceful shutdown of Temporal worker")
                             do {
                                 try await group.next()
                             } catch {
-                                self.logger.debug(
+                                logger.debug(
                                     "Initiating shut down of Temporal worker due to temporal activity / workflow worker error",
                                     metadata: [
                                         LoggingKeys.errorType: "\(type(of: error))",
@@ -353,14 +392,14 @@ where
                                 // to run that poll task again after shutdown since it needs to handle post-shutdown
                                 // messages: https://github.com/temporalio/sdk-dotnet/blob/5b15fb8523879db47c3442cf3cfc739643d1ed14/src/Temporalio/Worker/TemporalWorker.cs#L345
                                 // TODO: Add a timeout when waiting for all?
-                                self.logger.debug("Rerunning workers to clean up and finish work.")
+                                logger.debug("Rerunning workers to clean up and finish work.")
                                 try? await self.runWorkersIgnoringCancellation(
                                     worker: worker,
                                     activityWorker: activityWorker,
                                     workflowWorker: workflowWorker,
                                     isRunningForShutdown: true
                                 )
-                                self.logger.debug(
+                                logger.debug(
                                     "Finished rerunning workers for cleanup. Throwing back error.",
                                     metadata: [
                                         LoggingKeys.errorType: "\(type(of: error))",
@@ -375,7 +414,7 @@ where
                     }
                 }.value
             } onCancel: {
-                self.logger.debug("Initiating shut down of Temporal worker")
+                logger.debug("Initiating shut down of Temporal worker")
                 worker.initiateShutdown()
             }
         }

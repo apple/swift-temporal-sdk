@@ -33,7 +33,6 @@ extension TemporalWorker {
     ///   - activities: Additional standalone activity definitions to register alongside container
     ///   activities.
     ///   - workflows: The workflow types to register with this worker for task processing.
-    ///   - logger: The logger instance used for diagnostic and debugging output.
     /// - Throws: Transport configuration errors if the HTTP/2 transport cannot be created.
     public convenience init<each Container: ActivityContainer>(
         configuration: Configuration,
@@ -41,8 +40,7 @@ extension TemporalWorker {
         transportSecurity: HTTP2ClientTransport.Posix.TransportSecurity,
         activityContainers: repeat each Container,
         activities: [any ActivityDefinition] = [],
-        workflows: [any WorkflowDefinition.Type] = [],
-        logger: Logger
+        workflows: [any WorkflowDefinition.Type] = []
     ) throws {
         self.init(
             configuration: configuration,
@@ -52,8 +50,49 @@ extension TemporalWorker {
             ),
             activityContainers: repeat each activityContainers,
             activities: activities,
-            workflows: workflows,
-            logger: logger
+            workflows: workflows
+        )
+    }
+
+    /// Creates a Temporal worker with HTTP/2 NIO transport configuration.
+    ///
+    /// - Parameters:
+    ///   - configuration: The worker configuration including namespace, task queue, and
+    ///   operational settings.
+    ///   - target: The target server address to resolve for the Temporal server connection.
+    ///   - transportSecurity: The configuration for securing network traffic (TLS, plaintext, etc.).
+    ///   - activityContainers: One or more containers that provide activity implementations for
+    ///   registration.
+    ///   - activities: Additional standalone activity definitions to register alongside container
+    ///   activities.
+    ///   - workflows: The workflow types to register with this worker for task processing.
+    ///   - logger: The logger instance used for diagnostic and debugging output.
+    /// - Throws: Transport configuration errors if the HTTP/2 transport cannot be created.
+    @available(
+        *,
+        deprecated,
+        message: """
+            The worker no longer takes a logger. It logs through the task local logger instead, so \
+            this logger is ignored. Bind yours with `withLogger(_:)` around `run()`, or at your \
+            application's entry point.
+            """
+    )
+    public convenience init<each Container: ActivityContainer>(
+        configuration: Configuration,
+        target: any ResolvableTarget,
+        transportSecurity: HTTP2ClientTransport.Posix.TransportSecurity,
+        activityContainers: repeat each Container,
+        activities: [any ActivityDefinition] = [],
+        workflows: [any WorkflowDefinition.Type] = [],
+        logger: Logger
+    ) throws {
+        try self.init(
+            configuration: configuration,
+            target: target,
+            transportSecurity: transportSecurity,
+            activityContainers: repeat each activityContainers,
+            activities: activities,
+            workflows: workflows
         )
     }
 }

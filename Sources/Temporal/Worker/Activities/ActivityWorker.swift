@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncAlgorithms
-package import Logging
+import Logging
 import SwiftProtobuf
 import Synchronization
 
@@ -24,8 +24,7 @@ package protocol ActivityWorkerProtocol: Sendable {
     init(
         worker: BridgeWorker,
         configuration: TemporalWorker.Configuration,
-        activities: [any ActivityDefinition],
-        logger: Logger
+        activities: [any ActivityDefinition]
     ) throws
     func run() async throws
 }
@@ -70,8 +69,6 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     private let taskQueue: String
     /// The data converter used for serializing activity inputs and deserializing outputs and errors.
     private let dataConverter: DataConverter
-    /// The logger instance used for diagnostic and debugging output during activity execution.
-    private let logger: Logger
     /// The collection of worker interceptors.
     private let interceptors: [any WorkerInterceptor]
 
@@ -98,16 +95,15 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     ///   - taskQueue: The name of the task queue to poll for activity tasks.
     ///   - dataConverter: The data converter for handling payload serialization and deserialization.
     ///   - interceptors: Worker interceptors for customizing activity execution behavior. Defaults to empty array.
-    ///   - logger: The logger instance for diagnostic and debugging output.
     package init(
         worker: BridgeWorker,
         activities: [any ActivityDefinition],
         taskQueue: String,
         dataConverter: DataConverter,
         interceptors: [any WorkerInterceptor] = [],
-        logger: Logger
     ) throws {
         self.worker = worker
+        let logger = Logger.current
 
         // Validate reserved name prefix and build the activities dictionary
         for activity in activities {
@@ -129,7 +125,6 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
         )
         self.taskQueue = taskQueue
         self.dataConverter = dataConverter
-        self.logger = logger
         self.state = .init(.init(runningActivities: [:]))
         self.interceptors = interceptors
         self.implementation = .init(interceptors: interceptors.compactMap { $0.activityInboundInterceptor })
@@ -138,16 +133,14 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     package convenience init(
         worker: BridgeWorker,
         configuration: TemporalWorker.Configuration,
-        activities: [any ActivityDefinition],
-        logger: Logger
+        activities: [any ActivityDefinition]
     ) throws {
         try self.init(
             worker: worker,
             activities: activities,
             taskQueue: configuration.taskQueue,
             dataConverter: configuration.dataConverter,
-            interceptors: configuration.interceptors,
-            logger: logger
+            interceptors: configuration.interceptors
         )
     }
 
@@ -167,6 +160,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     /// - Throws: Network errors, task execution errors, or cancellation errors that terminate the polling
     /// loop.
     package func run() async throws {
+        let logger = Logger.current
         // A discarding task group releases each activity's child task once it finished, instead of retaining all
         // of them until the worker stops
         var pollingError: (any Error)?
@@ -175,12 +169,9 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
             // for us and telling the bridge worker about it
             do {
                 while true {
-                    self.logger.debug("Polling next activity task")
-                    try await self.pollNextActivityTask(
-                        taskGroup: &group,
-                        logger: self.logger
-                    )
-                    self.logger.debug("Finished activity task")
+                    logger.debug("Polling next activity task")
+                    try await self.pollNextActivityTask(taskGroup: &group)
+                    logger.debug("Finished activity task")
                 }
             } catch {
                 // Cancel the running activities, the task group waits for them to finish before returning
@@ -202,59 +193,52 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     ///
     /// - Parameters:
     ///   - taskGroup: The task group for managing concurrent activity executions.
-    ///   - logger: The logger instance for diagnostic output.
     private func pollNextActivityTask(
-        taskGroup: inout DiscardingTaskGroup,
-        logger: Logger
+        taskGroup: inout DiscardingTaskGroup
     ) async throws {
-        var logger = self.logger
-
         let activityTask = try await self.worker.pollActivityTask()
         let activityTaskToken = ActivityTaskToken(bytes: Array(activityTask.taskToken))
-        logger[metadataKey: LoggingKeys.taskToken] = "\(activityTask.taskToken.base64EncodedString())"
+        try await withLogger(mergingMetadata: [LoggingKeys.taskToken: "\(activityTask.taskToken.base64EncodedString())"]) { logger in
+            switch activityTask.variant {
+            case .start(let activityTaskStart):
+                // Look up the activity by name, falling back to the dynamic activity (nil key)
+                guard let activity = self.activities[activityTaskStart.activityType] ?? self.activities[nil] else {
+                    logger.debug("No activity registered for type")
+                    try await self.sendActivityCompletionForUnknownActivity(
+                        taskToken: activityTask.taskToken,
+                        activityType: activityTaskStart.activityType
+                    )
+                    return
+                }
 
-        switch activityTask.variant {
-        case .start(let activityTaskStart):
-            logger.debug("Starting activity")
+                try withLogger(mergingMetadata: [LoggingKeys.activityName: "\(activityTaskStart.activityType)"]) { logger in
+                    logger.debug("Starting activity")
 
-            // Look up the activity by name, falling back to the dynamic activity (nil key)
-            guard let activity = self.activities[activityTaskStart.activityType] ?? self.activities[nil] else {
-                logger.debug("No activity registered for type")
-                try await self.sendActivityCompletionForUnknownActivity(
-                    taskToken: activityTask.taskToken,
-                    activityType: activityTaskStart.activityType,
-                    logger: logger
+                    try self.startActivity(
+                        activity: activity,
+                        activityTaskStart: activityTaskStart,
+                        taskToken: activityTaskToken,
+                        taskGroup: &taskGroup
+                    )
+                }
+            case .cancel(let activityTaskCancel):
+                logger.debug(
+                    "Cancelling activity",
+                    metadata: [LoggingKeys.activityCancellationReason: "\(activityTaskCancel.reason)"]
                 )
-                return
+
+                guard let runningActivity = self.state.withLock({ $0.runningActivities.removeValue(forKey: activityTaskToken) }) else {
+                    logger.debug("No running activity found")
+                    return
+                }
+
+                runningActivity.cancel(reason: .init(temporalAPICancelReason: activityTaskCancel.reason))
+
+            default:
+                // TODO: Revisit throwing here
+                logger.error("Received an unknown activity task \(String(describing: activityTask.variant))")
+                throw TemporalSDKError("Unknown message type: \(String(describing: activityTask.variant))")
             }
-
-            try await self.startActivity(
-                activity: activity,
-                activityTaskStart: activityTaskStart,
-                taskToken: activityTaskToken,
-                taskGroup: &taskGroup,
-                logger: logger
-            )
-
-        case .cancel(let activityTaskCancel):
-            logger.debug(
-                "Cancelling activity",
-                metadata: [
-                    LoggingKeys.activityCancellationReason: "\(activityTaskCancel.reason)"
-                ]
-            )
-
-            guard let runningActivity = self.state.withLock({ $0.runningActivities.removeValue(forKey: activityTaskToken) }) else {
-                logger.debug("No running activity found")
-                return
-            }
-
-            runningActivity.cancel(reason: .init(temporalAPICancelReason: activityTaskCancel.reason))
-
-        default:
-            // TODO: Revisit throwing here
-            logger.error("Received an unknown activity task \(String(describing: activityTask.variant))")
-            throw TemporalSDKError("Unknown message type: \(String(describing: activityTask.variant))")
         }
     }
 
@@ -269,14 +253,13 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     ///   - activityTaskStart: The task start information from the server.
     ///   - taskToken: The unique token identifying this activity execution.
     ///   - taskGroup: The task group for managing the activity execution task.
-    ///   - logger: The logger instance for diagnostic output.
     private func startActivity<A: ActivityDefinition>(
         activity: A,
         activityTaskStart: Coresdk.ActivityTask.Start,
         taskToken: ActivityTaskToken,
-        taskGroup: inout DiscardingTaskGroup,
-        logger: Logger
-    ) async throws {
+        taskGroup: inout DiscardingTaskGroup
+    ) throws {
+        let logger = Logger.current
         let runningActivity = RunningActivity()
         self.state.withLock { $0.runningActivities[taskToken] = runningActivity }
 
@@ -286,7 +269,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
             // trigger cancellation.
             await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
-                    await runningActivity.waitForCancellation(logger: logger)
+                    await runningActivity.waitForCancellation()
                     self.state.withLock {
                         let _ = $0.runningActivities.removeValue(forKey: taskToken)
                     }
@@ -306,7 +289,6 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                             taskQueue: self.taskQueue,
                             taskToken: taskToken,
                             dataConverter: self.dataConverter,
-                            logger: logger,
                             outboundInterceptors: self.interceptors.compactMap { $0.activityOutboundInterceptor },
                             heartbeatContinuation: heartbeatContinuation,
                             lookupCancellationReason: { runningActivity.cancellationReason }
@@ -365,18 +347,19 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                                         headers = activityTaskStart.headerFields
                                     }
 
-                                    // TODO: We want to have a task local logger here
-                                    let output = try await self.implementation.run(
-                                        activity,
-                                        input: .init(
-                                            definition: activity,
-                                            headers: headers,
-                                            input: input
+                                    let output = try await withLogger(mergingMetadata: executionContext.info.loggingMetadata) { _ in
+                                        try await self.implementation.run(
+                                            activity,
+                                            input: .init(
+                                                definition: activity,
+                                                headers: headers,
+                                                input: input
+                                            )
                                         )
-                                    )
+                                    }
                                     resultPayload = try await self.dataConverter.convertValue(output)
                                 } catch is CompleteAsyncError {  // Async completion of the activity
-                                    logger.debug("Completing activity asynchronously", metadata: [LoggingKeys.activityName: "\(A.name)"])
+                                    logger.debug("Completing activity asynchronously")
                                     return .with {
                                         $0.taskToken = Data(taskToken.bytes)
                                         $0.result = .with { $0.willCompleteAsync = .init() }
@@ -414,8 +397,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                                                 $0.result = resultPayload
                                             }
                                         }
-                                    },
-                                    logger: logger
+                                    }
                                 )
 
                                 return nil
@@ -426,7 +408,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
                             return
                         }
 
-                        try await self.sendActivityCompletion(completion: completion, logger: logger)
+                        try await self.sendActivityCompletion(completion: completion)
                     }
                 }
 
@@ -456,11 +438,10 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     /// - Parameters:
     ///   - taskToken: The unique token for the activity task.
     ///   - activityType: The name of the unregistered activity type.
-    ///   - logger: The logger instance for diagnostic output.
+    ///   - metadata: Logging metadata identifying the activity task.
     private func sendActivityCompletionForUnknownActivity(
         taskToken: Data,
         activityType: String,
-        logger: Logger
     ) async throws {
         let completion = Coresdk.ActivityTaskCompletion.with {
             $0.taskToken = taskToken
@@ -475,7 +456,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
             // $0.result.failed.failure.applicationFailureInfo.details = "details payload"
         }
 
-        try await self.sendActivityCompletion(completion: completion, logger: logger)
+        try await self.sendActivityCompletion(completion: completion)
     }
 
     /// Sends an activity completion message to the Temporal server.
@@ -485,12 +466,10 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
     ///
     /// - Parameters:
     ///   - completion: The completion message containing results or failure information.
-    ///   - logger: The logger instance for diagnostic output.
     private func sendActivityCompletion(
-        completion: Coresdk.ActivityTaskCompletion,
-        logger: Logger
+        completion: Coresdk.ActivityTaskCompletion
     ) async throws {
-        logger.debug("Sending activity completion \(completion)")
+        Logger.current.debug("Sending activity completion \(completion)")
 
         try await self.worker.completeActivityTask(completion)
     }
@@ -507,6 +486,7 @@ package final class ActivityWorker<BridgeWorker: BridgeWorkerProtocol>: Activity
         taskToken: ActivityTaskToken,
         heartbeatDetails: [any Sendable]
     ) async {
+        let logger = Logger.current
         var payloads = [Api.Common.V1.Payload]()
         payloads.reserveCapacity(heartbeatDetails.count)
 

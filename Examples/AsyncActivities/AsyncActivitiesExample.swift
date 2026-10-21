@@ -58,181 +58,186 @@ struct AsyncActivitiesExample {
     static func main() async throws {
         var logger = Logger(label: "TemporalWorker")
         logger.logLevel = .info
+        try await withLogger(logger) { logger in
+            let namespace = "default"
+            let taskQueue = "film-permit-queue"
 
-        let namespace = "default"
-        let taskQueue = "film-permit-queue"
+            print("🎬 NYC Film Permit Processing - Async Activities Example")
+            print(String(repeating: "=", count: 70))
+            print()
 
-        print("🎬 NYC Film Permit Processing - Async Activities Example")
-        print(String(repeating: "=", count: 70))
-        print()
+            // Create worker configuration
+            let workerConfiguration = TemporalWorker.Configuration(
+                namespace: namespace,
+                taskQueue: taskQueue,
+                instrumentation: .init(serverHostname: "localhost")
+            )
 
-        // Create worker configuration
-        let workerConfiguration = TemporalWorker.Configuration(
-            namespace: namespace,
-            taskQueue: taskQueue,
-            instrumentation: .init(serverHostname: "localhost")
-        )
+            // Create activities
+            let activities = FilmPermitActivities()
 
-        // Create activities
-        let activities = FilmPermitActivities()
+            // Helper to create a worker
+            func createWorker() throws -> TemporalWorker {
+                try TemporalWorker(
+                    configuration: workerConfiguration,
+                    target: .ipv4(address: "127.0.0.1", port: 7233),
+                    transportSecurity: .plaintext,
+                    activityContainers: activities,
+                    activities: [],
+                    workflows: [FilmPermitWorkflow.self]  // All workers can handle workflows
+                )
+            }
 
-        // Helper to create a worker
-        func createWorker(workerId: Int) throws -> TemporalWorker {
-            var workerLogger = Logger(label: "TemporalWorker-\(workerId)")
-            workerLogger.logLevel = .info
+            // Each worker gets its own logger, bound around its `run()`.
+            func makeWorkerLogger(workerId: Int) -> Logger {
+                var workerLogger = Logger(label: "TemporalWorker-\(workerId)")
+                workerLogger.logLevel = .info
+                return workerLogger
+            }
 
-            return try TemporalWorker(
-                configuration: workerConfiguration,
+            // Create client
+            let client = try TemporalClient(
                 target: .ipv4(address: "127.0.0.1", port: 7233),
                 transportSecurity: .plaintext,
-                activityContainers: activities,
-                activities: [],
-                workflows: [FilmPermitWorkflow.self],  // All workers can handle workflows
-                logger: workerLogger
-            )
-        }
-
-        // Create client
-        let client = try TemporalClient(
-            target: .ipv4(address: "127.0.0.1", port: 7233),
-            transportSecurity: .plaintext,
-            configuration: .init(
-                instrumentation: .init(
-                    serverHostname: "localhost"
+                configuration: .init(
+                    instrumentation: .init(
+                        serverHostname: "localhost"
+                    )
                 )
-            ),
-            logger: logger
-        )
+            )
 
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            // Start 5 workers
-            print("🚀 Starting Workers:")
-            for workerId in 1...5 {
-                let worker = try createWorker(workerId: workerId)
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                // Start 5 workers
+                print("🚀 Starting Workers:")
+                for workerId in 1...5 {
+                    let worker = try createWorker()
+                    group.addTask {
+                        print("  ✅ Worker \(workerId) started (PID: \(ProcessInfo.processInfo.processIdentifier))")
+                        try await withLogger(makeWorkerLogger(workerId: workerId)) { _ in
+                            try await worker.run()
+                        }
+                    }
+                }
+
+                // Start client
                 group.addTask {
-                    print("  ✅ Worker \(workerId) started (PID: \(ProcessInfo.processInfo.processIdentifier))")
-                    try await worker.run()
+                    try await client.run()
                 }
-            }
 
-            // Start client
-            group.addTask {
-                try await client.run()
-            }
+                // Wait for worker and client to initialize
+                try await Task.sleep(for: .seconds(2))
 
-            // Wait for worker and client to initialize
-            try await Task.sleep(for: .seconds(2))
-
-            print()
-            print(String(repeating: "=", count: 70))
-            print()
-
-            // Fetch permits once, outside of workflow timing
-            print("📥 Fetching film permits from NYC API...")
-            let permits = try await fetchPermits(count: 100)  // Fetch large sample
-            print("✅ Fetched \(permits.count) permits")
-            print()
-
-            print(String(repeating: "=", count: 70))
-            print()
-
-            // Run sequential processing first
-            print("⏳ Test 1: Sequential Processing")
-            print(String(repeating: "-", count: 70))
-            let sequentialWorkflowId = "PERMITS-SEQ-\(UUID().uuidString.prefix(8))"
-            let sequentialRequest = FilmPermitWorkflow.BatchRequest(
-                permits: permits,
-                mode: .sequential
-            )
-
-            print("🔗 View in Temporal UI:")
-            print("  http://localhost:8233/namespaces/\(namespace)/workflows/\(sequentialWorkflowId)")
-            print()
-
-            let sequentialStart = Date()
-            let sequentialResult = try await client.executeWorkflow(
-                type: FilmPermitWorkflow.self,
-                options: .init(id: sequentialWorkflowId, taskQueue: taskQueue),
-                input: sequentialRequest
-            )
-            let sequentialDuration = Date().timeIntervalSince(sequentialStart)
-
-            print()
-            print("✅ Sequential Processing Complete:")
-            print("  Total permits: \(sequentialResult.report.totalPermits)")
-            print("  Valid permits: \(sequentialResult.report.validPermits)")
-            print("  Total time: \(String(format: "%.2f", sequentialDuration))s")
-            print("  Average per permit: \(String(format: "%.2f", sequentialDuration / Double(sequentialResult.report.totalPermits)))s")
-            print()
-
-            // Display borough breakdown
-            if !sequentialResult.report.byBorough.isEmpty {
-                print("  By Borough:")
-                for (borough, count) in sequentialResult.report.byBorough.sorted(by: { $0.value > $1.value }) {
-                    print("    • \(borough): \(count) permits")
-                }
                 print()
-            }
-
-            // Run parallel processing
-            print(String(repeating: "=", count: 70))
-            print()
-            print("⚡ Test 2: Parallel Processing")
-            print(String(repeating: "-", count: 70))
-            let parallelWorkflowId = "PERMITS-PAR-\(UUID().uuidString.prefix(8))"
-            let parallelRequest = FilmPermitWorkflow.BatchRequest(
-                permits: permits,
-                mode: .parallel
-            )
-
-            print("🔗 View in Temporal UI:")
-            print("  http://localhost:8233/namespaces/\(namespace)/workflows/\(parallelWorkflowId)")
-            print()
-            print("📊 Processing \(permits.count) permits in parallel...")
-            print()
-
-            let parallelStart = Date()
-            let parallelResult = try await client.executeWorkflow(
-                type: FilmPermitWorkflow.self,
-                options: .init(id: parallelWorkflowId, taskQueue: taskQueue),
-                input: parallelRequest
-            )
-            let parallelDuration = Date().timeIntervalSince(parallelStart)
-
-            print()
-            print("✅ Parallel Processing Complete:")
-            print("  Total permits: \(parallelResult.report.totalPermits)")
-            print("  Valid permits: \(parallelResult.report.validPermits)")
-            print("  Total time: \(String(format: "%.2f", parallelDuration))s")
-            print("  Average per permit: \(String(format: "%.2f", parallelDuration / Double(parallelResult.report.totalPermits)))s")
-            print()
-
-            // Display category breakdown
-            if !parallelResult.report.byCategory.isEmpty {
-                print("  By Category:")
-                for (category, count) in parallelResult.report.byCategory.sorted(by: { $0.value > $1.value }).prefix(5) {
-                    print("    • \(category): \(count) permits")
-                }
+                print(String(repeating: "=", count: 70))
                 print()
+
+                // Fetch permits once, outside of workflow timing
+                print("📥 Fetching film permits from NYC API...")
+                let permits = try await fetchPermits(count: 100)  // Fetch large sample
+                print("✅ Fetched \(permits.count) permits")
+                print()
+
+                print(String(repeating: "=", count: 70))
+                print()
+
+                // Run sequential processing first
+                print("⏳ Test 1: Sequential Processing")
+                print(String(repeating: "-", count: 70))
+                let sequentialWorkflowId = "PERMITS-SEQ-\(UUID().uuidString.prefix(8))"
+                let sequentialRequest = FilmPermitWorkflow.BatchRequest(
+                    permits: permits,
+                    mode: .sequential
+                )
+
+                print("🔗 View in Temporal UI:")
+                print("  http://localhost:8233/namespaces/\(namespace)/workflows/\(sequentialWorkflowId)")
+                print()
+
+                let sequentialStart = Date()
+                let sequentialResult = try await client.executeWorkflow(
+                    type: FilmPermitWorkflow.self,
+                    options: .init(id: sequentialWorkflowId, taskQueue: taskQueue),
+                    input: sequentialRequest
+                )
+                let sequentialDuration = Date().timeIntervalSince(sequentialStart)
+
+                print()
+                print("✅ Sequential Processing Complete:")
+                print("  Total permits: \(sequentialResult.report.totalPermits)")
+                print("  Valid permits: \(sequentialResult.report.validPermits)")
+                print("  Total time: \(String(format: "%.2f", sequentialDuration))s")
+                print("  Average per permit: \(String(format: "%.2f", sequentialDuration / Double(sequentialResult.report.totalPermits)))s")
+                print()
+
+                // Display borough breakdown
+                if !sequentialResult.report.byBorough.isEmpty {
+                    print("  By Borough:")
+                    for (borough, count) in sequentialResult.report.byBorough.sorted(by: { $0.value > $1.value }) {
+                        print("    • \(borough): \(count) permits")
+                    }
+                    print()
+                }
+
+                // Run parallel processing
+                print(String(repeating: "=", count: 70))
+                print()
+                print("⚡ Test 2: Parallel Processing")
+                print(String(repeating: "-", count: 70))
+                let parallelWorkflowId = "PERMITS-PAR-\(UUID().uuidString.prefix(8))"
+                let parallelRequest = FilmPermitWorkflow.BatchRequest(
+                    permits: permits,
+                    mode: .parallel
+                )
+
+                print("🔗 View in Temporal UI:")
+                print("  http://localhost:8233/namespaces/\(namespace)/workflows/\(parallelWorkflowId)")
+                print()
+                print("📊 Processing \(permits.count) permits in parallel...")
+                print()
+
+                let parallelStart = Date()
+                let parallelResult = try await client.executeWorkflow(
+                    type: FilmPermitWorkflow.self,
+                    options: .init(id: parallelWorkflowId, taskQueue: taskQueue),
+                    input: parallelRequest
+                )
+                let parallelDuration = Date().timeIntervalSince(parallelStart)
+
+                print()
+                print("✅ Parallel Processing Complete:")
+                print("  Total permits: \(parallelResult.report.totalPermits)")
+                print("  Valid permits: \(parallelResult.report.validPermits)")
+                print("  Total time: \(String(format: "%.2f", parallelDuration))s")
+                print("  Average per permit: \(String(format: "%.2f", parallelDuration / Double(parallelResult.report.totalPermits)))s")
+                print()
+
+                // Display category breakdown
+                if !parallelResult.report.byCategory.isEmpty {
+                    print("  By Category:")
+                    for (category, count) in parallelResult.report.byCategory.sorted(by: { $0.value > $1.value }).prefix(5) {
+                        print("    • \(category): \(count) permits")
+                    }
+                    print()
+                }
+
+                // Performance comparison
+                print(String(repeating: "=", count: 70))
+                print()
+                print("📈 Performance Summary:")
+                print(String(repeating: "-", count: 70))
+                print("  Sequential: \(String(format: "%.2f", sequentialDuration))s for \(permits.count) permits")
+                print("  Parallel:   \(String(format: "%.2f", parallelDuration))s for \(permits.count) permits")
+                print()
+                let speedup = sequentialDuration / parallelDuration
+                print("  Speedup: \(String(format: "%.1f", speedup))x")
+                print("  (Parallel processing is \(String(format: "%.1f", speedup))x faster)")
+                print()
+                print("✅ Example completed successfully!")
+                print()
+
+                // Cancel worker and client
+                group.cancelAll()
             }
-
-            // Performance comparison
-            print(String(repeating: "=", count: 70))
-            print()
-            print("📈 Performance Summary:")
-            print(String(repeating: "-", count: 70))
-            print("  Sequential: \(String(format: "%.2f", sequentialDuration))s for \(permits.count) permits")
-            print("  Parallel:   \(String(format: "%.2f", parallelDuration))s for \(permits.count) permits")
-            print()
-            let speedup = sequentialDuration / parallelDuration
-            print("  Speedup: \(String(format: "%.1f", speedup))x")
-            print("  (Parallel processing is \(String(format: "%.1f", speedup))x faster)")
-            print()
-            print("✅ Example completed successfully!")
-            print()
-
-            // Cancel worker and client
-            group.cancelAll()
         }
     }
 }

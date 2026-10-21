@@ -26,63 +26,62 @@ import Foundation
 @main
 struct GreetingExample {
     static func main() async throws {
-        let logger = Logger(label: "TemporalWorker")
+        try await withLogger(Logger(label: "TemporalWorker")) { logger in
 
-        let namespace = "default"
-        let taskQueue = "greeting-queue"
+            let namespace = "default"
+            let taskQueue = "greeting-queue"
 
-        // Create worker configuration
-        let workerConfiguration = TemporalWorker.Configuration(
-            namespace: namespace,
-            taskQueue: taskQueue,
-            instrumentation: .init(serverHostname: "localhost")
-        )
-
-        // Create the worker
-        let worker = try TemporalWorker(
-            configuration: workerConfiguration,
-            target: .ipv4(address: "127.0.0.1", port: 7233),
-            transportSecurity: .plaintext,
-            activityContainers: GreetingActivities(),
-            activities: [],
-            workflows: [GreetingWorkflow.self],
-            logger: logger
-        )
-
-        let client = try TemporalClient(
-            target: .ipv4(address: "127.0.0.1", port: 7233),
-            transportSecurity: .plaintext,
-            configuration: .init(
-                instrumentation: .init(
-                    serverHostname: "localhost"
-                )
-            ),
-            logger: logger
-        )
-
-        try await withThrowingTaskGroup { group in
-            group.addTask {
-                try await worker.run()
-            }
-
-            group.addTask {
-                try await client.run()
-            }
-
-            // Wait for the worker and client to run
-            try await Task.sleep(for: .seconds(1))
-
-            print("Executing workflow")
-            let greeting = try await client.executeWorkflow(
-                type: GreetingWorkflow.self,
-                options: .init(id: UUID().uuidString, taskQueue: taskQueue),
-                input: "Max"
+            // Create worker configuration
+            let workerConfiguration = TemporalWorker.Configuration(
+                namespace: namespace,
+                taskQueue: taskQueue,
+                instrumentation: .init(serverHostname: "localhost")
             )
 
-            print(greeting)
+            // Create the worker
+            let worker = try TemporalWorker(
+                configuration: workerConfiguration,
+                target: .ipv4(address: "127.0.0.1", port: 7233),
+                transportSecurity: .plaintext,
+                activityContainers: GreetingActivities(),
+                activities: [],
+                workflows: [GreetingWorkflow.self]
+            )
 
-            // Cancel the client and worker
-            group.cancelAll()
+            let client = try TemporalClient(
+                target: .ipv4(address: "127.0.0.1", port: 7233),
+                transportSecurity: .plaintext,
+                configuration: .init(
+                    instrumentation: .init(
+                        serverHostname: "localhost"
+                    )
+                )
+            )
+
+            try await withThrowingTaskGroup { group in
+                group.addTask {
+                    try await worker.run()
+                }
+
+                group.addTask {
+                    try await client.run()
+                }
+
+                // Wait for the worker and client to run
+                try await Task.sleep(for: .seconds(1))
+
+                print("Executing workflow")
+                let greeting = try await client.executeWorkflow(
+                    type: GreetingWorkflow.self,
+                    options: .init(id: UUID().uuidString, taskQueue: taskQueue),
+                    input: "Max"
+                )
+
+                print(greeting)
+
+                // Cancel the client and worker
+                group.cancelAll()
+            }
         }
     }
 }

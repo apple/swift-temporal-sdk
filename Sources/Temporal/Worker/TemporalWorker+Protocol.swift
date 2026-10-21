@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 package import GRPCCore
-package import Logging
 package import ServiceLifecycle
 
 /// Defines the requirements for creating and running a Temporal worker.
@@ -28,13 +27,11 @@ package protocol TemporalWorkerProtocol: Service, Sendable {
     ///   - transport: The transport used to communicate with the Temporal service.
     ///   - activities: Activities to register with the worker.
     ///   - workflows: Workflows to register with the worker.
-    ///   - logger: Logger for diagnostic output.
     init<Transport: ClientTransport>(
         for configuration: TemporalWorker.Configuration,
         transport: Transport,
         activities: [any ActivityDefinition],
-        workflows: [any WorkflowDefinition.Type],
-        logger: Logger
+        workflows: [any WorkflowDefinition.Type]
     )
 
     /// Run the worker with a specific runtime.
@@ -48,15 +45,13 @@ extension TemporalWorker: TemporalWorkerProtocol {
         for configuration: TemporalWorker.Configuration,
         transport: Transport,
         activities: [any ActivityDefinition],
-        workflows: [any WorkflowDefinition.Type],
-        logger: Logging.Logger
+        workflows: [any WorkflowDefinition.Type]
     ) where Transport: GRPCCore.ClientTransport {
         self.init(
             configuration: configuration,
             transport: transport,
             activities: activities,
-            workflows: workflows,
-            logger: logger
+            workflows: workflows
         )
     }
 }
@@ -66,15 +61,13 @@ extension GenericTemporalWorker: TemporalWorkerProtocol {
         for configuration: TemporalWorker.Configuration,
         transport: Transport,
         activities: [any ActivityDefinition],
-        workflows: [any WorkflowDefinition.Type],
-        logger: Logging.Logger
+        workflows: [any WorkflowDefinition.Type]
     ) where Transport: GRPCCore.ClientTransport {
         self.init(
             configuration: configuration,
             transport: transport,
             activities: activities,
-            workflows: workflows,
-            logger: logger
+            workflows: workflows
         )
     }
 }
