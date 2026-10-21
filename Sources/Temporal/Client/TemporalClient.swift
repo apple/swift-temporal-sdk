@@ -35,7 +35,7 @@ import Foundation
 ///
 /// ## Creating a client
 ///
-/// Use the ``connect(transport:configuration:logger:_:)`` method for a lifetime-scoped client:
+/// Use the ``connect(transport:configuration:_:)`` method for a lifetime-scoped client:
 ///
 /// ```swift
 /// let configuration = TemporalClient.Configuration(
@@ -159,23 +159,46 @@ public final class TemporalClient: Sendable {
     /// - Parameters:
     ///   - transport: The transport layer that should be used by the gRPC connection of the ``TemporalClient``.
     ///   - configuration: The configuration of the ``TemporalClient``.
-    ///   - logger: The logger used in the ``TemporalClient``.
     ///   - body: A closure which is called with the ``TemporalClient``. When the closure returns, the ``TemporalClient`` is shutdown gracefully.
     /// - Returns: The result of the passed closure.
-    public static func connect<Transport: ClientTransport, Result: Sendable>(
+    public nonisolated(nonsending) static func connect<Transport: ClientTransport, Result: Sendable>(
         transport: Transport,
         configuration: TemporalClient.Configuration,
-        logger: Logger = Logger(label: "NoOpLogger", factory: { _ in SwiftLogNoOpLogHandler() }),
         _ body: (TemporalClient) async throws -> sending Result
     ) async throws -> sending Result {
         try await withGRPCClient(
             transport: transport,
-            interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname, logger: logger),
+            interceptors: Self.grpcClientInterceptors(serverHostname: configuration.instrumentation.serverHostname),
             isolation: #isolation
         ) { client in
             let temporalClient = Self.init(client: client, configuration: configuration)
             return try await body(temporalClient)
         }
+    }
+
+    /// Creates a new Temporal client and connects it to the Temporal server.
+    ///
+    /// - Parameters:
+    ///   - transport: The transport layer that should be used by the gRPC connection of the ``TemporalClient``.
+    ///   - configuration: The configuration of the ``TemporalClient``.
+    ///   - logger: The logger used in the ``TemporalClient``.
+    ///   - body: A closure which is called with the ``TemporalClient``. When the closure returns, the ``TemporalClient`` is shutdown gracefully.
+    /// - Returns: The result of the passed closure.
+    @available(
+        *,
+        deprecated,
+        message: """
+            The client no longer takes a logger. It logs through the task local logger instead, so \
+            this logger is ignored. Bind yours with `withLogger(_:)` at your application's entry point.
+            """
+    )
+    public nonisolated(nonsending) static func connect<Transport: ClientTransport, Result: Sendable>(
+        transport: Transport,
+        configuration: TemporalClient.Configuration,
+        logger: Logger,
+        _ body: (TemporalClient) async throws -> sending Result
+    ) async throws -> sending Result {
+        try await Self.connect(transport: transport, configuration: configuration, body)
     }
 }
 
@@ -187,7 +210,7 @@ extension TemporalClient {
     /// Creates a new Temporal client with NIO-based HTTP/2 transport.
     ///
     /// This convenience initializer creates a client using the NIO-based HTTP/2 transport implementation.
-    /// For automatic lifecycle management, prefer using the static ``connect(transport:configuration:logger:_:)``
+    /// For automatic lifecycle management, prefer using the static ``connect(transport:configuration:_:)``
     /// method instead of this initializer.
     ///
     /// The initializer configures an HTTP/2 transport with the specified target and security settings,
@@ -197,13 +220,11 @@ extension TemporalClient {
     ///   - target: The target endpoint for the Temporal server (host and port).
     ///   - transportSecurity: The security configuration for the transport layer (TLS settings).
     ///   - configuration: The client configuration including namespace and retry policies.
-    ///   - logger: The logger instance for client operations.
     /// - Throws: An error if the transport cannot be configured or the client cannot be initialized.
     public convenience init(
         target: any ResolvableTarget,
         transportSecurity: HTTP2ClientTransport.Posix.TransportSecurity,
-        configuration: TemporalClient.Configuration,
-        logger: Logger
+        configuration: TemporalClient.Configuration
     ) throws {
         try self.init(
             transport:
@@ -212,9 +233,33 @@ extension TemporalClient {
                     target: target,
                     transportSecurity: transportSecurity
                 ),
-            configuration: configuration,
-            logger: logger
+            configuration: configuration
         )
+    }
+
+    /// Creates a new Temporal client with NIO-based HTTP/2 transport.
+    ///
+    /// - Parameters:
+    ///   - target: The target endpoint for the Temporal server (host and port).
+    ///   - transportSecurity: The security configuration for the transport layer (TLS settings).
+    ///   - configuration: The client configuration including namespace and retry policies.
+    ///   - logger: The logger instance for client operations.
+    /// - Throws: An error if the transport cannot be configured or the client cannot be initialized.
+    @available(
+        *,
+        deprecated,
+        message: """
+            The client no longer takes a logger. It logs through the task local logger instead, so \
+            this logger is ignored. Bind yours with `withLogger(_:)` at your application's entry point.
+            """
+    )
+    public convenience init(
+        target: any ResolvableTarget,
+        transportSecurity: HTTP2ClientTransport.Posix.TransportSecurity,
+        configuration: TemporalClient.Configuration,
+        logger: Logger
+    ) throws {
+        try self.init(target: target, transportSecurity: transportSecurity, configuration: configuration)
     }
 }
 #endif

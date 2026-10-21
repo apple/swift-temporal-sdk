@@ -32,7 +32,8 @@ func randomBytes(count: Int) -> [UInt8] {
 /// - Parameters:
 ///   - info: The activity info that should be supplied to your activity.
 ///   - cancellationReason: Provide an activity cancellation reason to test the scenario in which your activity was cancelled.
-///   - logger: The logger to use with the activity execution context.
+///   - logger: The logger to use with the activity execution context. Defaults to a logger that discards all
+///   messages. To log through a logger you have already bound with `withLogger(_:_:)`, pass `.current`.
 ///   - body: The body that will be evaluated with the activity test environment set up.
 /// - Throws: Rethrows the error from your body closure.
 /// - Returns: The value returned from your body closure.
@@ -46,7 +47,6 @@ public func withActivityTestEnvironment<Return>(
 
     let context = ActivityExecutionContext(
         info: info,
-        logger: logger,
         outboundInterceptors: [],
         heartbeatContinuation: heartbeatDetails.continuation
     ) {
@@ -58,7 +58,14 @@ public func withActivityTestEnvironment<Return>(
     }
 
     return try await ActivityExecutionContext.$taskLocal.withValue(context) {
-        try await body()
+        // Bind the logger, then add the metadata the worker adds around a real execution. When the
+        // caller passed `.current`, this rebinds the logger that is already bound, which leaves
+        // their `withLogger` scope in effect.
+        try await withLogger(logger) { _ in
+            try await withLogger(mergingMetadata: info.loggingMetadata) { _ in
+                try await body()
+            }
+        }
     }
 }
 
@@ -67,7 +74,8 @@ public func withActivityTestEnvironment<Return>(
 /// - Parameters:
 ///   - info: The activity info that should be supplied to your activity.
 ///   - cancellationReason: Provide an activity cancellation reason to test the scenario in which your activity was cancelled.
-///   - logger: The logger to use with the activity execution context.
+///   - logger: The logger to use with the activity execution context. Defaults to a logger that discards all
+///   messages. To log through a logger you have already bound with `withLogger(_:_:)`, pass `.current`.
 ///   - body: The body that will be evaluated with the activity test environment set up.
 ///   - assertHeartbeatDetails: A closure you can run to concurrently assert heartbeats emitted by the activity while it is running.
 /// - Throws: Rethrows the error from your body closure.
@@ -83,7 +91,6 @@ public func withActivityTestEnvironment<Result>(
 
     let context = ActivityExecutionContext(
         info: info,
-        logger: logger,
         outboundInterceptors: [],
         heartbeatContinuation: heartbeatDetails.continuation
     ) {
@@ -98,7 +105,14 @@ public func withActivityTestEnvironment<Result>(
         let result: Result
         do {
             result = try await ActivityExecutionContext.$taskLocal.withValue(context) {
-                try await body()
+                // Bind the logger, then add the metadata the worker adds around a real execution.
+                // When the caller passed `.current`, this rebinds the logger that is already bound,
+                // which leaves their `withLogger` scope in effect.
+                try await withLogger(logger) { _ in
+                    try await withLogger(mergingMetadata: info.loggingMetadata) { _ in
+                        try await body()
+                    }
+                }
             }
             heartbeatDetails.continuation.finish()
         } catch {

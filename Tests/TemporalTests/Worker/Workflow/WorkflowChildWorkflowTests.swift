@@ -587,7 +587,7 @@ extension TestServerDependentTests {
         @Workflow
         struct ParentWorkflow {
             mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
-                let logger = context.logger
+                let logger = Logger.current
                 var ids: [Int] = []
                 ids.reserveCapacity(150)
                 for index in 0..<150 {

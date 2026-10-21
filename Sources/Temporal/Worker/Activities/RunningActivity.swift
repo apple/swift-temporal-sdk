@@ -69,9 +69,8 @@ extension ActivityWorker {
         /// external cancellation requests. It transitions the activity to the running state and waits for either
         /// explicit cancellation or task cancellation cleanup.
         ///
-        /// - Parameter logger: The logger instance for diagnostic and debugging output.
         /// - Important: This method should only be called once per activity instance.
-        func waitForCancellation(logger: Logger) async {
+        func waitForCancellation() async {
             await withTaskCancellationHandler {
                 await withCheckedContinuation { continuation in
                     let maybeContinuation: CheckedContinuation<Void, Never>? = state.withLock {

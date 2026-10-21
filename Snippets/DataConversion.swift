@@ -84,8 +84,7 @@ let worker = try TemporalWorker(
         dataConverter: dataConverter
     ),
     target: .ipv4(address: "127.0.0.1", port: 7233),
-    transportSecurity: .plaintext,
-    logger: logger
+    transportSecurity: .plaintext
 )
 // snippet.end
 

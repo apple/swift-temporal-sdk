@@ -74,14 +74,12 @@ extension TestServerDependentTests {
                 required init(
                     worker: BridgeWorker,
                     configuration: TemporalWorker.Configuration,
-                    activities: [any ActivityDefinition],
-                    logger: Logger
+                    activities: [any ActivityDefinition]
                 ) throws {
                     self.base = try ActivityWorker(
                         worker: worker,
                         configuration: configuration,
-                        activities: activities,
-                        logger: logger
+                        activities: activities
                     )
                 }
 
@@ -116,14 +114,12 @@ extension TestServerDependentTests {
                 required init(
                     worker: BridgeWorker,
                     configuration: TemporalWorker.Configuration,
-                    workflows: [any WorkflowDefinition.Type],
-                    logger: Logger
+                    workflows: [any WorkflowDefinition.Type]
                 ) throws {
                     self.base = try WorkflowWorker(
                         worker: worker,
                         configuration: configuration,
-                        workflows: workflows,
-                        logger: logger
+                        workflows: workflows
                     )
                 }
 

@@ -14,7 +14,6 @@
 
 import GRPCCore
 import GRPCOTelTracingInterceptors
-import Logging
 import OTelSemanticConventions
 import TemporalInstrumentation
 
@@ -30,7 +29,7 @@ extension TemporalClient {
 // MARK: GRPC Interceptors
 
 extension TemporalClient {
-    static func grpcClientInterceptors(serverHostname: String, logger: Logger) -> [any GRPCCore.ClientInterceptor] {
+    static func grpcClientInterceptors(serverHostname: String) -> [any GRPCCore.ClientInterceptor] {
         [
             ClientOTelTracingInterceptor(
                 serverHostname: serverHostname,
@@ -44,7 +43,6 @@ extension TemporalClient {
                 networkTransportMethod: .tcp
             ),
             ClientOTelLoggingInterceptor(
-                logger: logger,
                 serverHostname: serverHostname,
                 networkTransportMethod: .tcp,
                 includeRequestMetadata: true,

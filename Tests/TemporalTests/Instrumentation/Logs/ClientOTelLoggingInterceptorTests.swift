@@ -47,7 +47,6 @@ struct ClientOTelLoggingInterceptorTests {
         let localPeer = "ipv4:145.32.54.12:4321"
 
         let interceptor = ClientOTelLoggingInterceptor(
-            logger: logger,
             serverHostname: serverHostname,
             networkTransportMethod: transport,
             includeRequestMetadata: true,
@@ -62,30 +61,33 @@ struct ClientOTelLoggingInterceptorTests {
             remotePeer: remotePeer,
             localPeer: localPeer
         )
-        let next: (StreamingClientRequest<String>, ClientContext) async throws -> StreamingClientResponse<String> = { request, _ in
-            var metadata = GRPCCore.Metadata()
-            metadata.addString("test-value", forKey: "test-key")
 
-            return StreamingClientResponse<String>(
-                accepted: .success(
-                    .init(
-                        metadata: metadata,
-                        bodyParts: RPCAsyncSequence(
-                            wrapping: AsyncThrowingStream<StreamingClientResponse.Contents.BodyPart, any Error> {
-                                $0.yield(.message("response-message"))
-                                $0.finish()
-                            }
+        let response = try await withLogger(logger) { _ in
+            let next: (StreamingClientRequest<String>, ClientContext) async throws -> StreamingClientResponse<String> = { request, _ in
+                var metadata = GRPCCore.Metadata()
+                metadata.addString("test-value", forKey: "test-key")
+
+                return StreamingClientResponse<String>(
+                    accepted: .success(
+                        .init(
+                            metadata: metadata,
+                            bodyParts: RPCAsyncSequence(
+                                wrapping: AsyncThrowingStream<StreamingClientResponse.Contents.BodyPart, any Error> {
+                                    $0.yield(.message("response-message"))
+                                    $0.finish()
+                                }
+                            )
                         )
                     )
                 )
+            }
+
+            return try await interceptor.intercept(
+                request: request,
+                context: context,
+                next: next
             )
         }
-
-        let response = try await interceptor.intercept(
-            request: request,
-            context: context,
-            next: next
-        )
 
         guard case .success = response.accepted else {
             Issue.record("Should have been successful")
@@ -169,7 +171,6 @@ struct ClientOTelLoggingInterceptorTests {
         let descriptor = MethodDescriptor(fullyQualifiedService: serviceName, method: "TestMethod")
 
         let interceptor = ClientOTelLoggingInterceptor(
-            logger: logger,
             serverHostname: "test.com",
             networkTransportMethod: .tcp,
             includeRequestMetadata: true,
@@ -179,27 +180,30 @@ struct ClientOTelLoggingInterceptorTests {
         let request = StreamingClientRequest<String> { writer in
             try await writer.write("test-message")
         }
-        let next: (StreamingClientRequest<String>, ClientContext) async throws -> StreamingClientResponse<String> = { request, _ in
-            var metadata = GRPCCore.Metadata()
-            metadata.addString("test-value-error", forKey: "test-key-error")
 
-            return StreamingClientResponse(
-                accepted: .failure(
-                    .init(
-                        code: .aborted,
-                        message: "Test failure",
-                        metadata: metadata,
-                        cause: TestError()
+        let response = try await withLogger(logger) { _ in
+            let next: (StreamingClientRequest<String>, ClientContext) async throws -> StreamingClientResponse<String> = { request, _ in
+                var metadata = GRPCCore.Metadata()
+                metadata.addString("test-value-error", forKey: "test-key-error")
+
+                return StreamingClientResponse(
+                    accepted: .failure(
+                        .init(
+                            code: .aborted,
+                            message: "Test failure",
+                            metadata: metadata,
+                            cause: TestError()
+                        )
                     )
                 )
+            }
+
+            return try await interceptor.intercept(
+                request: request,
+                context: ClientContext(descriptor: descriptor, remotePeer: "", localPeer: ""),
+                next: next
             )
         }
-
-        let response = try await interceptor.intercept(
-            request: request,
-            context: ClientContext(descriptor: descriptor, remotePeer: "", localPeer: ""),
-            next: next
-        )
 
         guard case .failure = response.accepted else {
             Issue.record("Should have failed")
