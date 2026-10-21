@@ -12,13 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Temporal
-
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
 import Foundation
-#endif
+import Temporal
 
 /// Activities representing external service calls in an order fulfillment workflow.
 ///

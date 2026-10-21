@@ -17,11 +17,7 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import Temporal
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
 import Foundation
-#endif
 
 @main
 struct GreetingExample {

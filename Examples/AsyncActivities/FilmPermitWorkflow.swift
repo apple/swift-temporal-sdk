@@ -12,13 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Temporal
-
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
 import Foundation
-#endif
+import Temporal
 
 /// Workflow for processing NYC film permits with parallel and sequential modes.
 @Workflow

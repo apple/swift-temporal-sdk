@@ -12,13 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Temporal
-
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
 import Foundation
-#endif
+import Temporal
 
 /// Demonstrates error handling and compensation patterns in Temporal workflows.
 ///

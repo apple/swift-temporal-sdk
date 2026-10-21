@@ -12,13 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Temporal
-
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
 import Foundation
-#endif
+import Temporal
 
 #if canImport(FoundationNetworking)
 import FoundationNetworking

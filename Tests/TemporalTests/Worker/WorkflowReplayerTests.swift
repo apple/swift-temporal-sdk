@@ -12,17 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Logging
 import Synchronization
 import Temporal
 import TemporalTestKit
 import Testing
-
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 
 // MARK: - Test Suite
 
