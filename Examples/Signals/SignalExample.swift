@@ -13,10 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 #if GRPCNIOTransport
-import Foundation
 import GRPCNIOTransportHTTP2Posix
 import Logging
 import Temporal
+import Foundation
 
 /// Signal, Query, and Update Example.
 ///

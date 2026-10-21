@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxMacros
@@ -148,8 +147,8 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
                                 // Check input type matches
                                 let updateParams = functionDecl.signature.parameterClause.parameters
                                 if let updateParam = updateParams.first(where: { $0.firstName.text == "input" }) {
-                                    let updateType = updateParam.type.description.trimmingCharacters(in: .whitespaces)
-                                    let validatorType = validatorParam.type.description.trimmingCharacters(in: .whitespaces)
+                                    let updateType = updateParam.type.trimmedDescription
+                                    let validatorType = validatorParam.type.trimmedDescription
                                     if updateType != validatorType {
                                         context.diagnose(
                                             Diagnostic(

@@ -12,11 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import Logging
 import Synchronization
 import Temporal
 import Testing
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 // Mock bridge worker for testing
 private final class MockBridgeWorker: BridgeWorkerProtocol {

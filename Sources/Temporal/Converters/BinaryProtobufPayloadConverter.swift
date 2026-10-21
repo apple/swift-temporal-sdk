@@ -12,8 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftProtobuf
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Converts any type conforming to `SwiftProtobuf.Message` into binary protobuf encoding.
 public struct BinaryProtobufPayloadConverter: EncodingPayloadConverter {

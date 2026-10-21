@@ -13,8 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 import Bridge
-import Foundation
 internal import SwiftProtobuf
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 package final class BridgeReplayer: Sendable {
     /// The underlying worker pointer from the Core SDK.

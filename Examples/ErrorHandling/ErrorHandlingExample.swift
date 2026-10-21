@@ -13,10 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 #if GRPCNIOTransport
-import Foundation
 import GRPCNIOTransportHTTP2Posix
 import Logging
 import Temporal
+
+import Foundation
 
 /// Travel Booking Error Handling Example.
 ///
