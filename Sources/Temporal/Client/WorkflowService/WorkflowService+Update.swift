@@ -26,8 +26,9 @@ extension TemporalClient.WorkflowService {
     ///
     /// This method combines workflow update initiation and result retrieval into a single
     /// operation, providing a convenient way to send updates to running workflows and
-    /// wait for their completion. The method uses long polling to wait for the update
-    /// to complete, automatically handling the asynchronous nature of workflow updates.
+    /// wait for their completion. When the update completes during the start call, its outcome
+    /// is used directly. Otherwise the method uses long polling to wait for the update to complete,
+    /// automatically handling the asynchronous nature of workflow updates.
     ///
     /// - Parameters:
     ///   - workflowID: The unique identifier of the target workflow.
@@ -52,7 +53,7 @@ extension TemporalClient.WorkflowService {
         resultTypes: repeat (each Result).Type,
         callOptions: CallOptions? = nil
     ) async throws -> (repeat each Result) {
-        _ = try await self.startWorkflowUpdate(
+        let result = try await self.startWorkflowUpdateWithOutcome(
             workflowID: workflowID,
             runID: runID,
             firstExecutionRunID: firstExecutionRunID,
@@ -64,13 +65,19 @@ extension TemporalClient.WorkflowService {
             callOptions: callOptions
         )
 
-        return try await self.workflowUpdateResult(
-            workflowID: workflowID,
-            runID: runID,
-            updateID: updateID,
-            resultTypes: repeat each resultTypes,
-            callOptions: callOptions
-        )
+        let outcome: Api.Update.V1.Outcome
+        if let knownOutcome = result.outcome {
+            outcome = knownOutcome
+        } else {
+            outcome = try await self.pollWorkflowUpdateOutcome(
+                workflowID: workflowID,
+                runID: runID,
+                updateID: updateID,
+                callOptions: callOptions
+            )
+        }
+        let payloads = try await outcome.successPayloads(using: self.configuration.dataConverter)
+        return try await self.configuration.dataConverter.convertPayloads(payloads, as: repeat each resultTypes)
     }
 
     /// Executes a strongly-typed workflow update and waits for its completion with automatic result retrieval.
@@ -119,8 +126,8 @@ extension TemporalClient.WorkflowService {
         /// The unique identifier for this update operation.
         package let updateID: String
 
-        /// The outcome payloads if the update completed during the start call.
-        package let outcomePayloads: [Api.Common.V1.Payload]?
+        /// The update outcome if the update completed during the start call.
+        package let outcome: Api.Update.V1.Outcome?
     }
 
     // MARK: - Start Workflow Update
@@ -171,7 +178,7 @@ extension TemporalClient.WorkflowService {
 
     /// Initiates a workflow update by name and returns the update ID along with any known outcome.
     ///
-    /// This is an internal variant that also captures the outcome payloads from the response
+    /// This is an internal variant that also captures the outcome from the response
     /// when the update completes during the start call (for example, when ``waitForStage`` is
     /// ``WorkflowUpdateStage/completed``). The captured outcome can be used to avoid
     /// redundant RPCs when retrieving the update result.
@@ -228,12 +235,7 @@ extension TemporalClient.WorkflowService {
             }
         } while response.stage.rawValue < Api.Enums.V1.UpdateWorkflowExecutionLifecycleStage(waitForStage).rawValue
 
-        var outcomePayloads: [Api.Common.V1.Payload]?
-        if response.hasOutcome, case .success(let success) = response.outcome.value {
-            outcomePayloads = success.payloads
-        }
-
-        return StartUpdateResult(updateID: updateID, outcomePayloads: outcomePayloads)
+        return StartUpdateResult(updateID: updateID, outcome: response.hasOutcome ? response.outcome : nil)
     }
 
     /// Initiates a strongly-typed workflow update without waiting for completion.

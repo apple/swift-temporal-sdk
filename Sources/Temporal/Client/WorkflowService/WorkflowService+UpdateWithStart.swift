@@ -23,13 +23,15 @@ import Foundation
 #endif
 
 extension TemporalClient.WorkflowService {
-    /// The result of an update-with-start operation, containing both the workflow run ID
-    /// and the update ID.
+    /// The result of an update-with-start operation, containing the workflow run ID, the
+    /// update ID, and any known outcome.
     package struct UpdateWithStartResult: Sendable {
         /// The run ID of the workflow execution.
         package let runID: String
         /// The update ID of the started update.
         package let updateID: String
+        /// The update outcome if the update completed during the start call.
+        package let outcome: Api.Update.V1.Outcome?
     }
 
     /// Starts a workflow (if not already running) and sends an update to it atomically.
@@ -48,7 +50,8 @@ extension TemporalClient.WorkflowService {
     ///   - updateInput: The serialized update input payloads.
     ///   - waitForStage: The stage to wait for before returning from the update request.
     ///   - callOptions: Optional gRPC call options for customizing the request.
-    /// - Returns: An ``UpdateWithStartResult`` containing the workflow run ID and update ID.
+    /// - Returns: An ``UpdateWithStartResult`` containing the workflow run ID, the update ID, and
+    ///   the update outcome if the update completed during the call.
     /// - Throws: An error if the operation fails.
     func startUpdateWithStartWorkflow(
         workflowName: String,
@@ -124,7 +127,8 @@ extension TemporalClient.WorkflowService {
 
         return UpdateWithStartResult(
             runID: runID ?? "",
-            updateID: updateID
+            updateID: updateID,
+            outcome: updateResp.flatMap { $0.hasOutcome ? $0.outcome : nil }
         )
     }
 }
