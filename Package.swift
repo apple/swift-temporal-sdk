@@ -257,6 +257,7 @@ let package = Package(
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
                 "Temporal",
                 "TemporalTestKit",
+                .product(name: "InMemoryLogging", package: "swift-log"),
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
                 .product(name: "ServiceContextModule", package: "swift-service-context"),
             ],
