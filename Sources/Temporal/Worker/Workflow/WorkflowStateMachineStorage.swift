@@ -169,7 +169,7 @@ package final class WorkflowStateMachineStorage: @unchecked Sendable {
         try await withoutActuallyEscaping(condition, do: wait)
     }
 
-    func forceCancelOutstandingContinuations() {
+    func forceCancelOutstandingContinuations() -> Bool {
         stateMachine.forceCancelOutstandingContinuations()
     }
 

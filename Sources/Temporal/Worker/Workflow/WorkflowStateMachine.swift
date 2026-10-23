@@ -299,10 +299,20 @@ struct WorkflowStateMachine: ~Copyable {
         }
     }
 
-    mutating func forceCancelOutstandingContinuations() {
+    /// Resumes every outstanding continuation with ``WorkflowRemovedFromCacheError``.
+    ///
+    /// - Returns: Whether there was any continuation to resume.
+    mutating func forceCancelOutstandingContinuations() -> Bool {
         switch consume self.state {
         case .active(var active):
             let error = WorkflowRemovedFromCacheError()
+            let hadOutstandingContinuations =
+                !active.activityContinuations.isEmpty
+                || active.waitConditionContinuations.values.contains { $0.1 != nil }
+                || !active.timerContinuations.isEmpty
+                || !active.childWorkflowStartContinuations.isEmpty
+                || !active.externalWorkflowSignalContinuations.isEmpty
+                || !active.externalWorkflowCancelContinuations.isEmpty
 
             let activityContinuations = active.activityContinuations
             active.activityContinuations.removeAll()
@@ -341,6 +351,7 @@ struct WorkflowStateMachine: ~Copyable {
             }
 
             self = .init(state: .active(active))
+            return hadOutstandingContinuations
         }
     }
 
