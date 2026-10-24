@@ -255,6 +255,8 @@ let package = Package(
             name: "TemporalTests",
             dependencies: [
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+                .product(name: "GRPCInProcessTransport", package: "grpc-swift-2"),
+                .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
                 "Temporal",
                 "TemporalTestKit",
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
