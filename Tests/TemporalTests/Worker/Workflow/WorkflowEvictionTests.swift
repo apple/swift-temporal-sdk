@@ -129,5 +129,83 @@ extension TestServerDependentTests {
                 // passing here is the assertion.
             }
         }
+
+        struct NoopActivity: ActivityDefinition {
+            func run(input: Void) async throws {}
+        }
+
+        @Workflow
+        struct CleanupAfterCancellationWorkflow {
+            @WorkflowQuery
+            func isParked(input: Void) -> Bool {
+                true
+            }
+
+            func run(context: WorkflowContext<Self>, input: Void) async throws {
+                do {
+                    try await context.condition { false }
+                } catch {
+                    try await context.withCancellationShield {
+                        try await context.executeActivity(
+                            NoopActivity.self,
+                            options: .init(startToCloseTimeout: .seconds(10))
+                        )
+                    }
+                    throw error
+                }
+            }
+        }
+
+        /// Shutting down the worker evicts a workflow that awaits cleanup after a cancellation.
+        ///
+        /// Eviction cancels the workflow, so the parked condition throws `CanceledError`, as it would for a real
+        /// cancellation. The workflow then awaits an activity inside a cancellation shield. Nothing resolves
+        /// that activity once the workflow is evicted, so the workflow never finishes and the worker never
+        /// shuts down.
+        @Test
+        func workerShutsDownWhileWorkflowAwaitsCleanup() async throws {
+            let shutDown = await finishes(within: .seconds(30)) {
+                try await withTestWorkerAndClient(
+                    activities: [NoopActivity()],
+                    workflows: [CleanupAfterCancellationWorkflow.self]
+                ) { taskQueue, client in
+                    let handle = try await client.startWorkflow(
+                        type: CleanupAfterCancellationWorkflow.self,
+                        options: .init(id: "evict-cleanup-\(UUID().uuidString)", taskQueue: taskQueue)
+                    )
+                    // Answered only once the workflow has run up to the condition.
+                    _ = try await handle.query(queryType: CleanupAfterCancellationWorkflow.IsParked.self)
+                }
+            }
+            #expect(shutDown, "The worker didn't shut down within 30 seconds")
+        }
+
+        /// Runs `operation` in an unstructured task and reports whether it finished within `timeout`.
+        ///
+        /// A stuck workflow ignores cancellation, so neither awaiting the operation nor a test time limit would
+        /// end the test. The task is left behind when the timeout wins.
+        private func finishes(
+            within timeout: Duration,
+            _ operation: @escaping @Sendable () async throws -> Void
+        ) async -> Bool {
+            let (stream, continuation) = AsyncStream.makeStream(of: Bool.self)
+            Task {
+                do {
+                    try await operation()
+                } catch {
+                    Issue.record(error)
+                }
+                continuation.yield(true)
+            }
+            let timer = Task {
+                try await Task.sleep(for: timeout)
+                continuation.yield(false)
+            }
+            defer { timer.cancel() }
+            for await finished in stream {
+                return finished
+            }
+            return false
+        }
     }
 }
