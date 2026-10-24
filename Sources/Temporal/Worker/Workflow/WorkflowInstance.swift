@@ -667,6 +667,8 @@ struct WorkflowInstance: Sendable {
                     LoggingKeys.errorMessage: "\(error)",
                 ]
             )
+            let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
+            self.stateMachine.queryFailed(id: id, failure: failure)
             return
         }
 

@@ -212,6 +212,40 @@ extension TestServerDependentTests {
         }
 
         @Test
+        func queryWithUndecodableInputFails() async throws {
+            try await withTestWorkerAndClient(
+                workflows: [QueryWorkflow.self]
+            ) { taskQueue, client in
+                let handle = try await client.startWorkflow(
+                    type: QueryWorkflow.self,
+                    options: .init(id: UUID().uuidString, taskQueue: taskQueue)
+                )
+
+                // An unanswered query hangs until the deadline, so keep it short.
+                var callOptions = CallOptions.defaults
+                callOptions.timeout = .seconds(10)
+
+                // The query expects a `QueryScenario`, which can't be decoded from an `Int`.
+                let error = await #expect(throws: WorkflowQueryFailedError.self) {
+                    _ = try await handle.untypedHandle.query(
+                        queryName: QueryWorkflow.Query.name,
+                        input: 42,
+                        resultTypes: String.self,
+                        callOptions: callOptions
+                    )
+                }
+                #expect(error?.message.contains("DecodingError") == true)
+
+                try await handle.signal(
+                    signalType: QueryWorkflow.Signal.self,
+                    input: "finished"
+                )
+
+                try await handle.result()
+            }
+        }
+
+        @Test
         func interceptsQuery() async throws {
             final class CountingInterceptor: WorkerInterceptor {
                 let counter: Mutex<Int> = .init(0)
