@@ -34,6 +34,11 @@ extension AttributeSyntax {
         return boolLiteral.literal.tokenKind == .keyword(.true)
     }
 
+    func expressionForArgument(named name: String) -> ExprSyntax? {
+        guard case let .argumentList(arguments) = arguments else { return nil }
+        return arguments.first(where: { $0.label?.text == name })?.expression
+    }
+
     func memberAccessNameForArgument(named name: String) -> String? {
         guard case let .argumentList(arguments) = arguments else { return nil }
         guard let element = arguments.first(where: { $0.label?.text == name }) else { return nil }

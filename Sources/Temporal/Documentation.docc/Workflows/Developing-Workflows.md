@@ -19,8 +19,12 @@ systems.
 
 Use the `@Workflow` macro on a `struct` to create a ``WorkflowDefinition``.
 The main entry point for a workflow is the `run(context:input:)` method, which
-receives a ``WorkflowContext`` and returns the workflow result. The `run` method
-treats thrown errors as workflow failures.
+receives a ``WorkflowContext`` and returns the workflow result. Throwing a
+``TemporalFailureError``, such as ``ApplicationError``, fails the workflow. Any
+other error, and nondeterminism, fails the workflow task, which Temporal
+retries until the workflow code is fixed. To fail the workflow for other error
+types, list them in ``TemporalWorker/Configuration/workflowFailureErrorTypes``
+or the `failureErrorTypes` argument of the `@Workflow` macro.
 
 The struct-based design provides compile-time safety guarantees: query handlers
 cannot mutate workflow state, and update validators cannot mutate state either.
@@ -337,6 +341,10 @@ Update handlers can be asynchronous and throw errors, and can return
 values. Unlike queries, updates can modify workflow state and execute
 activities. Use custom input and output types for updates to maintain backward
 compatibility.
+
+Throwing a ``TemporalFailureError``, or an error of a type listed in the
+workflow failure error types, from an update handler fails the update. Any
+other error, including a ``ContinueAsNewError``, fails the workflow task.
 
 By default, the update name matches the unqualified
 capitalized method name. You can customize the update name using the

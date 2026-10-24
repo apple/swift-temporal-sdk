@@ -38,7 +38,11 @@ package final class WorkflowHistoryRunner: Sendable {
         self.bridgeReplayer = try BridgeReplayer(
             runtime: self.runtime,
             namespace: configuration.namespace,
-            taskQueue: configuration.taskQueue
+            taskQueue: configuration.taskQueue,
+            nondeterminismAsWorkflowFail: WorkflowFailureErrorTypes(configuration.workflowFailureErrorTypes).matchesNondeterminism,
+            nondeterminismAsWorkflowFailForTypes: WorkflowFailureErrorTypes.workflowTypesFailingOnNondeterminism(
+                in: configuration.workflows
+            )
         )
     }
 
@@ -79,6 +83,7 @@ package final class WorkflowHistoryRunner: Sendable {
             namespace: self.configuration.namespace,
             dataConverter: self.configuration.dataConverter,
             workflows: self.configuration.workflows,
+            workflowFailureErrorTypes: self.configuration.workflowFailureErrorTypes,
             interceptors: self.configuration.interceptors,
             enableLoggingInReplay: self.configuration.enableLoggingInReplay
         )
@@ -220,7 +225,7 @@ package final class ReplayBridgeWorker: BridgeWorkerProtocol {
         client: borrowing BridgeClient,
         configuration: TemporalWorker.Configuration,
         hasActivities: Bool,
-        hasWorkflows: Bool
+        workflows: [any WorkflowDefinition.Type]
     ) throws {
         fatalError("ReplayBridgeWorker should not be created with BridgeClient")
     }

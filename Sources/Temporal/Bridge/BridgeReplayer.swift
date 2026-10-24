@@ -37,11 +37,16 @@ package final class BridgeReplayer: Sendable {
     ///   - runtime: The bridge runtime to use.
     ///   - namespace: The namespace for replay context.
     ///   - taskQueue: The task queue for replay context.
+    ///   - nondeterminismAsWorkflowFail: Whether nondeterminism fails every replayed workflow execution.
+    ///   - nondeterminismAsWorkflowFailForTypes: The workflow types for which nondeterminism fails the
+    ///     workflow execution.
     /// - Throws: An error if the replayer cannot be created.
     init(
         runtime: BridgeRuntime,
         namespace: String,
-        taskQueue: String
+        taskQueue: String,
+        nondeterminismAsWorkflowFail: Bool,
+        nondeterminismAsWorkflowFailForTypes: [String]
     ) throws {
         self.runtime = runtime
 
@@ -58,7 +63,9 @@ package final class BridgeReplayer: Sendable {
         let result = Self.withReplayerOptions(
             namespace: namespace,
             taskQueue: taskQueue,
-            tuner: tuner
+            tuner: tuner,
+            nondeterminismAsWorkflowFail: nondeterminismAsWorkflowFail,
+            nondeterminismAsWorkflowFailForTypes: nondeterminismAsWorkflowFailForTypes
         ) { options in
             temporal_core_worker_replayer_new(runtime.runtime, options)
         }
@@ -196,60 +203,64 @@ package final class BridgeReplayer: Sendable {
         namespace: String,
         taskQueue: String,
         tuner: TemporalCoreTunerHolder,
+        nondeterminismAsWorkflowFail: Bool,
+        nondeterminismAsWorkflowFailForTypes: [String],
         _ body: (UnsafePointer<TemporalCoreWorkerOptions>) throws -> T
     ) rethrows -> T {
         try namespace.withByteArrayRef { namespaceRef in
             try taskQueue.withByteArrayRef { taskQueueRef in
-                // Create a minimal versioning strategy (none)
-                try "".withByteArrayRef { emptyRef in
-                    var versioningStrategy = TemporalCoreWorkerVersioningStrategy()
-                    versioningStrategy.tag = TemporalCoreWorkerVersioningStrategy_None
-                    versioningStrategy.none = TemporalCoreWorkerVersioningNone(build_id: emptyRef)
+                try nondeterminismAsWorkflowFailForTypes.withByteArrayRefArray { nondetArray in
+                    // Create a minimal versioning strategy (none)
+                    try "".withByteArrayRef { emptyRef in
+                        var versioningStrategy = TemporalCoreWorkerVersioningStrategy()
+                        versioningStrategy.tag = TemporalCoreWorkerVersioningStrategy_None
+                        versioningStrategy.none = TemporalCoreWorkerVersioningNone(build_id: emptyRef)
 
-                    // Create simple maximum poller behavior
-                    // Must be created inside withUnsafePointer to keep it alive
-                    let simpleMaximum = TemporalCorePollerBehaviorSimpleMaximum(simple_maximum: 2)
-                    return try withUnsafePointer(to: simpleMaximum) { simpleMaxPtr in
-                        let pollerBehavior = TemporalCorePollerBehavior(
-                            simple_maximum: simpleMaxPtr,
-                            autoscaling: nil
-                        )
+                        // Create simple maximum poller behavior
+                        // Must be created inside withUnsafePointer to keep it alive
+                        let simpleMaximum = TemporalCorePollerBehaviorSimpleMaximum(simple_maximum: 2)
+                        return try withUnsafePointer(to: simpleMaximum) { simpleMaxPtr in
+                            let pollerBehavior = TemporalCorePollerBehavior(
+                                simple_maximum: simpleMaxPtr,
+                                autoscaling: nil
+                            )
 
-                        var opts = TemporalCoreWorkerOptions(
-                            namespace_: namespaceRef,
-                            task_queue: taskQueueRef,
-                            versioning_strategy: versioningStrategy,
-                            identity_override: emptyRef,
-                            max_cached_workflows: 1,
-                            tuner: tuner,
-                            task_types: TemporalCoreWorkerTaskTypes(
-                                enable_workflows: true,
-                                enable_local_activities: false,
-                                enable_remote_activities: false,
-                                enable_nexus: false
-                            ),
-                            sticky_queue_schedule_to_start_timeout_millis: 10_000,
-                            max_heartbeat_throttle_interval_millis: 60_000,
-                            default_heartbeat_throttle_interval_millis: 30_000,
-                            max_activities_per_second: 0,
-                            max_task_queue_activities_per_second: 0,
-                            graceful_shutdown_period_millis: 0,
-                            workflow_task_poller_behavior: pollerBehavior,
-                            nonsticky_to_sticky_poll_ratio: 0.2,
-                            activity_task_poller_behavior: pollerBehavior,
-                            nexus_task_poller_behavior: pollerBehavior,
-                            nondeterminism_as_workflow_fail: true,
-                            nondeterminism_as_workflow_fail_for_types: .init(),
-                            plugins: .init(),
-                            storage_drivers: .init(),
-                            // NOTE: Mirrors the Core SDK defaults (`WorkerConfig::disable_payload_error_limit`
-                            // and `WorkerConfig::max_eager_activity_reservations_per_workflow_task`) until
-                            // these are exposed as configurable options.
-                            disable_payload_error_limit: false,
-                            max_eager_activity_reservations_per_workflow_task: 3
-                        )
+                            var opts = TemporalCoreWorkerOptions(
+                                namespace_: namespaceRef,
+                                task_queue: taskQueueRef,
+                                versioning_strategy: versioningStrategy,
+                                identity_override: emptyRef,
+                                max_cached_workflows: 1,
+                                tuner: tuner,
+                                task_types: TemporalCoreWorkerTaskTypes(
+                                    enable_workflows: true,
+                                    enable_local_activities: false,
+                                    enable_remote_activities: false,
+                                    enable_nexus: false
+                                ),
+                                sticky_queue_schedule_to_start_timeout_millis: 10_000,
+                                max_heartbeat_throttle_interval_millis: 60_000,
+                                default_heartbeat_throttle_interval_millis: 30_000,
+                                max_activities_per_second: 0,
+                                max_task_queue_activities_per_second: 0,
+                                graceful_shutdown_period_millis: 0,
+                                workflow_task_poller_behavior: pollerBehavior,
+                                nonsticky_to_sticky_poll_ratio: 0.2,
+                                activity_task_poller_behavior: pollerBehavior,
+                                nexus_task_poller_behavior: pollerBehavior,
+                                nondeterminism_as_workflow_fail: nondeterminismAsWorkflowFail,
+                                nondeterminism_as_workflow_fail_for_types: nondetArray,
+                                plugins: .init(),
+                                storage_drivers: .init(),
+                                // NOTE: Mirrors the Core SDK defaults (`WorkerConfig::disable_payload_error_limit`
+                                // and `WorkerConfig::max_eager_activity_reservations_per_workflow_task`) until
+                                // these are exposed as configurable options.
+                                disable_payload_error_limit: false,
+                                max_eager_activity_reservations_per_workflow_task: 3
+                            )
 
-                        return try body(&opts)
+                            return try body(&opts)
+                        }
                     }
                 }
             }
