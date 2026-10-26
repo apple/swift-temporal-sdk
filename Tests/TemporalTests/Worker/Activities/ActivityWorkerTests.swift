@@ -14,6 +14,7 @@
 
 import Dispatch
 import Foundation
+import InMemoryLogging
 import Logging
 import SwiftProtobuf
 import Synchronization
@@ -1163,7 +1164,7 @@ struct ActivityWorkerTests {
     @Test
     func duplicateActivityRegistrationThrowsError() async throws {
         // Test that duplicate activity registrations throw TemporalSDKError
-        let logHandler = InMemoryLogHandler()
+        var logHandler = InMemoryLogHandler()
         logHandler.logLevel = .trace  // Capture all logs including info
         let logger = Logger(label: "TestActivityWorker") { _ in logHandler }
 
@@ -1184,7 +1185,8 @@ struct ActivityWorkerTests {
         }
 
         // Verify the info log was recorded before the error was thrown
-        try logHandler.entries.withLock { entries in
+        do {
+            let entries = logHandler.entries
             let infoEntries = entries.filter { $0.level == .info }
             #expect(infoEntries.count == 1)
 
@@ -1192,7 +1194,7 @@ struct ActivityWorkerTests {
             #expect(logEntry.message == "Duplicate activity registration")
 
             // Verify structured metadata using activity name key
-            let activityName = try #require(logEntry.metadata?["temporal.activity.name"])
+            let activityName = try #require(logEntry.metadata["temporal.activity.name"])
             #expect(activityName == "DuplicateName")
         }
     }
@@ -1218,9 +1220,7 @@ struct ActivityWorkerTests {
         }
 
         // Verify no logs were recorded
-        logHandler.entries.withLock { entries in
-            #expect(entries.isEmpty)
-        }
+        #expect(logHandler.entries.isEmpty)
     }
 
     @Test
