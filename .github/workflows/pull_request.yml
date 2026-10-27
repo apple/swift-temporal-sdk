@@ -15,72 +15,31 @@ jobs:
       license_header_check_project_name: "Swift Temporal SDK"
       api_breakage_check_enabled: false
 
-  unit-tests:
-    name: Unit tests
-    uses: apple/swift-nio/.github/workflows/unit_tests.yml@main
+  tests:
+    name: Tests
+    uses: swiftlang/github-workflows/.github/workflows/package_test.yml@main
     with:
-      linux_5_10_enabled: false
-      linux_6_0_enabled: false
-      linux_6_1_enabled: false
-      linux_6_2_arguments_override: "-Xswiftc -require-explicit-sendable"
-      linux_6_3_arguments_override: "-Xswiftc -require-explicit-sendable"
-      linux_6_4_arguments_override: "-Xswiftc -require-explicit-sendable"
-      linux_nightly_next_arguments_override: "-Xswiftc -require-explicit-sendable"
-      linux_nightly_main_arguments_override: "-Xswiftc -require-explicit-sendable"
+      # The Temporal core artifacts are only built for Linux and Apple platforms.
+      enable_windows: false
+      enable_wasm_sdk_build: false
+      enable_embedded_wasm_sdk_build: false
+      enable_android_sdk_build: false
+      enable_android_emulator_tests: false
+      linux_command: |
+        Debug-Test: swift test -Xswiftc -require-explicit-sendable
+        Release-Build: swift build -c release
+      xcode_scheme: swift-temporal-sdk-Package
+      xcode_targets: "[macOS, Catalyst, iOS]"
 
-  macos-tests:
-    name: macOS tests
-    uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
-    with:
-      runner_pool: general
-      build_scheme: swift-temporal-sdk-Package
-      swift_6_1_enabled: false
-      watchos_xcode_build_enabled: false
-      tvos_xcode_build_enabled: false
-      visionos_xcode_build_enabled: false
-    secrets: inherit
-
-  static-sdk:
-    name: Static Linux Swift SDK
-    uses: apple/swift-nio/.github/workflows/static_sdk.yml@main
-
-  cxx-interop:
-    name: Cxx interop
-    uses: apple/swift-nio/.github/workflows/cxx_interop.yml@main
-    with:
-      linux_5_10_enabled: false
-      linux_6_0_enabled: false
-      linux_6_1_enabled: false
-
-  construct-linkage-test-matrix:
-    name: Construct linkage test matrix
-    runs-on: ubuntu-latest
-    outputs:
-      linkage-test-matrix: '${{ steps.generate-matrix.outputs.linkage-test-matrix }}'
-    steps:
-      - id: generate-matrix
-        run: echo "linkage-test-matrix=$(curl -s https://raw.githubusercontent.com/apple/swift-nio/main/scripts/generate_matrix.sh | bash)" >> "$GITHUB_OUTPUT"
-        env:
-          MATRIX_LINUX_SETUP_COMMAND: apt-get update -y && apt-get install -yq jq && git config --global --add safe.directory /swift-temporal-sdk
-          MATRIX_LINUX_COMMAND: ./scripts/run-linkage-test.sh
-          MATRIX_LINUX_5_10_ENABLED: false
-          MATRIX_LINUX_6_0_ENABLED: false
-          MATRIX_LINUX_6_1_ENABLED: false
-          MATRIX_LINUX_NIGHTLY_NEXT_ENABLED: false
-          MATRIX_LINUX_NIGHTLY_MAIN_ENABLED: false
+  linkage-test-toolchains:
+    name: Linkage test toolchains
+    uses: swiftlang/github-workflows/.github/workflows/toolchain_matrix.yml@main
 
   linkage-test:
     name: Linkage test
-    needs: construct-linkage-test-matrix
-    uses: apple/swift-nio/.github/workflows/swift_test_matrix.yml@main
+    needs: linkage-test-toolchains
+    uses: swiftlang/github-workflows/.github/workflows/execute_matrix.yml@main
     with:
       name: "Linkage test"
-      matrix_string: '${{ needs.construct-linkage-test-matrix.outputs.linkage-test-matrix }}'
-
-  release-builds:
-    name: Release builds
-    uses: apple/swift-nio/.github/workflows/release_builds.yml@main
-    with:
-      linux_5_10_enabled: false
-      linux_6_0_enabled: false
-      linux_6_1_enabled: false
+      matrix_yaml_string: ${{ needs.linkage-test-toolchains.outputs.matrix_yaml }}
+      command: ./scripts/run-linkage-test.sh
