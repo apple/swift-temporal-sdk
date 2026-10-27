@@ -29,7 +29,12 @@ jobs:
         Debug-Test: swift test -Xswiftc -require-explicit-sendable
         Release-Build: swift build -c release
       xcode_scheme: swift-temporal-sdk-Package
-      xcode_targets: "[macOS, Catalyst, iOS]"
+      # The macros are only built for the host architecture, so the tests can't
+      # be built for the other slice of a universal macOS build.
+      xcode_targets: |
+        macOS: {build_destination: "platform=macOS,arch=arm64,variant=macos"}
+        Catalyst: {}
+        iOS: {}
 
   linkage-test-toolchains:
     name: Linkage test toolchains
