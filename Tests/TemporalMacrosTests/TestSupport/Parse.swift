@@ -30,9 +30,15 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacroExpansion
 import SwiftSyntaxMacros
+
+// Macros are only built for the host, so they can't be imported when building
+// the tests for another destination with xcodebuild.
+#if canImport(TemporalMacros)
 import TemporalMacros
+#endif
 
 private var allMacros: [String: any Macro.Type] {
+    #if canImport(TemporalMacros)
     [
         "Workflow": WorkflowMacro.self,
         "WorkflowSignal": WorkflowSignalMacro.self,
@@ -42,6 +48,9 @@ private var allMacros: [String: any Macro.Type] {
         "Activity": ActivityMacro.self,
         "ActivityContainer": ActivityContainerMacro.self,
     ]
+    #else
+    [:]
+    #endif
 }
 
 func parse(
