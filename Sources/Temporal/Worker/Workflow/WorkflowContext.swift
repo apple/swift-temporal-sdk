@@ -14,7 +14,11 @@
 
 public import Logging
 
+#if canImport(FoundationEssentials)
+public import struct FoundationEssentials.Date
+#else
 public import struct Foundation.Date
+#endif
 
 /// The workflow context providing access to Temporal workflow operations.
 ///

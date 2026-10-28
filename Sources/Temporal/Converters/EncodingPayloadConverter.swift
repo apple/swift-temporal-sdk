@@ -14,7 +14,11 @@
 
 import SwiftProtobuf
 
+#if canImport(FoundationEssentials)
+import struct FoundationEssentials.Data
+#else
 import struct Foundation.Data
+#endif
 
 /// A payload converter that handles a single encoding format.
 public protocol EncodingPayloadConverter: PayloadConverter {

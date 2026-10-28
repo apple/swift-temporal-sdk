@@ -12,8 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+import struct FoundationEssentials.Data
+import struct FoundationEssentials.Date
+#else
 import struct Foundation.Data
 import struct Foundation.Date
+#endif
 
 extension Api.Common.V1.SearchAttributes {
     init(_ collection: SearchAttributeCollection) {

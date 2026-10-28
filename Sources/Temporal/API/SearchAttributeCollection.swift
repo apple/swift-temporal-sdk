@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+public import struct FoundationEssentials.Date
+#else
 public import struct Foundation.Date
+#endif
 
 /// A collection of search attribute key-value pairs.
 public struct SearchAttributeCollection: Hashable, Sendable {

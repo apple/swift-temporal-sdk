@@ -17,7 +17,11 @@ import Logging
 import SwiftProtobuf
 import Synchronization
 
+#if canImport(FoundationEssentials)
+import struct FoundationEssentials.Data
+#else
 import struct Foundation.Data
+#endif
 
 package protocol ActivityWorkerProtocol: Sendable {
     associatedtype BridgeWorker: BridgeWorkerProtocol

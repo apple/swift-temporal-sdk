@@ -15,8 +15,13 @@
 public import Logging
 import SwiftProtobuf
 
+#if canImport(FoundationEssentials)
+public import struct FoundationEssentials.Data
+public import struct FoundationEssentials.Date
+#else
 public import struct Foundation.Data
 public import struct Foundation.Date
+#endif
 
 /// Execution context information and utilities available during activity execution.
 ///

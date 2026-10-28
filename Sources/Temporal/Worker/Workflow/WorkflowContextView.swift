@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+public import struct FoundationEssentials.Date
+#else
 public import struct Foundation.Date
+#endif
 
 /// A read-only context for queries, validators, and sync handlers.
 ///

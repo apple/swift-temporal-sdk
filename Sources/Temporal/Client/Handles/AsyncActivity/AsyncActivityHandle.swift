@@ -14,7 +14,11 @@
 
 import GRPCCore
 
+#if canImport(FoundationEssentials)
+import struct FoundationEssentials.Data
+#else
 import struct Foundation.Data
+#endif
 
 /// A handle for performing asynchronous completion operations on a specific activity.
 ///
