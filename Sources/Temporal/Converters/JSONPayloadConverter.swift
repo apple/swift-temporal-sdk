@@ -12,9 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+public import struct FoundationEssentials.Data
+public import class FoundationEssentials.JSONDecoder
+public import class FoundationEssentials.JSONEncoder
+#else
 public import struct Foundation.Data
 public import class Foundation.JSONDecoder
 public import class Foundation.JSONEncoder
+#endif
 
 /// A payload converter for types conforming to `Encodable` and `Decodable` using JSON encoding.
 public struct JSONPayloadConverter: EncodingPayloadConverter {

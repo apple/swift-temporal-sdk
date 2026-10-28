@@ -14,7 +14,11 @@
 
 import SwiftProtobuf
 
+#if canImport(FoundationEssentials)
+public import struct FoundationEssentials.Date
+#else
 public import struct Foundation.Date
+#endif
 
 /// Information about a specific workflow execution instance.
 ///

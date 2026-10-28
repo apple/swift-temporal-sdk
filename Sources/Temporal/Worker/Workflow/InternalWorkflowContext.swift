@@ -14,7 +14,11 @@
 
 import Logging
 
+#if canImport(FoundationEssentials)
+import struct FoundationEssentials.Date
+#else
 import struct Foundation.Date
+#endif
 
 /// The internal execution context available during workflow execution.
 struct InternalWorkflowContext: Sendable {

@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+import struct FoundationEssentials.Data
+#else
 import struct Foundation.Data
+#endif
 
 /// Input parameters for completing an async activity in client interceptors.
 public struct CompleteAsyncActivityInput<Result: Sendable>: Sendable {

@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+import struct FoundationEssentials.Data
+#else
 import struct Foundation.Data
+#endif
 
 /// A payload converter for `Array<UInt8>` and `Data` values.
 public struct BinaryPayloadConverter: EncodingPayloadConverter {

@@ -15,7 +15,11 @@
 import OrderedCollections
 import SwiftProtobuf
 
+#if canImport(FoundationEssentials)
+import struct FoundationEssentials.Date
+#else
 import struct Foundation.Date
+#endif
 
 // This type is unchecked Sendable since it enforces the safe access
 // by checking that every call from a workflow context is coming from

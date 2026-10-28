@@ -15,8 +15,13 @@
 import OrderedCollections
 import SwiftProtobuf
 
+#if canImport(FoundationEssentials)
+import struct FoundationEssentials.Date
+import struct FoundationEssentials.UUID
+#else
 import struct Foundation.Date
 import struct Foundation.UUID
+#endif
 
 struct WorkflowStateMachine: ~Copyable {
     /// An entry representing a currently running handler.

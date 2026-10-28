@@ -15,7 +15,11 @@
 import Logging
 internal import SwiftProtobuf
 
+#if canImport(FoundationEssentials)
+import struct FoundationEssentials.Data
+#else
 import struct Foundation.Data
+#endif
 
 /// Internal runner for workflow history replay.
 package final class WorkflowHistoryRunner: Sendable {

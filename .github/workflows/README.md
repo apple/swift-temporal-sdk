@@ -57,5 +57,5 @@ Before using this workflow, your repository must have:
 1. **At least one existing release** - The workflow calculates new versions based on the last release
 2. **Properly configured semver labels** - PRs must be labeled with one of: `semver/none`, `🔨 semver/patch`, `🆕 semver/minor`, or `⚠️ semver/major`
 3. **`.github/release.yml` file** - Required for auto-generating release notes. See [GitHub's documentation](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes) for configuration details
-4. **Semver label validation** - Integrate the [NIO-provided `semver-label-check` action](https://github.com/swiftlang/github-workflows/blob/main/.github/workflows/soundness.yml) to ensure all PRs have appropriate labels
+4. **Semver label validation** - Integrate the [`pull_request_label.yml` reusable workflow](https://github.com/swiftlang/github-workflows/blob/main/.github/workflows/pull_request_label.yml) to ensure all PRs have appropriate labels
 5. **A `main` branch** - The workflow expects releases to be based on the `main` branch

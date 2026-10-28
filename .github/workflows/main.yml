@@ -10,31 +10,18 @@ on:
     - cron: "0 8,20 * * *"
 
 jobs:
-  unit-tests:
-    name: Unit tests
-    uses: apple/swift-nio/.github/workflows/unit_tests.yml@main
+  tests:
+    name: Tests
+    uses: swiftlang/github-workflows/.github/workflows/package_test.yml@main
     with:
-      linux_5_10_enabled: false
-      linux_6_0_enabled: false
-      linux_6_1_enabled: false
-      linux_6_2_arguments_override: "-Xswiftc -require-explicit-sendable"
-      linux_6_3_arguments_override: "-Xswiftc -require-explicit-sendable"
-      linux_6_4_arguments_override: "-Xswiftc -require-explicit-sendable"
-      linux_nightly_next_arguments_override: "-Xswiftc -require-explicit-sendable"
-      linux_nightly_main_arguments_override: "-Xswiftc -require-explicit-sendable"
-
-  cxx-interop:
-    name: Cxx interop
-    uses: apple/swift-nio/.github/workflows/cxx_interop.yml@main
-    with:
-      linux_5_10_enabled: false
-      linux_6_0_enabled: false
-      linux_6_1_enabled: false
-
-  release-builds:
-    name: Release builds
-    uses: apple/swift-nio/.github/workflows/release_builds.yml@main
-    with:
-      linux_5_10_enabled: false
-      linux_6_0_enabled: false
-      linux_6_1_enabled: false
+      enable_macos: false
+      enable_macos_swiftly: false
+      enable_windows: false
+      enable_linux_static_sdk_build: false
+      enable_wasm_sdk_build: false
+      enable_embedded_wasm_sdk_build: false
+      enable_android_sdk_build: false
+      enable_android_emulator_tests: false
+      linux_command: |
+        Debug-Test: swift test -Xswiftc -require-explicit-sendable
+        Release-Build: swift build -c release
