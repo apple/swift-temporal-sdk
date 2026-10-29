@@ -25,6 +25,7 @@ jobs:
       enable_embedded_wasm_sdk_build: false
       enable_android_sdk_build: false
       enable_android_emulator_tests: false
+      enable_freebsd: false
       linux_command: |
         Debug-Test: swift test -Xswiftc -require-explicit-sendable
         Release-Build: swift build -c release
