@@ -23,18 +23,22 @@
 /// ## Requirements
 ///
 /// Workflows must:
-/// - Be a `final class`.
-/// - Have a `run(input:)` method that returns the workflow result.
+/// - Be a `struct`.
+/// - Have a `mutating func run(context:input:)` method that returns the workflow result.
+///
+/// If the workflow doesn't declare an `init(input:)` initializer, the macro generates an empty one,
+/// which requires all stored properties to have default values.
 ///
 /// ## Usage
 ///
 /// ```swift
 /// @Workflow
-/// final class GreetingWorkflow {
-///     func run(context: WorkflowContext, input: String) async throws -> String {
-///         return try await executeActivity(
-///             GreetingActivity.self,
-///             input: name
+/// struct GreetingWorkflow {
+///     mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+///         return try await context.executeActivity(
+///             GreetingActivity.Activities.Greet.self,
+///             options: .init(startToCloseTimeout: .seconds(30)),
+///             input: input
 ///         )
 ///     }
 /// }
@@ -50,6 +54,9 @@ public macro Workflow(name: String? = nil) = #externalMacro(module: "TemporalMac
 /// The `@WorkflowSignal` macro marks a function as a signal handler within a workflow.
 /// Signals are asynchronous messages that can be sent to a running workflow.
 ///
+/// The function must not return a value and must take an `input` parameter, optionally preceded by a
+/// `context: WorkflowContext<Self>` parameter.
+///
 /// ## Key Characteristics
 ///
 /// - **Asynchronous**: Signals are sent without waiting for execution completion
@@ -61,19 +68,20 @@ public macro Workflow(name: String? = nil) = #externalMacro(module: "TemporalMac
 ///
 /// ```swift
 /// @Workflow
-/// final class GreetingWorkflow {
-///     var shouldGreet: false
+/// struct GreetingWorkflow {
+///     var shouldGreet = false
 ///
-///     func run(context: WorkflowContext, input: String) async throws -> String {
-///         try await Workflow.condition { self.shouldGreet }
-///         return try await executeActivity(
-///             GreetingActivity.self,
-///             input: name
+///     mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+///         try await context.condition { $0.shouldGreet }
+///         return try await context.executeActivity(
+///             GreetingActivity.Activities.Greet.self,
+///             options: .init(startToCloseTimeout: .seconds(30)),
+///             input: input
 ///         )
 ///     }
 ///
 ///     @WorkflowSignal
-///     func greet() {
+///     mutating func greet(input: Void) {
 ///         self.shouldGreet = true
 ///     }
 /// }
@@ -93,6 +101,9 @@ public macro WorkflowSignal(name: String? = nil, description: String? = nil, unf
 /// Queries are synchronous, read-only requests that can be sent to a running workflow
 /// to retrieve current state information without modifying the workflow execution.
 ///
+/// The function must return a non-`Void` value and must take an `input` parameter, optionally preceded by a
+/// `context: WorkflowContextView` parameter.
+///
 /// ## Key Characteristics
 ///
 /// - **Read-only**: Queries cannot modify workflow state or trigger side effects
@@ -102,7 +113,7 @@ public macro WorkflowSignal(name: String? = nil, description: String? = nil, unf
 ///
 /// ## Usage
 ///
-/// Use on a method to define a query with input:
+/// Use on a method to define a query:
 ///
 /// ```swift
 /// @Workflow
@@ -116,12 +127,12 @@ public macro WorkflowSignal(name: String? = nil, description: String? = nil, unf
 ///     }
 ///
 ///     @WorkflowQuery
-///     func greetName() -> String {
+///     func greetName(input: Void) -> String {
 ///         self.name
 ///     }
 /// }
 /// ```
-/// Use on stored or computed properties to directly expose it as a query:
+/// Use on stored or computed properties to directly expose it as a query. The property needs an explicit type annotation:
 ///
 /// ```swift
 /// @Workflow
@@ -142,6 +153,8 @@ public macro WorkflowQuery(name: String? = nil, description: String? = nil) = #e
 /// Updates are synchronous requests that can modify workflow state and return a result,
 /// combining the immediacy of queries with the state-modification capabilities of signals.
 ///
+/// The function must take an `input` parameter, optionally preceded by a `context: WorkflowContext<Self>` parameter.
+///
 /// ## Key Characteristics
 ///
 /// - **Synchronous**: Updates wait for completion and return results
@@ -153,21 +166,22 @@ public macro WorkflowQuery(name: String? = nil, description: String? = nil) = #e
 ///
 /// ```swift
 /// @Workflow
-/// final class GreetingWorkflow {
-///     var shouldGreet: false
-///     var name: String
+/// struct GreetingWorkflow {
+///     var shouldGreet = false
+///     var name = ""
 ///
-///     func run(context: WorkflowContext, input: String) async throws -> String {
-///         self.name = name
-///         try await Workflow.condition { self.shouldGreet }
-///         return try await executeActivity(
-///             GreetingActivity.self,
-///             input: name
+///     mutating func run(context: WorkflowContext<Self>, input: String) async throws -> String {
+///         self.name = input
+///         try await context.condition { $0.shouldGreet }
+///         return try await context.executeActivity(
+///             GreetingActivity.Activities.Greet.self,
+///             options: .init(startToCloseTimeout: .seconds(30)),
+///             input: input
 ///         )
 ///     }
 ///
 ///     @WorkflowUpdate
-///     func greet() async throws -> String {
+///     mutating func greet(input: Void) async throws -> String {
 ///         self.shouldGreet = true
 ///         return self.name
 ///     }
@@ -178,9 +192,10 @@ public macro WorkflowQuery(name: String? = nil, description: String? = nil) = #e
 /// - Parameter description: An optional description of the update's purpose.
 /// - Parameter unfinishedPolicy: The policy for handling unfinished instances of this handler when
 ///   the workflow exits. Defaults to ``HandlerUnfinishedPolicy/warnAndAbandon``.
-/// - Parameter validator: The name of a method on the workflow class that validates the update input
-///   before execution. The validator method must accept the same input type as the update handler
-///   and return `Void`. It may throw to reject the update. If not provided, no validation is performed.
+/// - Parameter validator: The name of a method on the workflow type that validates the update input
+///   before execution. The validator method must be synchronous, have a single parameter called `input` of the
+///   same type as the update handler's input, and return `Void`. It may throw to reject the update. If not provided,
+///   no validation is performed.
 @attached(peer, names: arbitrary)
 public macro WorkflowUpdate(
     name: String? = nil,
@@ -199,26 +214,29 @@ public macro WorkflowUpdate(
 ///
 /// ## Usage
 ///
-/// The `@Workflow` macro automatically applies the `@_WorkflowState` macro to all members:
+/// The `@Workflow` macro automatically applies the `@_WorkflowState` macro to all mutable, stored instance properties:
 ///
 /// ```swift
 /// @Workflow
-/// final class IncrementingWorkflow {
+/// struct IncrementingWorkflow {
 ///     private var state = 1
 ///
-///     func run(input: Void) async throws -> Int {
+///     mutating func run(context: WorkflowContext<Self>, input: Void) async throws -> Int {
 ///         await withTaskGroup { group in
 ///             group.addTask {
-///                 self.state += 1
+///                 context.mutateState { $0.state += 1 }
 ///             }
 ///             group.addTask {
-///                 self.state += 1
+///                 context.mutateState { $0.state += 1 }
 ///             }
 ///         }
 ///         return self.state
 ///     }
 /// }
 /// ```
+///
+/// > Note: Code running outside of `run` and the handlers, like the child tasks above, modifies the state through
+/// > ``WorkflowContext/mutateState(_:)``.
 @attached(accessor, names: named(init), named(get), named(set))
 @attached(peer, names: prefixed(_))
 public macro _WorkflowState() = #externalMacro(module: "TemporalMacros", type: "WorkflowStateMacro")
