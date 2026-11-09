@@ -17,9 +17,13 @@
 /// The `@Activity` macro automatically generates the necessary implementation code to register a
 /// function as a Temporal activity. When applied to a function, it creates an activity definition that can be executed by Temporal workers.
 ///
+/// The function must be declared directly within a struct or class, must not be generic, and can take at most one parameter.
+/// Use the macro together with ``ActivityContainer()`` on the enclosing type.
+///
 /// ## Usage
 ///
 /// ```swift
+/// @ActivityContainer
 /// struct GreetingActivity {
 ///     @Activity
 ///     func greet(name: String) async throws -> String {
@@ -33,6 +37,7 @@
 /// Mark an activity as dynamic to create a catch-all handler for unregistered activity types:
 ///
 /// ```swift
+/// @ActivityContainer
 /// struct MyDynamicActivity {
 ///     @Activity(dynamic: true)
 ///     func handle(input: [TemporalRawValue]) async throws -> TemporalRawValue {
@@ -57,6 +62,8 @@ public macro Activity(name: String? = nil, dynamic: Bool = false) =
 /// The `@ActivityContainer` macro analyzes a type for functions marked with `@Activity` and automatically
 /// generates the necessary ``ActivityContainer`` conformance. This allows all activities within the container
 /// to be registered with a Temporal worker.
+///
+/// The macro can't be applied to enumerations, protocols, or private types.
 ///
 /// ```swift
 /// @ActivityContainer
