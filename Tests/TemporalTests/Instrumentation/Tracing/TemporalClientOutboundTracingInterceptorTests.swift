@@ -14,6 +14,7 @@
 
 import GRPCCore
 import GRPCNIOTransportHTTP2Posix
+import InMemoryTracing
 import Logging
 import ServiceContextModule
 import SwiftProtobuf
@@ -35,10 +36,6 @@ struct TemporalClientOutboundTracingInterceptorTests {
         mutating func run(context: WorkflowContext<Self>, input: Void) async {}
     }
 
-    struct TemporalTraceID: Decodable {
-        let traceparent: UUID  // matches default Temporal tracing payload key
-    }
-
     // Test attributes
     private static let workflowId = UUID().uuidString
     private static let runId = UUID().uuidString
@@ -58,10 +55,10 @@ struct TemporalClientOutboundTracingInterceptorTests {
     // one of them only; per-method span attributes are covered separately
     @Test
     func tracingInterceptorTemporalClient() async throws {
-        let tracer = TestTracer()
+        let tracer = InMemoryTracer()
         var serviceContext = ServiceContext.topLevel
         let traceIDString = UUID().uuidString
-        serviceContext.traceID = traceIDString
+        serviceContext.inMemorySpanContext = InMemorySpanContext(traceID: traceIDString, spanID: UUID().uuidString, parentSpanID: nil)
 
         try await ServiceContext.withValue(serviceContext) {
             let interceptor = try #require(
@@ -80,10 +77,10 @@ struct TemporalClientOutboundTracingInterceptorTests {
                         })?.1 as? Api.Common.V1.Payload
                     )
 
-                    let traceHeader: TemporalTraceID = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
+                    let traceHeader: InMemoryTraceHeader = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
                         traceHeaderPayload
                     )
-                    #expect(traceHeader.traceparent.uuidString == traceIDString)
+                    #expect(traceHeader.traceID == traceIDString)
 
                     return ()
                 }
@@ -114,10 +111,10 @@ struct TemporalClientOutboundTracingInterceptorTests {
 
     @Test
     func tracingInterceptorTemporalClientFailure() async throws {
-        let tracer = TestTracer()
+        let tracer = InMemoryTracer()
         var serviceContext = ServiceContext.topLevel
         let traceIDString = UUID().uuidString
-        serviceContext.traceID = traceIDString
+        serviceContext.inMemorySpanContext = InMemorySpanContext(traceID: traceIDString, spanID: UUID().uuidString, parentSpanID: nil)
 
         try await ServiceContext.withValue(serviceContext) {
             let interceptor = try #require(
@@ -137,10 +134,10 @@ struct TemporalClientOutboundTracingInterceptorTests {
                             })?.1 as? Api.Common.V1.Payload
                         )
 
-                        let traceHeader: TemporalTraceID = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
+                        let traceHeader: InMemoryTraceHeader = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
                             traceHeaderPayload
                         )
-                        #expect(traceHeader.traceparent.uuidString == traceIDString)
+                        #expect(traceHeader.traceID == traceIDString)
 
                         // Simulates an error within the RPC
                         throw TracingInterceptorTestError.testError
@@ -176,7 +173,7 @@ struct TemporalClientOutboundTracingInterceptorTests {
 
     @Test
     func listWorkflowsRecordsQueryUnderWorkflowKey() async throws {
-        let tracer = TestTracer()
+        let tracer = InMemoryTracer()
         let interceptor = try #require(
             TemporalClientTracingInterceptor(
                 tracer: tracer

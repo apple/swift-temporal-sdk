@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import InMemoryTracing
 import Logging
 import ServiceContextModule
 import SwiftProtobuf
@@ -30,10 +31,6 @@ struct TemporalWorkerInboundTracingInterceptorTests {
     @Workflow
     struct VoidWorkflow {
         mutating func run(context: WorkflowContext<Self>, input: Void) async {}
-    }
-
-    struct TemporalTraceID: Encodable {
-        let traceparent: UUID  // matches default Temporal tracing payload key
     }
 
     // Test attributes
@@ -60,8 +57,8 @@ struct TemporalWorkerInboundTracingInterceptorTests {
     // only test one inbound workflow worker interceptor, as logic is the same (except for the setting of span attributes)
     @Test
     func inboundTracingWorkflowWorker() async throws {
-        let tracer = TestTracer()
-        let traceID = UUID()
+        let tracer = InMemoryTracer()
+        let callerContext = InMemoryTraceHeader(traceID: UUID().uuidString, spanID: UUID().uuidString)
 
         let interceptor = try #require(
             TemporalWorkerTracingInterceptor(
@@ -70,9 +67,9 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         )
 
         let mockIncomingHeaders: [String: Api.Common.V1.Payload] = await [
-            // reflects structure of the default Temporal tracing header
+            // the default Temporal tracing header, carrying the InMemoryTracer's trace context
             "_tracer-data": try DataConverter.default.convertValue(
-                TemporalTraceID(traceparent: traceID)
+                callerContext
             )
         ]
         _ = try await interceptor.executeWorkflow(
@@ -83,7 +80,8 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             )
         ) { input in
             // The inbound span continues the caller's trace, so the handler runs inside it.
-            #expect(ServiceContext.current?.traceID == traceID.uuidString)
+            #expect(ServiceContext.current?.inMemorySpanContext?.traceID == callerContext.traceID)
+            #expect(ServiceContext.current?.inMemorySpanContext?.parentSpanID == callerContext.spanID)
         }
 
         assertTestSpanComponents(
@@ -108,15 +106,16 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         }
 
         // The caller's trace is continued as the span's parent, not attached as a link.
-        let span = tracer.getSpan(ofOperation: "RunWorkflow:\(Self.workflowName)")
-        #expect(span?.context.traceID == traceID.uuidString)
-        #expect(span?.context.spanLinks == nil)
+        let span = tracer.finishedSpan(named: "RunWorkflow:\(Self.workflowName)")
+        #expect(span?.traceID == callerContext.traceID)
+        #expect(span?.parentSpanID == callerContext.spanID)
+        #expect(span?.links.isEmpty == true)
     }
 
     @Test
     func inboundTracingWorkflowWorkerFailure() async throws {
-        let tracer = TestTracer()
-        let traceID = UUID()
+        let tracer = InMemoryTracer()
+        let callerContext = InMemoryTraceHeader(traceID: UUID().uuidString, spanID: UUID().uuidString)
 
         let interceptor = try #require(
             TemporalWorkerTracingInterceptor(
@@ -125,9 +124,9 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         )
 
         let mockIncomingHeaders: [String: Api.Common.V1.Payload] = await [
-            // reflects structure of the default Temporal tracing header
+            // the default Temporal tracing header, carrying the InMemoryTracer's trace context
             "_tracer-data": try DataConverter.default.convertValue(
-                TemporalTraceID(traceparent: traceID)
+                callerContext
             )
         ]
 
@@ -140,7 +139,8 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 )
             ) { input in
                 // The inbound span continues the caller's trace, so the handler runs inside it.
-                #expect(ServiceContext.current?.traceID == traceID.uuidString)
+                #expect(ServiceContext.current?.inMemorySpanContext?.traceID == callerContext.traceID)
+                #expect(ServiceContext.current?.inMemorySpanContext?.parentSpanID == callerContext.spanID)
 
                 // Simulates an error within the RPC
                 throw TracingInterceptorTestError.testError
@@ -163,9 +163,10 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             }
 
             // The caller's trace is continued as the span's parent, not attached as a link.
-            let span = tracer.getSpan(ofOperation: "RunWorkflow:\(Self.workflowName)")
-            #expect(span?.context.traceID == traceID.uuidString)
-            #expect(span?.context.spanLinks == nil)
+            let span = tracer.finishedSpan(named: "RunWorkflow:\(Self.workflowName)")
+            #expect(span?.traceID == callerContext.traceID)
+            #expect(span?.parentSpanID == callerContext.spanID)
+            #expect(span?.links.isEmpty == true)
         }
     }
 
@@ -175,8 +176,8 @@ struct TemporalWorkerInboundTracingInterceptorTests {
 
     @Test
     func inboundTracingActivityWorker() async throws {
-        let tracer = TestTracer()
-        let traceID = UUID()
+        let tracer = InMemoryTracer()
+        let callerContext = InMemoryTraceHeader(traceID: UUID().uuidString, spanID: UUID().uuidString)
 
         let interceptor = try #require(
             TemporalWorkerTracingInterceptor(
@@ -185,9 +186,9 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         )
 
         let mockIncomingHeaders: [String: Api.Common.V1.Payload] = await [
-            // reflects structure of the default Temporal tracing header
+            // the default Temporal tracing header, carrying the InMemoryTracer's trace context
             "_tracer-data": try DataConverter.default.convertValue(
-                TemporalTraceID(traceparent: traceID)
+                callerContext
             )
         ]
 
@@ -199,7 +200,8 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             )
         ) { input in
             // The inbound span continues the caller's trace, so the handler runs inside it.
-            #expect(ServiceContext.current?.traceID == traceID.uuidString)
+            #expect(ServiceContext.current?.inMemorySpanContext?.traceID == callerContext.traceID)
+            #expect(ServiceContext.current?.inMemorySpanContext?.parentSpanID == callerContext.spanID)
 
             return ()
         }
@@ -219,15 +221,16 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         }
 
         // The caller's trace is continued as the span's parent, not attached as a link.
-        let span = tracer.getSpan(ofOperation: "RunActivity:\(TestActivityName.name)")
-        #expect(span?.context.traceID == traceID.uuidString)
-        #expect(span?.context.spanLinks == nil)
+        let span = tracer.finishedSpan(named: "RunActivity:\(TestActivityName.name)")
+        #expect(span?.traceID == callerContext.traceID)
+        #expect(span?.parentSpanID == callerContext.spanID)
+        #expect(span?.links.isEmpty == true)
     }
 
     @Test
     func inboundTracingActivityWorkerFailure() async throws {
-        let tracer = TestTracer()
-        let traceID = UUID()
+        let tracer = InMemoryTracer()
+        let callerContext = InMemoryTraceHeader(traceID: UUID().uuidString, spanID: UUID().uuidString)
 
         let interceptor = try #require(
             TemporalWorkerTracingInterceptor(
@@ -236,9 +239,9 @@ struct TemporalWorkerInboundTracingInterceptorTests {
         )
 
         let mockIncomingHeaders: [String: Api.Common.V1.Payload] = await [
-            // reflects structure of the default Temporal tracing header
+            // the default Temporal tracing header, carrying the InMemoryTracer's trace context
             "_tracer-data": try DataConverter.default.convertValue(
-                TemporalTraceID(traceparent: traceID)
+                callerContext
             )
         ]
 
@@ -251,7 +254,8 @@ struct TemporalWorkerInboundTracingInterceptorTests {
                 )
             ) { input in
                 // The inbound span continues the caller's trace, so the handler runs inside it.
-                #expect(ServiceContext.current?.traceID == traceID.uuidString)
+                #expect(ServiceContext.current?.inMemorySpanContext?.traceID == callerContext.traceID)
+                #expect(ServiceContext.current?.inMemorySpanContext?.parentSpanID == callerContext.spanID)
 
                 // Simulates an error within the RPC
                 throw TracingInterceptorTestError.testError
@@ -274,9 +278,10 @@ struct TemporalWorkerInboundTracingInterceptorTests {
             }
 
             // The caller's trace is continued as the span's parent, not attached as a link.
-            let span = tracer.getSpan(ofOperation: "RunActivity:\(TestActivityName.name)")
-            #expect(span?.context.traceID == traceID.uuidString)
-            #expect(span?.context.spanLinks == nil)
+            let span = tracer.finishedSpan(named: "RunActivity:\(TestActivityName.name)")
+            #expect(span?.traceID == callerContext.traceID)
+            #expect(span?.parentSpanID == callerContext.spanID)
+            #expect(span?.links.isEmpty == true)
         }
     }
 }
