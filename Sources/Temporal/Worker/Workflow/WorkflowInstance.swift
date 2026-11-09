@@ -39,6 +39,12 @@ struct WorkflowInstance: Sendable {
     @TaskLocal
     static var isOnWorkflowInstance: Bool = false
 
+    /// How many times the executor may still run once the workflow is removed from the cache.
+    ///
+    /// Every await fails once the workflow is removed, so a workflow that keeps retrying would otherwise run
+    /// for ever. Cleanup that finishes needs one pass per await; this leaves ample room for it.
+    static let removedFromCachePassLimit = 1_000
+
     /// The task queue.
     private var taskQueue: String
     /// The worker's namespace.
@@ -94,9 +100,14 @@ struct WorkflowInstance: Sendable {
         self.outboundInterceptors = outboundInterceptors
     }
 
+    /// Runs the workflow until it is removed from the cache and has finished.
+    ///
+    /// A workflow that doesn't finish within ``removedFromCachePassLimit`` executor passes after removal is
+    /// abandoned: `onAbandoned` is called, and this method never returns.
     func run<Workflow: WorkflowDefinition>(
         workflowType: Workflow.Type,
-        activations: some AsyncSequence<Coresdk.WorkflowActivation.WorkflowActivation, Never>
+        activations: some AsyncSequence<Coresdk.WorkflowActivation.WorkflowActivation, Never>,
+        onAbandoned: @Sendable () -> Void
     ) async throws {
         let logger = Logger.current
         var activationsIterator = activations.makeAsyncIterator()
@@ -208,13 +219,27 @@ struct WorkflowInstance: Sendable {
             // when replaying for a query). We can't leave a dangling cancellation
             // otherwise the task group will never return.
             Self.$isOnWorkflowInstance.withValue(true) {
-                stateMachine.forceCancelOutstandingContinuations()
+                _ = stateMachine.forceCancelOutstandingContinuations()
             }
 
             // There might be outstanding continuations for wait conditions, activities, etc.. The cancel
-            // should resume them but we have to run the executor one more time for the workflow run method
-            // and any message handler to finish.
-            self.runExecutor(context: executionState.workflowContext)
+            // should resume them but we have to run the executor again for the workflow run method
+            // and any message handler to finish. Running it can await anew, e.g. cleanup code inside a
+            // cancellation shield, and no activation will resolve that, so we repeat until nothing is left.
+            var passes = 0
+            repeat {
+                guard passes < Self.removedFromCachePassLimit else {
+                    // The workflow keeps awaiting although every await fails, most likely because it retries them.
+                    // We stop running it, so its tasks never finish and the task group never returns.
+                    logger.error(
+                        "Workflow still running after \(Self.removedFromCachePassLimit) passes since its removal from the cache. Abandoning it."
+                    )
+                    onAbandoned()
+                    return
+                }
+                passes += 1
+                self.runExecutor(context: executionState.workflowContext)
+            } while Self.$isOnWorkflowInstance.withValue(true, operation: { stateMachine.forceCancelOutstandingContinuations() })
         }
     }
 
