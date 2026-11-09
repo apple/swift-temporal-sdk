@@ -213,6 +213,19 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
             )
         }
 
+        // Declared as a member rather than in the extension, so the error types are looked up in the
+        // workflow's own scope, where types nested in an enclosing type are visible.
+        var failureErrorTypesDecls = [DeclSyntax]()
+        if let failureErrorTypes = node.expressionForArgument(named: "failureErrorTypes") {
+            failureErrorTypesDecls.append(
+                """
+                \(accessModifier)static var failureErrorTypes: [any Error.Type] {
+                    \(failureErrorTypes)
+                }
+                """
+            )
+        }
+
         var emptyInitDecl: InitializerDeclSyntax?
 
         // Check if an initializer with a single "input:" parameter (from `WorkflowDefinition` protocol) is already provided
@@ -243,7 +256,7 @@ public struct WorkflowMacro: ExtensionMacro, MemberMacro, MemberAttributeMacro {
             )
         }
 
-        return messageHandlerDecls + (DeclSyntax(emptyInitDecl).map { [$0] } ?? [])
+        return messageHandlerDecls + failureErrorTypesDecls + (DeclSyntax(emptyInitDecl).map { [$0] } ?? [])
     }
 
     public static func expansion(

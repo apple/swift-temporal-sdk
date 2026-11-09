@@ -76,6 +76,16 @@ public protocol WorkflowDefinition: Sendable {
     /// Defaults to an empty array.
     static var updates: [any WorkflowUpdateDefinition<Self>] { get }
 
+    /// The error types that fail a workflow execution of this type instead of its workflow task.
+    ///
+    /// These types are combined with ``TemporalWorker/Configuration/workflowFailureErrorTypes``
+    /// and match the same way. Set them with the `failureErrorTypes` argument of the `@Workflow`
+    /// macro. Defaults to an empty array.
+    ///
+    /// If you implement this yourself, declare it as `[any Error.Type]`. A property with an inferred
+    /// type such as `[MyError.Type]` doesn't satisfy this requirement and is ignored.
+    static var failureErrorTypes: [any Error.Type] { get }
+
     /// Creates a new workflow instance.
     ///
     /// The Temporal SDK calls this initializer when starting a new workflow execution.
@@ -94,7 +104,9 @@ public protocol WorkflowDefinition: Sendable {
     ///   - context: The workflow execution context providing access to all workflow operations.
     ///   - input: The workflow input.
     /// - Returns: The workflow execution result.
-    /// - Throws: Any error that causes the workflow to fail.
+    /// - Throws: A ``TemporalFailureError``, or an error matching ``failureErrorTypes`` or
+    ///   ``TemporalWorker/Configuration/workflowFailureErrorTypes``, fails the workflow execution.
+    ///   Any other error fails the workflow task.
     mutating func run(context: WorkflowContext<Self>, input: Input) async throws -> Output
 }
 
@@ -112,6 +124,10 @@ extension WorkflowDefinition {
     }
 
     public static var updates: [any WorkflowUpdateDefinition<Self>] {
+        []
+    }
+
+    public static var failureErrorTypes: [any Error.Type] {
         []
     }
 }

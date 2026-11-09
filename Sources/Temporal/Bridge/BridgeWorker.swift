@@ -27,7 +27,7 @@ package protocol BridgeWorkerProtocol: Sendable {
         client: borrowing BridgeClient,
         configuration: TemporalWorker.Configuration,
         hasActivities: Bool,
-        hasWorkflows: Bool,
+        workflows: [any WorkflowDefinition.Type]
     ) throws
 
     func initiateShutdown()
@@ -118,7 +118,7 @@ package final class BridgeWorker: BridgeWorkerProtocol {
         client: borrowing BridgeClient,
         configuration: TemporalWorker.Configuration,
         hasActivities: Bool,
-        hasWorkflows: Bool,
+        workflows: [any WorkflowDefinition.Type]
     ) throws {
         try self.init(
             client: client,
@@ -128,14 +128,14 @@ package final class BridgeWorker: BridgeWorkerProtocol {
             clientIdentity: configuration.clientIdentity,
             identityOverride: configuration.identityOverride,
             hasActivities: hasActivities,
-            hasWorkflows: hasWorkflows,
+            hasWorkflows: !workflows.isEmpty,
             workflowTaskPollerBehavior: configuration.workflowTaskPollerBehavior,
             maxCachedWorkflows: UInt32(configuration.maxCachedWorkflows),
             tuner: configuration.tuner,
             nonstickyToStickyPollRatio: Float(configuration.nonstickyToStickyPollRatio),
             stickyQueueScheduleToStartTimeoutMs: configuration.stickyQueueScheduleToStartTimeout.milliseconds,
-            nondeterminismAsWorkflowFail: true,
-            nondeterminismAsWorkflowFailForTypes: [],
+            nondeterminismAsWorkflowFail: WorkflowFailureErrorTypes(configuration.workflowFailureErrorTypes).matchesNondeterminism,
+            nondeterminismAsWorkflowFailForTypes: WorkflowFailureErrorTypes.workflowTypesFailingOnNondeterminism(in: workflows),
             activityTaskPollerBehavior: configuration.activityTaskPollerBehavior,
             maxActivitiesPerSecond: configuration.maxActivitiesPerSecond,
             maxTaskQueueActivitiesPerSecond: configuration.maxTaskQueueActivitiesPerSecond,

@@ -172,6 +172,61 @@ struct WorkflowMacrosTests {
         #expect(expectedOutput == actualOutput)
     }
 
+    @Test
+    func workflowWithFailureErrorTypes() throws {
+        let (expectedOutput, _) = try parse(
+            """
+            struct Foo {
+
+                static var failureErrorTypes: [any Error.Type] {
+                    [FooError.self, BarError.self]
+                }
+
+                init(input: Input) {}
+            }
+
+            extension Foo: WorkflowDefinition {
+            }
+            """
+        )
+        let (actualOutput, _) = try parse(
+            """
+            @Workflow(failureErrorTypes: [FooError.self, BarError.self])
+            struct Foo {}
+            """
+        )
+        #expect(expectedOutput == actualOutput)
+    }
+
+    @Test(arguments: ["public", "package", "internal", "fileprivate"])
+    func namedWorkflowWithFailureErrorTypes(modifier: String) throws {
+        let (expectedOutput, _) = try parse(
+            """
+            \(modifier) struct Foo {
+
+                \(modifier) static var failureErrorTypes: [any Error.Type] {
+                    [FooError.self]
+                }
+
+                \(modifier) init(input: Input) {}
+            }
+
+            extension Foo: WorkflowDefinition {
+                \(modifier) static var name: String { "CustomName" }
+            }
+            """,
+            removeWhitespace: true
+        )
+        let (actualOutput, _) = try parse(
+            """
+            @Workflow(name: "CustomName", failureErrorTypes: [FooError.self])
+            \(modifier) struct Foo {}
+            """,
+            removeWhitespace: true
+        )
+        #expect(expectedOutput == actualOutput)
+    }
+
     @Test(arguments: [nil, "public", "package", "internal", "fileprivate", "private"])
     func signal(modifier: String?) throws {
         let modifierPrefix = modifier.map { "\($0) " } ?? ""

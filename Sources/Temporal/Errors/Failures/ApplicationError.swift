@@ -15,7 +15,9 @@
 /// Error thrown during workflow or activity execution.
 ///
 /// For workflows, users should throw this error to signal a workflow failure.
-/// Other non-``TemporalFailureError``s will not fail the workflow.
+/// Other non-``TemporalFailureError``s will not fail the workflow, unless they match
+/// ``TemporalWorker/Configuration/workflowFailureErrorTypes`` or the workflow's
+/// ``WorkflowDefinition/failureErrorTypes``.
 ///
 /// In activities, all non-``TemporalError``s are translated to this error as retryable with the type
 /// as the unqualified error class name.

@@ -60,6 +60,8 @@ struct WorkflowInstance: Sendable {
     private let implementation: Implementation
     /// The workflow outbound interceptor chain.
     private let outboundInterceptors: [any WorkflowOutboundInterceptor]
+    /// The error types that fail the workflow execution instead of the workflow task.
+    private let failureErrorTypes: WorkflowFailureErrorTypes
 
     init<WorkflowWorker: WorkflowWorkerProtocol>(
         workflowWorker: WorkflowWorker,
@@ -67,6 +69,7 @@ struct WorkflowInstance: Sendable {
         namespace: String,
         payloadConverter: any PayloadConverter,
         failureConverter: any FailureConverter,
+        failureErrorTypes: WorkflowFailureErrorTypes,
     ) {
         self.workflowWorkerCompleteWorkflowActivation = workflowWorker.completeWorkflowActivation
         self.taskQueue = taskQueue
@@ -92,6 +95,7 @@ struct WorkflowInstance: Sendable {
         }
         self.implementation = .init(interceptors: inboundInterceptors, executor: self.executor)
         self.outboundInterceptors = outboundInterceptors
+        self.failureErrorTypes = failureErrorTypes
     }
 
     func run<Workflow: WorkflowDefinition>(
@@ -129,22 +133,13 @@ struct WorkflowInstance: Sendable {
                 )
             }
         } catch {
-            // We failed to initialize the workflow. This indicates a workflow task failure
-            // so let's fail the activation and return here.
-            let failure = self.failureConverter.convertError(
-                error,
-                payloadConverter: self.payloadConverter
-            )
-            try await self.workflowWorkerCompleteWorkflowActivation(
-                .with {
-                    $0.runID = activation.runID
-                    $0.status = .failed(
-                        .with {
-                            $0.failure = failure
-                        }
-                    )
-                }
-            )
+            // We failed to initialize the workflow, for example because its input couldn't be
+            // decoded. Handle it like an error thrown from the run method, then complete the
+            // activation and return here.
+            await Self.$isOnWorkflowInstance.withValue(true) {
+                await self.handleTopLevelError(error)
+            }
+            try await self.completeActivation(activation: activation)
             return
         }
 
@@ -314,8 +309,7 @@ struct WorkflowInstance: Sendable {
                 case .success(let temporalPayload):
                     self.stateMachine.workflowFinished(temporalPayload: temporalPayload)
                 case .failure(let error):
-                    let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
-                    self.stateMachine.workflowTaskFailed(failure: failure)
+                    await self.handleTopLevelError(error)
                 }
             case .failure(let error):
                 logger.trace(
@@ -908,16 +902,17 @@ struct WorkflowInstance: Sendable {
             // Similar to errors thrown from the workflow's run method, errors thrown from
             // update handlers can lead to either update rejection or workflow task failure.
             // The categorization is identical to workflow's run method errors in that it depends
-            // if it is a Api.Failure.V1.FailureError or not.
+            // on whether the error fails the workflow, see `failsWorkflow(_:)`.
             // Updates have 5 states: admitted (reached server but not worker), accepted (validated but not
             // complete), rejected (failed validation), success, and failure.
             // Core just combines rejection (i.e. during validation) and failure (i.e. after validation) into the
             // same field in the proto and calls it "rejection".
-            if let temporalFailureError = error as? any TemporalFailureError {
-                let failure = self.failureConverter.convertError(temporalFailureError, payloadConverter: self.payloadConverter)
+            // Update handlers can't continue as new, so that always fails the workflow task, even if a
+            // workflow failure error type matches it.
+            let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
+            if !(error is ContinueAsNewError) && self.failsWorkflow(error) {
                 self.stateMachine.updateRejected(id: id, failure: failure)
             } else {
-                let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
                 self.stateMachine.workflowTaskFailed(failure: failure)
             }
         }
@@ -1001,10 +996,9 @@ struct WorkflowInstance: Sendable {
         } else if Task.isCancelled && error.isTemporalCancellation {
             logger.debug("Workflow raised a cancellation.")
             self.stateMachine.cancelWorkflowExecution()
-        } else if let temporalFailureError = error as? any TemporalFailureError {
-            // If the thrown error is a temporal failure error it needs to fail the whole
-            // workflow.
-            let failure = self.failureConverter.convertError(temporalFailureError, payloadConverter: self.payloadConverter)
+        } else if self.failsWorkflow(error) {
+            // If the thrown error fails the workflow, it needs to fail the whole workflow.
+            let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
             self.stateMachine.workflowFinished(failure: failure)
         } else {
             // If it's any other error type we need to fail the activation
@@ -1012,6 +1006,11 @@ struct WorkflowInstance: Sendable {
             let failure = self.failureConverter.convertError(error, payloadConverter: self.payloadConverter)
             self.stateMachine.workflowTaskFailed(failure: failure)
         }
+    }
+
+    /// Returns whether the error fails the workflow execution instead of the workflow task.
+    private func failsWorkflow(_ error: any Error) -> Bool {
+        error is any TemporalFailureError || self.failureErrorTypes.contains(error)
     }
 }
 
