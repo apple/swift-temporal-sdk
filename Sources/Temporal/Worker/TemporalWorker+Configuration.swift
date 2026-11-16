@@ -328,6 +328,24 @@ extension TemporalWorker {
         /// duplicate record for every log statement in each replayed workflow task. Enable it to follow a
         /// replay when debugging. See ``WorkflowContext/logger``.
         public var enableLoggingInReplay: Bool = false
+        /// Whether metrics emitted by Workflow code keep recording while a workflow is replaying (default `false`).
+        ///
+        /// Workflow code runs again from the beginning on every replay, so leaving this disabled avoids a
+        /// duplicate sample for every counter increment and recorded value in each replayed workflow task.
+        /// Enable it to follow a replay when debugging.
+        ///
+        /// This covers metrics created through `swift-metrics` inside Workflow code. Metrics emitted by
+        /// Activities, by the client, and by the rest of the application are never suppressed.
+        public var enableMetricsInReplay: Bool = false
+        /// Whether spans started by Workflow code keep recording while a workflow is replaying (default `false`).
+        ///
+        /// Workflow code runs again from the beginning on every replay, so leaving this disabled avoids a
+        /// duplicate span for every span started in each replayed workflow task. Enable it to follow a
+        /// replay when debugging.
+        ///
+        /// This covers spans started through `swift-distributed-tracing` inside Workflow code. Spans
+        /// started by Activities, by the client, and by the rest of the application are never suppressed.
+        public var enableTracingInReplay: Bool = false
 
         // –– Activities ––
         /// Polling behavior for activities (default max `5`).

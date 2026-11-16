@@ -13,7 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
+import Metrics
 import SwiftProtobuf
+import Tracing
 
 package protocol WorkflowWorkerProtocol: Sendable {
     associatedtype BridgeWorker: BridgeWorkerProtocol
@@ -44,6 +46,10 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
     private let workflows: [String: any WorkflowDefinition.Type]
     /// Whether the workflow logger keeps emitting records while replaying.
     private let enableLoggingInReplay: Bool
+    /// Whether metrics emitted by workflow code keep recording while replaying.
+    private let enableMetricsInReplay: Bool
+    /// Whether spans started by workflow code keep recording while replaying.
+    private let enableTracingInReplay: Bool
     /// The worker interceptor factories.
     package let interceptors: [any WorkerInterceptor]
 
@@ -54,7 +60,9 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
         dataConverter: DataConverter,
         workflows: [any WorkflowDefinition.Type],
         interceptors: [any WorkerInterceptor],
-        enableLoggingInReplay: Bool = false
+        enableLoggingInReplay: Bool = false,
+        enableMetricsInReplay: Bool = false,
+        enableTracingInReplay: Bool = false
     ) throws {
         let logger = Logger.current
 
@@ -71,6 +79,8 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
         )
         self.interceptors = interceptors
         self.enableLoggingInReplay = enableLoggingInReplay
+        self.enableMetricsInReplay = enableMetricsInReplay
+        self.enableTracingInReplay = enableTracingInReplay
     }
 
     package convenience init(
@@ -85,7 +95,9 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
             dataConverter: configuration.dataConverter,
             workflows: workflows,
             interceptors: configuration.interceptors,
-            enableLoggingInReplay: configuration.enableLoggingInReplay
+            enableLoggingInReplay: configuration.enableLoggingInReplay,
+            enableMetricsInReplay: configuration.enableMetricsInReplay,
+            enableTracingInReplay: configuration.enableTracingInReplay
         )
     }
 
@@ -247,10 +259,13 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
                     }
                     do {
                         try await withLogger(workflowLogger) { _ in
-                            try await workflowInstance.run(
-                                workflowType: workflowType,
-                                activations: activationsStream
-                            )
+                            // The metrics factory and tracer seen by workflow code drop signals while replaying.
+                            try await self.withReplayAwareInstruments {
+                                try await workflowInstance.run(
+                                    workflowType: workflowType,
+                                    activations: activationsStream
+                                )
+                            }
                         }
                         logger.trace("Workflow instance finished")
                     } catch {
@@ -278,5 +293,45 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
             try await completion.encode(payloadCodec: payloadCodec)
         }
         try await self.worker.completeWorkflowActivation(completion: completion)
+    }
+}
+
+extension WorkflowWorker {
+    /// Runs `operation` with a replay-aware metrics factory and tracer bound for the current task.
+    ///
+    /// Both libraries resolve their task-local value first, so metrics and spans created by workflow code
+    /// pick these up without the workflow having to reach for anything SDK-specific. Code outside the
+    /// workflow — activities, the client, the rest of the application — keeps the application's own
+    /// factory and tracer.
+    fileprivate func withReplayAwareInstruments<Result>(
+        _ operation: () async throws -> Result
+    ) async throws -> Result {
+        try await self.withReplayAwareMetricsFactoryIfNeeded {
+            try await self.withReplayAwareTracerIfNeeded {
+                try await operation()
+            }
+        }
+    }
+
+    private func withReplayAwareMetricsFactoryIfNeeded<Result>(
+        _ operation: () async throws -> Result
+    ) async throws -> Result {
+        guard !self.enableMetricsInReplay else {
+            return try await operation()
+        }
+        return try await withMetricsFactory(ReplayAwareMetricsFactory(underlying: MetricsSystem.factory)) {
+            try await operation()
+        }
+    }
+
+    private func withReplayAwareTracerIfNeeded<Result>(
+        _ operation: () async throws -> Result
+    ) async throws -> Result {
+        guard !self.enableTracingInReplay else {
+            return try await operation()
+        }
+        return try await withReplayAwareTracer(InstrumentationSystem.tracer) {
+            try await operation()
+        }
     }
 }
