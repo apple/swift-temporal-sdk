@@ -32,4 +32,5 @@ package struct LoggingKeys {
     package static let activityAttempt = TemporalTracingKeys.activityAttempt
     package static let unfinishedSignalHandlers = TemporalTracingKeys.unfinishedSignalHandlers
     package static let unfinishedUpdateHandlers = TemporalTracingKeys.unfinishedUpdateHandlers
+    package static let pluginName = TemporalTracingKeys.pluginName
 }
