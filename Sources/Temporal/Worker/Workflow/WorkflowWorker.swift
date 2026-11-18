@@ -238,32 +238,40 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
             let (activationsStream, activationsContinuation) = AsyncStream<Coresdk.WorkflowActivation.WorkflowActivation>.makeStream()
             runningWorkflows[runID] = activationsContinuation
             taskGroup.addTask {
-                await withLogger(mergingMetadata: instanceLoggerMetadata) { logger in
-                    logger.trace("Running workflow instance")
-                    // The logger seen by workflow code drops records while replaying.
-                    var workflowLogger = logger
-                    if !self.enableLoggingInReplay {
-                        workflowLogger.handler = ReplayAwareLogHandler(underlying: logger.handler)
-                    }
-                    do {
-                        try await withLogger(workflowLogger) { _ in
-                            try await workflowInstance.run(
-                                workflowType: workflowType,
-                                activations: activationsStream
+                // The instance runs in an unstructured task that we only wait on until it finishes or is
+                // abandoned. An abandoned instance never returns, and must not keep the worker from shutting down.
+                let (instanceDone, instanceDoneContinuation) = AsyncStream<Never>.makeStream()
+                Task {
+                    await withLogger(mergingMetadata: instanceLoggerMetadata) { logger in
+                        logger.trace("Running workflow instance")
+                        // The logger seen by workflow code drops records while replaying.
+                        var workflowLogger = logger
+                        if !self.enableLoggingInReplay {
+                            workflowLogger.handler = ReplayAwareLogHandler(underlying: logger.handler)
+                        }
+                        do {
+                            try await withLogger(workflowLogger) { _ in
+                                try await workflowInstance.run(
+                                    workflowType: workflowType,
+                                    activations: activationsStream,
+                                    onAbandoned: { instanceDoneContinuation.finish() }
+                                )
+                            }
+                            logger.trace("Workflow instance finished")
+                        } catch {
+                            // TODO: We should probably log an error here and let it all tear down
+                            logger.info(
+                                "Workflow instance failed to send a completion",
+                                metadata: [
+                                    LoggingKeys.errorType: "\(type(of: error))",
+                                    LoggingKeys.errorMessage: "\(error)",
+                                ]
                             )
                         }
-                        logger.trace("Workflow instance finished")
-                    } catch {
-                        // TODO: We should probably log an error here and let it all tear down
-                        logger.info(
-                            "Workflow instance failed to send a completion",
-                            metadata: [
-                                LoggingKeys.errorType: "\(type(of: error))",
-                                LoggingKeys.errorMessage: "\(error)",
-                            ]
-                        )
                     }
+                    instanceDoneContinuation.finish()
                 }
+                for await _ in instanceDone {}
             }
             return activationsContinuation
         }
