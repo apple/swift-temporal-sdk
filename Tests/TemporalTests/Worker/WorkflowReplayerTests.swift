@@ -15,9 +15,12 @@
 import Foundation
 import InMemoryLogging
 import Logging
+import Metrics
+import MetricsTestKit
 import Temporal
 import TemporalTestKit
 import Testing
+import Tracing
 
 // MARK: - Test Suite
 
@@ -89,6 +92,17 @@ extension TestServerDependentTests {
 
             mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
                 Logger.current.info(Self.logMessage)
+            }
+        }
+
+        @Workflow
+        struct InstrumentedWorkflow {
+            static let counterLabel = "workflow-custom-counter"
+            static let spanName = "workflow-custom-span"
+
+            mutating func run(context: WorkflowContext<Self>, input: Void) async throws {
+                Counter(label: Self.counterLabel).increment()
+                withSpan(Self.spanName) { _ in }
             }
         }
 
@@ -174,6 +188,76 @@ extension TestServerDependentTests {
                     event.message == LoggingWorkflow.logMessage
                 })
             )
+        }
+
+        // MARK: - Metrics and tracing
+
+        /// A handler made while replaying is still registered with the backend — it has to be, because the
+        /// same handler keeps being used once the workflow catches up and runs live. What replay drops is
+        /// the values recorded through it.
+        @Test
+        func replayDoesNotRecordWorkflowMetricsByDefault() async throws {
+            let instruments = try await Self.replayInstrumentedWorkflow()
+
+            let counter = try instruments.metrics.expectCounter(InstrumentedWorkflow.counterLabel)
+            #expect(counter.values.isEmpty)
+            #expect(counter.totalValue == 0)
+        }
+
+        @Test
+        func replayEmitsWorkflowMetricsWhenEnabled() async throws {
+            let instruments = try await Self.replayInstrumentedWorkflow(enableMetricsInReplay: true)
+
+            #expect(instruments.metrics.counterTotal(label: InstrumentedWorkflow.counterLabel) == 1)
+        }
+
+        @Test
+        func replayDoesNotStartWorkflowSpansByDefault() async throws {
+            let instruments = try await Self.replayInstrumentedWorkflow()
+
+            #expect(instruments.tracer.getSpan(ofOperation: InstrumentedWorkflow.spanName) == nil)
+        }
+
+        @Test
+        func replayStartsWorkflowSpansWhenEnabled() async throws {
+            let instruments = try await Self.replayInstrumentedWorkflow(enableTracingInReplay: true)
+
+            #expect(instruments.tracer.getSpan(ofOperation: InstrumentedWorkflow.spanName) != nil)
+        }
+
+        private static func replayInstrumentedWorkflow(
+            enableMetricsInReplay: Bool = false,
+            enableTracingInReplay: Bool = false
+        ) async throws -> (metrics: TestMetrics, tracer: TestTracer) {
+            let history = try await withTestWorkerAndClient(workflows: [InstrumentedWorkflow.self]) {
+                taskQueue,
+                client in
+                let handle = try await client.startWorkflow(
+                    type: InstrumentedWorkflow.self,
+                    options: .init(id: "replayer-test-instruments-\(UUID().uuidString)", taskQueue: taskQueue),
+                    input: ()
+                )
+                try await handle.result()
+
+                return try await handle.fetchHistory()
+            }
+
+            var configuration = WorkflowReplayer.Configuration(workflows: [InstrumentedWorkflow.self])
+            configuration.enableMetricsInReplay = enableMetricsInReplay
+            configuration.enableTracingInReplay = enableTracingInReplay
+
+            // Bound for the replay alone, so the original execution above records nowhere near these.
+            let metrics = TestMetrics()
+            let tracer = TestTracer()
+            let replayer = WorkflowReplayer(configuration: configuration)
+            let result = try await withMetricsFactory(metrics) {
+                try await withTracer(tracer) {
+                    try await replayer.replayWorkflow(history: history)
+                }
+            }
+            #expect(result.replayFailure == nil)
+
+            return (metrics, tracer)
         }
 
         private static func replayLoggingWorkflow(enableLoggingInReplay: Bool) async throws -> InMemoryLogHandler {

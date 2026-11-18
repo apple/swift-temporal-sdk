@@ -52,6 +52,18 @@ extension WorkflowReplayer {
         /// produce nothing. Enable it to follow a workflow's own logging through the replay.
         public var enableLoggingInReplay: Bool
 
+        /// Whether metrics emitted by Workflow code keep recording during replay (default `false`).
+        ///
+        /// Everything a replayer runs is a replay, so leaving this disabled means metrics emitted by
+        /// workflow code record nothing. Enable it to follow a workflow's own metrics through the replay.
+        public var enableMetricsInReplay: Bool = false
+
+        /// Whether spans started by Workflow code keep recording during replay (default `false`).
+        ///
+        /// Everything a replayer runs is a replay, so leaving this disabled means spans started by
+        /// workflow code record nothing. Enable it to follow a workflow's own spans through the replay.
+        public var enableTracingInReplay: Bool = false
+
         /// Creates a new replayer configuration.
         ///
         /// - Parameters:
