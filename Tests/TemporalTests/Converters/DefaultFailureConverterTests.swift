@@ -109,6 +109,63 @@ struct DefaultFailureConverterTests {
     }
 
     @Test
+    func applicationErrorWithoutNextRetryDelayRoundTrips() async throws {
+        let applicationError = ApplicationError(
+            message: "Test message",
+            type: "TestError"
+        )
+
+        let failureConverter = DefaultFailureConverter()
+        let jsonPayloadConverter = JSONPayloadConverter()
+
+        let failure = failureConverter.convertError(
+            applicationError,
+            payloadConverter: jsonPayloadConverter
+        )
+        #expect(!failure.applicationFailureInfo.hasNextRetryDelay)
+
+        let error = failureConverter.convertFailure(
+            failure,
+            payloadConverter: jsonPayloadConverter
+        )
+
+        let convertedApplicationError = try #require(error as? ApplicationError)
+        #expect(convertedApplicationError.nextRetryDelay == nil)
+
+        let reencodedFailure = failureConverter.convertError(
+            convertedApplicationError,
+            payloadConverter: jsonPayloadConverter
+        )
+        #expect(!reencodedFailure.applicationFailureInfo.hasNextRetryDelay)
+    }
+
+    @Test
+    func applicationErrorWithZeroNextRetryDelayRoundTrips() async throws {
+        let applicationError = ApplicationError(
+            message: "Test message",
+            type: "TestError",
+            nextRetryDelay: .zero
+        )
+
+        let failureConverter = DefaultFailureConverter()
+        let jsonPayloadConverter = JSONPayloadConverter()
+
+        let failure = failureConverter.convertError(
+            applicationError,
+            payloadConverter: jsonPayloadConverter
+        )
+        #expect(failure.applicationFailureInfo.hasNextRetryDelay)
+
+        let error = failureConverter.convertFailure(
+            failure,
+            payloadConverter: jsonPayloadConverter
+        )
+
+        let convertedApplicationError = try #require(error as? ApplicationError)
+        #expect(convertedApplicationError.nextRetryDelay == .zero)
+    }
+
+    @Test
     func encodeCommonAttributes() async throws {
         let testError = TestError(description: "Error description")
         var failureConverter = DefaultFailureConverter()

@@ -115,7 +115,7 @@ public struct DefaultFailureConverter: FailureConverter {
                 details: application.details.payloads,
                 type: application.type,
                 isNonRetryable: application.nonRetryable,
-                nextRetryDelay: .init(protobufDuration: application.nextRetryDelay),
+                nextRetryDelay: application.hasNextRetryDelay ? .init(protobufDuration: application.nextRetryDelay) : nil,
                 category: application.category
             )
         case .canceledFailureInfo(let cancelled):
