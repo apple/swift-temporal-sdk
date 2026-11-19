@@ -42,7 +42,7 @@ private final class MockBridgeWorker: BridgeWorkerProtocol {
         client: borrowing Temporal.BridgeClient,
         configuration: Temporal.TemporalWorker.Configuration,
         hasActivities: Bool,
-        hasWorkflows: Bool
+        workflows: [any WorkflowDefinition.Type]
     ) throws {
         fatalError()
     }

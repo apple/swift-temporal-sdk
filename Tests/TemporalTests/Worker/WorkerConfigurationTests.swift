@@ -94,6 +94,17 @@ struct WorkerConfigurationTests {
     }
 
     @Test
+    func workflowFailureErrorTypesDefaultsToEmpty() {
+        let config = TemporalWorker.Configuration(
+            namespace: "test",
+            taskQueue: "test-queue",
+            instrumentation: .init(serverHostname: "localhost")
+        )
+
+        #expect(config.workflowFailureErrorTypes.isEmpty)
+    }
+
+    @Test
     func workerHeartbeatIntervalFromConfigReader() async throws {
         let namespace = "testdefault"
         let taskQueue = "testtaskqueue"

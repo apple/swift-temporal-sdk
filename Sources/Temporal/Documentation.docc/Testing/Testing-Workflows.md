@@ -219,6 +219,12 @@ func replayCompatibility() async throws {
 }
 ```
 
+If the worker that produced the histories sets
+``TemporalWorker/Configuration/workflowFailureErrorTypes``, set the same types
+in ``WorkflowReplayer/Configuration/workflowFailureErrorTypes``. Otherwise a
+workflow that failed with one of those errors fails its workflow task during
+replay instead.
+
 You can also skip the CLI export by calling
 ``WorkflowHandle/fetchHistory(waitNewEvent:eventFilterType:skipArchival:callOptions:)``
 on a completed workflow handle and replaying the result directly in your test.

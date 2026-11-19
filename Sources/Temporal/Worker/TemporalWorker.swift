@@ -291,7 +291,7 @@ where
                     client: client,
                     configuration: self.configuration,
                     hasActivities: !self.activities.isEmpty,
-                    hasWorkflows: !self.workflows.isEmpty
+                    workflows: self.workflows
                 )
                 optionalWorker = worker
 

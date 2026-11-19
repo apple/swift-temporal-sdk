@@ -268,6 +268,32 @@ extension TestServerDependentTests {
         }
 
         @Test
+        func replayNondeterministicWithFailureTypeStillThrowsNondeterminismError() async throws {
+            try await withTestWorkerAndClient(
+                activities: [ReplayActivity()],
+                workflows: [SayHelloWorkflow.self]
+            ) { taskQueue, client in
+                let params = ReplayParams(name: "Temporal", shouldCauseNonDeterminism: true)
+                let handle = try await client.startWorkflow(
+                    type: SayHelloWorkflow.self,
+                    options: .init(id: "replayer-test-nondet-\(UUID().uuidString)", taskQueue: taskQueue),
+                    input: params
+                )
+                _ = try await handle.result()
+                let history = try await handle.fetchHistory()
+
+                var config = WorkflowReplayer.Configuration()
+                config.workflows.append(SayHelloWorkflow.self)
+                config.workflowFailureErrorTypes = [WorkflowNondeterminismError.self]
+                let replayer = WorkflowReplayer(configuration: config)
+
+                await #expect(throws: WorkflowNondeterminismError.self) {
+                    try await replayer.replayWorkflow(history: history)
+                }
+            }
+        }
+
+        @Test
         func replayNondeterministicWithoutThrowingReturnsFailure() async throws {
             try await withTestWorkerAndClient(
                 activities: [ReplayActivity()],
