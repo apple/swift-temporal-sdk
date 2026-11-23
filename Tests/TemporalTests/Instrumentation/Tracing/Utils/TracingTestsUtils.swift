@@ -12,207 +12,40 @@
 //
 //===----------------------------------------------------------------------===//
 
-import ServiceContextModule
-import Synchronization
+import InMemoryTracing
 import Testing
 import Tracing
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
+/// The trace context that `InMemoryTracer` writes into, and reads from, the Temporal tracing header.
+struct InMemoryTraceHeader: Codable {
+    let traceID: String
+    let spanID: String
 
-/// Simle `Tracer` for testing usage.
-final class TestTracer: Tracer {
-    typealias Span = TestSpan
-
-    private let testSpans: Mutex<[String: TestSpan]> = .init([:])
-
-    func getSpan(ofOperation operationName: String) -> TestSpan? {
-        self.testSpans.withLock { $0[operationName] }
+    init(traceID: String, spanID: String) {
+        self.traceID = traceID
+        self.spanID = spanID
     }
 
-    func getEventsForTestSpan(ofOperation operationName: String) -> [SpanEvent] {
-        self.getSpan(ofOperation: operationName)?.events ?? []
-    }
-
-    func extract<Carrier, Extract>(
-        _ carrier: Carrier,
-        into context: inout ServiceContextModule.ServiceContext,
-        using extractor: Extract
-    ) where Carrier == Extract.Carrier, Extract: Instrumentation.Extractor {
-        let traceID = extractor.extract(key: TraceID.keyName, from: carrier)
-        context[TraceID.self] = traceID
-    }
-
-    func inject<Carrier, Inject>(
-        _ context: ServiceContextModule.ServiceContext,
-        into carrier: inout Carrier,
-        using injector: Inject
-    ) where Carrier == Inject.Carrier, Inject: Instrumentation.Injector {
-        if let traceID = context.traceID {
-            injector.inject(traceID, forKey: TraceID.keyName, into: &carrier)
+    init(from decoder: any Decoder) throws {
+        let values = try decoder.singleValueContainer().decode([String: String].self)
+        guard let traceID = values[InMemoryTracer.traceIDKey], let spanID = values[InMemoryTracer.spanIDKey] else {
+            throw DecodingError.dataCorrupted(
+                .init(codingPath: decoder.codingPath, debugDescription: "Missing InMemoryTracer keys in \(values)")
+            )
         }
-        if let spanID = context.spanID {
-            injector.inject(spanID, forKey: SpanID.keyName, into: &carrier)
-        }
+        self.init(traceID: traceID, spanID: spanID)
     }
 
-    func forceFlush() {
-        // no-op
-    }
-
-    func startSpan<Instant>(
-        _ operationName: String,
-        context: @autoclosure () -> ServiceContext,
-        ofKind kind: SpanKind,
-        at instant: @autoclosure () -> Instant,
-        function: String,
-        file fileID: String,
-        line: UInt
-    ) -> TestSpan where Instant: TracerInstant {
-        return self.testSpans.withLock { testSpans in
-            // Give every span its own identity while inheriting the trace, so that tests can tell which
-            // span a propagated context actually refers to.
-            var context = context()
-            context.spanID = UUID().uuidString
-            let span = TestSpan(context: context, operationName: operationName)
-            testSpans[operationName] = span
-            return span
-        }
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode([InMemoryTracer.traceIDKey: self.traceID, InMemoryTracer.spanIDKey: self.spanID])
     }
 }
 
-final class TestSpan: Span, Sendable {
-    private struct State {
-        var context: ServiceContextModule.ServiceContext
-        var operationName: String
-        var attributes: Tracing.SpanAttributes
-        var status: Tracing.SpanStatus?
-        var events: [Tracing.SpanEvent] = []
-        var errors: [TracingInterceptorTestError]
-    }
-
-    private let state: Mutex<State>
-    let isRecording: Bool
-
-    var context: ServiceContextModule.ServiceContext {
-        self.state.withLock { $0.context }
-    }
-
-    var operationName: String {
-        get { self.state.withLock { $0.operationName } }
-        set { self.state.withLock { $0.operationName = newValue } }
-    }
-
-    var attributes: Tracing.SpanAttributes {
-        get { self.state.withLock { $0.attributes } }
-        set { self.state.withLock { $0.attributes = newValue } }
-    }
-
-    var events: [Tracing.SpanEvent] {
-        self.state.withLock { $0.events }
-    }
-
-    var status: SpanStatus? {
-        self.state.withLock { $0.status }
-    }
-
-    var errors: [TracingInterceptorTestError] {
-        self.state.withLock { $0.errors }
-    }
-
-    init(
-        context: ServiceContextModule.ServiceContext,
-        operationName: String,
-        attributes: Tracing.SpanAttributes = [:],
-        isRecording: Bool = true
-    ) {
-        let state = State(
-            context: context,
-            operationName: operationName,
-            attributes: attributes,
-            errors: []
-        )
-        self.state = Mutex(state)
-        self.isRecording = isRecording
-    }
-
-    func setStatus(_ status: Tracing.SpanStatus) {
-        self.state.withLock { $0.status = status }
-    }
-
-    func addEvent(_ event: Tracing.SpanEvent) {
-        self.state.withLock { $0.events.append(event) }
-    }
-
-    func recordError<Instant>(
-        _ error: any Error,
-        attributes: Tracing.SpanAttributes,
-        at instant: @autoclosure () -> Instant
-    ) where Instant: Tracing.TracerInstant {
-        // For the purposes of these tests, we don't really care about the error being thrown
-        self.state.withLock { $0.errors.append(TracingInterceptorTestError.testError) }
-    }
-
-    func addLink(_ link: Tracing.SpanLink) {
-        self.state.withLock {
-            var links = $0.context.spanLinks ?? []
-            links.append(link)
-            $0.context.spanLinks = links
-        }
-    }
-
-    func end<Instant>(at instant: @autoclosure () -> Instant) where Instant: Tracing.TracerInstant {
-        // no-op
-    }
-}
-
-enum TraceID: ServiceContextModule.ServiceContextKey {
-    typealias Value = String
-
-    static let keyName = "traceparent"  // matches default Temporal tracing key
-}
-
-enum SpanID: ServiceContextModule.ServiceContextKey {
-    typealias Value = String
-
-    static let keyName = "spanid"
-}
-
-enum ServiceContextSpanLinksKey: ServiceContextModule.ServiceContextKey {
-    typealias Value = [SpanLink]
-
-    static let keyName = "span-links"
-}
-
-extension ServiceContext {
-    var traceID: String? {
-        get {
-            self[TraceID.self]
-        }
-        set {
-            self[TraceID.self] = newValue
-        }
-    }
-
-    var spanID: String? {
-        get {
-            self[SpanID.self]
-        }
-        set {
-            self[SpanID.self] = newValue
-        }
-    }
-
-    var spanLinks: [SpanLink]? {
-        get {
-            self[ServiceContextSpanLinksKey.self]
-        }
-        set {
-            self[ServiceContextSpanLinksKey.self] = newValue
-        }
+extension InMemoryTracer {
+    /// Returns the most recently finished span with the given operation name.
+    func finishedSpan(named operationName: String) -> FinishedInMemorySpan? {
+        self.finishedSpans.last { $0.operationName == operationName }
     }
 }
 
@@ -249,18 +82,22 @@ enum TracingInterceptorTestError: Error, Equatable {
 
 func assertTestSpanComponents(
     forSpan spanName: String,
-    tracer: TestTracer,
+    tracer: InMemoryTracer,
     assertEvents: ([TestSpanEvent]) -> Void,
     assertAttributes: (SpanAttributes) -> Void,
     assertStatus: (SpanStatus?) -> Void,
     assertErrors: ([TracingInterceptorTestError]) -> Void
 ) {
-    guard let span = tracer.getSpan(ofOperation: spanName) else {
-        Issue.record("Span could not be found")
+    guard let span = tracer.finishedSpan(named: spanName) else {
+        if tracer.activeSpans.contains(where: { $0.operationName == spanName }) {
+            Issue.record("Span \(spanName) was started but not ended")
+        } else {
+            Issue.record("Span \(spanName) could not be found")
+        }
         return
     }
     assertEvents(span.events.map({ TestSpanEvent($0) }))
     assertAttributes(span.attributes)
     assertStatus(span.status)
-    assertErrors(span.errors)
+    assertErrors(span.errors.compactMap { $0.error as? TracingInterceptorTestError })
 }

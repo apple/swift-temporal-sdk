@@ -14,6 +14,7 @@
 
 import Foundation
 import InMemoryLogging
+import InMemoryTracing
 import Logging
 import Temporal
 import TemporalTestKit
@@ -221,7 +222,7 @@ extension TestServerDependentTests {
 
                 let history = try await handle.fetchHistory()
 
-                let tracer = TestTracer()
+                let tracer = InMemoryTracer()
                 var config = WorkflowReplayer.Configuration()
                 config.workflows.append(SayHelloWorkflow.self)
                 config.interceptors.append(TemporalWorkerTracingInterceptor(tracer: tracer))
@@ -229,8 +230,9 @@ extension TestServerDependentTests {
                 let replayResult = try await WorkflowReplayer(configuration: config).replayWorkflow(history: history)
                 #expect(replayResult.replayFailure == nil)
 
-                #expect(tracer.getSpan(ofOperation: "RunWorkflow:\(SayHelloWorkflow.name)") != nil)
-                #expect(tracer.getSpan(ofOperation: "StartActivity:ReplayActivity") == nil)
+                #expect(tracer.finishedSpan(named: "RunWorkflow:\(SayHelloWorkflow.name)") != nil)
+                #expect(tracer.finishedSpan(named: "StartActivity:ReplayActivity") == nil)
+                #expect(!tracer.activeSpans.contains { $0.operationName == "StartActivity:ReplayActivity" })
             }
         }
 

@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import InMemoryTracing
 import Logging
 import ServiceContextModule
 import SwiftProtobuf
@@ -31,16 +32,6 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
     @Workflow
     struct VoidWorkflow {
         mutating func run(context: WorkflowContext<Self>, input: Void) async {}
-    }
-
-    struct TemporalTraceID: Decodable {
-        let traceparent: UUID  // matches default Temporal tracing payload key
-    }
-
-    /// The full context the interceptor writes onto the Temporal headers.
-    struct PropagatedContext: Decodable {
-        let traceparent: String
-        let spanid: String
     }
 
     // Test attributes
@@ -79,10 +70,10 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
 
     @Test
     func outboundTracingWorkflowWorker() async throws {
-        let tracer = TestTracer()
+        let tracer = InMemoryTracer()
         var serviceContext = ServiceContext.topLevel
         let traceIDString = UUID().uuidString
-        serviceContext.traceID = traceIDString
+        serviceContext.inMemorySpanContext = InMemorySpanContext(traceID: traceIDString, spanID: UUID().uuidString, parentSpanID: nil)
 
         try await ServiceContext.withValue(serviceContext) {
             let interceptor = try #require(
@@ -114,10 +105,10 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                         })?.1 as? Api.Common.V1.Payload
                     )
 
-                    let traceHeader: TemporalTraceID = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
+                    let traceHeader: InMemoryTraceHeader = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
                         traceHeaderPayload
                     )
-                    #expect(traceHeader.traceparent.uuidString == traceIDString)
+                    #expect(traceHeader.traceID == traceIDString)
 
                     return ()
                 }
@@ -160,10 +151,10 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
 
     @Test
     func outboundTracingWorkflowWorkerFailure() async throws {
-        let tracer = TestTracer()
+        let tracer = InMemoryTracer()
         var serviceContext = ServiceContext.topLevel
         let traceIDString = UUID().uuidString
-        serviceContext.traceID = traceIDString
+        serviceContext.inMemorySpanContext = InMemorySpanContext(traceID: traceIDString, spanID: UUID().uuidString, parentSpanID: nil)
 
         try await ServiceContext.withValue(serviceContext) {
             let interceptor = try #require(
@@ -196,10 +187,10 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                             })?.1 as? Api.Common.V1.Payload
                         )
 
-                        let traceHeader: TemporalTraceID = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
+                        let traceHeader: InMemoryTraceHeader = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
                             traceHeaderPayload
                         )
-                        #expect(traceHeader.traceparent.uuidString == traceIDString)
+                        #expect(traceHeader.traceID == traceIDString)
 
                         // Simulates an error within the RPC
                         throw TracingInterceptorTestError.testError
@@ -226,7 +217,7 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
 
     @Test
     func outboundSpanNames() async throws {
-        let tracer = TestTracer()
+        let tracer = InMemoryTracer()
         let interceptor = try #require(
             TemporalWorkerTracingInterceptor(
                 tracer: tracer
@@ -271,16 +262,16 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
             next: { _ in }
         )
 
-        #expect(tracer.getSpan(ofOperation: "StartTimer") != nil)
-        #expect(tracer.getSpan(ofOperation: "StartLocalActivity:\(Self.activityInfo.name)") != nil)
+        #expect(tracer.finishedSpan(named: "StartTimer") != nil)
+        #expect(tracer.finishedSpan(named: "StartLocalActivity:\(Self.activityInfo.name)") != nil)
         // A child signal and an external signal must remain distinguishable, as they are in the other SDKs.
-        #expect(tracer.getSpan(ofOperation: "SignalChildWorkflow:\(Self.signalName)") != nil)
-        #expect(tracer.getSpan(ofOperation: "SignalExternalWorkflow:\(Self.signalName)") != nil)
+        #expect(tracer.finishedSpan(named: "SignalChildWorkflow:\(Self.signalName)") != nil)
+        #expect(tracer.finishedSpan(named: "SignalExternalWorkflow:\(Self.signalName)") != nil)
     }
 
     @Test
     func outboundStartChildWorkflowRecordsChildIdentity() async throws {
-        let tracer = TestTracer()
+        let tracer = InMemoryTracer()
         let interceptor = try #require(
             TemporalWorkerTracingInterceptor(
                 tracer: tracer
@@ -326,10 +317,10 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
 
     @Test
     func outboundSignalExternalWorkflowPropagatesTraceContext() async throws {
-        let tracer = TestTracer()
+        let tracer = InMemoryTracer()
         var serviceContext = ServiceContext.topLevel
         let traceIDString = UUID().uuidString
-        serviceContext.traceID = traceIDString
+        serviceContext.inMemorySpanContext = InMemorySpanContext(traceID: traceIDString, spanID: UUID().uuidString, parentSpanID: nil)
 
         try await ServiceContext.withValue(serviceContext) {
             let interceptor = try #require(
@@ -354,10 +345,10 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                         })?.1 as? Api.Common.V1.Payload
                     )
 
-                    let traceHeader: TemporalTraceID = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
+                    let traceHeader: InMemoryTraceHeader = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(
                         traceHeaderPayload
                     )
-                    #expect(traceHeader.traceparent.uuidString == traceIDString)
+                    #expect(traceHeader.traceID == traceIDString)
                 }
             )
 
@@ -382,11 +373,11 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
 
     @Test
     func outboundPropagatesItsOwnSpanContext() async throws {
-        let tracer = TestTracer()
+        let tracer = InMemoryTracer()
         var serviceContext = ServiceContext.topLevel
-        serviceContext.traceID = UUID().uuidString
-        serviceContext.spanID = UUID().uuidString
-        let callerSpanID = try #require(serviceContext.spanID)
+        let callerSpanContext = InMemorySpanContext(traceID: UUID().uuidString, spanID: UUID().uuidString, parentSpanID: nil)
+        serviceContext.inMemorySpanContext = callerSpanContext
+        let callerSpanID = callerSpanContext.spanID
 
         try await ServiceContext.withValue(serviceContext) {
             let interceptor = try #require(
@@ -395,7 +386,7 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                 ).workflowOutboundInterceptor
             )
 
-            let propagated: Mutex<PropagatedContext?> = .init(nil)
+            let propagated: Mutex<InMemoryTraceHeader?> = .init(nil)
 
             try await interceptor.signalExternalWorkflow(
                 input: SignalExternalWorkflowInput<Void>(
@@ -407,19 +398,18 @@ struct TemporalWorkerOutboundTracingInterceptorTests {
                 ),
                 next: { input in
                     let payload = try #require(input.headers["_tracer-data"])
-                    propagated.withLock {
-                        $0 = try? DataConverter.default.payloadConverter.convertPayloadHandlingVoid(payload)
-                    }
+                    let header: InMemoryTraceHeader = try DataConverter.default.payloadConverter.convertPayloadHandlingVoid(payload)
+                    propagated.withLock { $0 = header }
                 }
             )
 
-            let span = try #require(tracer.getSpan(ofOperation: "SignalExternalWorkflow:\(Self.signalName)"))
+            let span = try #require(tracer.finishedSpan(named: "SignalExternalWorkflow:\(Self.signalName)"))
             let propagatedContext = try #require(propagated.withLock { $0 })
 
-            #expect(propagatedContext.spanid == span.context.spanID)
-            #expect(propagatedContext.spanid != callerSpanID)
+            #expect(propagatedContext.spanID == span.spanID)
+            #expect(propagatedContext.spanID != callerSpanID)
             // The trace is continued either way.
-            #expect(propagatedContext.traceparent == serviceContext.traceID)
+            #expect(propagatedContext.traceID == callerSpanContext.traceID)
         }
     }
 }
