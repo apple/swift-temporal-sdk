@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftProtobuf
 import Temporal
 import Testing
 
@@ -63,6 +64,48 @@ struct JSONPayloadConverterTests {
             as: Data.self
         )
         #expect(convertedData == Data([1, 2, 3]))
+    }
+
+    @Test
+    func convertDateKeepsFractionalSeconds() async throws {
+        let payloadConverter = JSONPayloadConverter()
+        let date = Date(timeIntervalSince1970: 1_737_302_400.25)
+
+        let payload = try payloadConverter.convertValue(date)
+        #expect(String(decoding: payload.data, as: UTF8.self) == "\"2025-01-19T16:00:00.250Z\"")
+
+        let convertedDate = try payloadConverter.convertPayload(payload, as: Date.self)
+        #expect(convertedDate == date)
+    }
+
+    @Test(arguments: [
+        ("\"2025-01-19T16:00:00Z\"", 1_737_302_400.0),
+        ("\"2025-01-19T16:00:00.250Z\"", 1_737_302_400.25),
+        ("\"2025-01-19T16:00:00.250000+00:00\"", 1_737_302_400.25),
+        ("\"2025-01-19T11:00:00-05:00\"", 1_737_302_400.0),
+    ])
+    func convertDateFromISO8601String(json: String, timeIntervalSince1970: Double) async throws {
+        let payloadConverter = JSONPayloadConverter()
+        let payload = Api.Common.V1.Payload.with {
+            $0.metadata = ["encoding": Data("json/plain".utf8)]
+            $0.data = Data(json.utf8)
+        }
+
+        let convertedDate = try payloadConverter.convertPayload(payload, as: Date.self)
+        #expect(convertedDate == Date(timeIntervalSince1970: timeIntervalSince1970))
+    }
+
+    @Test
+    func convertDateFromInvalidStringThrows() async throws {
+        let payloadConverter = JSONPayloadConverter()
+        let payload = Api.Common.V1.Payload.with {
+            $0.metadata = ["encoding": Data("json/plain".utf8)]
+            $0.data = Data("\"2025-01-19 16:00:00\"".utf8)
+        }
+
+        #expect(throws: (any Error).self) {
+            try payloadConverter.convertPayload(payload, as: Date.self)
+        }
     }
 
     @Test
