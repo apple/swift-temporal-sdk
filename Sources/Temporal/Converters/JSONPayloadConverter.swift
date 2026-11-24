@@ -14,10 +14,12 @@
 
 #if canImport(FoundationEssentials)
 public import struct FoundationEssentials.Data
+public import struct FoundationEssentials.Date
 public import class FoundationEssentials.JSONDecoder
 public import class FoundationEssentials.JSONEncoder
 #else
 public import struct Foundation.Data
+public import struct Foundation.Date
 public import class Foundation.JSONDecoder
 public import class Foundation.JSONEncoder
 #endif
@@ -29,18 +31,42 @@ public struct JSONPayloadConverter: EncodingPayloadConverter {
     private let jsonEncoder: JSONEncoder
     private let jsonDecoder: JSONDecoder
 
+    /// ISO 8601 with fractional seconds, e.g. `2025-01-19T16:00:00.250Z`.
+    private static let dateStyleWithFractionalSeconds = Date.ISO8601FormatStyle(includingFractionalSeconds: true)
+
+    /// ISO 8601 without fractional seconds, e.g. `2025-01-19T16:00:00Z`.
+    private static let dateStyleWithoutFractionalSeconds = Date.ISO8601FormatStyle()
+
     /// The default JSONEncoder used by the JSONPayloadConverter.
+    ///
+    /// Dates are written as ISO 8601 strings with millisecond precision, e.g.
+    /// `2025-01-19T16:00:00.250Z`, so that sub-second timestamps are not truncated to the second.
     public static let defaultJSONEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(dateStyleWithFractionalSeconds.format(date))
+        }
         return encoder
     }()
 
     /// The default JSONDecoder used by the JSONPayloadConverter.
+    ///
+    /// Dates are read as ISO 8601 strings with or without fractional seconds, so payloads written
+    /// by earlier versions of this SDK and by other Temporal SDKs keep decoding.
     public static let defaultJSONDecoder: JSONDecoder = {
-        let encoder = JSONDecoder()
-        encoder.dateDecodingStrategy = .iso8601
-        return encoder
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+            if let date = try? dateStyleWithFractionalSeconds.parse(string) { return date }
+            if let date = try? dateStyleWithoutFractionalSeconds.parse(string) { return date }
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Expected date string to be ISO8601-formatted."
+            )
+        }
+        return decoder
     }()
 
     /// Creates a new JSON payload converter.
