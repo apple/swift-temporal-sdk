@@ -27,24 +27,21 @@
 /// ## Usage
 ///
 /// ```swift
-/// @Workflow
-/// struct OrderProcessingWorkflow {
-///     var orderRequest: OrderRequest?
-///
-///     init(input: OrderRequest) {
-///         self.orderRequest = input
-///     }
+/// struct OrderProcessingWorkflow: WorkflowDefinition {
+///     init(input: OrderRequest) {}
 ///
 ///     mutating func run(context: WorkflowContext<Self>, input: OrderRequest) async throws -> OrderResult {
-///         let result = try await context.executeActivity(
+///         try await context.executeActivity(
 ///             ProcessOrderActivity.self,
 ///             options: .init(startToCloseTimeout: .seconds(30)),
-///             input: orderRequest
+///             input: input
 ///         )
-///         return result
 ///     }
 /// }
 /// ```
+///
+/// > Note: Most workflows don't conform to this protocol manually but use the ``Workflow(name:)`` macro instead,
+/// > which adds the conformance and generates the signal, query, and update definitions.
 public protocol WorkflowDefinition: Sendable {
     /// The workflow's input type.
     associatedtype Input: Sendable
