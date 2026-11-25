@@ -129,8 +129,9 @@ struct WorkflowStateMachine: ~Copyable {
             /// An activation error leads to workflow task failure which leads to temporal retrying the workflow.
             ///
             /// This is different than workflow failure which signals an end state. Concretely, throwing a
-            /// `` Api.Failure.V1.FailureError`` from the workflows run method is considered a workflow failure
-            /// whereas throwing any other error is considered a workflow task failure.
+            /// ``TemporalFailureError``, or an error matching a workflow failure error type, from the workflow's
+            /// run method is considered a workflow failure whereas throwing any other error is considered a
+            /// workflow task failure.
             ///
             /// We cannot transition to another state yet because handlers might still have suspended continuations which
             /// we can only resume once we get a `RemoveFromCache` job.

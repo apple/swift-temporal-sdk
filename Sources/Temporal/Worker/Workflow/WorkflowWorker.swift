@@ -42,6 +42,8 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
     private let dataConverter: DataConverter
     /// Workflow definition keyed by their name.
     private let workflows: [String: any WorkflowDefinition.Type]
+    /// The error types that fail a workflow execution on this worker.
+    private let workflowFailureErrorTypes: [any Error.Type]
     /// Whether the workflow logger keeps emitting records while replaying.
     private let enableLoggingInReplay: Bool
     /// The worker interceptor factories.
@@ -53,6 +55,7 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
         namespace: String,
         dataConverter: DataConverter,
         workflows: [any WorkflowDefinition.Type],
+        workflowFailureErrorTypes: [any Error.Type],
         interceptors: [any WorkerInterceptor],
         enableLoggingInReplay: Bool = false
     ) throws {
@@ -69,6 +72,7 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
                 throw TemporalSDKError("Duplicate workflow: \(first.name)")
             }
         )
+        self.workflowFailureErrorTypes = workflowFailureErrorTypes
         self.interceptors = interceptors
         self.enableLoggingInReplay = enableLoggingInReplay
     }
@@ -84,6 +88,7 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
             namespace: configuration.namespace,
             dataConverter: configuration.dataConverter,
             workflows: workflows,
+            workflowFailureErrorTypes: configuration.workflowFailureErrorTypes,
             interceptors: configuration.interceptors,
             enableLoggingInReplay: configuration.enableLoggingInReplay
         )
@@ -231,7 +236,10 @@ package final class WorkflowWorker<BridgeWorker: BridgeWorkerProtocol>: Workflow
                 taskQueue: self.taskQueue,
                 namespace: self.namespace,
                 payloadConverter: self.dataConverter.payloadConverter,
-                failureConverter: self.dataConverter.failureConverter
+                failureConverter: self.dataConverter.failureConverter,
+                failureErrorTypes: WorkflowFailureErrorTypes(
+                    self.workflowFailureErrorTypes + workflowType.failureErrorTypes
+                )
             )
             // Other SDKs keep this without an upper buffer limit as well
             // TODO: Check if we should enforce a buffer size

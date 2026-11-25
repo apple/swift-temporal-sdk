@@ -39,11 +39,28 @@
 ///     }
 /// }
 /// ```
-/// - Parameter name: The name of the workflow. If not provided, defaults to the type name.
+///
+/// Use `failureErrorTypes` to fail the workflow execution, instead of its workflow task, for
+/// errors of other types:
+///
+/// ```swift
+/// @Workflow(failureErrorTypes: [PaymentDeclinedError.self])
+/// struct PaymentWorkflow {
+///     func run(context: WorkflowContext<Self>, input: Payment) async throws {
+///         throw PaymentDeclinedError()
+///     }
+/// }
+/// ```
+///
+/// - Parameters:
+///   - name: The name of the workflow. If not provided, defaults to the type name.
+///   - failureErrorTypes: The error types that fail a workflow execution of this type instead of its
+///     workflow task. See ``WorkflowDefinition/failureErrorTypes``. Defaults to an empty array.
 @attached(extension, conformances: WorkflowDefinition, names: arbitrary)
-@attached(member, names: named(signals), named(queries), named(updates), named(init))
+@attached(member, names: named(signals), named(queries), named(updates), named(failureErrorTypes), named(init))
 @attached(memberAttribute)
-public macro Workflow(name: String? = nil) = #externalMacro(module: "TemporalMacros", type: "WorkflowMacro")
+public macro Workflow(name: String? = nil, failureErrorTypes: [any Error.Type] = []) =
+    #externalMacro(module: "TemporalMacros", type: "WorkflowMacro")
 
 /// Defines a signal handler for a workflow.
 ///

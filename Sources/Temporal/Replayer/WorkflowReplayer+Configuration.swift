@@ -32,6 +32,12 @@ extension WorkflowReplayer {
         /// The interceptors to apply during replay.
         public var interceptors: [any WorkerInterceptor]
 
+        /// The error types that fail a replayed workflow execution instead of its workflow task.
+        ///
+        /// Match this to ``TemporalWorker/Configuration/workflowFailureErrorTypes`` of the worker that
+        /// produced the histories. Defaults to an empty array.
+        public var workflowFailureErrorTypes: [any Error.Type]
+
         /// A logger for diagnostic output during replay.
         @available(*, deprecated, message: "Use a task local logger around replay operations.")
         public var logger: Logger {
@@ -63,6 +69,8 @@ extension WorkflowReplayer {
         ///     ``DataConverter/default``.
         ///   - interceptors: The interceptors to apply during replay. Defaults to an empty
         ///     array (no interceptors).
+        ///   - workflowFailureErrorTypes: The error types that fail a replayed workflow execution
+        ///     instead of its workflow task. Defaults to an empty array.
         ///   - logger: The logger for diagnostic output. Defaults to a logger with label
         ///     `"WorkflowReplayer"`.
         ///   - enableLoggingInReplay: Whether the workflow logger keeps emitting records during replay.
@@ -74,6 +82,7 @@ extension WorkflowReplayer {
             taskQueue: String = "ReplayTaskQueue",
             dataConverter: DataConverter = .default,
             interceptors: [any WorkerInterceptor] = [],
+            workflowFailureErrorTypes: [any Error.Type] = [],
             logger: Logger = Logger(label: "WorkflowReplayer"),
             enableLoggingInReplay: Bool = false
         ) {
@@ -82,6 +91,7 @@ extension WorkflowReplayer {
             self.taskQueue = taskQueue
             self.dataConverter = dataConverter
             self.interceptors = interceptors
+            self.workflowFailureErrorTypes = workflowFailureErrorTypes
             self._logger = logger
             self.enableLoggingInReplay = enableLoggingInReplay
         }
@@ -97,6 +107,8 @@ extension WorkflowReplayer {
         ///     ``DataConverter/default``.
         ///   - interceptors: The interceptors to apply during replay. Defaults to an empty
         ///     array (no interceptors).
+        ///   - workflowFailureErrorTypes: The error types that fail a replayed workflow execution
+        ///     instead of its workflow task. Defaults to an empty array.
         ///   - enableLoggingInReplay: Whether the workflow logger keeps emitting records during replay.
         ///     Defaults to `false`.
         public init(
@@ -105,6 +117,7 @@ extension WorkflowReplayer {
             taskQueue: String = "ReplayTaskQueue",
             dataConverter: DataConverter = .default,
             interceptors: [any WorkerInterceptor] = [],
+            workflowFailureErrorTypes: [any Error.Type] = [],
             enableLoggingInReplay: Bool = false
         ) {
             self.workflows = workflows
@@ -112,6 +125,7 @@ extension WorkflowReplayer {
             self.taskQueue = taskQueue
             self.dataConverter = dataConverter
             self.interceptors = interceptors
+            self.workflowFailureErrorTypes = workflowFailureErrorTypes
             self.enableLoggingInReplay = enableLoggingInReplay
             self._logger = Logger.current
         }

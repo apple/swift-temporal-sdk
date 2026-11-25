@@ -328,6 +328,20 @@ extension TemporalWorker {
         /// duplicate record for every log statement in each replayed workflow task. Enable it to follow a
         /// replay when debugging. See ``WorkflowContext/logger``.
         public var enableLoggingInReplay: Bool = false
+        /// Error types that fail a workflow execution instead of its workflow task (default `[]`).
+        ///
+        /// By default, only ``TemporalFailureError``s fail the workflow execution. Other errors, and
+        /// nondeterminism, fail the workflow task, which Temporal retries until the code is fixed. Errors
+        /// matching a type listed here fail the workflow execution of every workflow on this worker, or
+        /// the update if thrown from an update handler. See <doc:Developing-Workflows> for details.
+        ///
+        /// An error matches the same way `catch let error as T` does: a class also matches its
+        /// subclasses, and `Error` matches every error. Protocols can't be listed. List
+        /// ``WorkflowNondeterminismError`` or `Error` to fail workflows on nondeterminism.
+        ///
+        /// - Note: On Apple platforms, every Swift error can be cast to `NSError`, so listing `NSError`
+        ///   matches every error there, including nondeterminism.
+        public var workflowFailureErrorTypes: [any Error.Type] = []
 
         // –– Activities ––
         /// Polling behavior for activities (default max `5`).

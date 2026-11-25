@@ -154,13 +154,13 @@ extension TestServerDependentTests {
                     client: borrowing Temporal.BridgeClient,
                     configuration: Temporal.TemporalWorker.Configuration,
                     hasActivities: Bool,
-                    hasWorkflows: Bool,
+                    workflows: [any WorkflowDefinition.Type],
                 ) throws {
                     self.base = try BridgeWorker(
                         client: client,
                         configuration: configuration,
                         hasActivities: false,
-                        hasWorkflows: true,
+                        workflows: workflows,
                     )
                 }
 

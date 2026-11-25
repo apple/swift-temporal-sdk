@@ -12,7 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Error thrown when a workflow does something potentially non-deterministic, such as making an illegal call.
+/// Error describing nondeterminism, where a workflow's code no longer matches its history.
+///
+/// ``WorkflowReplayer`` reports this error when replaying a history hits nondeterminism.
+///
+/// By default, nondeterminism fails the workflow task. List this type, or `Error`, in
+/// ``TemporalWorker/Configuration/workflowFailureErrorTypes`` or a workflow's
+/// ``WorkflowDefinition/failureErrorTypes`` to fail the workflow execution instead.
 public struct WorkflowNondeterminismError: TemporalError {
     /// The error message describing the non-determinism.
     public var message: String
