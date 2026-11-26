@@ -80,7 +80,9 @@ package final class WorkflowHistoryRunner: Sendable {
             dataConverter: self.configuration.dataConverter,
             workflows: self.configuration.workflows,
             interceptors: self.configuration.interceptors,
-            enableLoggingInReplay: self.configuration.enableLoggingInReplay
+            enableLoggingInReplay: self.configuration.enableLoggingInReplay,
+            enableMetricsInReplay: self.configuration.enableMetricsInReplay,
+            enableTracingInReplay: self.configuration.enableTracingInReplay
         )
 
         // Run replay following the pattern from TemporalWorker
